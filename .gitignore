@@ -1,0 +1,7 @@
+### VS Code ###
+.vscode/
+
+# Environment Files
+.env
+.env.local
+.env.*.local

@@ -1,0 +1,36 @@
+services:
+  postgresdb:
+    image: postgres:17
+    restart: unless-stopped
+    env_file: ./.env
+    container_name: db
+    environment:
+      - POSTGRES_USER=${POSTGRESDB_USER}
+      - POSTGRES_PASSWORD=${POSTGRESDB_ROOT_PASSWORD}
+      - POSTGRES_DB=${POSTGRESDB_DATABASE}
+    ports:
+      - "${POSTGRESDB_LOCAL_PORT}:${POSTGRESDB_DOCKER_PORT}"
+    volumes:
+      - db:/var/lib/postgresql/data
+
+  app:
+    build: ./app
+    restart: on-failure
+    container_name: app
+    depends_on:
+      - postgresdb
+    env_file: ./.env
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgresdb:${POSTGRESDB_DOCKER_PORT}/${POSTGRESDB_DATABASE}
+      - SPRING_DATASOURCE_USERNAME=${POSTGRESDB_USER}
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRESDB_ROOT_PASSWORD}
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+    ports:
+      - "${SPRING_LOCAL_PORT}:${SPRING_DOCKER_PORT}"
+    volumes:
+      - .m2:/root/.m2
+    stdin_open: true
+    tty: true
+
+volumes:
+  db:
