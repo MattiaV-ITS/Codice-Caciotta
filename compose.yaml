@@ -25,12 +25,23 @@ services:
       - SPRING_DATASOURCE_USERNAME=${POSTGRESDB_USER}
       - SPRING_DATASOURCE_PASSWORD=${POSTGRESDB_ROOT_PASSWORD}
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - DEV_MODE=${DEV_MODE}
       - app.jwtSecret=${APP_JWT_SECRET}
       - app.jwtExpirationMs=86400000
     ports:
       - "${SPRING_LOCAL_PORT}:${SPRING_DOCKER_PORT}"
     stdin_open: true
     tty: true
+  frontend:
+    build:
+      context: ./frontend
+    container_name: frontend
+    ports:
+      - "3000:80"  # maps container port 80 to localhost:3000
+    depends_on:
+      - backend
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
 
 volumes:
   db:
