@@ -13,10 +13,10 @@ services:
     volumes:
       - db:/var/lib/postgresql/data
 
-  app:
-    build: ./app
+  backend:
+    build: ./backend
     restart: on-failure
-    container_name: app
+    container_name: backend
     depends_on:
       - postgresdb
     env_file: ./.env
@@ -25,10 +25,10 @@ services:
       - SPRING_DATASOURCE_USERNAME=${POSTGRESDB_USER}
       - SPRING_DATASOURCE_PASSWORD=${POSTGRESDB_ROOT_PASSWORD}
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - app.jwtSecret=${APP_JWT_SECRET}
+      - app.jwtExpirationMs=86400000
     ports:
       - "${SPRING_LOCAL_PORT}:${SPRING_DOCKER_PORT}"
-    volumes:
-      - .m2:/root/.m2
     stdin_open: true
     tty: true
 
