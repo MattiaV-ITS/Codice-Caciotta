@@ -21,10 +21,6 @@ public class Animale {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "id_utente", nullable = false)
-    private Utente proprietario;
-
     @Column(nullable = false)
     private String nome;
 
