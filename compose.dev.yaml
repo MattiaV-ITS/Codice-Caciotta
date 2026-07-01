@@ -1,0 +1,59 @@
+services:
+  postgresdb:
+    image: postgres:17
+    restart: unless-stopped
+    env_file: ./.env
+    container_name: db
+    environment:
+      - POSTGRES_USER=${POSTGRESDB_USER}
+      - POSTGRES_PASSWORD=${POSTGRESDB_ROOT_PASSWORD}
+      - POSTGRES_DB=${POSTGRESDB_DATABASE}
+    ports:
+      - "${POSTGRESDB_LOCAL_PORT}:${POSTGRESDB_DOCKER_PORT}"
+    volumes:
+      - db:/var/lib/postgresql/data
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    container_name: backend
+    depends_on:
+      - postgresdb
+    env_file: ./.env
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgresdb:${POSTGRESDB_DOCKER_PORT}/${POSTGRESDB_DATABASE}
+      - SPRING_DATASOURCE_USERNAME=${POSTGRESDB_USER}
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRESDB_ROOT_PASSWORD}
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - DEV_MODE=${DEV_MODE}
+      - app.jwtSecret=${APP_JWT_SECRET}
+      - app.jwtExpirationMs=86400000
+    ports:
+      - "${SPRING_LOCAL_PORT}:${SPRING_DOCKER_PORT}"
+      - "5005:5005"  # debug port
+    volumes:
+      - ./backend/src:/backend/src  # Mount source code for hot reload
+      - ./backend/pom.xml:/backend/pom.xml
+      - ./backend/.mvn:/backend/.mvn
+      - ./backend/mvnw:/backend/mvnw
+    stdin_open: true
+    tty: true
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: frontend
+    ports:
+      - "3000:3000"  # React dev server portports:
+      - "5173:5173" # Vite dev server port
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/frontend  # Mount source code for hot reload
+      - /frontend/node_modules  # Avoid overwriting node_modules
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+
+volumes:
+  db:

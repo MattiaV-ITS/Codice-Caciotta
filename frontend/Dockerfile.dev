@@ -1,0 +1,12 @@
+FROM node:24-alpine
+
+WORKDIR /frontend
+
+COPY package*.json ./
+RUN npm install
+
+# Mount source code in docker-compose for live reload
+
+EXPOSE 3000
+
+CMD ["npm", "run", "dev"]
