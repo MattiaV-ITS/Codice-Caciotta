@@ -21,7 +21,7 @@ public class Prestazione {
     @Column(name = "nome_prestazione", nullable = false)
     private String nomePrestazione;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(nullable = true)
     private String descrizione;
 
     @Column(nullable = false)
@@ -41,4 +41,7 @@ public class Prestazione {
 
     @Column(nullable = false)
     private String stato = "attiva";
+
+    @Column(nullable = true)
+    private String note;
 }
