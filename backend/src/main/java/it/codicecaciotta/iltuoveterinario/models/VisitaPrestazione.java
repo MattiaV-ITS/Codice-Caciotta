@@ -2,8 +2,6 @@ package it.codicecaciotta.iltuoveterinario.models;
 
 import jakarta.persistence.*;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
 
 import java.time.LocalDate;
 import java.util.HashSet;
@@ -12,7 +10,7 @@ import java.util.Set;
 @Entity
 @Table(name = "prestazioni")
 @Data
-public class VisitePrestazioni {
+public class VisitaPrestazione {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
