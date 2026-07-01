@@ -18,6 +18,9 @@ public class Propietario {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "codice_fiscale", unique = true, nullable = false, length = 16)
+    private String codiceFiscale;
+
     @Column(nullable = false)
     private String nome;
 
@@ -38,6 +41,9 @@ public class Propietario {
 
     @Column(nullable = false)
     private LocalDate dataRegistrazione;
+
+    @Column(name = "stato_attività", nullable = false)
+    private Boolean statoAttivita;
 
     @OneToMany(mappedBy = "proprietario", cascade = CascadeType.ALL, orphanRemoval = true)
     @EqualsAndHashCode.Exclude
