@@ -37,5 +37,5 @@ public class Prenotazione {
 
     @Column(nullable = true)
     private String note;
-    
+
 }
