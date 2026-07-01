@@ -3,10 +3,7 @@ package it.codicecaciotta.iltuoveterinario.models;
 import java.math.BigDecimal;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Size;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
 
 @Entity
 @Table(name = "prenotazione_prestazione")

@@ -3,9 +3,7 @@ package it.codicecaciotta.iltuoveterinario.models;
 import jakarta.persistence.*;
 import lombok.Data;
 
-import java.time.LocalDate;
-import java.util.HashSet;
-import java.util.Set;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "prestazioni")

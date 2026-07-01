@@ -1,10 +1,7 @@
 package it.codicecaciotta.iltuoveterinario.models;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Size;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
 
 @Entity
 @Table(name = "diario_clinico")

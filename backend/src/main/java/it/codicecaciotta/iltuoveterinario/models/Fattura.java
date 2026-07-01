@@ -1,16 +1,10 @@
 package it.codicecaciotta.iltuoveterinario.models;
 
-import java.time.LocalDate;
-
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Size;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
 
 @Entity
 @Table(name = "ricette")
