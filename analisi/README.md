@@ -18,7 +18,7 @@ L’obiettivo del sistema è digitalizzare e centralizzare le principali attivit
 
 All’interno di questa cartella sono presenti i seguenti file:
 
-- `analisi_studio_zampetti.docx` → documento completo dell’analisi del sistema
+- `studio_veterinario_zampetti.docx` → documento completo dell’analisi del sistema
 - (eventuali altri file di supporto all’analisi del modello dati e dei requisiti)
 
 ---
