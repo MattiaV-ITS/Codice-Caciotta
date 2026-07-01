@@ -29,7 +29,7 @@ public class Fattura {
     @Column(name = "denominazione_cliente", nullable = false)
     private String denominazioneCliente;
 
-    @Column(name = "codice_fiscale_cliente", nullable = false)
+    @Column(name = "codice_fiscale_cliente", unique = true, length = 16, nullable = false)
     private String codiceFiscaleCliente;
 
     @Column(name = "partita_iva_cliente", nullable = true)
