@@ -2,10 +2,6 @@ package it.codicecaciotta.iltuoveterinario.models;
 
 import java.time.LocalDate;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
@@ -21,10 +17,6 @@ public class Animale {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "id_utente", nullable = false)
-    private Utente proprietario;
-
     @Column(nullable = false)
     private String nome;
 
@@ -37,7 +29,7 @@ public class Animale {
     @Column(name = "data_di_nascita", nullable = false) // TODO: Data di nascita sconosciuta?
     private LocalDate dataNascita;
 
-    @Column(nullable = false) // TODO: Sesso sconosciuto?
+    @Column(nullable = false)
     private String sesso;
 
     @Column(nullable = false)
@@ -47,26 +39,8 @@ public class Animale {
     @Size(min = 15, max = 15, message = "Il microchip deve avere esattamente 15 caratteri") // Per validazione lunghezza
     private String microchip;
 
-    @Column(nullable = false)
-    private String coloreMantello;
-
-    @Column(nullable = false)
-    private boolean sterilizzato = false;
-
-    @Column(name = "gruppo_sanguigno", nullable = false) // TODO: Gruppo sanguigno sconosciuto
-    private String gruppoSanguigno;
-
-    @Column(nullable = true) // Allergie opzionali
-    private String allergie;
-
-    @Column(nullable = true) // Patologie opzionali
-    private String patologie;
-
-    @Column(name = "stato_sopravvivenza", nullable = false) // indica se l animale è vivo o morto
-    private boolean statoSopravvivenza = true; // vivo di default
-
-    @Column(name = "note_generali", nullable = true) // Note opzionali
-    private String noteGenerali;
+    @Column(name = "note", nullable = true) // Note opzionali
+    private String note;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "proprietario_id", nullable = false) // TODO: Considerare se rendere opzionale il proprietario, per animali senza proprietario
