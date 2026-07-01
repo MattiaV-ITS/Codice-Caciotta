@@ -2,9 +2,7 @@ package it.codicecaciotta.iltuoveterinario.models;
 
 import java.time.LocalDate;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
+import org.hibernate.annotations.Check;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Size;
@@ -21,10 +19,6 @@ public class Animale {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "id_utente", nullable = false)
-    private Utente proprietario;
-
     @Column(nullable = false)
     private String nome;
 
@@ -37,7 +31,8 @@ public class Animale {
     @Column(name = "data_di_nascita", nullable = false) // TODO: Data di nascita sconosciuta?
     private LocalDate dataNascita;
 
-    @Column(nullable = false) // TODO: Sesso sconosciuto?
+    @Column(nullable = true)
+    @Check(constraints = "sesso IN ('M', 'F')") // Sesso puo essere null per alcune specie, quindi non è obbligatorio
     private String sesso;
 
     @Column(nullable = false)
@@ -47,13 +42,17 @@ public class Animale {
     @Size(min = 15, max = 15, message = "Il microchip deve avere esattamente 15 caratteri") // Per validazione lunghezza
     private String microchip;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
+    @Check(constraints = "taglia IN ('piccola', 'media', 'grande')") // Taglia puo essere null per alcune specie, quindi non è obbligatorio
+    private String taglia;
+
+    @Column(name = "colore_mantello", nullable = true) // Colore mantello puo essere null per alcune specie, quindi non è obbligatorio
     private String coloreMantello;
 
     @Column(nullable = false)
     private boolean sterilizzato = false;
 
-    @Column(name = "gruppo_sanguigno", nullable = false) // TODO: Gruppo sanguigno sconosciuto
+    @Column(name = "gruppo_sanguigno", nullable = true) // Alcune specie non hanno gruppo sanguigno, quindi non è obbligatorio
     private String gruppoSanguigno;
 
     @Column(nullable = true) // Allergie opzionali
@@ -62,8 +61,9 @@ public class Animale {
     @Column(nullable = true) // Patologie opzionali
     private String patologie;
 
-    @Column(name = "stato_sopravvivenza", nullable = false) // indica se l animale è vivo o morto
-    private boolean statoSopravvivenza = true; // vivo di default
+    //TODO: Stato di salute da cambiare nell'analisi
+    @Column(name = "stato", nullable = false) // indica lo stato di salute dell'animale, sano, deceduto, vaccino scaduto, in cura,...
+    private String stato = "sano"; // sano di default
 
     @Column(name = "note_generali", nullable = true) // Note opzionali
     private String noteGenerali;
@@ -72,5 +72,5 @@ public class Animale {
     @JoinColumn(name = "proprietario_id", nullable = false) // TODO: Considerare se rendere opzionale il proprietario, per animali senza proprietario
     @EqualsAndHashCode.Exclude
     @ToString.Exclude
-    private Propietario proprietario;
+    private Proprietario proprietario;
 }
