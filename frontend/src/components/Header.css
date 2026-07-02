@@ -1,52 +1,86 @@
-/* Struttura Layout */
-.app-layout {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-}
-
-/* Stile dell'Header */
+/* HEADER PRINCIPALE */
 .main-header {
-  background-color: var(--bg); /* Usa lo sfondo definito in index.css */
-  border-bottom: 1px solid var(--border); /* Linea di separazione */
-  padding: 15px 32px;
+  background-color: var(--bg);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 32px;
   position: sticky;
   top: 0;
   z-index: 100;
 }
 
 .header-container {
+  max-width: 1126px;
+  margin: 0 auto;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  max-width: 1126px;
-  margin: 0 auto;
 }
 
-/* Sistemiamo il titolo per l'header, sovrascrivendo i margini enormi */
-.main-header h1 {
-  font-size: 28px;
-  margin: 0;
-  letter-spacing: -0.5px;
+/* BRAND */
+.brand {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--accent);
+  text-decoration: none;
 }
 
-/* Badge di esempio nell'header */
+/* NAVBAR */
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+/* BADGE */
 .badge {
-  font-size: 14px;
-  padding: 6px 12px;
   background-color: var(--accent-bg);
   color: var(--accent);
+  padding: 6px 12px;
   border-radius: 20px;
-  font-weight: bold;
+  font-size: 14px;
+  font-weight: 600;
 }
 
-/* Contenitore del contenuto principale */
+/* LINK */
+.nav-link {
+  color: #4b5563;
+  text-decoration: none;
+  font-weight: 500;
+  padding: 8px 12px;
+  border-radius: 6px;
+  transition: 0.2s;
+}
+
+.nav-link:hover {
+  background-color: #f3f4f6;
+  color: #1f2937;
+}
+
+/* USER */
+.nav-user {
+  font-weight: 500;
+  color: #374151;
+}
+
+/* LOGOUT BUTTON */
+.logout-btn {
+  background-color: #ef4444;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.logout-btn:hover {
+  background-color: #dc2626;
+}
+
+/* MAIN CONTENT */
 .main-content {
-  flex-grow: 1;
-  padding: 40px 32px;
   max-width: 1126px;
-  width: 100%;
   margin: 0 auto;
-  box-sizing: border-box;
-  text-align: left; /* Allinea il testo a sinistra per una lettura migliore della lista */
+  padding: 40px 32px;
 }
