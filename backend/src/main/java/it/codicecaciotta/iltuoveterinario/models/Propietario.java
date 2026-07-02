@@ -44,7 +44,7 @@ public class Propietario {
 
     @Column(name = "stato_attività", nullable = false, 
             columnDefinition = "VARCHAR(20) CHECK (stato IN ('Attivo', 'Inattivo'))")
-    private Boolean statoAttivita;
+    private String statoAttivita = "Attivo";
 
     @OneToMany(mappedBy = "proprietario", cascade = CascadeType.ALL, orphanRemoval = true)
     @EqualsAndHashCode.Exclude
