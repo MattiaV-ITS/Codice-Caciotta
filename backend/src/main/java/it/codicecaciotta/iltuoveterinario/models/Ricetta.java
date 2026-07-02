@@ -18,6 +18,10 @@ public class Ricetta {
 
     @Column(name = "data_emissione", nullable = false)
     private LocalDateTime dataEmissione;
+    @PrePersist
+    public void onCreate() {
+        dataEmissione = LocalDateTime.now();
+    }
 
     @Column(name = "farmaco_prescritto", nullable = false)
     private String farmacoPrescritto;
