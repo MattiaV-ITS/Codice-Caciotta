@@ -23,8 +23,9 @@ public class Visita {
     @Column(name = "importo_totale", nullable = false)
     private Double importoTotale;
 
-    @Column(nullable = false)
-    private String stato;
+    @Column(nullable = false, 
+        columnDefinition = "VARCHAR(20) CHECK (stato IN ('Pianificata', 'In corso', 'Completata', 'Annullata'))")
+    private String stato = "Pianificata";
 
     @Column(nullable = true)
     private String note;
