@@ -20,6 +20,9 @@ public class AnimaleListaServiceImpl implements AnimaleListaService {
 
     @Override
     public Page<AnimaleListaDTO> getAllAnimali(Pageable pageable) {
+        if (pageable == null) {
+            throw new IllegalArgumentException("Pageable non può essere null");
+        }
         return animaleRepository.findAll(pageable)
                 .map(AnimaleListaMapper::toListaDTO);
     }
@@ -32,10 +35,22 @@ public class AnimaleListaServiceImpl implements AnimaleListaService {
 
     @Override
     public Page<AnimaleListaDTO> getAnimaliBySpecie(String specie, Pageable pageable) {
-        return animaleRepository.findBySpecie(specie, pageable)
+        // Gestione del caso "altro" - restituisce tutti gli animali che non sono cane o gatto
+        if ("altro".equalsIgnoreCase(specie)) {
+            return animaleRepository.findBySpecieNotInIgnoreCase(java.util.Arrays.asList("cane", "gatto"), pageable)
+                    .map(AnimaleListaMapper::toListaDTO);
+        }
+        // Caso normale - filtra per specie specifica
+        return animaleRepository.findBySpecieIgnoreCase(specie, pageable)
                 .map(AnimaleListaMapper::toListaDTO);
     }
 
+    @Override
+    public Page<AnimaleListaDTO> searchAnimaliComprehensive(String searchTerm, Pageable pageable) {
+        return animaleRepository.findByNomeContainingOrMicrochipContainingOrProprietario_NomeContainingOrProprietario_CognomeContaining(
+                searchTerm, searchTerm, searchTerm, searchTerm, pageable)
+                .map(AnimaleListaMapper::toListaDTO);
+    }
 
     // TODO: Implementare un metodo per ottenere gli animali di un proprietario specifico
 }

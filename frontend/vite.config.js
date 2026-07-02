@@ -4,10 +4,13 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   plugins: [react()],
   server: {
-    host: true, // TODO: change to false in production
+    host: true,
     proxy: {
-      '/api': 'http://backend:8080', // backend container and port inside Docker network
+      '/api': 'http://backend:8080',
+    },
+    watch: {
+      usePolling: true,
+      interval: 1000
     }
-
   },
 });

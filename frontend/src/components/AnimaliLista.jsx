@@ -6,21 +6,36 @@ function AnimaliLista() {
   const [error, setError] = useState(null);
   const [page, setPage] = useState(0);
   const [size] = useState(10);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [specieFilter, setSpecieFilter] = useState('');
   const [totalPages, setTotalPages] = useState(0);
 
-  // Example placeholder status data keyed by animal id (replace with real data if available)
+  // Dati di stato placeholder associati all'id dell'animale (sostituire con dati reali se disponibili)
   const statusMap = {
     // id: { label: string, color: string }
-    1: { label: 'Sano', color: '#4CAF50' },          // green
-    2: { label: 'Vaccino in Sospeso', color: '#FF9800' }, // orange
-    3: { label: 'In Trattamento', color: '#F44336' }, // red
-    4: { label: 'Sano', color: '#4CAF50' },
-    5: { label: 'Controllo', color: '#2196F3' },     // blue
+    1: { label: 'Sano', color: '#4CAF50' },          // verde
+    2: { label: 'Vaccino in Sospeso', color: '#FF9800' }, // arancione
+    3: { label: 'In Trattamento', color: '#F44336' }, // rosso
+    4: { label: 'Controllo', color: '#2196F3' },     // blu
   };
 
   useEffect(() => {
     setLoading(true);
-    fetch(`/api/animali?page=${page}&size=${size}`)
+    
+    // Build query parameters
+    const params = new URLSearchParams();
+    params.append('page', page);
+    params.append('size', size);
+    
+    if (searchTerm) {
+      params.append('search', searchTerm);
+    }
+    
+    if (specieFilter) {
+      params.append('specie', specieFilter);
+    }
+    
+    fetch(`/api/animali?${params.toString()}`)
       .then(response => {
         if (!response.ok) {
           throw new Error('Failed to fetch animali');
@@ -36,7 +51,7 @@ function AnimaliLista() {
         setError(err.message);
         setLoading(false);
       });
-  }, [page, size]);
+  }, [page, size, searchTerm, specieFilter]);
 
   const goToPreviousPage = () => {
     if (page > 0) setPage(page - 1);
@@ -46,13 +61,13 @@ function AnimaliLista() {
     if (page < totalPages - 1) setPage(page + 1);
   };
 
-  // Helper to get first letter icon from specie
+  // Funzione ausiliaria per ottenere la lettera iniziale dell'icona dalla specie
   const getIconLetter = (specie) => {
     if (!specie) return '?';
     return specie.charAt(0).toUpperCase();
   };
 
-  // Helper to format date in Italian style
+  // Funzione ausiliaria per formattare la data nello stile italiano
   const formatDate = (dateStr) => {
     if (!dateStr) return '-';
     const date = new Date(dateStr);
@@ -65,6 +80,109 @@ function AnimaliLista() {
   return (
     <div style={{ padding: '1rem', fontFamily: 'Arial, sans-serif' }}>
       <h2>Elenco Pazienti</h2>
+
+      <div style={{ marginBottom: '1rem' }}>
+        <div style={{ marginBottom: '1rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+          <button
+            onClick={() => {
+              setSpecieFilter('');
+              setSearchTerm('');
+              setPage(0);
+            }}
+            style={{
+              padding: '8px 16px',
+              backgroundColor: specieFilter === '' ? '#2196F3' : '#f0f4f8',
+              color: specieFilter === '' ? 'white' : '#333',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontWeight: specieFilter === '' ? '600' : 'normal'
+            }}
+          >
+            Tutti
+          </button>
+          
+          <button
+            onClick={() => {
+              setSpecieFilter('cane');
+              setSearchTerm('');
+              setPage(0);
+            }}
+            style={{
+              padding: '8px 16px',
+              backgroundColor: specieFilter === 'cane' ? '#2196F3' : '#f0f4f8',
+              color: specieFilter === 'cane' ? 'white' : '#333',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontWeight: specieFilter === 'cane' ? '600' : 'normal'
+            }}
+          >
+            Cane
+          </button>
+          
+          <button
+            onClick={() => {
+              setSpecieFilter('gatto');
+              setSearchTerm('');
+              setPage(0);
+            }}
+            style={{
+              padding: '8px 16px',
+              backgroundColor: specieFilter === 'gatto' ? '#2196F3' : '#f0f4f8',
+              color: specieFilter === 'gatto' ? 'white' : '#333',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontWeight: specieFilter === 'gatto' ? '600' : 'normal'
+            }}
+          >
+            Gatto
+          </button>
+          
+          <button
+            onClick={() => {
+              setSpecieFilter('altro');
+              setSearchTerm('');
+              setPage(0);
+            }}
+            style={{
+              padding: '8px 16px',
+              backgroundColor: specieFilter === 'altro' ? '#2196F3' : '#f0f4f8',
+              color: specieFilter === 'altro' ? 'white' : '#333',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontWeight: specieFilter === 'altro' ? '600' : 'normal'
+            }}
+          >
+            Altro
+          </button>
+        </div>
+
+        <div style={{ marginBottom: '1rem', display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+          <input
+            type="text"
+            placeholder="Cerca per nome animale, microchip o nome proprietario..."
+            value={searchTerm}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setPage(0); // Reset to first page when search changes
+            }}
+            style={{ padding: '8px', flex: '1', minWidth: '200px' }}
+          />
+          
+          <button 
+            onClick={() => {
+              setSearchTerm('');
+              setPage(0);
+            }}
+            style={{ padding: '8px 16px' }}
+          >
+            Cancella Filtri
+          </button>
+        </div>
+      </div>
 
       {animali.length === 0 ? (
         <p>Nessun animale trovato.</p>
@@ -132,7 +250,7 @@ function AnimaliLista() {
                     </span>
                   </td>
                   <td style={{ padding: '10px 8px', textAlign: 'center', cursor: 'pointer' }}>
-                    &#x22EE; {/* vertical ellipsis */}
+                    &#x22EE; {/* ellissi verticale */}
                   </td>
                 </tr>
               );

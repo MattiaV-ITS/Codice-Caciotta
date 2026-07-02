@@ -10,4 +10,7 @@ public interface AnimaleListaService {
     public Page<AnimaleListaDTO> getAllAnimali(Pageable pageable);
     public Page<AnimaleListaDTO> getAnimaliBySpecie(String specie, Pageable pageable);
     public Page<AnimaleListaDTO> getAnimaliByStato(String stato, Pageable pageable);
+    
+    // Metodo di ricerca completa
+    public Page<AnimaleListaDTO> searchAnimaliComprehensive(String searchTerm, Pageable pageable);
 }

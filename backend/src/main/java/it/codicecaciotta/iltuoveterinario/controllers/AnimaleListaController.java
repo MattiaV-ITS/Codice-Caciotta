@@ -25,10 +25,22 @@ public class AnimaleListaController {
         @RequestParam(defaultValue = "0") int page,
         @RequestParam(defaultValue = "10") int size,
         @RequestParam(defaultValue = "id") String sortBy,
-        @RequestParam(defaultValue = "asc") String sortDir) {
-        sortDir = sortDir.equalsIgnoreCase("asc") ? "asc" : "desc"; // Default to ascending if invalid
+        @RequestParam(defaultValue = "asc") String sortDir,
+        @RequestParam(required = false) String search,
+        @RequestParam(required = false) String specie) {
+        
+        sortDir = sortDir.equalsIgnoreCase("asc") ? "asc" : "desc"; // Imposta asc come predefinito se non valido
         Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
         Pageable pageable = PageRequest.of(page, size, sort);
+        
+        if (search != null && !search.isEmpty()) {
+            return animaleService.searchAnimaliComprehensive(search, pageable);
+        }
+        
+        if (specie != null && !specie.isEmpty()) {
+            return animaleService.getAnimaliBySpecie(specie, pageable);
+        }
+        
         return animaleService.getAllAnimali(pageable);
     }
 }

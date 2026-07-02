@@ -1,8 +1,10 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import AnimaliLista from './components/AnimaliLista';
+import ProprietariLista from './components/ProprietariLista';
 import Login from './components/Login';
 import Signup from './components/Signup';
 import Header from './components/Header';
+import Dashboard from './components/Dashboard';
 import { useAuth } from './context/AuthContext';
 import AdminRoleManagement from "./components/AdminRoleManagement";
 
@@ -24,6 +26,17 @@ function AdminRoute({ children }) {
     : <Navigate to="/" replace />;
 }
 
+function StaffRoute({ children }) {
+  const { isAuthenticated, isLoading, user } = useAuth();
+
+  if (isLoading) return <div>Caricamento...</div>;
+  if (!isAuthenticated()) return <Navigate to="/login" />;
+
+  return user?.roles?.includes("ROLE_STAFF") || user?.roles?.includes("ROLE_ADMIN")
+    ? children
+    : <Navigate to="/" replace />;
+}
+
 function App() {
   return (
     <div className="app-container">
@@ -38,8 +51,26 @@ function App() {
             path="/"
             element={
               <ProtectedRoute>
-                <AnimaliLista />
+                <Dashboard />
               </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/animali"
+            element={
+              <StaffRoute>
+                <AnimaliLista />
+              </StaffRoute>
+            }
+          />
+
+          <Route
+            path="/proprietari"
+            element={
+              <StaffRoute>
+                <ProprietariLista />
+              </StaffRoute>
             }
           />
 
