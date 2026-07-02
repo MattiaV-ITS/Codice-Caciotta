@@ -1,11 +1,11 @@
 package it.codicecaciotta.iltuoveterinario.models;
 
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
-import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -40,7 +40,12 @@ public class Propietario {
     private String citta;
 
     @Column(nullable = false)
-    private LocalDate dataRegistrazione;
+    private LocalDateTime dataRegistrazione;
+
+    @PrePersist
+    public void onCreate() {
+        dataRegistrazione = LocalDateTime.now();
+    }
 
     @Column(name = "stato_attività", nullable = false, 
             columnDefinition = "VARCHAR(20) CHECK (stato IN ('Attivo', 'Inattivo'))")
