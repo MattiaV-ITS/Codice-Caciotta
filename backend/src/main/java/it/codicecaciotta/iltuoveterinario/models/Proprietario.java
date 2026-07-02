@@ -12,9 +12,9 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-@Table(name = "propietari")
+@Table(name = "proprietari")
 @Data
-public class Propietario {
+public class Proprietario {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

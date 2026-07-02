@@ -47,7 +47,7 @@ private String statoPrenotazione = "Attesa";
     @JoinColumn(name = "proprietario_id", nullable = false)
     @EqualsAndHashCode.Exclude
     @ToString.Exclude
-    private Propietario proprietario;
+    private Proprietario proprietario;
     
     @PrePersist
     public void onCreate() {

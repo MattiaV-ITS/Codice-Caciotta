@@ -79,7 +79,7 @@ public class Fattura {
     @JoinColumn(name = "proprietario_id", nullable = false)
     @EqualsAndHashCode.Exclude
     @ToString.Exclude
-    private Propietario proprietario;
+    private Proprietario proprietario;
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "visita_id", nullable = false)
