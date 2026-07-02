@@ -31,4 +31,11 @@ public class Prenotazione {
     @Column(nullable = true)
     private String note;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "animale_id", nullable = false)
+    private Animale animale;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "proprietario_id", nullable = false)
+    private Propietario proprietario;
 }
