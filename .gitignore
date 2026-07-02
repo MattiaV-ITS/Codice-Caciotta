@@ -1,6 +1,12 @@
 ### VS Code ###
 .vscode/
 
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
 # Environment Files
 .env
 .env.local
