@@ -4,6 +4,8 @@ import java.time.LocalDateTime;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 @Entity
 @Table(name = "ricette")
@@ -33,6 +35,8 @@ public class Ricetta {
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "visita_id", nullable = false)
+    @EqualsAndHashCode.Exclude
+    @ToString.Exclude
     private Visita visita;
     
     @PrePersist

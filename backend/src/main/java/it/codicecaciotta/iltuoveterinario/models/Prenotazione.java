@@ -4,6 +4,8 @@ import java.time.LocalDateTime;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 @Entity
 @Table(name = "prenotazioni")
@@ -37,10 +39,14 @@ private String statoPrenotazione = "Attesa";
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "animale_id", nullable = false)
+    @EqualsAndHashCode.Exclude
+    @ToString.Exclude
     private Animale animale;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "proprietario_id", nullable = false)
+    @EqualsAndHashCode.Exclude
+    @ToString.Exclude
     private Propietario proprietario;
     
     @PrePersist

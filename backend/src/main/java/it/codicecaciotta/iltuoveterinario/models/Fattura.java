@@ -6,6 +6,8 @@ import java.time.LocalDateTime;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 @Entity
 @Table(name = "ricette")
@@ -75,10 +77,14 @@ public class Fattura {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "proprietario_id", nullable = false)
+    @EqualsAndHashCode.Exclude
+    @ToString.Exclude
     private Propietario proprietario;
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "visita_id", nullable = false)
+    @EqualsAndHashCode.Exclude
+    @ToString.Exclude
     private Visita visita;
 
     @PrePersist

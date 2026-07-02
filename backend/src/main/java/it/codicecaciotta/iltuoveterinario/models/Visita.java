@@ -2,6 +2,8 @@ package it.codicecaciotta.iltuoveterinario.models;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 import java.time.LocalDateTime;
 import java.math.BigDecimal;
@@ -33,9 +35,13 @@ public class Visita {
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "prenotazione_id", nullable = true)
+    @EqualsAndHashCode.Exclude
+    @ToString.Exclude
     private Prenotazione prenotazione;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "animale_id", nullable = false)
+    @EqualsAndHashCode.Exclude
+    @ToString.Exclude
     private Animale animale;
 }

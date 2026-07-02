@@ -2,6 +2,8 @@ package it.codicecaciotta.iltuoveterinario.models;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -39,6 +41,8 @@ public class VisitaPrestazione {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "prestazione_id", nullable = false)
+    @EqualsAndHashCode.Exclude
+    @ToString.Exclude
     private Prestazione prestazione;
     
     @PrePersist

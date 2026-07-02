@@ -2,6 +2,8 @@ package it.codicecaciotta.iltuoveterinario.models;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 @Entity
 @Table(name = "diario_clinico")
@@ -25,5 +27,8 @@ public class DiarioClinico {
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "visita_id", nullable = false)
+    @EqualsAndHashCode.Exclude
+    @ToString.Exclude
     private Visita visita;
 }
+
