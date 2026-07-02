@@ -35,8 +35,9 @@ public class Prestazione {
     @Column(name = "codice_prestazione", nullable = false, unique = true)
     private String codicePrestazione;
 
-    @Column(nullable = false)
-    private String stato = "attiva";
+    @Column(nullable = false, 
+            columnDefinition = "VARCHAR(20) CHECK (stato IN ('Disponibile', 'Non Disponibile'))")
+    private String stato = "Disponibile";
 
     @Column(nullable = true)
     private String note;
