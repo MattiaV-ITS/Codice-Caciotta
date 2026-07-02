@@ -19,4 +19,12 @@ public class PrenotazionePrestazione {
 
     @Column(nullable = true)
     private String note;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "prenotazione_id", nullable = false)
+    private Prenotazione prenotazione;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "prestazione_id", nullable = false)
+    private Prestazione prestazione;
 }
