@@ -7,7 +7,6 @@ import lombok.ToString;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.math.*;
 
 @Entity
 @Table(name = "prestazioni")
@@ -16,9 +15,6 @@ public class VisitaPrestazione {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @Column(name = "visita_id", nullable = false, precision = 10, scale = 2)
-    private BigDecimal prezzoApplicato;
 
     @Column(name = "data_esecuzione", nullable = false)
     private LocalDateTime dataEsecuzione;
@@ -37,6 +33,8 @@ public class VisitaPrestazione {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "visita_id", nullable = false)
+    @EqualsAndHashCode.Exclude
+    @ToString.Exclude
     private Visita visita;
 
     @ManyToOne(fetch = FetchType.LAZY)
