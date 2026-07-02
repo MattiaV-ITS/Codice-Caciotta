@@ -42,7 +42,8 @@ public class Propietario {
     @Column(nullable = false)
     private LocalDate dataRegistrazione;
 
-    @Column(name = "stato_attività", nullable = false)
+    @Column(name = "stato_attività", nullable = false, 
+            columnDefinition = "VARCHAR(20) CHECK (stato IN ('Attivo', 'Inattivo'))")
     private Boolean statoAttivita;
 
     @OneToMany(mappedBy = "proprietario", cascade = CascadeType.ALL, orphanRemoval = true)
