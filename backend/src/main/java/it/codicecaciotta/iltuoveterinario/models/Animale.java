@@ -58,7 +58,9 @@ public class Animale {
     @Column(nullable = true) // Patologie opzionali
     private String patologie;
 
-    @Column(name = "stato_sopravvivenza", nullable = false) // indica se l animale è vivo o morto
+    @Column(name = "stato_sopravvivenza", nullable = false,
+            columnDefinition = "VARCHAR(20) CHECK (stato IN ('Sano', 'In cura', 'Deceduto'))"
+    ) // indica se l animale è vivo o morto
     private boolean statoSopravvivenza = true; // vivo di default
 
     @Column(name = "note_generali", nullable = true) // Note opzionali
