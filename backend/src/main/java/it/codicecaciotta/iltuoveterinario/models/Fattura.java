@@ -47,17 +47,23 @@ public class Fattura {
     @Column(name = "importo_totale", nullable = false)
     private BigDecimal importoTotale;
 
-    @Column(name = "metodo_pagamento", nullable = false)
+    @Column(name = "metodo_pagamento", nullable = false,
+            columnDefinition = "VARCHAR(20) CHECK (stato IN ('Contanti', 'Bonifico', 'Carta di Credito', 'Altro'))"
+    )
     private String metodoPagamento;
 
-    @Column(name = "stato_pagamento", nullable = false)
-    private String statoPagamento = "da pagare";
+    @Column(name = "stato_pagamento", nullable = false,
+            columnDefinition = "VARCHAR(20) CHECK (stato IN ('Da pagare', 'Pagato', 'Annullato'))"
+    )
+    private String statoPagamento = "Da pagare";
 
     @Column(name = "data_ora_pagamento", nullable = true)
     private LocalDateTime dataOraPagamento;
 
-    @Column(name = "stato_fattura", nullable = false)
-    private String statoFattura = "bozza";
+    @Column(name = "stato_fattura", nullable = false,
+            columnDefinition = "VARCHAR(20) CHECK (stato IN ('Bozza', 'Emessa', 'Annullata'))"
+    )
+    private String statoFattura = "Bozza";
 
     @Column(nullable = true)
     private String note;
