@@ -28,4 +28,12 @@ public class Visita {
 
     @Column(nullable = true)
     private String note;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "prenotazione_id", nullable = true)
+    private Prenotazione prenotazione;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "animale_id", nullable = false)
+    private Animale animale;
 }
