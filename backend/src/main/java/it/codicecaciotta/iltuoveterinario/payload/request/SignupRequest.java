@@ -17,7 +17,9 @@ public class SignupRequest {
   private Set<String> role;
 
   @NotBlank
-  @Size(min = 6, max = 40)
+  @Size(min = 8, max = 40, message = "Password must be between 8 and 40 characters")
+  @Pattern(regexp = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=!]).*$", 
+           message = "Password must contain: 1 uppercase, 1 lowercase, 1 digit, 1 special character (@#$%^&+=!)")
   private String password;
 
   public String getUsername() {
