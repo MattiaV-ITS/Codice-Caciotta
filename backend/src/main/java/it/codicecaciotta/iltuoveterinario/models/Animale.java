@@ -30,11 +30,13 @@ public class Animale {
     @Column(nullable = true) // Razza puo essere null per alcune specie, quindi non è obbligatorio
     private String razza;
 
-    @Column(name = "data_di_nascita", nullable = false) // TODO: Data di nascita sconosciuta?
+    @Column(name = "data_di_nascita", nullable = true) 
     private LocalDate dataNascita;
 
-    @Column(nullable = false) // TODO: Sesso sconosciuto?
-    private String sesso;
+    @Column(nullable = false,
+            columnDefinition = "VARCHAR(20) CHECK (stato IN ('M', 'F', 'ND'))"
+    ) 
+    private String sesso = "ND"; // M = Maschio, F = Femmina, ND = Non Definito
 
     @Column(nullable = false)
     private Double peso;
@@ -49,8 +51,8 @@ public class Animale {
     @Column(nullable = false)
     private boolean sterilizzato = false;
 
-    @Column(name = "gruppo_sanguigno", nullable = false) // TODO: Gruppo sanguigno sconosciuto
-    private String gruppoSanguigno;
+    @Column(name = "gruppo_sanguigno", nullable = true) 
+    private String gruppoSanguigno = "ND"; // Gruppo sanguigno default ND (Non Definito)
 
     @Column(nullable = true) // Allergie opzionali
     private String allergie;
@@ -67,7 +69,7 @@ public class Animale {
     private String noteGenerali;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "proprietario_id", nullable = false) // TODO: Considerare se rendere opzionale il proprietario, per animali senza proprietario
+    @JoinColumn(name = "proprietario_id", nullable = false)
     @EqualsAndHashCode.Exclude
     @ToString.Exclude
     private Propietario proprietario;
