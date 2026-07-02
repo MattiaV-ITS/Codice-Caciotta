@@ -3,6 +3,7 @@ package it.codicecaciotta.iltuoveterinario.models;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -18,6 +19,10 @@ public class VisitaPrestazione {
 
     @Column(name = "data_esecuzione", nullable = false)
     private LocalDateTime dataEsecuzione;
+    @PrePersist
+    public void onCreate() {
+        dataEsecuzione = LocalDateTime.now();
+    }
 
     @Column(name = "nome_farmaco", nullable = true)
     private String nomeFarmaco;
@@ -26,7 +31,7 @@ public class VisitaPrestazione {
     private String lottoFarmaco;
 
     @Column(name = "data_prossima_scadenza", nullable = true)
-    private LocalDateTime dataProssimaScadenza;
+    private LocalDate dataProssimaScadenza;
 
     @Column(nullable = true)
     private String note;
