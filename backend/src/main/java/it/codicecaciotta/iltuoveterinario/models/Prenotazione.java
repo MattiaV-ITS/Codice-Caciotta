@@ -22,11 +22,15 @@ public class Prenotazione {
     @Column(nullable = false)
     private String motivo;
 
-    @Column(name = "stato_prenotazione", nullable = false)
-    private String statoPrenotazione = "attesa";
+    @Column(name = "stato_prenotazione", nullable = false,
+            columnDefinition = "VARCHAR(20) CHECK (stato IN ('Attesa', 'Confermata', 'Completata', 'Annullata'))"
+    )
+    private String statoPrenotazione = "Attesa";
 
-    @Column(name = "priorità", nullable = false)
-    private String priorita = "bassa";
+    @Column(name = "priorità", nullable = false,
+            columnDefinition = "VARCHAR(20) CHECK (stato IN ('Alta', 'Bassa', 'Media'))"
+    )
+    private String priorita = "Bassa";
 
     @Column(nullable = true)
     private String note;
