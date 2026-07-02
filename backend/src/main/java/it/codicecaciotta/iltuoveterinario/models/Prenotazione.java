@@ -15,6 +15,10 @@ public class Prenotazione {
 
     @Column(name = "data_prenotazione", nullable = false)
     private LocalDateTime dataPrenotazione;
+    @PrePersist
+    public void onCreate() {
+        dataPrenotazione = LocalDateTime.now();
+    }
 
     @Column(name = "data_ora_appuntamento", nullable = false)
     private LocalDateTime dataOraAppuntamento;
