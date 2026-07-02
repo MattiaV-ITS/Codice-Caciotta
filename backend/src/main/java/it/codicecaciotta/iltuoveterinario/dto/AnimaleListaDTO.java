@@ -16,6 +16,7 @@ public class AnimaleListaDTO {
     private LocalDate dataNascita;
     private String sesso;
     private String microchip;
+    private String stato;
     private Long idProprietario; // ID del cliente a cui appartiene l'animale
     private String proprietario;  // Nome e cognome del proprietario, per visualizzazione nella lista
 }

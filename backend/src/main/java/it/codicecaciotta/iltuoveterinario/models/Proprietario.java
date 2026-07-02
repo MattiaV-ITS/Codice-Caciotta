@@ -10,13 +10,16 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-@Table(name = "propietari")
+@Table(name = "proprietari")
 @Data
-public class Propietario {
+public class Proprietario {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(name = "codice_fiscale", unique = true, nullable = true, length = 16)
+    private String codiceFiscale;
 
     @Column(nullable = false)
     private String nome;
