@@ -17,4 +17,8 @@ public interface AnimaleRepository extends JpaRepository<Animale, Long> {
     // Ricerca completa per nome animale, microchip, o nome/cognome proprietario
     Page<Animale> findByNomeContainingOrMicrochipContainingOrProprietario_NomeContainingOrProprietario_CognomeContaining(
         String nome, String microchip, String proprietarioNome, String proprietarioCognome, Pageable pageable);
+    
+    // Ricerca completa case-insensitive per nome animale, microchip, o nome/cognome proprietario
+    Page<Animale> findByNomeContainingIgnoreCaseOrMicrochipContainingIgnoreCaseOrProprietario_NomeContainingIgnoreCaseOrProprietario_CognomeContainingIgnoreCase(
+        String nome, String microchip, String proprietarioNome, String proprietarioCognome, Pageable pageable);
 }

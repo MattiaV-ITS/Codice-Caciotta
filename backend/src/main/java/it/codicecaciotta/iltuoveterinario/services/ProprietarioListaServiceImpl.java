@@ -32,7 +32,7 @@ public class ProprietarioListaServiceImpl implements ProprietarioListaService {
         if (pageable == null) {
             throw new IllegalArgumentException("Pageable cannot be null");
         }
-        return proprietarioRepository.findByNomeContainingOrCognomeContainingOrTelefonoContainingOrEmailContainingOrCodiceFiscaleContaining(
+        return proprietarioRepository.findByNomeContainingIgnoreCaseOrCognomeContainingIgnoreCaseOrTelefonoContainingIgnoreCaseOrEmailContainingIgnoreCaseOrCodiceFiscaleContainingIgnoreCase(
                 searchTerm, searchTerm, searchTerm, searchTerm, searchTerm, pageable)
                 .map(ProprietarioListaMapper::toListaDTO);
     }

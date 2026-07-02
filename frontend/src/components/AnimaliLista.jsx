@@ -7,8 +7,11 @@ function AnimaliLista() {
   const [page, setPage] = useState(0);
   const [size] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
+  const [appliedSearchTerm, setAppliedSearchTerm] = useState('');
   const [specieFilter, setSpecieFilter] = useState('');
   const [totalPages, setTotalPages] = useState(0);
+  const [sortBy, setSortBy] = useState('id');
+  const [sortDir, setSortDir] = useState('asc');
 
   // Dati di stato placeholder associati all'id dell'animale (sostituire con dati reali se disponibili)
   const statusMap = {
@@ -26,9 +29,11 @@ function AnimaliLista() {
     const params = new URLSearchParams();
     params.append('page', page);
     params.append('size', size);
+    params.append('sortBy', sortBy);
+    params.append('sortDir', sortDir);
     
-    if (searchTerm) {
-      params.append('search', searchTerm);
+    if (appliedSearchTerm) {
+      params.append('search', appliedSearchTerm);
     }
     
     if (specieFilter) {
@@ -51,7 +56,7 @@ function AnimaliLista() {
         setError(err.message);
         setLoading(false);
       });
-  }, [page, size, searchTerm, specieFilter]);
+  }, [page, size, appliedSearchTerm, specieFilter, sortBy, sortDir]);
 
   const goToPreviousPage = () => {
     if (page > 0) setPage(page - 1);
@@ -74,6 +79,26 @@ function AnimaliLista() {
     return date.toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' });
   };
 
+  // Funzione per gestire il cambio di ordinamento
+  const handleSort = (columnName) => {
+    if (sortBy === columnName) {
+      // Se stiamo già ordinando per questa colonna, invertiamo la direzione
+      setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
+    } else {
+      // Altrimenti impostiamo la nuova colonna e la direzione predefinita
+      setSortBy(columnName);
+      setSortDir('asc');
+    }
+    // Resetta alla prima pagina quando cambia l'ordinamento
+    setPage(0);
+  };
+
+  // Funzione per ottenere l'indicatore di ordinamento
+  const getSortIndicator = (columnName) => {
+    if (sortBy !== columnName) return null;
+    return sortDir === 'asc' ? ' ↑' : ' ↓';
+  };
+
   if (loading) return <p>Caricamento animali...</p>;
   if (error) return <p>Errore: {error}</p>;
 
@@ -87,6 +112,7 @@ function AnimaliLista() {
             onClick={() => {
               setSpecieFilter('');
               setSearchTerm('');
+              setAppliedSearchTerm('');
               setPage(0);
             }}
             style={{
@@ -106,6 +132,7 @@ function AnimaliLista() {
             onClick={() => {
               setSpecieFilter('cane');
               setSearchTerm('');
+              setAppliedSearchTerm('');
               setPage(0);
             }}
             style={{
@@ -125,6 +152,7 @@ function AnimaliLista() {
             onClick={() => {
               setSpecieFilter('gatto');
               setSearchTerm('');
+              setAppliedSearchTerm('');
               setPage(0);
             }}
             style={{
@@ -144,6 +172,7 @@ function AnimaliLista() {
             onClick={() => {
               setSpecieFilter('altro');
               setSearchTerm('');
+              setAppliedSearchTerm('');
               setPage(0);
             }}
             style={{
@@ -165,9 +194,12 @@ function AnimaliLista() {
             type="text"
             placeholder="Cerca per nome animale, microchip o nome proprietario..."
             value={searchTerm}
-            onChange={(e) => {
-              setSearchTerm(e.target.value);
-              setPage(0); // Reset to first page when search changes
+            onChange={(e) => setSearchTerm(e.target.value)}
+            onKeyPress={(e) => {
+              if (e.key === 'Enter') {
+                setAppliedSearchTerm(searchTerm);
+                setPage(0); // Reset to first page when search is submitted
+              }
             }}
             style={{ padding: '8px', flex: '1', minWidth: '200px' }}
           />
@@ -175,6 +207,7 @@ function AnimaliLista() {
           <button 
             onClick={() => {
               setSearchTerm('');
+              setAppliedSearchTerm('');
               setPage(0);
             }}
             style={{ padding: '8px 16px' }}
@@ -190,18 +223,18 @@ function AnimaliLista() {
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
           <thead>
             <tr style={{ backgroundColor: '#f0f4f8', textAlign: 'left' }}>
-              <th style={{ padding: '12px 8px' }}>NOME ANIMALE</th>
-              <th style={{ padding: '12px 8px' }}>RAZZA</th>
-              <th style={{ padding: '12px 8px' }}>PROPRIETARIO</th>
-              <th style={{ padding: '12px 8px' }}>DATA DI NASCITA</th>
-              <th style={{ padding: '12px 8px' }}>MICROCHIP</th>
+              <th style={{ padding: '12px 8px', cursor: 'pointer' }} onClick={() => handleSort('nome')}>NOME ANIMALE{getSortIndicator('nome')}</th>
+              <th style={{ padding: '12px 8px', cursor: 'pointer' }} onClick={() => handleSort('razza')}>RAZZA{getSortIndicator('razza')}</th>
+              <th style={{ padding: '12px 8px', cursor: 'pointer' }} onClick={() => handleSort('proprietario')}>PROPRIETARIO{getSortIndicator('proprietario')}</th>
+              <th style={{ padding: '12px 8px', cursor: 'pointer' }} onClick={() => handleSort('dataNascita')}>DATA DI NASCITA{getSortIndicator('dataNascita')}</th>
+              <th style={{ padding: '12px 8px', cursor: 'pointer' }} onClick={() => handleSort('microchip')}>MICROCHIP{getSortIndicator('microchip')}</th>
               <th style={{ padding: '12px 8px' }}>STATO</th>
               <th style={{ padding: '12px 8px', width: '40px' }}></th>
             </tr>
           </thead>
           <tbody>
             {animali.map((animale, index) => {
-              const isFemale = animale.sesso?.toLowerCase() === 'femmina';
+              const isFemale = animale.sesso?.toLowerCase() === 'f';
               const nameColor = isFemale ? '#E91E63' : '#2196F3'; // pink or blue
               const status = statusMap[animale.id] || { label: 'Stato', color: '#9E9E9E' };
 

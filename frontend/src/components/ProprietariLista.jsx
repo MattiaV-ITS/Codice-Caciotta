@@ -8,7 +8,9 @@ function ProprietariLista() {
   const [size] = useState(10);
   const [totalPages, setTotalPages] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
-  const [cittaFilter, setCittaFilter] = useState('');
+  const [appliedSearchTerm, setAppliedSearchTerm] = useState('');
+  const [sortBy, setSortBy] = useState('id');
+  const [sortDir, setSortDir] = useState('asc');
 
   useEffect(() => {
     setLoading(true);
@@ -17,13 +19,11 @@ function ProprietariLista() {
     const params = new URLSearchParams();
     params.append('page', page);
     params.append('size', size);
+    params.append('sortBy', sortBy);
+    params.append('sortDir', sortDir);
     
-    if (searchTerm) {
-      params.append('search', searchTerm);
-    }
-    
-    if (cittaFilter) {
-      params.append('citta', cittaFilter);
+    if (appliedSearchTerm) {
+      params.append('search', appliedSearchTerm);
     }
     
     fetch(`/api/proprietari?${params.toString()}`)
@@ -42,7 +42,7 @@ function ProprietariLista() {
         setError(err.message);
         setLoading(false);
       });
-  }, [page, size, searchTerm, cittaFilter]);
+  }, [page, size, appliedSearchTerm, sortBy, sortDir]);
 
   const goToPreviousPage = () => {
     if (page > 0) setPage(page - 1);
@@ -54,17 +54,11 @@ function ProprietariLista() {
 
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
-    setPage(0); // Reset to first page when search changes
-  };
-
-  const handleCittaChange = (e) => {
-    setCittaFilter(e.target.value);
-    setPage(0); // Reset to first page when city filter changes
   };
 
   const clearFilters = () => {
     setSearchTerm('');
-    setCittaFilter('');
+    setAppliedSearchTerm('');
     setPage(0);
   };
 
@@ -73,6 +67,26 @@ function ProprietariLista() {
     if (!dateStr) return '-';
     const date = new Date(dateStr);
     return date.toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' });
+  };
+
+  // Function to handle sorting
+  const handleSort = (columnName) => {
+    if (sortBy === columnName) {
+      // If already sorting by this column, toggle direction
+      setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
+    } else {
+      // Otherwise set new column and default direction
+      setSortBy(columnName);
+      setSortDir('asc');
+    }
+    // Reset to first page when sorting changes
+    setPage(0);
+  };
+
+  // Function to get sort indicator
+  const getSortIndicator = (columnName) => {
+    if (sortBy !== columnName) return null;
+    return sortDir === 'asc' ? ' ↑' : ' ↓';
   };
 
   if (loading) return <p>Caricamento proprietari...</p>;
@@ -88,14 +102,12 @@ function ProprietariLista() {
           placeholder="Cerca per nome, cognome, telefono, email o codice fiscale..."
           value={searchTerm}
           onChange={handleSearchChange}
-          style={{ padding: '8px', flex: '1', minWidth: '200px' }}
-        />
-        
-        <input
-          type="text"
-          placeholder="Filtra per città..."
-          value={cittaFilter}
-          onChange={handleCittaChange}
+          onKeyPress={(e) => {
+            if (e.key === 'Enter') {
+              setAppliedSearchTerm(searchTerm);
+              setPage(0); // Reset to first page when search is submitted
+            }
+          }}
           style={{ padding: '8px', flex: '1', minWidth: '200px' }}
         />
         
@@ -110,12 +122,12 @@ function ProprietariLista() {
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
           <thead>
             <tr style={{ backgroundColor: '#f0f4f8', textAlign: 'left' }}>
-              <th style={{ padding: '12px 8px' }}>NOME E COGNOME</th>
-              <th style={{ padding: '12px 8px' }}>EMAIL</th>
-              <th style={{ padding: '12px 8px' }}>TELEFONO</th>
-              <th style={{ padding: '12px 8px' }}>CITTÀ</th>
-              <th style={{ padding: '12px 8px' }}>DATA REGISTRAZIONE</th>
-              <th style={{ padding: '12px 8px' }}>NUMERO ANIMALI</th>
+              <th style={{ padding: '12px 8px', cursor: 'pointer' }} onClick={() => handleSort('nome')}>NOME E COGNOME{getSortIndicator('nome')}</th>
+              <th style={{ padding: '12px 8px', cursor: 'pointer' }} onClick={() => handleSort('email')}>EMAIL{getSortIndicator('email')}</th>
+              <th style={{ padding: '12px 8px', cursor: 'pointer' }} onClick={() => handleSort('telefono')}>TELEFONO{getSortIndicator('telefono')}</th>
+              <th style={{ padding: '12px 8px', cursor: 'pointer' }} onClick={() => handleSort('citta')}>CITTÀ{getSortIndicator('citta')}</th>
+              <th style={{ padding: '12px 8px', cursor: 'pointer' }} onClick={() => handleSort('dataRegistrazione')}>DATA REGISTRAZIONE{getSortIndicator('dataRegistrazione')}</th>
+              <th style={{ padding: '12px 8px', cursor: 'pointer' }} onClick={() => handleSort('numeroAnimali')}>NUMERO ANIMALI{getSortIndicator('numeroAnimali')}</th>
               <th style={{ padding: '12px 8px', width: '40px' }}></th>
             </tr>
           </thead>
