@@ -1,6 +1,8 @@
 package it.codicecaciotta.iltuoveterinario.models;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
+
 import java.time.LocalDateTime;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -18,6 +20,7 @@ public class Propietario {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Size(min = 16, max = 16)
     @Column(name = "codice_fiscale", unique = true, nullable = false, length = 16)
     private String codiceFiscale;
 
@@ -42,15 +45,11 @@ public class Propietario {
     @Column(nullable = false)
     private LocalDateTime dataRegistrazione;
 
-    @PrePersist
-    public void onCreate() {
-        dataRegistrazione = LocalDateTime.now();
-    }
-
+    
     @Column(name = "stato_attività", nullable = false, 
-            columnDefinition = "VARCHAR(20) CHECK (stato IN ('Attivo', 'Inattivo'))")
+    columnDefinition = "VARCHAR(20) CHECK (stato IN ('Attivo', 'Inattivo'))")
     private String statoAttivita = "Attivo";
-
+    
     @OneToMany(mappedBy = "proprietario", cascade = CascadeType.ALL, orphanRemoval = true)
     @EqualsAndHashCode.Exclude
     @ToString.Exclude
@@ -65,5 +64,10 @@ public class Propietario {
     public void removeAnimal(Animale animale) {
         animali.remove(animale);
         animale.setProprietario(null);
+    }
+    
+    @PrePersist
+    public void onCreate() {
+        dataRegistrazione = LocalDateTime.now();
     }
 }

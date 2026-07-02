@@ -19,11 +19,7 @@ public class VisitaPrestazione {
 
     @Column(name = "data_esecuzione", nullable = false)
     private LocalDateTime dataEsecuzione;
-    @PrePersist
-    public void onCreate() {
-        dataEsecuzione = LocalDateTime.now();
-    }
-
+    
     @Column(name = "nome_farmaco", nullable = true)
     private String nomeFarmaco;
 
@@ -43,4 +39,9 @@ public class VisitaPrestazione {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "prestazione_id", nullable = false)
     private Prestazione prestazione;
+    
+    @PrePersist
+    public void onCreate() {
+        dataEsecuzione = LocalDateTime.now();
+    }
 }

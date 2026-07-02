@@ -18,24 +18,25 @@ public class Ricetta {
 
     @Column(name = "data_emissione", nullable = false)
     private LocalDateTime dataEmissione;
-    @PrePersist
-    public void onCreate() {
-        dataEmissione = LocalDateTime.now();
-    }
-
+    
     @Column(name = "farmaco_prescritto", nullable = false)
     private String farmacoPrescritto;
-
+    
     @Column(name = "posologia_modalità_uso", nullable = false)
     private String posologiaModalitaUso;
 
     @Column(name = "durata_terapua", nullable = false)
     private String durataTerapia;
-
+    
     @Column(nullable = true)
     private String note;
-
+    
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "visita_id", nullable = false)
     private Visita visita;
+    
+    @PrePersist
+    public void onCreate() {
+        dataEmissione = LocalDateTime.now();
+    }
 }

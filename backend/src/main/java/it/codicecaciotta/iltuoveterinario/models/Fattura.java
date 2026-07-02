@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
 import lombok.Data;
 
 @Entity
@@ -14,7 +15,7 @@ public class Fattura {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "numero_fattura", nullable = false)
+    @Column(name = "numero_fattura", nullable = false, unique = true)
     private String numeroFattura;
 
     @Column(name = "data_emissione", nullable = false)
@@ -23,19 +24,22 @@ public class Fattura {
     @Column(name = "denominazione_cliente", nullable = false)
     private String denominazioneCliente;
 
-    @Column(name = "codice_fiscale_cliente", unique = true, length = 16, nullable = false)
+    @Size(min = 16, max = 16)
+    @Column(name = "codice_fiscale_cliente", length = 16, nullable = false)
     private String codiceFiscaleCliente;
 
-    @Column(name = "partita_iva_cliente", nullable = true)
+    @Size(max = 11)
+    @Column(name = "partita_iva_cliente", length = 11, nullable = true)
     private String partitaIvaCliente;
 
     @Column(name = "indirizzo_cliente", nullable = false)
     private String indirizzoCliente;
 
-    @Column(name = "codice_destinatazio", nullable = false)
+    @Size(min = 7, max = 7)
+    @Column(name = "codice_destinatario", length = 7, nullable = false)
     private String codiceDestinatario;
 
-    @Column(name = "pec_cliente", nullable = true)
+    @Column(name = "pec_cliente", length = 256, nullable = true)
     private String pecCliente;
 
     @Column(name = "importo_imponibile", nullable = false)
@@ -59,6 +63,7 @@ public class Fattura {
 
     @Column(name = "data_ora_pagamento", nullable = true)
     private LocalDateTime dataOraPagamento;
+    
 
     @Column(name = "stato_fattura", nullable = false,
             columnDefinition = "VARCHAR(20) CHECK (stato IN ('Bozza', 'Emessa', 'Annullata'))"
@@ -76,4 +81,9 @@ public class Fattura {
     @JoinColumn(name = "visita_id", nullable = false)
     private Visita visita;
 
+    @PrePersist
+    public void onCreate() {
+        dataEmissione = LocalDateTime.now();
+        dataOraPagamento = LocalDateTime.now();
+    }
 }

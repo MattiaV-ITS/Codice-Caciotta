@@ -15,21 +15,17 @@ public class Prenotazione {
 
     @Column(name = "data_prenotazione", nullable = false)
     private LocalDateTime dataPrenotazione;
-    @PrePersist
-    public void onCreate() {
-        dataPrenotazione = LocalDateTime.now();
-    }
-
+    
     @Column(name = "data_ora_appuntamento", nullable = false)
     private LocalDateTime dataOraAppuntamento;
-
+    
     @Column(nullable = false)
     private String motivo;
 
     @Column(name = "stato_prenotazione", nullable = false,
-            columnDefinition = "VARCHAR(20) CHECK (stato IN ('Attesa', 'Confermata', 'Completata', 'Annullata'))"
-    )
-    private String statoPrenotazione = "Attesa";
+    columnDefinition = "VARCHAR(20) CHECK (stato IN ('Attesa', 'Confermata', 'Completata', 'Annullata'))"
+)
+private String statoPrenotazione = "Attesa";
 
     @Column(name = "priorità", nullable = false,
             columnDefinition = "VARCHAR(20) CHECK (stato IN ('Alta', 'Bassa', 'Media'))"
@@ -46,4 +42,9 @@ public class Prenotazione {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "proprietario_id", nullable = false)
     private Propietario proprietario;
+    
+    @PrePersist
+    public void onCreate() {
+        dataPrenotazione = LocalDateTime.now();
+    }
 }
