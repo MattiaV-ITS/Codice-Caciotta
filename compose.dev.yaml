@@ -46,14 +46,16 @@ services:
       dockerfile: Dockerfile.dev
     container_name: frontend
     ports:
-      - "3000:3000"  # React dev server portports:
       - "5173:5173" # Vite dev server port
     depends_on:
       - backend
     volumes:
       - ./frontend:/frontend  # Mount source code for hot reload
       - /frontend/node_modules  # Avoid overwriting node_modules
-      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    environment:
+      - NODE_ENV=development
+    stdin_open: true
+    tty: true
 
 volumes:
   db:

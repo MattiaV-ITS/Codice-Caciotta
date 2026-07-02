@@ -22,4 +22,4 @@ EXPOSE 8080 5005
 # Mount source code as volume in docker-compose (see next step)
 
 # Run Spring Boot with devtools enabled and remote debug
-CMD ["./mvnw", "spring-boot:run", "-Dspring-boot.run.fork=false", "-Dspring-boot.run.jvmArguments=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005"]
+CMD ["./mvnw", "spring-boot:run", "-Dspring-boot.run.fork=false", "-Dspring-boot.run.jvmArguments=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"]
