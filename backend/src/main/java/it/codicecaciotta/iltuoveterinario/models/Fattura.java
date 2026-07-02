@@ -15,13 +15,13 @@ public class Fattura {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "numero_fattura", length = 50, nullable = false, unique = true)
+    @Column(name = "numero_fattura", nullable = false, unique = true)
     private String numeroFattura;
 
     @Column(name = "data_emissione", nullable = false)
     private LocalDateTime dataEmissione;
 
-    @Column(name = "denominazione_cliente", length = 100, nullable = false)
+    @Column(name = "denominazione_cliente",  nullable = false)
     private String denominazioneCliente;
 
     @Size(min = 16, max = 16)
@@ -42,13 +42,13 @@ public class Fattura {
     @Column(name = "pec_cliente", length = 256, nullable = true)
     private String pecCliente;
 
-    @Column(name = "importo_imponibile", nullable = false)
+    @Column(name = "importo_imponibile", nullable = false, precision = 10, scale = 2)
     private BigDecimal importoImponibile;
 
     @Column(name = "aliquota_iva", nullable = false)
     private BigDecimal aliquotaIva;
 
-    @Column(name = "importo_totale", nullable = false)
+    @Column(name = "importo_totale", nullable = false, precision = 10, scale = 2)
     private BigDecimal importoTotale;
 
     @Column(name = "metodo_pagamento", nullable = false,

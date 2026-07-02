@@ -5,6 +5,7 @@ import lombok.Data;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.math.*;
 
 @Entity
 @Table(name = "prestazioni")
@@ -14,8 +15,8 @@ public class VisitaPrestazione {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "visita_id", nullable = false)
-    private Double prezzoApplicato;
+    @Column(name = "visita_id", nullable = false, precision = 10, scale = 2)
+    private BigDecimal prezzoApplicato;
 
     @Column(name = "data_esecuzione", nullable = false)
     private LocalDateTime dataEsecuzione;

@@ -1,5 +1,6 @@
 package it.codicecaciotta.iltuoveterinario.models;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 import jakarta.persistence.*;
@@ -34,8 +35,8 @@ public class Animale {
     ) 
     private String sesso = "ND"; // M = Maschio, F = Femmina, ND = Non Definito
 
-    @Column(nullable = false)
-    private Double peso;
+    @Column(nullable = false, precision = 6, scale = 2) // Precisione totale di 6 cifre, di cui 2 decimali
+    private BigDecimal peso;
 
     @Column(length = 15, nullable = true, unique = true) // Non tutte le specie hanno il microchip. Microchip univoco
     @Size(min = 15, max = 15, message = "Il microchip deve avere esattamente 15 caratteri") // Per validazione lunghezza
@@ -44,8 +45,10 @@ public class Animale {
     @Column(nullable = false)
     private String coloreMantello;
 
-    @Column(nullable = false)
-    private boolean sterilizzato = false;
+    @Column(nullable = false,
+            columnDefinition = "VARCHAR(20) CHECK (stato IN ('SI', 'NO', 'ND'))"
+    )
+    private String sterilizzato = "ND"; // SI = Sterilizzato, NO = Non sterilizzato, ND = Non Definito
 
     @Column(name = "gruppo_sanguigno", nullable = true) 
     private String gruppoSanguigno = "ND"; // Gruppo sanguigno default ND (Non Definito)

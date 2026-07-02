@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.math.BigDecimal;
 
 @Entity
 @Table(name = "visite")
@@ -20,8 +21,8 @@ public class Visita {
     @Column(nullable = false)
     private Integer durata;
 
-    @Column(name = "importo_totale", nullable = false)
-    private Double importoTotale;
+    @Column(name = "importo_totale", nullable = false, precision = 10, scale = 2)
+    private BigDecimal importoTotale;
 
     @Column(nullable = false, 
         columnDefinition = "VARCHAR(20) CHECK (stato IN ('Pianificata', 'In corso', 'Completata', 'Annullata'))")

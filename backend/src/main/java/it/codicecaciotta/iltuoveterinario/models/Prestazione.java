@@ -26,17 +26,18 @@ public class Prestazione {
     @Column(name ="durata_stimata", nullable = false)
     private Integer durataStimata;
 
-    @Column(name = "costo_base", nullable = false)
+    @Column(name = "costo_base", nullable = false, precision = 10, scale = 2)
     private BigDecimal costoBase;
 
     @Column(name = "aliquota_iva", nullable = false)
-    private BigDecimal aliquotaIva;
+    private Integer aliquotaIva = 22;
 
     @Column(name = "codice_prestazione", nullable = false, unique = true)
     private String codicePrestazione;
 
     @Column(nullable = false, 
-            columnDefinition = "VARCHAR(20) CHECK (stato IN ('Disponibile', 'Non Disponibile'))")
+            columnDefinition = "VARCHAR(20) CHECK (stato IN ('Disponibile', 'Non Disponibile'))"
+    )
     private String stato = "Disponibile";
 
     @Column(nullable = true)
