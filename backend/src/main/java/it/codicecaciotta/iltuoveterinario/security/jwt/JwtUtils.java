@@ -18,10 +18,10 @@ import it.codicecaciotta.iltuoveterinario.security.services.UserDetailsImpl;
 public class JwtUtils {
   private static final Logger logger = LoggerFactory.getLogger(JwtUtils.class);
 
-  @Value("${app.jwtSecret}")
+  @Value("${app.jwt-secret}")
   private String jwtSecret;
 
-  @Value("${app.jwtExpirationMs}")
+  @Value("${app.jwt-expiration-ms}")
   private int jwtExpirationMs;
 
   public String generateJwtToken(Authentication authentication) {
@@ -35,14 +35,15 @@ public class JwtUtils {
         .signWith(key(), SignatureAlgorithm.HS256)
         .compact();
   }
-  
+
   private Key key() {
-    return Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtSecret));
+    byte[] keyBytes = Decoders.BASE64URL.decode(jwtSecret);
+    return Keys.hmacShaKeyFor(keyBytes);
   }
 
   public String getUserNameFromJwtToken(String token) {
     return Jwts.parserBuilder().setSigningKey(key()).build()
-               .parseClaimsJws(token).getBody().getSubject();
+        .parseClaimsJws(token).getBody().getSubject();
   }
 
   public boolean validateJwtToken(String authToken) {

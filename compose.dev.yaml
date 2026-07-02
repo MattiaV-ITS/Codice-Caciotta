@@ -27,8 +27,8 @@ services:
       - SPRING_DATASOURCE_PASSWORD=${POSTGRESDB_ROOT_PASSWORD}
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
       - DEV_MODE=${DEV_MODE}
-      - app.jwtSecret=${APP_JWT_SECRET}
-      - app.jwtExpirationMs=86400000
+      - APP_JWT_SECRET=${APP_JWT_SECRET}
+      - APP_JWT_EXPIRATION_MS=${APP_JWT_EXPIRATION_MS}
     ports:
       - "${SPRING_LOCAL_PORT}:${SPRING_DOCKER_PORT}"
       - "5005:5005"  # debug port
