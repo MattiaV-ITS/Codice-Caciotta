@@ -5,6 +5,7 @@ import Signup from './components/Signup';
 import Header from './components/Header';
 import { useAuth } from './context/AuthContext';
 import AdminRoleManagement from "./components/AdminRoleManagement";
+import './App.css';
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated, isLoading } = useAuth();
