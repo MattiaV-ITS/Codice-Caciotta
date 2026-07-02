@@ -22,4 +22,8 @@ public class DiarioClinico {
 
     @Column(nullable = true)
     private String note;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "visita_id", nullable = false)
+    private Visita visita;
 }
