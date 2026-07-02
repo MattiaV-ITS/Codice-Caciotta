@@ -2,10 +2,8 @@ package it.codicecaciotta.iltuoveterinario.repositories;
 
 import it.codicecaciotta.iltuoveterinario.models.VisitaPrestazione;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
 import java.util.List;
 
-@Repository
 public interface VisitaPrestazioneRepository extends JpaRepository<VisitaPrestazione, Long> {
     
     // Trova tutte le prestazioni (con dettagli farmaco/lotto) eseguite in una specifica visita
