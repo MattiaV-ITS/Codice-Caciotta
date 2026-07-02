@@ -61,7 +61,7 @@ public class Animale {
     @Column(name = "stato_sopravvivenza", nullable = false,
             columnDefinition = "VARCHAR(20) CHECK (stato IN ('Sano', 'In cura', 'Deceduto'))"
     ) // indica se l animale è vivo o morto
-    private boolean statoSopravvivenza = true; // vivo di default
+    private String statoSopravvivenza; // vivo di default
 
     @Column(name = "note_generali", nullable = true) // Note opzionali
     private String noteGenerali;
@@ -72,3 +72,4 @@ public class Animale {
     @ToString.Exclude
     private Propietario proprietario;
 }
+
