@@ -62,4 +62,12 @@ public class Fattura {
     @Column(nullable = true)
     private String note;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "proprietario_id", nullable = false)
+    private Propietario proprietario;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "visita_id", nullable = false)
+    private Visita visita;
+
 }
