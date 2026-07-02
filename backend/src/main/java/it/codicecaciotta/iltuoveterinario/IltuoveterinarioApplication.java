@@ -1,10 +1,23 @@
 package it.codicecaciotta.iltuoveterinario;
 
+import java.util.EnumSet;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.beans.factory.annotation.Value;
+
+import it.codicecaciotta.iltuoveterinario.models.ERuoli;
+import it.codicecaciotta.iltuoveterinario.models.Ruolo;
+import it.codicecaciotta.iltuoveterinario.models.Utente;
+import it.codicecaciotta.iltuoveterinario.repositories.RuoloRepository;
+import it.codicecaciotta.iltuoveterinario.repositories.UtenteRepository;
 
 @SpringBootApplication
 public class IltuoveterinarioApplication {
@@ -23,6 +36,35 @@ public class IltuoveterinarioApplication {
 			} catch (Exception e) {
 				System.err.println("Connessione fallita a PostgreSQL; errore: " + e.getMessage());
 			}
+		};
+	}
+
+	//TODO: aggiungere a .env le credenziali di default per l'utente admin
+	@Bean
+	public CommandLineRunner seedSecurityData(
+			RuoloRepository roleRepository,
+			UtenteRepository userRepository,
+			PasswordEncoder passwordEncoder,
+			@Value("${app.admin.username:admin}") String adminUsername,
+			@Value("${app.admin.email:admin@example.com}") String adminEmail,
+			@Value("${app.admin.password:Admin123!}") String adminPassword) {
+		return args -> {
+			Set<Ruolo> roles = EnumSet.allOf(ERuoli.class).stream()
+					.map(roleName -> roleRepository.findByNome(roleName)
+							.orElseGet(() -> {
+								Ruolo role = new Ruolo();
+								role.setNome(roleName);
+								return roleRepository.save(role);
+							}))
+					.collect(Collectors.toCollection(HashSet::new));
+
+			Utente adminUser = userRepository.findByUsername(adminUsername).orElseGet(() -> {
+				Utente user = new Utente(adminUsername, adminEmail, passwordEncoder.encode(adminPassword));
+				return userRepository.save(user);
+			});
+
+			adminUser.setRuoli(new HashSet<>(roles));
+			userRepository.save(adminUser);
 		};
 	}
 }
