@@ -1,8 +1,9 @@
 package it.codicecaciotta.iltuoveterinario.models;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
-import org.hibernate.annotations.Check;
+
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Size;
@@ -32,18 +33,17 @@ public class Animale {
     private LocalDate dataNascita;
 
     @Column(nullable = true)
-    @Check(constraints = "sesso IN ('M', 'F')") // Sesso puo essere null per alcune specie, quindi non è obbligatorio
-    private String sesso;
+    @Enumerated(EnumType.STRING) // Sesso puo essere null per alcune specie, quindi non è obbligatorio
+    private ESesso sesso;
 
     @Column(nullable = false)
-    private Double peso;
+    private BigDecimal peso;
 
     @Column(length = 15, nullable = true, unique = true) // Non tutte le specie hanno il microchip. Microchip univoco
     @Size(min = 15, max = 15, message = "Il microchip deve avere esattamente 15 caratteri") // Per validazione lunghezza
     private String microchip;
 
-    @Column(nullable = true)
-    @Check(constraints = "taglia IN ('piccola', 'media', 'grande')") // Taglia puo essere null per alcune specie, quindi non è obbligatorio
+    @Column(nullable = true) //TODO: Enum
     private String taglia;
 
     @Column(name = "colore_mantello", nullable = true) // Colore mantello puo essere null per alcune specie, quindi non è obbligatorio
@@ -63,13 +63,14 @@ public class Animale {
 
     //TODO: Stato di salute da cambiare nell'analisi
     @Column(name = "stato", nullable = false) // indica lo stato di salute dell'animale, sano, deceduto, vaccino scaduto, in cura,...
-    private String stato = "sano"; // sano di default
+    @Enumerated(EnumType.STRING)
+    private EStatoAnimale stato = EStatoAnimale.SANO; // sano di default
 
     @Column(name = "note_generali", nullable = true) // Note opzionali
     private String noteGenerali;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "proprietario_id", nullable = false) // TODO: Considerare se rendere opzionale il proprietario, per animali senza proprietario
+    @JoinColumn(name = "proprietario_id") // Made nullable to break circular dependency
     @EqualsAndHashCode.Exclude
     @ToString.Exclude
     private Proprietario proprietario;

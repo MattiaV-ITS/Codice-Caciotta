@@ -2,6 +2,7 @@ package it.codicecaciotta.iltuoveterinario.dto;
 
 import java.time.LocalDate;
 
+import it.codicecaciotta.iltuoveterinario.models.ESesso;
 import lombok.Data;
 
 // DTO per la visualizzazione degli animali nella lista
@@ -14,7 +15,7 @@ public class AnimaleListaDTO {
     private String specie; // TODO: Considerare se mostrare la razza e la specie unite
     private String razza;
     private LocalDate dataNascita;
-    private String sesso;
+    private ESesso sesso;
     private String microchip;
     private String stato;
     private Long idProprietario; // ID del cliente a cui appartiene l'animale

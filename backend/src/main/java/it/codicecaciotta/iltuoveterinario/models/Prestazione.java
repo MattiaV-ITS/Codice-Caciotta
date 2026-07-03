@@ -24,7 +24,7 @@ public class Prestazione {
     private String categoria;
 
     @Column(name ="durata_stimata", nullable = false)
-    private Integer durataStimata;
+    private Integer durataStimata; // in minuti
 
     @Column(name = "costo_base", nullable = false, precision = 10, scale = 2)
     private BigDecimal costoBase;
@@ -35,9 +35,7 @@ public class Prestazione {
     @Column(name = "codice_prestazione", nullable = false, unique = true)
     private String codicePrestazione;
 
-    @Column(nullable = false, 
-            columnDefinition = "VARCHAR(20) CHECK (stato IN ('Disponibile', 'Non Disponibile'))"
-    )
+    @Column(nullable = false)
     private String stato = "Disponibile";
 
     @Column(nullable = true)

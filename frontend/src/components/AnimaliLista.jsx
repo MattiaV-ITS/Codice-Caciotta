@@ -13,13 +13,20 @@ function AnimaliLista() {
   const [sortBy, setSortBy] = useState('id');
   const [sortDir, setSortDir] = useState('asc');
 
-  // Dati di stato placeholder associati all'id dell'animale (sostituire con dati reali se disponibili)
-  const statusMap = {
-    // id: { label: string, color: string }
-    1: { label: 'Sano', color: '#4CAF50' },          // verde
-    2: { label: 'Vaccino in Sospeso', color: '#FF9800' }, // arancione
-    3: { label: 'In Trattamento', color: '#F44336' }, // rosso
-    4: { label: 'Controllo', color: '#2196F3' },     // blu
+  // Funzione per mappare lo stato dell'animale a etichetta e colore
+  const getStatoInfo = (stato) => {
+    switch (stato) {
+      case 'SANO':
+        return { label: 'Sano', color: '#4CAF50' };          // verde
+      case 'MALATO':
+        return { label: 'Malato', color: '#F44336' };      // rosso
+      case 'IN_CURA':
+        return { label: 'In Cura', color: '#FF9800' };      // arancione
+      case 'DECEDUTO':
+        return { label: 'Deceduto', color: '#607D8B' };     // grigio bluastro
+      default:
+        return { label: 'Sconosciuto', color: '#9E9E9E' }; // grigio
+    }
   };
 
   useEffect(() => {
@@ -236,7 +243,7 @@ function AnimaliLista() {
             {animali.map((animale, index) => {
               const isFemale = animale.sesso?.toLowerCase() === 'f';
               const nameColor = isFemale ? '#E91E63' : '#2196F3'; // pink or blue
-              const status = statusMap[animale.id] || { label: 'Stato', color: '#9E9E9E' };
+              const status = getStatoInfo(animale.stato) || { label: 'Stato', color: '#9E9E9E' };
 
               return (
                 <tr key={animale.id} style={{ borderBottom: '1px solid #ddd' }}>

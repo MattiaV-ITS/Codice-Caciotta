@@ -26,8 +26,7 @@ public class Visita {
     @Column(name = "importo_totale", nullable = false, precision = 10, scale = 2)
     private BigDecimal importoTotale;
 
-    @Column(nullable = false, 
-        columnDefinition = "VARCHAR(20) CHECK (stato IN ('Pianificata', 'In corso', 'Completata', 'Annullata'))")
+    @Column(nullable = false)
     private String stato = "Pianificata";
 
     @Column(nullable = true)

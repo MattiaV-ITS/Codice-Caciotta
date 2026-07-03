@@ -10,7 +10,7 @@ import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
 @Entity
-@Table(name = "ricette")
+@Table(name = "fatture")
 @Data
 public class Fattura {
     @Id
@@ -53,23 +53,16 @@ public class Fattura {
     @Column(name = "importo_totale", nullable = false, precision = 10, scale = 2)
     private BigDecimal importoTotale;
 
-    @Column(name = "metodo_pagamento", nullable = false,
-            columnDefinition = "VARCHAR(20) CHECK (stato IN ('Contanti', 'Bonifico', 'Carta di Credito', 'Altro'))"
-    )
+    @Column(name = "metodo_pagamento", nullable = false, length = 20)
     private String metodoPagamento;
 
-    @Column(name = "stato_pagamento", nullable = false,
-            columnDefinition = "VARCHAR(20) CHECK (stato IN ('Da pagare', 'Pagato', 'Annullato'))"
-    )
+    @Column(name = "stato_pagamento", nullable = false, length = 20)
     private String statoPagamento = "Da pagare";
 
     @Column(name = "data_ora_pagamento", nullable = true)
     private LocalDateTime dataOraPagamento;
     
-
-    @Column(name = "stato_fattura", nullable = false,
-            columnDefinition = "VARCHAR(20) CHECK (stato IN ('Bozza', 'Emessa', 'Annullata'))"
-    )
+    @Column(name = "stato_fattura", nullable = false, length = 20)
     private String statoFattura = "Bozza";
 
     @Column(nullable = true)

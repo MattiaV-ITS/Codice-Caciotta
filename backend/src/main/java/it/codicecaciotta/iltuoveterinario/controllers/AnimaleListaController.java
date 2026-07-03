@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.RestController;
 public class AnimaleListaController {
 
     private final AnimaleListaServiceImpl animaleService;
+    private static final int MAX_PAGE_SIZE = 100;
+    private static final String[] ALLOWED_SORT_FIELDS = {"id", "nome", "specie", "dataNascita", "peso", "stato"};
 
     public AnimaleListaController(AnimaleListaServiceImpl animaleService) {
         this.animaleService = animaleService;
@@ -29,16 +31,37 @@ public class AnimaleListaController {
         @RequestParam(required = false) String search,
         @RequestParam(required = false) String specie) {
         
-        sortDir = sortDir.equalsIgnoreCase("asc") ? "asc" : "desc"; // Imposta asc come predefinito se non valido
+        // Validate and sanitize pagination parameters
+        if (page < 0) {
+            page = 0;
+        }
+        if (size <= 0 || size > MAX_PAGE_SIZE) {
+            size = 10;
+        }
+        
+        // Validate sortBy to prevent injection
+        boolean validField = false;
+        for (String field : ALLOWED_SORT_FIELDS) {
+            if (field.equals(sortBy)) {
+                validField = true;
+                break;
+            }
+        }
+        if (!validField) {
+            sortBy = "id";
+        }
+        
+        // Normalize sort direction
+        sortDir = sortDir.toLowerCase().startsWith("desc") ? "desc" : "asc";
         Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
         Pageable pageable = PageRequest.of(page, size, sort);
         
-        if (search != null && !search.isEmpty()) {
-            return animaleService.searchAnimaliComprehensive(search, pageable);
+        if (search != null && !search.trim().isEmpty()) {
+            return animaleService.searchAnimaliComprehensive(search.trim(), pageable);
         }
         
-        if (specie != null && !specie.isEmpty()) {
-            return animaleService.getAnimaliBySpecie(specie, pageable);
+        if (specie != null && !specie.trim().isEmpty()) {
+            return animaleService.getAnimaliBySpecie(specie.trim(), pageable);
         }
         
         return animaleService.getAllAnimali(pageable);

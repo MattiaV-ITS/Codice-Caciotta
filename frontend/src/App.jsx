@@ -7,6 +7,7 @@ import Header from './components/Header';
 import Dashboard from './components/Dashboard';
 import { useAuth } from './context/AuthContext';
 import AdminRoleManagement from "./components/AdminRoleManagement";
+import ErrorBoundary from './components/ErrorBoundary';
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated, isLoading } = useAuth();
@@ -39,52 +40,54 @@ function StaffRoute({ children }) {
 
 function App() {
   return (
-    <div className="app-container">
-      <Header />
+    <ErrorBoundary>
+      <div className="app-container">
+        <Header />
 
-      <main className="main-content">
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
+        <main className="main-content">
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
 
-          <Route
-            path="/"
-            element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            }
-          />
+            <Route
+              path="/"
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              }
+            />
 
-          <Route
-            path="/animali"
-            element={
-              <StaffRoute>
-                <AnimaliLista />
-              </StaffRoute>
-            }
-          />
+            <Route
+              path="/animali"
+              element={
+                <StaffRoute>
+                  <AnimaliLista />
+                </StaffRoute>
+              }
+            />
 
-          <Route
-            path="/proprietari"
-            element={
-              <StaffRoute>
-                <ProprietariLista />
-              </StaffRoute>
-            }
-          />
+            <Route
+              path="/proprietari"
+              element={
+                <StaffRoute>
+                  <ProprietariLista />
+                </StaffRoute>
+              }
+            />
 
-          <Route
-            path="/admin"
-            element={
-              <AdminRoute>
-                <AdminRoleManagement />
-              </AdminRoute>
-            }
-          />
-        </Routes>
-      </main>
-    </div>
+            <Route
+              path="/admin"
+              element={
+                <AdminRoute>
+                  <AdminRoleManagement />
+                </AdminRoute>
+              }
+            />
+          </Routes>
+        </main>
+      </div>
+    </ErrorBoundary>
   );
 }
 

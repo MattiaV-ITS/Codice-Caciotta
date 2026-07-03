@@ -47,8 +47,7 @@ public class AnimaleListaServiceImpl implements AnimaleListaService {
 
     @Override
     public Page<AnimaleListaDTO> searchAnimaliComprehensive(String searchTerm, Pageable pageable) {
-        return animaleRepository.findByNomeContainingIgnoreCaseOrMicrochipContainingIgnoreCaseOrProprietario_NomeContainingIgnoreCaseOrProprietario_CognomeContainingIgnoreCase(
-                searchTerm, searchTerm, searchTerm, searchTerm, pageable)
+        return animaleRepository.searchComprehensive(searchTerm, pageable)
                 .map(AnimaleListaMapper::toListaDTO);
     }
 

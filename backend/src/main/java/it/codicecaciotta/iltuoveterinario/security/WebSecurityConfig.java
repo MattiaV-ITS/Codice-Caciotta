@@ -91,15 +91,19 @@ public class WebSecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         logger.info("Dev mode: {}", devMode);
+        logger.warn("Dev mode should NOT be used in production. Disable it by setting DEV_MODE=false");
 
         // Configure CORS
         http.cors(cors -> {
         });
 
         if (devMode) {
+            // TODO: Dev mode bypassa le richieste di autenticazione. Solo per sviluppo locale. Rimuovere in produzione.
+            logger.error("DEV MODE ENABLED - All authentication is bypassed! Only use for local development!");
             http.csrf(csrf -> csrf.disable())
                     .authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
         } else {
+            // Production security configuration
             http.csrf(csrf -> csrf.disable())
                     .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
                     .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
