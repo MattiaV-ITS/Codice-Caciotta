@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import Header from '../Header';  // ← Importa il tuo Header esistente
 
 export function Layout() {
   const { user, logout } = useAuth();
@@ -17,37 +18,14 @@ export function Layout() {
     setIsMenuOpen(false);
   };
 
+  // Funzione per passare al componente Header
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
+  };
+
   return (
     <div className="app-container">
-      <header className="app-header">
-        <div className="header-left">
-          {/* Pulsante hamburger (visibile solo su mobile) */}
-          <button 
-            className="menu-toggle"
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            aria-label="Toggle menu"
-          >
-            ☰
-          </button>
-          
-          <div className="logo" onClick={() => navigate('/')}>
-            <div className="logo-icon">🐾</div>
-            <span>VetCare</span>
-          </div>
-        </div>
-        
-        <div className="header-right">
-          <div className="user-menu" onClick={() => navigate('/profile')}>
-            <div className="user-avatar">
-              {user?.username?.[0]?.toUpperCase() || 'U'}
-            </div>
-            <span>{user?.username || 'Utente'}</span>
-          </div>
-          <button className="btn btn-outline btn-sm" onClick={handleLogout}>
-            Esci
-          </button>
-        </div>
-      </header>
+      <Header onMenuToggle={toggleMenu} />  {/* ← Usa il tuo Header */}
 
       <div className="main-layout">
         {/* Overlay scuro per chiudere il menu cliccando fuori */}
@@ -75,7 +53,7 @@ export function Layout() {
               onClick={closeMenu}
             >
               <span className="nav-icon">🐕</span>
-              Animali
+              Pazienti
             </NavLink>
             <NavLink 
               to="/proprietari" 

@@ -54,6 +54,7 @@ function ProprietariLista() {
   const [size, setSize] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
   const [appliedSearchTerm, setAppliedSearchTerm] = useState('');
+  const [statoFiltro, setStatoFiltro] = useState('');
   const [sortBy, setSortBy] = useState('cognome');
   const [sortDir, setSortDir] = useState('asc');
   const [totalPages, setTotalPages] = useState(0);
@@ -79,39 +80,53 @@ function ProprietariLista() {
     setLoading(true);
     setTimeout(() => {
       let filtered = [...MOCK_PROPRIETARI.content];
-      
+
+      if (statoFiltro) {
+        filtered = filtered.filter(p => p.statoAttivita === statoFiltro);
+      }
+
       if (appliedSearchTerm) {
         const term = appliedSearchTerm.toLowerCase();
-        filtered = filtered.filter(p =>
-          p.nome.toLowerCase().includes(term) ||
-          p.cognome.toLowerCase().includes(term) ||
-          p.email.toLowerCase().includes(term) ||
-          p.telefono.includes(term) ||
-          p.citta.toLowerCase().includes(term)
-        );
+        filtered = filtered.filter(p => {
+          // Ricerca "prefix" (inizia con) su tutti i campi
+          const matchNome = p.nome?.toLowerCase().startsWith(term);
+          const matchCognome = p.cognome?.toLowerCase().startsWith(term);
+          const matchTelefono = p.telefono?.startsWith(appliedSearchTerm);
+          const matchEmail = p.email?.toLowerCase().startsWith(term);
+          const matchCitta = p.citta?.toLowerCase().startsWith(term);
+          
+          // Ricerca sulla data: sia sulla stringa ISO (prefix) che sulla data formattata (includes)
+          const dataFormattata = formatDate(p.dataRegistrazione);
+          const matchData = p.dataRegistrazione && (
+            p.dataRegistrazione.startsWith(appliedSearchTerm) || 
+            dataFormattata.toLowerCase().includes(term)
+          );
+          
+          return matchNome || matchCognome || matchTelefono || matchEmail || matchCitta || matchData;
+        });
       }
-      
+
       filtered.sort((a, b) => {
         let valA = (a[sortBy] || '').toString().toLowerCase();
         let valB = (b[sortBy] || '').toString().toLowerCase();
-        
+
         if (sortBy === 'dataRegistrazione') {
           valA = new Date(a[sortBy] || 0).getTime();
           valB = new Date(b[sortBy] || 0).getTime();
         }
-        
+
         if (valA < valB) return sortDir === 'asc' ? -1 : 1;
         if (valA > valB) return sortDir === 'asc' ? 1 : -1;
         return 0;
       });
-      
+
       const start = page * size;
       const paginated = filtered.slice(start, start + size);
       setProprietari(paginated);
       setTotalPages(Math.ceil(filtered.length / size));
       setLoading(false);
     }, 500);
-  }, [page, size, appliedSearchTerm, sortBy, sortDir]);
+  }, [page, size, appliedSearchTerm, statoFiltro, sortBy, sortDir]);
 
   const handleSizeChange = (newSize) => {
     setSize(newSize);
@@ -139,6 +154,7 @@ function ProprietariLista() {
   const clearFilters = () => {
     setSearchTerm('');
     setAppliedSearchTerm('');
+    setStatoFiltro('');
     setPage(0);
   };
 
@@ -190,49 +206,52 @@ function ProprietariLista() {
 
       <div className="toolbar-wrapper">
         <div className="toolbar-filters">
-          <span className="filter-label">Ordina per:</span>
+          <span className="filter-label">Stato:</span>
           <button
-            className={`btn-filter ${sortBy === 'nome' ? 'active' : ''}`}
-            onClick={() => handleSort('nome')}
+            className={`btn-filter ${statoFiltro === '' ? 'active' : ''}`}
+            onClick={() => { setStatoFiltro(''); setSearchTerm(''); setAppliedSearchTerm(''); setPage(0); }}
           >
-            Nome {getSortIndicator('nome')}
+            Tutti
           </button>
           <button
-            className={`btn-filter ${sortBy === 'cognome' ? 'active' : ''}`}
-            onClick={() => handleSort('cognome')}
+            className={`btn-filter btn-filter-success ${statoFiltro === 'Attivo' ? 'active' : ''}`}
+            onClick={() => { setStatoFiltro('Attivo'); setSearchTerm(''); setAppliedSearchTerm(''); setPage(0); }}
           >
-            Cognome {getSortIndicator('cognome')}
+            Attivi
           </button>
           <button
-            className={`btn-filter ${sortBy === 'citta' ? 'active' : ''}`}
-            onClick={() => handleSort('citta')}
+            className={`btn-filter btn-filter-gray ${statoFiltro === 'Inattivo' ? 'active' : ''}`}
+            onClick={() => { setStatoFiltro('Inattivo'); setSearchTerm(''); setAppliedSearchTerm(''); setPage(0); }}
           >
-            Città {getSortIndicator('citta')}
-          </button>
-          <button
-            className={`btn-filter ${sortBy === 'dataRegistrazione' ? 'active' : ''}`}
-            onClick={() => handleSort('dataRegistrazione')}
-          >
-            Data {getSortIndicator('dataRegistrazione')}
+            Inattivi
           </button>
         </div>
+
         <div className="toolbar-actions">
           <div className="search-box-wrapper">
             <div className="search-icon-wrapper">
               <input
                 type="text"
                 className="search-input"
-                placeholder="Cerca per nome, cognome, email, telefono o città..."
+                placeholder="Cerca per nome, razza, proprietario, data nascita o microchip..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 onKeyPress={(e) => { if (e.key === 'Enter') { setAppliedSearchTerm(searchTerm); setPage(0); } }}
               />
+              <svg 
+                className="search-icon" 
+                xmlns="http://www.w3.org/2000/svg" 
+                viewBox="0 0 24 24" 
+                width="16" 
+                height="16"
+              >
+                <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+              </svg>
             </div>
           </div>
           <button className="btn-clear-filters" onClick={clearFilters}>
             Cancella Filtri
           </button>
-
           <div className="page-size-selector">
             <span className="page-size-label">Righe:</span>
             <select
@@ -255,7 +274,7 @@ function ProprietariLista() {
           <div className="empty-icon">👤</div>
           <div className="empty-title">Nessun proprietario trovato</div>
           <p className="empty-description">
-            {appliedSearchTerm ? 'Prova a modificare i filtri di ricerca.' : 'Inizia aggiungendo il tuo primo proprietario.'}
+            {appliedSearchTerm || statoFiltro ? 'Prova a modificare i filtri di ricerca.' : 'Inizia aggiungendo il tuo primo proprietario.'}
           </p>
         </div>
       ) : (
@@ -264,13 +283,31 @@ function ProprietariLista() {
             <table className="table-custom">
               <thead>
                 <tr>
-                  <th>NOME</th>
-                  <th>COGNOME</th>
-                  <th>TELEFONO</th>
-                  <th>EMAIL</th>
-                  <th>CITTÀ</th>
-                  <th>DATA REGISTRAZIONE</th>
-                  <th>STATO</th>
+                  <th
+                    onClick={() => handleSort('nome')}
+                    style={{ cursor: 'pointer', paddingRight: '4px' }}
+                  >
+                    NOME <span className="sort-indicator">{getSortIndicator('nome')}</span>
+                  </th>
+                  <th
+                    onClick={() => handleSort('cognome')}
+                    style={{ cursor: 'pointer', paddingLeft: '4px' }}
+                  >
+                    COGNOME <span className="sort-indicator">{getSortIndicator('cognome')}</span>
+                  </th>
+                  <th onClick={() => handleSort('telefono')}>
+                    TELEFONO <span className="sort-indicator">{getSortIndicator('telefono')}</span>
+                  </th>
+                  <th onClick={() => handleSort('email')}>
+                    EMAIL <span className="sort-indicator">{getSortIndicator('email')}</span>
+                  </th>
+                  <th onClick={() => handleSort('citta')}>
+                    CITTÀ <span className="sort-indicator">{getSortIndicator('citta')}</span>
+                  </th>
+                  <th onClick={() => handleSort('dataRegistrazione')}>
+                    DATA REGISTRAZIONE <span className="sort-indicator">{getSortIndicator('dataRegistrazione')}</span>
+                  </th>
+                  <th style={{ textAlign: 'center' }}>STATO</th>
                   <th style={{ width: '40px' }}></th>
                 </tr>
               </thead>
@@ -281,22 +318,26 @@ function ProprietariLista() {
 
                   return (
                     <tr key={p.id}>
-                      <td>
-                        <div className="cell-content">
+                      <td style={{ paddingRight: '4px' }}>
+                        <div className="cell-content" style={{ gap: '6px' }}>
                           <div className={`avatar-circle ${isAttivo ? 'avatar-success' : 'avatar-gray'}`}>
                             {getInitials(p.nome, p.cognome)}
                           </div>
-                          <span className="name-colored name-default">
+                          <span style={{ color: 'var(--gray-900)', fontWeight: '600' }}>
                             {p.nome}
                           </span>
                         </div>
                       </td>
-                      <td>{p.cognome}</td>
+                      <td style={{ paddingLeft: '4px' }}>
+                        <span style={{ color: 'var(--gray-900)', fontWeight: '400' }}>
+                          {p.cognome}
+                        </span>
+                      </td>
                       <td>{p.telefono}</td>
                       <td>{p.email}</td>
                       <td>{p.citta}</td>
                       <td>{formatDate(p.dataRegistrazione)}</td>
-                      <td>
+                      <td style={{ textAlign: 'center' }}>
                         <span className={`badge-status ${stato.className}`}>
                           {stato.label}
                         </span>

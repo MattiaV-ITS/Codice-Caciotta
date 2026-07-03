@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
 import './Header.css';
 
-function Header() {
+function Header({ onMenuToggle }) {  // ← Riceve la funzione per aprire/chiudere il menu
   const { user, logout, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const isAdmin = user?.roles?.includes('ROLE_ADMIN');
@@ -22,13 +22,23 @@ function Header() {
   };
 
   return (
-    <header className="app-header">  {/* <- classe cambiata */}
+    <header className="app-header">
       <div className="header-container">
+        <div className="header-left">
+          {/* Pulsante hamburger (visibile solo su mobile) */}
+          <button 
+            className="menu-toggle"
+            onClick={onMenuToggle}
+            aria-label="Toggle menu"
+          >
+            ☰
+          </button>
 
-        <Link to="/" className="logo">  {/* <- classe cambiata (era .brand) */}
-          <div className="logo-icon">🐾</div>  {/* <- nuovo elemento per l'icona */}
-          <span>Il Tuo Veterinario</span>
-        </Link>
+          <Link to="/" className="logo">
+            <div className="logo-icon">🐾</div>
+            <span>Il Tuo Veterinario</span>
+          </Link>
+        </div>
 
         <nav className="nav-links">
           <span className="badge badge-info" style={{ marginRight: '12px' }}>

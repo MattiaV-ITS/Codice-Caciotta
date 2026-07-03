@@ -62,7 +62,7 @@ export function Dashboard() {
                   <th>Animale</th>
                   <th>Proprietario</th>
                   <th>Orario</th>
-                  <th>Stato</th>
+                  <th style={{ textAlign: 'center' }}>STATO</th>
                 </tr>
               </thead>
               <tbody>
@@ -71,7 +71,9 @@ export function Dashboard() {
                     <td><strong>{visita.animale}</strong></td>
                     <td>{visita.proprietario}</td>
                     <td>{visita.ora}</td>
-                    <td><StatusBadge status={visita.stato} /></td>
+                    <td style={{ textAlign: 'center' }}>
+                      <StatusBadge status={visita.stato} />
+                    </td>
                   </tr>
                 ))}
               </tbody>
