@@ -25,6 +25,9 @@ public class DiarioClinico {
     @Column(nullable = true)
     private String note;
 
+    @Column(nullable = true)
+    private String notePrivate; // Note private visibili solo al veterinario
+
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "visita_id", nullable = false)
     @EqualsAndHashCode.Exclude

@@ -8,6 +8,7 @@ import lombok.ToString;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+// TODO: rivedere l'intera classe, non è chiaro se sia necessaria
 @Entity
 @Table(name = "visita_prestazione")
 @Data

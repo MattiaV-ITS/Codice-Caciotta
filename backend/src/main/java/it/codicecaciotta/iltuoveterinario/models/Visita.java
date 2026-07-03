@@ -20,17 +20,11 @@ public class Visita {
     @Column(name = "data_ora_visita", nullable = false)
     private LocalDateTime dataOraVisita;
 
-    @Column(nullable = false)
+    @Column(nullable = true) // in minuti, puo essere null se non effettuata
     private Integer durata;
 
     @Column(name = "importo_totale", nullable = false, precision = 10, scale = 2)
     private BigDecimal importoTotale;
-
-    @Column(nullable = false)
-    private String stato = "Pianificata";
-
-    @Column(nullable = true)
-    private String note;
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "prenotazione_id", nullable = true)
