@@ -1,5 +1,5 @@
 /* =========================
-   LAYOUT
+   LAYOUT BASE
 ========================= */
 
 .app-container {
@@ -40,6 +40,8 @@
   font-weight: 700;
   font-size: 20px;
   color: var(--primary);
+  cursor: pointer;
+  text-decoration: none;
 }
 
 .logo-icon {
@@ -72,6 +74,7 @@
 .user-menu:hover {
   background: var(--gray-200);
 }
+
 .user-avatar {
   width: 32px;
   height: 32px;
@@ -108,6 +111,7 @@
   position: sticky;
   top: 64px;
   overflow-y: auto;
+  transition: transform 0.3s ease;
 }
 
 .sidebar-nav {
@@ -127,6 +131,7 @@
   transition: all 0.15s;
   border-left: 3px solid transparent;
   text-decoration: none;
+  cursor: pointer;
 }
 
 .sidebar-nav .nav-item:hover {
@@ -235,7 +240,7 @@
 .kpi-card .kpi-label {
   font-size: 14px;
   font-weight: 500;
-  color: var(--gray-800);
+  color: var(--gray-500);
   margin-bottom: var(--space-2);
 }
 .kpi-card .kpi-value {
@@ -260,7 +265,7 @@
 .kpi-card.border-danger { border-left: 4px solid var(--danger); }
 
 /* =========================
-   TABELLE PROFESSIONALI
+   TABELLE
 ========================= */
 
 .table-container {
@@ -288,7 +293,7 @@
 .table tbody td {
   padding: 12px 16px;
   border-bottom: 1px solid var(--gray-100);
-  color: var(--black);
+  color: var(--gray-700);
 }
 .table tbody tr:hover {
   background: var(--gray-50);
@@ -312,23 +317,18 @@
   letter-spacing: 0.2px;
 }
 
-/* Stato animale */
 .badge-sano { background: #D1FAE5; color: #065F46; }
 .badge-in-cura { background: #FEF3C7; color: #92400E; }
 .badge-deceduto { background: #FEE2E2; color: #991B1B; }
 
-/* Prenotazioni */
 .badge-attesa { background: #FEF3C7; color: #92400E; }
 .badge-confermata { background: #DBEAFE; color: #1E40AF; }
 .badge-completata { background: #D1FAE5; color: #065F46; }
 .badge-annullata { background: #F1F5F9; color: #64748B; }
 
-/* Visite */
 .badge-pianificata { background: #DBEAFE; color: #1E40AF; }
 .badge-in-corso { background: #FEF3C7; color: #92400E; }
-.badge-completata { background: #D1FAE5; color: #065F46; }
 
-/* Pagamenti */
 .badge-da-pagare { background: #FEE2E2; color: #991B1B; }
 .badge-pagato { background: #D1FAE5; color: #065F46; }
 .badge-annullato { background: #F1F5F9; color: #64748B; }
@@ -364,7 +364,7 @@
 
 .btn-secondary {
   background: var(--gray-200);
-  color: var(--black);
+  color: var(--gray-700);
 }
 .btn-secondary:hover {
   background: var(--gray-300);
@@ -389,7 +389,7 @@
 .btn-outline {
   background: transparent;
   border: 1px solid var(--gray-300);
-  color: var(--black);
+  color: var(--gray-700);
 }
 .btn-outline:hover {
   background: var(--gray-50);
@@ -421,7 +421,7 @@
 .btn-icon:hover {
   background: var(--gray-50);
   border-color: var(--gray-300);
-  color: var(--black);
+  color: var(--gray-700);
 }
 .btn-icon.danger:hover {
   background: #FEE2E2;
@@ -440,7 +440,7 @@
   display: block;
   font-size: 14px;
   font-weight: 500;
-  color: var(--black);
+  color: var(--gray-700);
   margin-bottom: 4px;
 }
 .form-label .required {
@@ -478,15 +478,19 @@
   cursor: not-allowed;
 }
 
-.form-hint {
-  font-size: 13px;
-  color: var(--gray-500);
-  margin-top: 4px;
-}
 .form-error {
   font-size: 13px;
   color: var(--danger);
   margin-top: 4px;
+}
+.form-success {
+  padding: 12px 16px;
+  background: #D1FAE5;
+  color: #065F46;
+  border-radius: var(--radius);
+  border: 1px solid #A7F3D0;
+  margin-bottom: var(--space-4);
+  font-size: 14px;
 }
 
 .form-grid {
@@ -612,8 +616,45 @@
   margin-bottom: var(--space-4);
 }
 .empty-state h3 {
-  color: var(--black);
+  color: var(--gray-700);
   margin-bottom: var(--space-2);
+}
+
+/* =========================
+   MENU TOGGLE (Hamburger)
+========================= */
+
+.menu-toggle {
+  display: none;
+  background: none;
+  border: none;
+  font-size: 28px;
+  line-height: 1;
+  color: var(--gray-700);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: var(--radius);
+  transition: background 0.2s;
+}
+.menu-toggle:hover {
+  background: var(--gray-100);
+}
+
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  top: 64px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 999;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.sidebar-overlay.open {
+  display: block;
+  opacity: 1;
 }
 
 /* =========================
@@ -630,12 +671,44 @@
 }
 
 @media (max-width: 768px) {
-  .sidebar {
-    display: none;
+  /* Mostra pulsante hamburger */
+  .menu-toggle {
+    display: block;
   }
+
+  /* Sidebar a scomparsa */
+  .sidebar {
+    position: fixed;
+    top: 64px;
+    left: 0;
+    bottom: 0;
+    width: 280px;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    z-index: 1000;
+    background: white;
+    border-right: 1px solid var(--gray-200);
+    box-shadow: var(--shadow-lg);
+    padding-top: 0;
+    height: calc(100vh - 64px);
+    overflow-y: auto;
+  }
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
   .main-content {
     padding: var(--space-4);
+    width: 100%;
   }
+
+  .app-header {
+    padding: 0 var(--space-4);
+  }
+  .header-right .user-menu span {
+    display: none;
+  }
+
   .kpi-grid {
     grid-template-columns: 1fr 1fr;
   }
@@ -649,15 +722,18 @@
   .search-box input {
     width: 100%;
   }
-  .app-header {
-    padding: 0 var(--space-4);
-  }
-  .header-right .user-menu span {
-    display: none;
-  }
 }
 
 @media (max-width: 480px) {
+  .sidebar {
+    width: 240px;
+  }
+  .logo span {
+    display: none;
+  }
+  .menu-toggle {
+    font-size: 24px;
+  }
   .kpi-grid {
     grid-template-columns: 1fr;
   }
