@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
+import { useApi } from '../../services/apiService';
 
 function ProprietariLista() {
+  const { get } = useApi();
   const [proprietari, setProprietari] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -26,7 +28,7 @@ function ProprietariLista() {
       params.append('search', appliedSearchTerm);
     }
     
-    fetch(`/api/proprietari?${params.toString()}`)
+    get(`/api/proprietari?${params.toString()}`)
       .then(response => {
         if (!response.ok) {
           throw new Error('Failed to fetch proprietari');
@@ -42,7 +44,7 @@ function ProprietariLista() {
         setError(err.message);
         setLoading(false);
       });
-  }, [page, size, appliedSearchTerm, sortBy, sortDir]);
+  }, [page, size, appliedSearchTerm, sortBy, sortDir, get]);
 
   const goToPreviousPage = () => {
     if (page > 0) setPage(page - 1);
