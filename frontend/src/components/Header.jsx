@@ -1,3 +1,4 @@
+// components/Header.jsx
 import { useAuth } from '../context/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
 import './Header.css';
@@ -13,15 +14,18 @@ function Header() {
   };
 
   return (
-    <header className="main-header">
+    <header className="app-header">  {/* <- classe cambiata */}
       <div className="header-container">
 
-        <Link to="/" className="brand">
-          Il Tuo Veterinario
+        <Link to="/" className="logo">  {/* <- classe cambiata (era .brand) */}
+          <div className="logo-icon">🐾</div>  {/* <- nuovo elemento per l'icona */}
+          <span>Il Tuo Veterinario</span>
         </Link>
 
         <nav className="nav-links">
-          <span className="badge">Area Clinica</span>
+          <span className="badge badge-info" style={{ marginRight: '12px' }}>
+            Area Clinica
+          </span>
 
           {isAuthenticated() ? (
             <>
@@ -33,14 +37,14 @@ function Header() {
 
               <span className="nav-user">Ciao, {user?.username}</span>
 
-              <button onClick={handleLogout} className="logout-btn">
+              <button onClick={handleLogout} className="btn btn-outline btn-sm">
                 Disconnetti
               </button>
             </>
           ) : (
             <>
-              <Link to="/login" className="nav-link">Accedi</Link>
-              <Link to="/signup" className="nav-link">Registrati</Link>
+              <Link to="/login" className="btn btn-outline btn-sm">Accedi</Link>
+              <Link to="/signup" className="btn btn-primary btn-sm">Registrati</Link>
             </>
           )}
         </nav>
