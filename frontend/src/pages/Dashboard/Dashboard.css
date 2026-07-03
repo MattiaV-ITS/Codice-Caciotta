@@ -1,0 +1,7 @@
+/* pages/Dashboard.css */
+.dashboard-header {
+  margin-bottom: var(--space-6);
+}
+.dashboard-header h1 {
+  margin-bottom: var(--space-2);
+}
