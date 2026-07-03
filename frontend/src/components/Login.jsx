@@ -31,50 +31,56 @@ function Login() {
 
   return (
     <div className="auth-container">
-      <div className="auth-card">
-        <h2>Accedi</h2>
-        <p className="auth-subtitle">Benvenuto! Inserisci le tue credenziali.</p>
-        
-        {error && <div className="auth-error">{error}</div>}
-        
-        <form onSubmit={handleSubmit} className="auth-form">
-          <div className="form-group">
-            <label htmlFor="username">Username</label>
-            <input
-              type="text"
-              id="username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              required
-              autoComplete="username"
-              placeholder="Inserisci il tuo username"
-            />
-          </div>
+      <div className="card" style={{ maxWidth: '420px', margin: '0 auto' }}>
+        <div className="card-header">
+          <h3>Accedi</h3>
+        </div>
+        <div className="card-body">
+          <p className="auth-subtitle">Benvenuto! Inserisci le tue credenziali.</p>
+          
+          {error && <div className="form-error">{error}</div>}
+          
+          <form onSubmit={handleSubmit} className="auth-form">
+            <div className="form-group">
+              <label htmlFor="username" className="form-label">Username</label>
+              <input
+                type="text"
+                id="username"
+                className="form-control"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                required
+                autoComplete="username"
+                placeholder="Inserisci il tuo username"
+              />
+            </div>
 
-          <div className="form-group">
-            <label htmlFor="password">Password</label>
-            <input
-              type="password"
-              id="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              autoComplete="current-password"
-              placeholder="Inserisci la tua password"
-            />
-          </div>
+            <div className="form-group">
+              <label htmlFor="password" className="form-label">Password</label>
+              <input
+                type="password"
+                id="password"
+                className="form-control"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                autoComplete="current-password"
+                placeholder="Inserisci la tua password"
+              />
+            </div>
 
-          <button type="submit" className="auth-button" disabled={isLoading}>
-            {isLoading ? 'Accesso in corso...' : 'Accedi'}
-          </button>
-        </form>
+            <button type="submit" className="btn btn-primary" style={{ width: '100%' }} disabled={isLoading}>
+              {isLoading ? 'Accesso in corso...' : 'Accedi'}
+            </button>
+          </form>
 
-        <p className="auth-footer">
-          Non hai un account? <Link to="/signup">Registrati</Link>
-        </p>
+          <p className="auth-footer" style={{ marginTop: 'var(--space-4)' }}>
+            Non hai un account? <Link to="/signup">Registrati</Link>
+          </p>
+        </div>
       </div>
     </div>
   );
 }
 
-export default Login;
+export default Login; // ← UN SOLO EXPORT

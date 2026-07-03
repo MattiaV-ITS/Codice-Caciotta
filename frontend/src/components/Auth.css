@@ -1,159 +1,100 @@
+/* =========================
+   AUTH - Login & Signup
+   Stili specifici per le pagine di autenticazione
+   ========================= */
+
+/* Contenitore principale (centra il card) */
 .auth-container {
   display: flex;
-  justify-content: center;
   align-items: center;
-  min-height: 80vh;
-  padding: 20px;
+  justify-content: center;
+  min-height: calc(100vh - 64px);
+  padding: var(--space-4);
+  background: var(--gray-50);
 }
 
-.auth-card {
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  padding: 40px;
-  width: 100%;
-  max-width: 400px;
-}
-
-.auth-card h2 {
-  margin: 0 0 8px 0;
-  color: #333;
-  font-size: 28px;
-  text-align: center;
-}
-
+/* Sottotitolo sotto il titolo (es. "Benvenuto! Inserisci le tue credenziali.") */
 .auth-subtitle {
-  color: #666;
+  color: var(--gray-800);
+  margin-bottom: var(--space-4);
+  font-size: 15px;
+  font-weight: 400;
+  letter-spacing: 0.2px;
   text-align: center;
-  margin-bottom: 24px;
-  font-size: 14px;
 }
 
-.auth-error {
-  background-color: #fee2e2;
-  border: 1px solid #ef4444;
-  color: #dc2626;
-  padding: 12px;
-  border-radius: 4px;
-  margin-bottom: 16px;
-  font-size: 14px;
+/* Form di autenticazione (spaziatura tra i campi) */
+.auth-form .form-group {
+  margin-bottom: var(--space-4);
 }
 
-.auth-success {
-  background-color: #dcfce7;
-  border: 1px solid #22c55e;
-  color: #16a34a;
-  padding: 12px;
-  border-radius: 4px;
-  margin-bottom: 16px;
-  font-size: 14px;
-}
-
-.auth-form {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.form-group label {
-  font-weight: 500;
-  color: #374151;
-  font-size: 14px;
-}
-
-.form-group input {
-  padding: 10px 12px;
-  border: 1px solid #d1d5db;
-  border-radius: 4px;
-  font-size: 14px;
-  transition: border-color 0.2s, box-shadow 0.2s;
-}
-
-.form-group input:focus {
-  outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-.form-group input::placeholder {
-  color: #9ca3af;
-}
-
-.password-requirements {
-  margin-top: 8px;
-  padding: 10px;
-  background-color: #f9fafb;
-  border-radius: 4px;
-  font-size: 12px;
-}
-
-.password-requirements small {
-  color: #6b7280;
-  display: block;
-  margin-bottom: 6px;
-}
-
-.password-requirements ul {
-  margin: 0;
-  padding-left: 16px;
-  color: #6b7280;
-}
-
-.password-requirements li {
-  margin-bottom: 2px;
-}
-
-.password-requirements li.valid {
-  color: #16a34a;
-}
-
-.password-mismatch {
-  color: #ef4444;
-  font-size: 12px;
-  margin-top: 4px;
-}
-
-.auth-button {
-  background-color: #3b82f6;
-  color: white;
-  padding: 12px;
-  border: none;
-  border-radius: 4px;
-  font-size: 16px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background-color 0.2s;
-  margin-top: 8px;
-}
-
-.auth-button:hover:not(:disabled) {
-  background-color: #2563eb;
-}
-
-.auth-button:disabled {
-  background-color: #9ca3af;
-  cursor: not-allowed;
-}
-
+/* Footer con link "Non hai un account? Registrati" */
 .auth-footer {
   text-align: center;
-  margin-top: 20px;
-  color: #6b7280;
   font-size: 14px;
+  color: var(--gray-800);
+  margin-top: var(--space-4);
+}
+.auth-footer a {
+  color: var(--primary);
+  font-weight: 500;
+  transition: color 0.2s;
+}
+.auth-footer a:hover {
+  color: var(--primary-dark);
+  text-decoration: underline;
 }
 
-.auth-footer a {
-  color: #3b82f6;
-  text-decoration: none;
+/* =========================
+   REQUISITI PASSWORD (Signup)
+   ========================= */
+
+.password-requirements {
+  margin-top: 6px;
+}
+.password-requirements small {
+  color: var(--gray-500);
+  font-size: 13px;
   font-weight: 500;
 }
+.password-requirements ul {
+  list-style: none;
+  padding: 0;
+  margin: 4px 0 0;
+}
+.password-requirements ul li {
+  font-size: 12px;
+  padding: 2px 0;
+  color: var(--gray-400);
+  transition: color 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.password-requirements ul li::before {
+  content: "○";
+  font-size: 10px;
+  color: var(--gray-400);
+  transition: color 0.2s ease;
+}
+.password-requirements ul li.valid {
+  color: var(--success);
+}
+.password-requirements ul li.valid::before {
+  content: "●";
+  color: var(--success);
+}
 
-.auth-footer a:hover {
-  text-decoration: underline;
+/* =========================
+   RESPONSIVE
+   ========================= */
+
+@media (max-width: 480px) {
+  .auth-container {
+    padding: var(--space-3);
+    min-height: calc(100vh - 56px);
+  }
+  .auth-subtitle {
+    font-size: 14px;
+  }
 }

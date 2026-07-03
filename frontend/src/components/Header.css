@@ -1,86 +1,49 @@
-/* HEADER PRINCIPALE */
-.main-header {
-  background-color: var(--bg);
-  border-bottom: 1px solid var(--border);
-  padding: 14px 32px;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-}
-
+/* components/Header.css */
 .header-container {
-  max-width: 1126px;
-  margin: 0 auto;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
 }
 
-/* BRAND */
-.brand {
-  font-size: 22px;
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
   font-weight: 700;
-  color: var(--accent);
+  font-size: 20px;
+  color: var(--primary);
   text-decoration: none;
 }
+.logo .logo-icon {
+  width: 36px;
+  height: 36px;
+  background: var(--primary);
+  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 18px;
+}
 
-/* NAVBAR */
 .nav-links {
   display: flex;
   align-items: center;
-  gap: 18px;
+  gap: 12px;
 }
-
-/* BADGE */
-.badge {
-  background-color: var(--accent-bg);
-  color: var(--accent);
-  padding: 6px 12px;
-  border-radius: 20px;
-  font-size: 14px;
-  font-weight: 600;
-}
-
-/* LINK */
 .nav-link {
-  color: #4b5563;
+  color: var(--gray-600);
   text-decoration: none;
   font-weight: 500;
-  padding: 8px 12px;
-  border-radius: 6px;
-  transition: 0.2s;
+  transition: color 0.2s;
 }
-
 .nav-link:hover {
-  background-color: #f3f4f6;
-  color: #1f2937;
+  color: var(--primary);
 }
-
-/* USER */
 .nav-user {
   font-weight: 500;
-  color: #374151;
-}
-
-/* LOGOUT BUTTON */
-.logout-btn {
-  background-color: #ef4444;
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: 0.2s;
-}
-
-.logout-btn:hover {
-  background-color: #dc2626;
-}
-
-/* MAIN CONTENT */
-.main-content {
-  max-width: 1126px;
-  margin: 0 auto;
-  padding: 40px 32px;
+  color: var(--gray-700);
 }
