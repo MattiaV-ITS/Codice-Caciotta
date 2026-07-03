@@ -1,8 +1,27 @@
 import React, { useEffect, useState } from 'react';
-import { useApi } from '../../services/apiService';
+
+// ---- MOCK DATI ----
+const MOCK_ANIMALI = {
+  content: [
+    { id: 1, nome: 'Fido', specie: 'cane', razza: 'Labrador', proprietario: 'Mario Rossi', dataNascita: '2020-05-15', microchip: '123456789012345', sesso: 'M', stato: 'SANO' },
+    { id: 2, nome: 'Mimì', specie: 'gatto', razza: 'Persiano', proprietario: 'Laura Bianchi', dataNascita: '2021-08-22', microchip: '987654321098765', sesso: 'F', stato: 'IN_CURA' },
+    { id: 3, nome: 'Rex', specie: 'cane', razza: 'Pastore Tedesco', proprietario: 'Giuseppe Verdi', dataNascita: '2019-11-10', microchip: null, sesso: 'M', stato: 'MALATO' },
+    { id: 4, nome: 'Luna', specie: 'gatto', razza: 'Siamese', proprietario: 'Maria Neri', dataNascita: '2022-03-05', microchip: '567890123456789', sesso: 'F', stato: 'DECEDUTO' },
+    { id: 5, nome: 'Pippo', specie: 'altro', razza: 'Coniglio Nano', proprietario: 'Antonio Ferrari', dataNascita: '2023-01-20', microchip: '345678901234567', sesso: 'M', stato: 'SANO' },
+    { id: 6, nome: 'Bella', specie: 'cane', razza: 'Barboncino', proprietario: 'Sofia Esposito', dataNascita: '2021-12-10', microchip: '234567890123456', sesso: 'F', stato: 'IN_CURA' },
+    { id: 7, nome: 'Leo', specie: 'gatto', razza: 'Europeo', proprietario: 'Francesco Romano', dataNascita: '2022-07-18', microchip: '456789012345678', sesso: 'M', stato: 'SANO' },
+    { id: 8, nome: 'Daisy', specie: 'altro', razza: 'Criceto', proprietario: 'Elena Greco', dataNascita: '2023-09-01', microchip: null, sesso: 'F', stato: 'DECEDUTO' },
+    { id: 9, nome: 'Thor', specie: 'cane', razza: 'Mastino', proprietario: 'Marco Ferri', dataNascita: '2018-06-25', microchip: '678901234567890', sesso: 'M', stato: 'MALATO' },
+    { id: 10, nome: 'Mia', specie: 'gatto', razza: 'Maine Coon', proprietario: 'Chiara De Luca', dataNascita: '2020-11-30', microchip: '789012345678901', sesso: 'F', stato: 'SANO' }
+  ],
+  totalPages: 3,
+  totalElements: 25,
+  size: 10,
+  number: 0
+};
+// ---- FINE MOCK ----
 
 function AnimaliLista() {
-  const { get } = useApi();
   const [animali, setAnimali] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -15,303 +34,228 @@ function AnimaliLista() {
   const [sortBy, setSortBy] = useState('id');
   const [sortDir, setSortDir] = useState('asc');
 
-  // Funzione per mappare lo stato dell'animale a etichetta e colore
+  // Funzione per mappare lo stato dell'animale
   const getStatoInfo = (stato) => {
-    switch (stato) {
-      case 'SANO':
-        return { label: 'Sano', color: '#4CAF50' };          // verde
-      case 'MALATO':
-        return { label: 'Malato', color: '#F44336' };      // rosso
-      case 'IN_CURA':
-        return { label: 'In Cura', color: '#FF9800' };      // arancione
-      case 'DECEDUTO':
-        return { label: 'Deceduto', color: '#607D8B' };     // grigio bluastro
-      default:
-        return { label: 'Sconosciuto', color: '#9E9E9E' }; // grigio
-    }
+    const map = {
+      'SANO': { label: 'Sano', className: 'badge-sano' },
+      'MALATO': { label: 'Malato', className: 'badge-malato' },
+      'IN_CURA': { label: 'In cura', className: 'badge-in-cura' },
+      'DECEDUTO': { label: 'Deceduto', className: 'badge-deceduto' }
+    };
+    return map[stato] || { label: 'Sconosciuto', className: 'badge-sconosciuto' };
   };
 
+  // Caricamento dati mock
   useEffect(() => {
     setLoading(true);
-    
-    // Build query parameters
-    const params = new URLSearchParams();
-    params.append('page', page);
-    params.append('size', size);
-    params.append('sortBy', sortBy);
-    params.append('sortDir', sortDir);
-    
-    if (appliedSearchTerm) {
-      params.append('search', appliedSearchTerm);
-    }
-    
-    if (specieFilter) {
-      params.append('specie', specieFilter);
-    }
-    
-    get(`/api/animali?${params.toString()}`)
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Failed to fetch animali');
-        }
-        return response.json();
-      })
-      .then(data => {
-        setAnimali(data.content);
-        setTotalPages(data.totalPages);
-        setLoading(false);
-      })
-      .catch(err => {
-        setError(err.message);
-        setLoading(false);
+    setTimeout(() => {
+      let filtered = [...MOCK_ANIMALI.content];
+      if (specieFilter) filtered = filtered.filter(a => a.specie === specieFilter);
+      if (appliedSearchTerm) {
+        const term = appliedSearchTerm.toLowerCase();
+        filtered = filtered.filter(a =>
+          a.nome.toLowerCase().includes(term) ||
+          (a.microchip && a.microchip.includes(term)) ||
+          a.proprietario.toLowerCase().includes(term)
+        );
+      }
+      filtered.sort((a, b) => {
+        const valA = (a[sortBy] || '').toString().toLowerCase();
+        const valB = (b[sortBy] || '').toString().toLowerCase();
+        if (valA < valB) return sortDir === 'asc' ? -1 : 1;
+        if (valA > valB) return sortDir === 'asc' ? 1 : -1;
+        return 0;
       });
-  }, [page, size, appliedSearchTerm, specieFilter, sortBy, sortDir, get]);
+      const start = page * size;
+      const paginated = filtered.slice(start, start + size);
+      setAnimali(paginated);
+      setTotalPages(Math.ceil(filtered.length / size));
+      setLoading(false);
+    }, 500);
+  }, [page, size, appliedSearchTerm, specieFilter, sortBy, sortDir]);
 
-  const goToPreviousPage = () => {
-    if (page > 0) setPage(page - 1);
-  };
+  const goToPreviousPage = () => { if (page > 0) setPage(page - 1); };
+  const goToNextPage = () => { if (page < totalPages - 1) setPage(page + 1); };
 
-  const goToNextPage = () => {
-    if (page < totalPages - 1) setPage(page + 1);
-  };
+  const getIconLetter = (specie) => specie ? specie.charAt(0).toUpperCase() : '?';
 
-  // Funzione ausiliaria per ottenere la lettera iniziale dell'icona dalla specie
-  const getIconLetter = (specie) => {
-    if (!specie) return '?';
-    return specie.charAt(0).toUpperCase();
-  };
-
-  // Funzione ausiliaria per formattare la data nello stile italiano
   const formatDate = (dateStr) => {
     if (!dateStr) return '-';
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' });
+    return new Date(dateStr).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' });
   };
 
-  // Funzione per gestire il cambio di ordinamento
   const handleSort = (columnName) => {
-    if (sortBy === columnName) {
-      // Se stiamo già ordinando per questa colonna, invertiamo la direzione
-      setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
-    } else {
-      // Altrimenti impostiamo la nuova colonna e la direzione predefinita
-      setSortBy(columnName);
-      setSortDir('asc');
-    }
-    // Resetta alla prima pagina quando cambia l'ordinamento
+    if (sortBy === columnName) setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
+    else { setSortBy(columnName); setSortDir('asc'); }
     setPage(0);
   };
 
-  // Funzione per ottenere l'indicatore di ordinamento
   const getSortIndicator = (columnName) => {
     if (sortBy !== columnName) return null;
-    return sortDir === 'asc' ? ' ↑' : ' ↓';
+    return sortDir === 'asc' ? '↑' : '↓';
   };
 
-  if (loading) return <p>Caricamento animali...</p>;
-  if (error) return <p>Errore: {error}</p>;
+  const clearFilters = () => {
+    setSearchTerm('');
+    setAppliedSearchTerm('');
+    setSpecieFilter('');
+    setPage(0);
+  };
+
+  if (loading) {
+    return (
+      <div className="loading-wrapper">
+        <div className="loading-spinner-custom"></div>
+        <span>Caricamento animali...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="page-container">
+        <div className="form-error">Errore: {error}</div>
+      </div>
+    );
+  }
 
   return (
-    <div style={{ padding: '1rem', fontFamily: 'Arial, sans-serif' }}>
-      <h2>Elenco Pazienti</h2>
+    <div className="page-container">
+      <div className="page-header">
+        <div>
+          <h2>Elenco Pazienti</h2>
+          <p className="page-subtitle">Gestisci i tuoi animali</p>
+        </div>
+        <button className="btn-add">+ Nuovo Animale</button>
+      </div>
 
-      <div style={{ marginBottom: '1rem' }}>
-        <div style={{ marginBottom: '1rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+      <div className="toolbar-wrapper">
+        <div className="toolbar-filters">
+          <span className="filter-label">Specie:</span>
           <button
-            onClick={() => {
-              setSpecieFilter('');
-              setSearchTerm('');
-              setAppliedSearchTerm('');
-              setPage(0);
-            }}
-            style={{
-              padding: '8px 16px',
-              backgroundColor: specieFilter === '' ? '#2196F3' : '#f0f4f8',
-              color: specieFilter === '' ? 'white' : '#333',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontWeight: specieFilter === '' ? '600' : 'normal'
-            }}
+            className={`btn-filter ${specieFilter === '' ? 'active' : ''}`}
+            onClick={() => { setSpecieFilter(''); setSearchTerm(''); setAppliedSearchTerm(''); setPage(0); }}
           >
             Tutti
           </button>
-          
           <button
-            onClick={() => {
-              setSpecieFilter('cane');
-              setSearchTerm('');
-              setAppliedSearchTerm('');
-              setPage(0);
-            }}
-            style={{
-              padding: '8px 16px',
-              backgroundColor: specieFilter === 'cane' ? '#2196F3' : '#f0f4f8',
-              color: specieFilter === 'cane' ? 'white' : '#333',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontWeight: specieFilter === 'cane' ? '600' : 'normal'
-            }}
+            className={`btn-filter ${specieFilter === 'cane' ? 'active' : ''}`}
+            onClick={() => { setSpecieFilter('cane'); setSearchTerm(''); setAppliedSearchTerm(''); setPage(0); }}
           >
             Cane
           </button>
-          
           <button
-            onClick={() => {
-              setSpecieFilter('gatto');
-              setSearchTerm('');
-              setAppliedSearchTerm('');
-              setPage(0);
-            }}
-            style={{
-              padding: '8px 16px',
-              backgroundColor: specieFilter === 'gatto' ? '#2196F3' : '#f0f4f8',
-              color: specieFilter === 'gatto' ? 'white' : '#333',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontWeight: specieFilter === 'gatto' ? '600' : 'normal'
-            }}
+            className={`btn-filter ${specieFilter === 'gatto' ? 'active' : ''}`}
+            onClick={() => { setSpecieFilter('gatto'); setSearchTerm(''); setAppliedSearchTerm(''); setPage(0); }}
           >
             Gatto
           </button>
-          
           <button
-            onClick={() => {
-              setSpecieFilter('altro');
-              setSearchTerm('');
-              setAppliedSearchTerm('');
-              setPage(0);
-            }}
-            style={{
-              padding: '8px 16px',
-              backgroundColor: specieFilter === 'altro' ? '#2196F3' : '#f0f4f8',
-              color: specieFilter === 'altro' ? 'white' : '#333',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontWeight: specieFilter === 'altro' ? '600' : 'normal'
-            }}
+            className={`btn-filter ${specieFilter === 'altro' ? 'active' : ''}`}
+            onClick={() => { setSpecieFilter('altro'); setSearchTerm(''); setAppliedSearchTerm(''); setPage(0); }}
           >
             Altro
           </button>
         </div>
-
-        <div style={{ marginBottom: '1rem', display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-          <input
-            type="text"
-            placeholder="Cerca per nome animale, microchip o nome proprietario..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            onKeyPress={(e) => {
-              if (e.key === 'Enter') {
-                setAppliedSearchTerm(searchTerm);
-                setPage(0); // Reset to first page when search is submitted
-              }
-            }}
-            style={{ padding: '8px', flex: '1', minWidth: '200px' }}
-          />
-          
-          <button 
-            onClick={() => {
-              setSearchTerm('');
-              setAppliedSearchTerm('');
-              setPage(0);
-            }}
-            style={{ padding: '8px 16px' }}
-          >
+        <div className="toolbar-actions">
+          <div className="search-box-wrapper">
+            <div className="search-icon-wrapper">
+              <input
+                type="text"
+                className="search-input"
+                placeholder="Cerca per nome, microchip o proprietario..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyPress={(e) => { if (e.key === 'Enter') { setAppliedSearchTerm(searchTerm); setPage(0); } }}
+              />
+            </div>
+          </div>
+          <button className="btn-clear-filters" onClick={clearFilters}>
             Cancella Filtri
           </button>
         </div>
       </div>
 
       {animali.length === 0 ? (
-        <p>Nessun animale trovato.</p>
+        <div className="empty-state">
+          <div className="empty-icon">🐾</div>
+          <div className="empty-title">Nessun animale trovato</div>
+          <p className="empty-description">
+            {appliedSearchTerm || specieFilter ? 'Prova a modificare i filtri di ricerca.' : 'Inizia aggiungendo il tuo primo animale.'}
+          </p>
+        </div>
       ) : (
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
-          <thead>
-            <tr style={{ backgroundColor: '#f0f4f8', textAlign: 'left' }}>
-              <th style={{ padding: '12px 8px', cursor: 'pointer' }} onClick={() => handleSort('nome')}>NOME ANIMALE{getSortIndicator('nome')}</th>
-              <th style={{ padding: '12px 8px', cursor: 'pointer' }} onClick={() => handleSort('razza')}>RAZZA{getSortIndicator('razza')}</th>
-              <th style={{ padding: '12px 8px', cursor: 'pointer' }} onClick={() => handleSort('proprietario')}>PROPRIETARIO{getSortIndicator('proprietario')}</th>
-              <th style={{ padding: '12px 8px', cursor: 'pointer' }} onClick={() => handleSort('dataNascita')}>DATA DI NASCITA{getSortIndicator('dataNascita')}</th>
-              <th style={{ padding: '12px 8px', cursor: 'pointer' }} onClick={() => handleSort('microchip')}>MICROCHIP{getSortIndicator('microchip')}</th>
-              <th style={{ padding: '12px 8px' }}>STATO</th>
-              <th style={{ padding: '12px 8px', width: '40px' }}></th>
-            </tr>
-          </thead>
-          <tbody>
-            {animali.map((animale, index) => {
-              const isFemale = animale.sesso?.toLowerCase() === 'f';
-              const nameColor = isFemale ? '#E91E63' : '#2196F3'; // pink or blue
-              const status = getStatoInfo(animale.stato) || { label: 'Stato', color: '#9E9E9E' };
-
-              return (
-                <tr key={animale.id} style={{ borderBottom: '1px solid #ddd' }}>
-                  <td style={{ padding: '10px 8px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <div
-                      style={{
-                        width: 36,
-                        height: 36,
-                        borderRadius: '50%',
-                        backgroundColor: '#cfd8dc',
-                        color: '#37474f',
-                        fontWeight: 'bold',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: '1.2rem',
-                        userSelect: 'none',
-                      }}
-                      title={animale.specie}
-                    >
-                      {getIconLetter(animale.specie)}
-                    </div>
-                    <span style={{ color: nameColor, fontWeight: '600' }}>{animale.nome}</span>
-                  </td>
-                  <td style={{ padding: '10px 8px' }}>{animale.razza || '-'}</td>
-                  <td style={{ padding: '10px 8px' }}>{animale.proprietario || '-'}</td>
-                  <td style={{ padding: '10px 8px' }}>{formatDate(animale.dataNascita)}</td>
-                  <td style={{ padding: '10px 8px' }}>{animale.microchip || '-'}</td>
-                  <td style={{ padding: '10px 8px' }}>
-                    <span
-                      style={{
-                        backgroundColor: status.color,
-                        color: '#fff',
-                        padding: '4px 10px',
-                        borderRadius: '12px',
-                        fontSize: '0.8rem',
-                        fontWeight: '600',
-                        display: 'inline-block',
-                        minWidth: '90px',
-                        textAlign: 'center',
-                      }}
-                    >
-                      {status.label}
-                    </span>
-                  </td>
-                  <td style={{ padding: '10px 8px', textAlign: 'center', cursor: 'pointer' }}>
-                    &#x22EE; {/* ellissi verticale */}
-                  </td>
+        <>
+          <div className="table-responsive">
+            <table className="table-custom">
+              <thead>
+                <tr>
+                  <th onClick={() => handleSort('nome')}>
+                    NOME ANIMALE <span className="sort-indicator">{getSortIndicator('nome')}</span>
+                  </th>
+                  <th onClick={() => handleSort('razza')}>
+                    RAZZA <span className="sort-indicator">{getSortIndicator('razza')}</span>
+                  </th>
+                  <th onClick={() => handleSort('proprietario')}>
+                    PROPRIETARIO <span className="sort-indicator">{getSortIndicator('proprietario')}</span>
+                  </th>
+                  <th onClick={() => handleSort('dataNascita')}>
+                    DATA DI NASCITA <span className="sort-indicator">{getSortIndicator('dataNascita')}</span>
+                  </th>
+                  <th onClick={() => handleSort('microchip')}>
+                    MICROCHIP <span className="sort-indicator">{getSortIndicator('microchip')}</span>
+                  </th>
+                  <th>STATO</th>
+                  <th style={{ width: '40px' }}></th>
                 </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      )}
+              </thead>
+              <tbody>
+                {animali.map((animale) => {
+                  const isFemale = animale.sesso?.toLowerCase() === 'f';
+                  const isMale = animale.sesso?.toLowerCase() === 'm';
+                  
+                  let avatarClass = 'avatar-default';
+                  if (isFemale) avatarClass = 'avatar-female';
+                  else if (isMale) avatarClass = 'avatar-male';
 
-      <div style={{ marginTop: '1rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-        <button onClick={goToPreviousPage} disabled={page === 0}>
-          Precedente
-        </button>
-        <span>
-          Pagina <strong>{page + 1}</strong> di <strong>{totalPages}</strong>
-        </span>
-        <button onClick={goToNextPage} disabled={page >= totalPages - 1}>
-          Successiva
-        </button>
-      </div>
+                  return (
+                    <tr key={animale.id}>
+                      <td>
+                        <div className="cell-content">
+                          <div className={`avatar-circle ${avatarClass}`}>
+                            {getIconLetter(animale.specie)}
+                          </div>
+                          <span className={`name-colored ${isFemale ? 'name-female' : 'name-male'}`}>
+                            {animale.nome}
+                          </span>
+                        </div>
+                      </td>
+                      {/* ... resto delle colonne ... */}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="pagination-wrapper">
+            <span className="pagination-info">
+              Mostrati <strong>{animali.length}</strong> di <strong>{totalPages * size}</strong> animali
+            </span>
+            <div className="pagination-controls">
+              <button className="pagination-btn" onClick={goToPreviousPage} disabled={page === 0}>
+                Precedente
+              </button>
+              <span className="pagination-page-info">
+                <strong>{page + 1}</strong> di <strong>{totalPages}</strong>
+              </span>
+              <button className="pagination-btn" onClick={goToNextPage} disabled={page >= totalPages - 1}>
+                Successivo
+              </button>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }
