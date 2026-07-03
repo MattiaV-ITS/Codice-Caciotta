@@ -235,7 +235,7 @@
 .kpi-card .kpi-label {
   font-size: 14px;
   font-weight: 500;
-  color: var(--gray-500);
+  color: var(--gray-800);
   margin-bottom: var(--space-2);
 }
 .kpi-card .kpi-value {
