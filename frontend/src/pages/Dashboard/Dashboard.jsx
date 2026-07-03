@@ -1,6 +1,6 @@
 // pages/Dashboard.jsx
 import { useEffect, useState } from 'react';
-import { StatusBadge } from '../components/StatusBadge';
+import { StatusBadge } from "../../components/common/StatusBadge";
 import './Dashboard.css';
 
 export function Dashboard() {

@@ -1,5 +1,5 @@
-// components/StatusBadge.jsx
-import './StatusBadge.css';
+// components/common/StatusBadge.jsx
+// NOTA: Gli stili sono in App.css (classi .badge, .badge-sano, .badge-in-cura, ecc.)
 
 const STATUS_CONFIG = {
   // Stato animale
@@ -25,11 +25,9 @@ const STATUS_CONFIG = {
 
 export function StatusBadge({ status, className = '' }) {
   const config = STATUS_CONFIG[status];
-  
   if (!config) {
     return <span className={`badge ${className}`}>{status || '—'}</span>;
   }
-
   return (
     <span className={`badge ${config.className} ${className}`}>
       {config.label}

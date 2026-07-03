@@ -1,9 +1,9 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { Layout } from './components/Layout/Layout';  // <- importa il Layout
+import { Layout } from './components/Layout/Layout';
 import Login from './components/Login';
 import Signup from './components/Signup';
-import { Dashboard } from './pages/Dashboard/Dashboard';  // <- nuova Dashboard
-import AnimaliLista from './components/AnimaliLista';
+import { Dashboard } from './pages/Dashboard/Dashboard';
+import AnimaliLista from './pages/Animali/AnimaliLista';  // <- FIX: percorso corretto
 import AdminRoleManagement from "./components/AdminRoleManagement";
 import { useAuth } from './context/AuthContext';
 import './App.css';
@@ -24,16 +24,13 @@ function AdminRoute({ children }) {
 function App() {
   return (
     <Routes>
-      {/* Route pubbliche (senza layout) */}
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
 
-      {/* Route protette con Layout (Header + Sidebar + Content) */}
       <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
-        <Route path="/" element={<Dashboard />} />  {/* <- Dashboard ora è la home */}
-        <Route path="/animali" element={<AnimaliLista />} />  {/* <- Animali spostato su /animali */}
+        <Route path="/" element={<Dashboard />} />
+        <Route path="/animali" element={<AnimaliLista />} />
         <Route path="/admin" element={<AdminRoute><AdminRoleManagement /></AdminRoute>} />
-        {/* Aggiungi qui altre route come /visite, /prenotazioni, /fatture, /ricette */}
       </Route>
     </Routes>
   );

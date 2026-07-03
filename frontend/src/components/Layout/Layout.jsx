@@ -1,42 +1,76 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
-import { Layout } from './components/Layout/Layout';  // <- Layout con Header integrato
-import Login from './components/Login';
-import Signup from './components/Signup';
-import { Dashboard } from './pages/Dashboard/Dashboard';
-import AnimaliLista from './components/AnimaliLista';
-import AdminRoleManagement from "./components/AdminRoleManagement";
-import { useAuth } from './context/AuthContext';
-import './App.css';
+// components/Layout/Layout.jsx
+import { Outlet, NavLink } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 
-function ProtectedRoute({ children }) {
-  const { isAuthenticated, isLoading } = useAuth();
-  if (isLoading) return <div className="loading-spinner"><div className="spinner"></div> Caricamento...</div>;
-  return isAuthenticated() ? children : <Navigate to="/login" />;
-}
+export function Layout() {
+  const { user } = useAuth();
 
-function AdminRoute({ children }) {
-  const { isAuthenticated, isLoading, user } = useAuth();
-  if (isLoading) return <div className="loading-spinner"><div className="spinner"></div> Caricamento...</div>;
-  if (!isAuthenticated()) return <Navigate to="/login" />;
-  return user?.roles?.includes("ROLE_ADMIN") ? children : <Navigate to="/" replace />;
-}
-
-function App() {
   return (
-    <Routes>
-      {/* Route pubbliche (SENZA Layout) */}
-      <Route path="/login" element={<Login />} />
-      <Route path="/signup" element={<Signup />} />
+    <div className="app-container">
+      <header className="app-header">
+        <div className="header-left">
+          <div className="logo">
+            <div className="logo-icon">🐾</div>
+            <span>VetCare</span>
+          </div>
+        </div>
+        <div className="header-right">
+          <div className="user-menu">
+            <div className="user-avatar">
+              {user?.username?.[0]?.toUpperCase() || 'U'}
+            </div>
+            <span>{user?.username || 'Utente'}</span>
+          </div>
+          <button className="btn btn-outline btn-sm" onClick={() => {
+            // logout logic
+          }}>
+            Esci
+          </button>
+        </div>
+      </header>
 
-      {/* Route protette (CON Layout - che include Header e Sidebar) */}
-      <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
-        <Route path="/" element={<Dashboard />} />
-        <Route path="/animali" element={<AnimaliLista />} />
-        <Route path="/admin" element={<AdminRoute><AdminRoleManagement /></AdminRoute>} />
-        {/* Aggiungi qui altre route come /visite, /prenotazioni, /fatture, /ricette */}
-      </Route>
-    </Routes>
+      <div className="main-layout">
+        <aside className="sidebar">
+          <nav className="sidebar-nav">
+            <div className="nav-label">Menu</div>
+            <NavLink to="/" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} end>
+              <span className="nav-icon">📊</span> Dashboard
+            </NavLink>
+            <NavLink to="/animali" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+              <span className="nav-icon">🐕</span> Animali
+            </NavLink>
+            <NavLink to="/visite" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+              <span className="nav-icon">🩺</span> Visite
+            </NavLink>
+            <NavLink to="/prenotazioni" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+              <span className="nav-icon">📅</span> Prenotazioni
+            </NavLink>
+
+            <div className="nav-divider" />
+
+            <div className="nav-label">Amministrazione</div>
+            <NavLink to="/fatture" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+              <span className="nav-icon">📄</span> Fatture
+            </NavLink>
+            <NavLink to="/ricette" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+              <span className="nav-icon">💊</span> Ricette
+            </NavLink>
+
+            {user?.roles?.includes('ROLE_ADMIN') && (
+              <>
+                <div className="nav-divider" />
+                <NavLink to="/admin" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+                  <span className="nav-icon">⚙️</span> Admin
+                </NavLink>
+              </>
+            )}
+          </nav>
+        </aside>
+
+        <main className="main-content">
+          <Outlet />
+        </main>
+      </div>
+    </div>
   );
 }
-
-export default App;
