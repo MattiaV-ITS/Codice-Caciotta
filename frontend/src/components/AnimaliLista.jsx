@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from 'react';
+import { useAuth } from '../context/AuthContext';
+
 
 function AnimaliLista() {
   const [animali, setAnimali] = useState([]);
@@ -12,6 +14,7 @@ function AnimaliLista() {
   const [totalPages, setTotalPages] = useState(0);
   const [sortBy, setSortBy] = useState('id');
   const [sortDir, setSortDir] = useState('asc');
+  const { token } = useAuth();
 
   // Funzione per mappare lo stato dell'animale a etichetta e colore
   const getStatoInfo = (stato) => {
@@ -47,13 +50,35 @@ function AnimaliLista() {
       params.append('specie', specieFilter);
     }
     
-    fetch(`/api/animali?${params.toString()}`)
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Failed to fetch animali');
+    (() => {
+      // Create fetch function inside useEffect to avoid dependency issues
+      const getAuthHeaders = () => {
+        if (!token) {
+          console.log('No token available for animali fetch');
+          return {
+            'Content-Type': 'application/json',
+          };
         }
-        return response.json();
-      })
+        console.log('Using token for animali fetch:', token.substring(0, 20) + '...');
+        return {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        };
+      };
+      
+      const headers = getAuthHeaders();
+      console.log('Animali fetch headers:', headers);
+      
+      // Use environment-aware API URL
+      const apiUrl = '/api/animali' + '?' + params.toString();
+      console.log('Making request to:', apiUrl);
+      
+      return fetch(apiUrl, {
+        method: 'GET',
+        headers: headers,
+        credentials: 'include',
+      });
+    })()
       .then(data => {
         setAnimali(data.content);
         setTotalPages(data.totalPages);

@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from 'react';
+import { useAuth } from '../context/AuthContext';
+
 
 function ProprietariLista() {
   const [proprietari, setProprietari] = useState([]);
@@ -11,6 +13,7 @@ function ProprietariLista() {
   const [appliedSearchTerm, setAppliedSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('id');
   const [sortDir, setSortDir] = useState('asc');
+  const { token } = useAuth();
 
   useEffect(() => {
     setLoading(true);
@@ -26,13 +29,29 @@ function ProprietariLista() {
       params.append('search', appliedSearchTerm);
     }
     
-    fetch(`/api/proprietari?${params.toString()}`)
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Failed to fetch proprietari');
+    (() => {
+      // Create fetch function inside useEffect to avoid dependency issues
+      const getAuthHeaders = () => {
+        if (!token) {
+          return {
+            'Content-Type': 'application/json',
+          };
         }
-        return response.json();
-      })
+        return {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        };
+      };
+      
+      // Use environment-aware API URL
+      const apiUrl = '/api/proprietari' + '?' + params.toString();
+      console.log('Making request to:', apiUrl);
+      
+      return fetch(apiUrl, {
+        method: 'GET',
+        headers: getAuthHeaders(),
+      });
+    })()
       .then(data => {
         setProprietari(data.content);
         setTotalPages(data.totalPages);

@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
+import { useApi } from '../../services/apiService';
 
 function AnimaliLista() {
+  const { get } = useApi();
   const [animali, setAnimali] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -47,7 +49,7 @@ function AnimaliLista() {
       params.append('specie', specieFilter);
     }
     
-    fetch(`/api/animali?${params.toString()}`)
+    get(`/api/animali?${params.toString()}`)
       .then(response => {
         if (!response.ok) {
           throw new Error('Failed to fetch animali');
@@ -63,7 +65,7 @@ function AnimaliLista() {
         setError(err.message);
         setLoading(false);
       });
-  }, [page, size, appliedSearchTerm, specieFilter, sortBy, sortDir]);
+  }, [page, size, appliedSearchTerm, specieFilter, sortBy, sortDir, get]);
 
   const goToPreviousPage = () => {
     if (page > 0) setPage(page - 1);

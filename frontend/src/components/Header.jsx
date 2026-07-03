@@ -9,8 +9,16 @@ function Header() {
   const isAdmin = user?.roles?.includes('ROLE_ADMIN');
 
   const handleLogout = () => {
-    logout();
-    navigate('/login');
+    try {
+      console.log('Logout button clicked');
+      logout();
+      console.log('Logout function called, navigating to login');
+      navigate('/login');
+    } catch (error) {
+      console.error('Logout failed:', error);
+      // Fallback navigation
+      window.location.href = '/login';
+    }
   };
 
   return (

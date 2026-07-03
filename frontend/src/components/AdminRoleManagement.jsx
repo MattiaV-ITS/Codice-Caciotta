@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 
+import { useApi } from "../services/apiService";
+
 const AVAILABLE_ROLES = ["ROLE_USER", "ROLE_STAFF", "ROLE_ADMIN"];
 
 const ROLE_LABELS = {
@@ -23,13 +25,7 @@ const AdminRoleManagement = () => {
     return user?.roles?.includes("ROLE_ADMIN");
   }, [user]);
 
-  const apiHeaders = useMemo(
-    () => ({
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    }),
-    [token]
-  );
+
 
   useEffect(() => {
     if (!isAdmin) {
@@ -41,12 +37,32 @@ const AdminRoleManagement = () => {
       setMessage(null);
 
       try {
-        const response = await fetch("/api/admin/users", {
-          headers: apiHeaders,
+        console.log('Fetching admin users...');
+        
+        // Create get function inside useEffect to avoid dependency issues
+        const getAuthHeaders = () => {
+          if (!token) {
+            return {
+              'Content-Type': 'application/json',
+            };
+          }
+          return {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          };
+        };
+        
+        const apiUrl = '/api/admin/users';
+        console.log('Admin fetch URL:', apiUrl);
+        const response = await fetch(apiUrl, {
+          method: 'GET',
+          headers: getAuthHeaders(),
         });
+        console.log('Admin users response status:', response.status);
         const data = await response.json();
 
         if (!response.ok) {
+          console.error('Admin users fetch failed:', response.status, data);
           throw new Error(data.message || "Failed to fetch users");
         }
 
@@ -66,7 +82,7 @@ const AdminRoleManagement = () => {
     };
 
     loadUsers();
-  }, [isAdmin, apiHeaders]);
+  }, [isAdmin, token]);
 
   const selectedUser = useMemo(() => {
     return users.find((u) => u.id === selectedUserId) || null;
@@ -95,9 +111,24 @@ const AdminRoleManagement = () => {
     setSaving(true);
     setMessage(null);
     try {
-      const response = await fetch(`/api/admin/users/${selectedUser.username}/roles`, {
-        method: "PUT",
-        headers: apiHeaders,
+      // Create fetch function inside the handler to avoid dependency issues
+      const getAuthHeaders = () => {
+        if (!token) {
+          return {
+            'Content-Type': 'application/json',
+          };
+        }
+        return {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        };
+      };
+      
+      const apiUrl = `/api/admin/users/${selectedUser.username}/roles`;
+      console.log('Admin update URL:', apiUrl);
+      const response = await fetch(apiUrl, {
+        method: 'PUT',
+        headers: getAuthHeaders(),
         body: JSON.stringify({ roles: draftRoles }),
       });
       const data = await response.json();
@@ -145,7 +176,11 @@ const AdminRoleManagement = () => {
         )}
         {loading ? (
             <p>Caricamento utenti...</p>
-        ) : message?.type === "error" ? null : users.length === 0 ? (
+        ) : message?.type === "error" ? (
+            <p role="alert" style={{ margin: 0, color: "#b42318" }}>
+                {message.text}
+            </p>
+        ) : users.length === 0 ? (
             <p>Nessun utente trovato.</p>
         ) : (
           <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 12 }}>

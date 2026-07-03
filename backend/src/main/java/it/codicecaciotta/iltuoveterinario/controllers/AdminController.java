@@ -40,7 +40,7 @@ public class AdminController {
 		this.roleRepository = roleRepository;
 	}
 
-	@PreAuthorize("hasRole('ADMIN')")
+	@PreAuthorize("hasAuthority('ROLE_ADMIN')")
 	@Transactional(readOnly = true)
 	@GetMapping("/users")
 	public ResponseEntity<List<AdminUserResponse>> getUsers() {
@@ -51,7 +51,7 @@ public class AdminController {
 		return ResponseEntity.ok(users);
 	}
 
-	@PreAuthorize("hasRole('ADMIN')")
+	@PreAuthorize("hasAuthority('ROLE_ADMIN')")
 	@PutMapping("/users/{username}/roles")
 	public ResponseEntity<?> updateUserRoles(
 			@PathVariable String username,

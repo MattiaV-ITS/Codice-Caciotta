@@ -18,6 +18,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -124,5 +125,14 @@ public class AuthController {
         roles.stream().map(r -> r.getNome().name()).collect(Collectors.toList()));
 
     return ResponseEntity.ok(new MessageResponse("Utente registrato con successo!"));
+  }
+
+  /**
+   * Test endpoint to check received headers (for debugging)
+   */
+  @GetMapping("/test/headers")
+  public ResponseEntity<?> testHeaders() {
+    logger.info("Test headers endpoint called");
+    return ResponseEntity.ok().body("Headers test endpoint");
   }
 }

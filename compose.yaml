@@ -13,7 +13,7 @@ services:
     volumes:
       - db:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRESDB_USER}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRESDB_USER} -d ${POSTGRESDB_DATABASE}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -31,13 +31,11 @@ services:
       - SPRING_DATASOURCE_USERNAME=${POSTGRESDB_USER}
       - SPRING_DATASOURCE_PASSWORD=${POSTGRESDB_ROOT_PASSWORD}
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
-      - DEV_MODE=${DEV_MODE}
+      - DEV_MODE=false
       - APP_JWT_SECRET=${APP_JWT_SECRET}
       - APP_JWT_EXPIRATION_MS=${APP_JWT_EXPIRATION_MS}
     ports:
       - "${SPRING_LOCAL_PORT}:${SPRING_DOCKER_PORT}"
-    stdin_open: true
-    tty: true
     healthcheck:
       test: ["CMD", "sh", "-c", "test -f /backend/app.jar && echo 'ok' || exit 1"]
       interval: 30s
@@ -50,7 +48,7 @@ services:
       context: ./frontend
     container_name: frontend
     ports:
-      - "3000:80"  # maps container port 80 to localhost:3000
+      - "3000:80"
     depends_on:
       backend:
         condition: service_healthy
