@@ -1,39 +1,61 @@
-/* Auth.css - versione pulita */
+/* =========================
+   AUTH - Login & Signup
+   Stili specifici per le pagine di autenticazione
+   ========================= */
+
+/* Contenitore principale (centra il card) */
 .auth-container {
   display: flex;
   align-items: center;
   justify-content: center;
   min-height: calc(100vh - 64px);
   padding: var(--space-4);
+  background: var(--gray-50);
 }
 
+/* Sottotitolo sotto il titolo (es. "Benvenuto! Inserisci le tue credenziali.") */
 .auth-subtitle {
-  color: var(--gray-500);
+  color: var(--gray-800);
   margin-bottom: var(--space-4);
+  font-size: 15px;
+  font-weight: 400;
+  letter-spacing: 0.2px;
+  text-align: center;
 }
 
+/* Form di autenticazione (spaziatura tra i campi) */
 .auth-form .form-group {
   margin-bottom: var(--space-4);
 }
 
+/* Footer con link "Non hai un account? Registrati" */
 .auth-footer {
   text-align: center;
   font-size: 14px;
-  color: var(--gray-500);
+  color: var(--gray-800);
+  margin-top: var(--space-4);
 }
 .auth-footer a {
   color: var(--primary);
   font-weight: 500;
+  transition: color 0.2s;
 }
 .auth-footer a:hover {
   color: var(--primary-dark);
+  text-decoration: underline;
 }
 
+/* =========================
+   REQUISITI PASSWORD (Signup)
+   ========================= */
+
 .password-requirements {
-  margin-top: 4px;
+  margin-top: 6px;
 }
 .password-requirements small {
   color: var(--gray-500);
+  font-size: 13px;
+  font-weight: 500;
 }
 .password-requirements ul {
   list-style: none;
@@ -42,9 +64,37 @@
 }
 .password-requirements ul li {
   font-size: 12px;
-  padding: 1px 0;
-  transition: color 0.2s;
+  padding: 2px 0;
+  color: var(--gray-400);
+  transition: color 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.password-requirements ul li::before {
+  content: "○";
+  font-size: 10px;
+  color: var(--gray-400);
+  transition: color 0.2s ease;
 }
 .password-requirements ul li.valid {
   color: var(--success);
+}
+.password-requirements ul li.valid::before {
+  content: "●";
+  color: var(--success);
+}
+
+/* =========================
+   RESPONSIVE
+   ========================= */
+
+@media (max-width: 480px) {
+  .auth-container {
+    padding: var(--space-3);
+    min-height: calc(100vh - 56px);
+  }
+  .auth-subtitle {
+    font-size: 14px;
+  }
 }

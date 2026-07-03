@@ -20,6 +20,9 @@
   --gray-700: #334155;
   --gray-800: #1E293B;
   --gray-900: #0F172A;
+
+  --black: #000000;
+  --white: #FFFFFF;
   
   /* Stati */
   --success: #10B981;

@@ -288,7 +288,7 @@
 .table tbody td {
   padding: 12px 16px;
   border-bottom: 1px solid var(--gray-100);
-  color: var(--gray-700);
+  color: var(--black);
 }
 .table tbody tr:hover {
   background: var(--gray-50);
@@ -364,7 +364,7 @@
 
 .btn-secondary {
   background: var(--gray-200);
-  color: var(--gray-700);
+  color: var(--black);
 }
 .btn-secondary:hover {
   background: var(--gray-300);
@@ -389,7 +389,7 @@
 .btn-outline {
   background: transparent;
   border: 1px solid var(--gray-300);
-  color: var(--gray-700);
+  color: var(--black);
 }
 .btn-outline:hover {
   background: var(--gray-50);
@@ -421,7 +421,7 @@
 .btn-icon:hover {
   background: var(--gray-50);
   border-color: var(--gray-300);
-  color: var(--gray-700);
+  color: var(--black);
 }
 .btn-icon.danger:hover {
   background: #FEE2E2;
@@ -440,7 +440,7 @@
   display: block;
   font-size: 14px;
   font-weight: 500;
-  color: var(--gray-700);
+  color: var(--black);
   margin-bottom: 4px;
 }
 .form-label .required {
@@ -612,7 +612,7 @@
   margin-bottom: var(--space-4);
 }
 .empty-state h3 {
-  color: var(--gray-700);
+  color: var(--black);
   margin-bottom: var(--space-2);
 }
 

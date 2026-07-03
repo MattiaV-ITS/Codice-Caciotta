@@ -3,7 +3,7 @@
 /* ===== Testo ===== */
 .text-sm { font-size: 14px; }
 .text-xs { font-size: 12px; }
-.text-muted { color: var(--gray-500); }
+.text-muted { color: var(--gray-700); }
 .text-center { text-align: center; }
 .text-left { text-align: left; }
 .text-right { text-align: right; }
