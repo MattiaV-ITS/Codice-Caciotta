@@ -1,9 +1,10 @@
 // components/Header.jsx
 import { useAuth } from '../context/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
+import logo from '../assets/logo.svg';  // ← Importa il PNG da assets
 import './Header.css';
 
-function Header() {
+function Header({ onMenuToggle }) {
   const { user, logout, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const isAdmin = user?.roles?.includes('ROLE_ADMIN');
@@ -16,19 +17,27 @@ function Header() {
       navigate('/login');
     } catch (error) {
       console.error('Logout failed:', error);
-      // Fallback navigation
       window.location.href = '/login';
     }
   };
 
   return (
-    <header className="app-header">  {/* <- classe cambiata */}
+    <header className="app-header">
       <div className="header-container">
+        <div className="header-left">
+          <button 
+            className="menu-toggle"
+            onClick={onMenuToggle}
+            aria-label="Toggle menu"
+          >
+            ☰
+          </button>
 
-        <Link to="/" className="logo">  {/* <- classe cambiata (era .brand) */}
-          <div className="logo-icon">🐾</div>  {/* <- nuovo elemento per l'icona */}
-          <span>Il Tuo Veterinario</span>
-        </Link>
+          <Link to="/" className="logo">
+            <img src={logo} alt="Il Tuo Veterinario" className="logo-icon" />
+            <span>Il Tuo Veterinario</span>
+          </Link>
+        </div>
 
         <nav className="nav-links">
           <span className="badge badge-info" style={{ marginRight: '12px' }}>

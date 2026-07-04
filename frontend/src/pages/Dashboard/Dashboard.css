@@ -1,7 +1,349 @@
-/* pages/Dashboard.css */
+/* src/pages/Dashboard/Dashboard.css */
+
+/* =========================
+   DASHBOARD LAYOUT
+========================= */
+
+.dashboard {
+  padding: var(--space-4);
+}
+
+/* =========================
+   DASHBOARD HEADER
+========================= */
+
 .dashboard-header {
   margin-bottom: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
 }
+
 .dashboard-header h1 {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--gray-900);
+  margin: 0;
+  letter-spacing: -0.3px;
+}
+
+.dashboard-header .text-muted {
+  font-size: 15px;
+  color: var(--gray-500);
+  margin: 0;
+}
+
+/* =========================
+   KPI CARDS
+========================= */
+
+/* Le KPI card utilizzano già le classi globali .kpi-grid, .kpi-card, ecc.
+   Assicuriamoci che gli stili siano applicati correttamente. */
+
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+
+.kpi-card {
+  background: white;
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  border: 1px solid var(--gray-200);
+  box-shadow: var(--shadow-sm);
+  transition: all 0.2s;
+}
+.kpi-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.kpi-card .kpi-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--gray-500);
   margin-bottom: var(--space-2);
+}
+
+.kpi-card .kpi-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--gray-900);
+  letter-spacing: -0.5px;
+}
+
+.kpi-card .kpi-change {
+  font-size: 13px;
+  margin-top: var(--space-2);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.kpi-card .kpi-change.up {
+  color: var(--success);
+}
+.kpi-card .kpi-change.down {
+  color: var(--danger);
+}
+
+.kpi-card.border-primary {
+  border-left: 4px solid var(--primary);
+}
+.kpi-card.border-success {
+  border-left: 4px solid var(--success);
+}
+.kpi-card.border-warning {
+  border-left: 4px solid var(--warning);
+}
+.kpi-card.border-danger {
+  border-left: 4px solid var(--danger);
+}
+
+/* =========================
+   CARD (contenitore della tabella)
+========================= */
+
+.card {
+  background: white;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.2s;
+}
+.card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.card-header {
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--gray-200);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.card-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.card-body {
+  padding: var(--space-5);
+}
+
+/* =========================
+   TABELLA VISITE RECENTI
+========================= */
+
+.table-container {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.table thead {
+  background: var(--gray-50);
+}
+
+.table thead th {
+  padding: 12px 16px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--gray-500);
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.table tbody td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--gray-100);
+  color: var(--gray-700);
+}
+
+.table tbody tr:hover {
+  background: var(--gray-50);
+}
+
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* =========================
+   RIGHE CLICCABILI (per visite)
+========================= */
+
+.clickable-row {
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.clickable-row:hover {
+  background: var(--primary-light) !important;
+}
+
+/* =========================
+   BOTTONI
+========================= */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 18px;
+  border: none;
+  border-radius: var(--radius);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none;
+  line-height: 1.4;
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: white;
+}
+.btn-primary:hover {
+  background: var(--primary-dark);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-sm {
+  padding: 4px 12px;
+  font-size: 12px;
+}
+
+/* =========================
+   BADGE (per lo stato)
+========================= */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 22px;
+  letter-spacing: 0.2px;
+}
+
+.badge-sano {
+  background: #D1FAE5;
+  color: #065F46;
+}
+.badge-in-cura {
+  background: #FEF3C7;
+  color: #92400E;
+}
+.badge-deceduto {
+  background: #FEE2E2;
+  color: #991B1B;
+}
+.badge-attesa {
+  background: #FEF3C7;
+  color: #92400E;
+}
+.badge-confermata {
+  background: #DBEAFE;
+  color: #1E40AF;
+}
+.badge-completata {
+  background: #D1FAE5;
+  color: #065F46;
+}
+.badge-annullata {
+  background: #F1F5F9;
+  color: #64748B;
+}
+.badge-pianificata {
+  background: #DBEAFE;
+  color: #1E40AF;
+}
+.badge-in-corso {
+  background: #FEF3C7;
+  color: #92400E;
+}
+.badge-da-pagare {
+  background: #FEE2E2;
+  color: #991B1B;
+}
+.badge-pagato {
+  background: #D1FAE5;
+  color: #065F46;
+}
+.badge-annullato {
+  background: #F1F5F9;
+  color: #64748B;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 768px) {
+  .dashboard-header h1 {
+    font-size: 24px;
+  }
+
+  .dashboard-header .text-muted {
+    font-size: 14px;
+  }
+
+  .kpi-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .table thead th {
+    font-size: 11px;
+    padding: 10px 12px;
+  }
+
+  .table tbody td {
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .kpi-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .table thead {
+    display: none;
+  }
+
+  .table tbody tr {
+    display: block;
+    padding: var(--space-3);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius);
+    margin-bottom: var(--space-3);
+  }
+
+  .table tbody td {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 0;
+    border: none;
+  }
+
+  .table tbody td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: var(--gray-500);
+    font-size: 12px;
+  }
 }
