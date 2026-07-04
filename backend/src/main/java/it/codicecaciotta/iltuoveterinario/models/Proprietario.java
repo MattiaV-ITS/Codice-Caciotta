@@ -43,6 +43,9 @@ public class Proprietario {
     @Column(nullable = false)
     private LocalDate dataRegistrazione;
 
+    @Column(nullable = false)
+    private Boolean stato; // 1 = attivo, 0 = disattivo
+
     @OneToMany(mappedBy = "proprietario", cascade = CascadeType.ALL, orphanRemoval = true)
     @EqualsAndHashCode.Exclude
     @ToString.Exclude

@@ -1,48 +1,48 @@
 -- Proprietari
-INSERT INTO proprietari (id, codice_fiscale, nome, cognome, email, telefono, indirizzo, citta, data_registrazione)
-VALUES (1, NULL, 'Marco', 'Rossi', 'marco.rossi@email.it', '335 1234567', 'Via Roma 12', 'Bergamo', '2019-03-15');
+INSERT INTO proprietari (id, codice_fiscale, nome, cognome, email, telefono, indirizzo, citta, data_registrazione, stato)
+VALUES (1, NULL, 'Marco', 'Rossi', 'marco.rossi@email.it', '335 1234567', 'Via Roma 12', 'Bergamo', '2019-03-15', TRUE);
 
-INSERT INTO proprietari (id, codice_fiscale, nome, cognome, email, telefono, indirizzo, citta, data_registrazione)
-VALUES (2, NULL, 'Francesca', 'Bianchi', 'f.bianchi@gmail.com', '347 2345678', 'Via Garibaldi 5', 'Bergamo Alta', '2019-07-22');
+INSERT INTO proprietari (id, codice_fiscale, nome, cognome, email, telefono, indirizzo, citta, data_registrazione, stato)
+VALUES (2, NULL, 'Francesca', 'Bianchi', 'f.bianchi@gmail.com', '347 2345678', 'Via Garibaldi 5', 'Bergamo Alta', '2019-07-22', FALSE);
 
-INSERT INTO proprietari (id, codice_fiscale, nome, cognome, email, telefono, indirizzo, citta, data_registrazione)
-VALUES (3, NULL, 'Luigi', 'Colombo', 'l.colombo@libero.it', '328 3456789', 'Via Manzoni 33', 'Sorisole', '2019-11-10');
+INSERT INTO proprietari (id, codice_fiscale, nome, cognome, email, telefono, indirizzo, citta, data_registrazione, stato)
+VALUES (3, NULL, 'Luigi', 'Colombo', 'l.colombo@libero.it', '328 3456789', 'Via Manzoni 33', 'Sorisole', '2019-11-10', TRUE);
 
-INSERT INTO proprietari (id, codice_fiscale, nome, cognome, email, telefono, indirizzo, citta, data_registrazione)
-VALUES (4, NULL, 'Anna', 'Ferrari', 'anna.ferrari@yahoo.it', '339 4567890', 'Piazza Vecchia 1', 'Bergamo Alta', '2020-02-05');
+INSERT INTO proprietari (id, codice_fiscale, nome, cognome, email, telefono, indirizzo, citta, data_registrazione, stato)
+VALUES (4, NULL, 'Anna', 'Ferrari', 'anna.ferrari@yahoo.it', '339 4567890', 'Piazza Vecchia 1', 'Bergamo Alta', '2020-02-05', TRUE);
 
-INSERT INTO proprietari (id, codice_fiscale, nome, cognome, email, telefono, indirizzo, citta, data_registrazione)
-VALUES (5, NULL, 'Giorgio', 'Ricci', 'g.ricci@email.it', '366 5678901', 'Via Tasso 8', 'Bergamo', '2020-04-18');
+INSERT INTO proprietari (id, codice_fiscale, nome, cognome, email, telefono, indirizzo, citta, data_registrazione, stato)
+VALUES (5, NULL, 'Giorgio', 'Ricci', 'g.ricci@email.it', '366 5678901', 'Via Tasso 8', 'Bergamo', '2020-04-18', TRUE);
 
-INSERT INTO proprietari (id, codice_fiscale, nome, cognome, email, telefono, indirizzo, citta, data_registrazione)
-VALUES (6, NULL, 'Maria', 'Conti', 'maria.conti@gmail.com', '351 6789012', 'Via Pignolo 44', 'Bergamo', '2020-06-30');
+INSERT INTO proprietari (id, codice_fiscale, nome, cognome, email, telefono, indirizzo, citta, data_registrazione, stato)
+VALUES (6, NULL, 'Maria', 'Conti', 'maria.conti@gmail.com', '351 6789012', 'Via Pignolo 44', 'Bergamo', '2020-06-30', TRUE);
 
-INSERT INTO proprietari (id, codice_fiscale, nome, cognome, email, telefono, indirizzo, citta, data_registrazione)
-VALUES (7, NULL, 'Paolo', 'Manzoni', 'p.manzoni@libero.it', '342 7890123', 'Via Borgo Palazzo 17', 'Bergamo', '2020-09-12');
+INSERT INTO proprietari (id, codice_fiscale, nome, cognome, email, telefono, indirizzo, citta, data_registrazione, stato)
+VALUES (7, NULL, 'Paolo', 'Manzoni', 'p.manzoni@libero.it', '342 7890123', 'Via Borgo Palazzo 17', 'Bergamo', '2020-09-12', TRUE);
 
-INSERT INTO proprietari (id, codice_fiscale, nome, cognome, email, telefono, indirizzo, citta, data_registrazione)
-VALUES (8, NULL, 'Elena', 'Galli', 'e.galli@email.it', '333 8901234', 'Via S. Tomaso 9', 'Bergamo Alta', '2021-01-25');
+INSERT INTO proprietari (id, codice_fiscale, nome, cognome, email, telefono, indirizzo, citta, data_registrazione, stato)
+VALUES (8, NULL, 'Elena', 'Galli', 'e.galli@email.it', '333 8901234', 'Via S. Tomaso 9', 'Bergamo Alta', '2021-01-25', TRUE);
 
-INSERT INTO proprietari (id, codice_fiscale, nome, cognome, email, telefono, indirizzo, citta, data_registrazione)
-VALUES (9, NULL, 'Roberto', 'Esposito', 'r.esposito@gmail.com', '370 9012345', 'Via Zambonate 22', 'Bergamo', '2021-03-08');
+INSERT INTO proprietari (id, codice_fiscale, nome, cognome, email, telefono, indirizzo, citta, data_registrazione, stato)
+VALUES (9, NULL, 'Roberto', 'Esposito', 'r.esposito@gmail.com', '370 9012345', 'Via Zambonate 22', 'Bergamo', '2021-03-08', TRUE);
 
-INSERT INTO proprietari (id, codice_fiscale, nome, cognome, email, telefono, indirizzo, citta, data_registrazione)
-VALUES (10, NULL, 'Chiara', 'Ferretti', 'c.ferretti@email.it', '348 0123456', 'Viale Papa Giovanni 15', 'Bergamo', '2021-05-19');
+INSERT INTO proprietari (id, codice_fiscale, nome, cognome, email, telefono, indirizzo, citta, data_registrazione, stato)
+VALUES (10, NULL, 'Chiara', 'Ferretti', 'c.ferretti@email.it', '348 0123456', 'Viale Papa Giovanni 15', 'Bergamo', '2021-05-19', TRUE);
 
-INSERT INTO proprietari (id, codice_fiscale, nome, cognome, email, telefono, indirizzo, citta, data_registrazione)
-VALUES (11, NULL, 'Antonio', 'Moretti', 'a.moretti@libero.it', '335 1234568', 'Via Tiraboschi 6', 'Bergamo', '2021-08-02');
+INSERT INTO proprietari (id, codice_fiscale, nome, cognome, email, telefono, indirizzo, citta, data_registrazione, stato)
+VALUES (11, NULL, 'Antonio', 'Moretti', 'a.moretti@libero.it', '335 1234568', 'Via Tiraboschi 6', 'Bergamo', '2021-08-02', TRUE);
 
-INSERT INTO proprietari (id, codice_fiscale, nome, cognome, email, telefono, indirizzo, citta, data_registrazione)
-VALUES (12, NULL, 'Valentina', 'Caruso', 'v.caruso@gmail.com', '347 2345679', 'Via Quarenghi 11', 'Bergamo', '2021-10-14');
+INSERT INTO proprietari (id, codice_fiscale, nome, cognome, email, telefono, indirizzo, citta, data_registrazione, stato)
+VALUES (12, NULL, 'Valentina', 'Caruso', 'v.caruso@gmail.com', '347 2345679', 'Via Quarenghi 11', 'Bergamo', '2021-10-14', TRUE);
 
-INSERT INTO proprietari (id, codice_fiscale, nome, cognome, email, telefono, indirizzo, citta, data_registrazione)
-VALUES (13, NULL, 'Francesco', 'Lombardi', 'f.lombardi@email.it', '328 3456780', 'Via Moroni 28', 'Bergamo', '2021-12-27');
+INSERT INTO proprietari (id, codice_fiscale, nome, cognome, email, telefono, indirizzo, citta, data_registrazione, stato)
+VALUES (13, NULL, 'Francesco', 'Lombardi', 'f.lombardi@email.it', '328 3456780', 'Via Moroni 28', 'Bergamo', '2021-12-27', TRUE);
 
-INSERT INTO proprietari (id, codice_fiscale, nome, cognome, email, telefono, indirizzo, citta, data_registrazione)
-VALUES (14, NULL, 'Giulia', 'Barbieri', 'g.barbieri@yahoo.it', '339 4567891', 'Via Camozzi 3', 'Bergamo', '2022-02-09');
+INSERT INTO proprietari (id, codice_fiscale, nome, cognome, email, telefono, indirizzo, citta, data_registrazione, stato)
+VALUES (14, NULL, 'Giulia', 'Barbieri', 'g.barbieri@yahoo.it', '339 4567891', 'Via Camozzi 3', 'Bergamo', '2022-02-09', TRUE);
 
-INSERT INTO proprietari (id, codice_fiscale, nome, cognome, email, telefono, indirizzo, citta, data_registrazione)
-VALUES (15, NULL, 'Stefano', 'Marchetti', 's.marchetti@gmail.com', '366 5678902', 'Via Angelo Mai 19', 'Bergamo Alta', '2022-04-21');
+INSERT INTO proprietari (id, codice_fiscale, nome, cognome, email, telefono, indirizzo, citta, data_registrazione, stato)
+VALUES (15, NULL, 'Stefano', 'Marchetti', 's.marchetti@gmail.com', '366 5678902', 'Via Angelo Mai 19', 'Bergamo Alta', '2022-04-21', TRUE);
 
 -- Animali //TODO: correggere stato salute
 INSERT INTO animali (id, nome, specie, razza, data_di_nascita, sesso, peso, microchip, taglia, colore_mantello, sterilizzato, gruppo_sanguigno, allergie, patologie, stato, note_generali, proprietario_id)

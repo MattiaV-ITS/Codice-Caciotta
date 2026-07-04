@@ -18,6 +18,7 @@ public class ProprietarioListaMapper {
         dto.setCitta(proprietario.getCitta());
         dto.setDataRegistrazione(proprietario.getDataRegistrazione());
         dto.setCodiceFiscale(proprietario.getCodiceFiscale());
+        dto.setStato(proprietario.getStato());
         
         // Count the number of animals
         if (proprietario.getAnimali() != null) {
