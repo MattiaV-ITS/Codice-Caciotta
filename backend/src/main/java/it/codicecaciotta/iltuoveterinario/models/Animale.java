@@ -33,7 +33,7 @@ public class Animale {
     private LocalDate dataNascita;
 
     @Column(nullable = true)
-    @Enumerated(EnumType.STRING) // Sesso puo essere null per alcune specie, quindi non è obbligatorio
+    @Enumerated(EnumType.STRING) // M, F, null
     private ESesso sesso;
 
     @Column(nullable = false)
@@ -43,8 +43,9 @@ public class Animale {
     @Size(min = 15, max = 15, message = "Il microchip deve avere esattamente 15 caratteri") // Per validazione lunghezza
     private String microchip;
 
-    @Column(nullable = true) //TODO: Enum
-    private String taglia;
+    @Column(nullable = true) 
+    @Enumerated(EnumType.STRING) //PICCOLA, MEDIA, GRANDE, null
+    private ETaglia taglia;
 
     @Column(name = "colore_mantello", nullable = true) // Colore mantello puo essere null per alcune specie, quindi non è obbligatorio
     private String coloreMantello;

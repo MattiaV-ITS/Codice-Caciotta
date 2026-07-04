@@ -8,9 +8,6 @@ import it.codicecaciotta.iltuoveterinario.models.Proprietario;
 
 
 public interface ProprietarioRepository extends JpaRepository<Proprietario, Long> {
-    Page<Proprietario> findByNomeContainingOrCognomeContainingOrTelefonoContainingOrEmailContainingOrCodiceFiscaleContaining(
-        String nome, String cognome, String telefono, String email, String codiceFiscale, Pageable pageable);
-    
     // Ricerca completa case-insensitive
     Page<Proprietario> findByNomeContainingIgnoreCaseOrCognomeContainingIgnoreCaseOrTelefonoContainingIgnoreCaseOrEmailContainingIgnoreCaseOrCodiceFiscaleContainingIgnoreCase(
         String nome, String cognome, String telefono, String email, String codiceFiscale, Pageable pageable);

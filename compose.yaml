@@ -1,7 +1,7 @@
 services:
   postgresdb:
     image: postgres:17
-    restart: unless-stopped
+    # restart: unless-stopped TODO: cambiare in prod
     env_file: ./.env
     container_name: db
     environment:
@@ -20,7 +20,7 @@ services:
 
   backend:
     build: ./backend
-    restart: on-failure
+    # restart: on-failure TODO: cambiare in prod
     container_name: backend
     depends_on:
       postgresdb:
@@ -53,7 +53,7 @@ services:
       backend:
         condition: service_healthy
     volumes:
-      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx:/etc/nginx/conf.d
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/"]
       interval: 30s

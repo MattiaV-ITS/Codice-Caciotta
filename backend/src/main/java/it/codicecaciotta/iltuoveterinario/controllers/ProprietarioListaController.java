@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.RestController;
 public class ProprietarioListaController {
 
     private final ProprietarioListaServiceImpl proprietarioService;
+    private static final int MAX_PAGE_SIZE = 100;
+    private static final String[] ALLOWED_SORT_FIELDS = {"id", "nome", "cognome", "email", "telefono", "citta"};
 
     public ProprietarioListaController(ProprietarioListaServiceImpl proprietarioService) {
         this.proprietarioService = proprietarioService;
@@ -29,16 +31,37 @@ public class ProprietarioListaController {
         @RequestParam(required = false) String search,
         @RequestParam(required = false) String citta) {
         
-        sortDir = sortDir.equalsIgnoreCase("asc") ? "asc" : "desc"; // Default to ascending if invalid
+        // Validate and sanitize pagination parameters
+        if (page < 0) {
+            page = 0;
+        }
+        if (size <= 0 || size > MAX_PAGE_SIZE) {
+            size = 10;
+        }
+        
+        // Validate sortBy to prevent injection
+        boolean validField = false;
+        for (String field : ALLOWED_SORT_FIELDS) {
+            if (field.equals(sortBy)) {
+                validField = true;
+                break;
+            }
+        }
+        if (!validField) {
+            sortBy = "id";
+        }
+        
+        // Normalize sort direction
+        sortDir = sortDir.toLowerCase().startsWith("desc") ? "desc" : "asc";
         Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
         Pageable pageable = PageRequest.of(page, size, sort);
         
-        if (search != null && !search.isEmpty()) {
-            return proprietarioService.searchProprietariComprehensive(search, pageable);
+        if (search != null && !search.trim().isEmpty()) {
+            return proprietarioService.searchProprietariComprehensive(search.trim(), pageable);
         }
         
-        if (citta != null && !citta.isEmpty()) {
-            return proprietarioService.getProprietariByCitta(citta, pageable);
+        if (citta != null && !citta.trim().isEmpty()) {
+            return proprietarioService.getProprietariByCitta(citta.trim(), pageable);
         }
         
         return proprietarioService.getAllProprietari(pageable);

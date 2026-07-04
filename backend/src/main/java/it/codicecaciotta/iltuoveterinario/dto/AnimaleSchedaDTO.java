@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 import it.codicecaciotta.iltuoveterinario.models.ESesso;
+import it.codicecaciotta.iltuoveterinario.models.ETaglia;
 import lombok.Data;
 
 // DTO per la visualizzazione della scheda dell'animale
@@ -21,7 +22,7 @@ public class AnimaleSchedaDTO
     private ESesso sesso;
     private BigDecimal peso;
     private String microchip;
-    private String taglia;
+    private ETaglia taglia;
     private String coloreMantello;
     private Boolean sterilizzato;
     private String gruppoSanguigno;

@@ -1,4 +1,7 @@
 import React, { useEffect, useState } from 'react';
+import { formatDate } from '../../utils';
+import { useTableControls } from '../../utils/useTableControls';
+import { useApi } from '../../services/apiService';
 
 // ---- MOCK DATI PROPRIETARI (35) ----
 const MOCK_PROPRIETARI = {
@@ -50,23 +53,30 @@ function ProprietariLista() {
   const [proprietari, setProprietari] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [page, setPage] = useState(0);
-  const [size, setSize] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
   const [appliedSearchTerm, setAppliedSearchTerm] = useState('');
   const [statoFiltro, setStatoFiltro] = useState('');
-  const [sortBy, setSortBy] = useState('cognome');
-  const [sortDir, setSortDir] = useState('asc');
   const [totalPages, setTotalPages] = useState(0);
+
+  const { 
+    sortBy, 
+    sortDir, 
+    page, 
+    size, 
+    handleSort, 
+    handleSizeChange, 
+    getSortIndicator, 
+    goToPreviousPage, 
+    goToNextPage 
+  } = useTableControls({
+    defaultSortBy: 'cognome',
+    defaultSortDir: 'asc', 
+    defaultPageSize: 10
+  });
 
   const pageSizeOptions = [5, 10, 15, 20];
 
   const getInitials = (nome, cognome) => (nome?.charAt(0) || '') + (cognome?.charAt(0) || '');
-
-  const formatDate = (dateStr) => {
-    if (!dateStr) return '-';
-    return new Date(dateStr).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' });
-  };
 
   const getStatoInfo = (stato) => {
     switch (stato) {
@@ -78,78 +88,39 @@ function ProprietariLista() {
 
   useEffect(() => {
     setLoading(true);
-    setTimeout(() => {
-      let filtered = [...MOCK_PROPRIETARI.content];
 
-      if (statoFiltro) {
-        filtered = filtered.filter(p => p.statoAttivita === statoFiltro);
-      }
+    // Build query parameters
+    const params = new URLSearchParams();
+    params.append('page', page);
+    params.append('size', size);
+    params.append('sortBy', sortBy);
+    params.append('sortDir', sortDir);
 
-      if (appliedSearchTerm) {
-        const term = appliedSearchTerm.toLowerCase();
-        filtered = filtered.filter(p => {
-          // Ricerca "prefix" (inizia con) su tutti i campi
-          const matchNome = p.nome?.toLowerCase().startsWith(term);
-          const matchCognome = p.cognome?.toLowerCase().startsWith(term);
-          const matchTelefono = p.telefono?.startsWith(appliedSearchTerm);
-          const matchEmail = p.email?.toLowerCase().startsWith(term);
-          const matchCitta = p.citta?.toLowerCase().startsWith(term);
-          
-          // Ricerca sulla data: sia sulla stringa ISO (prefix) che sulla data formattata (includes)
-          const dataFormattata = formatDate(p.dataRegistrazione);
-          const matchData = p.dataRegistrazione && (
-            p.dataRegistrazione.startsWith(appliedSearchTerm) || 
-            dataFormattata.toLowerCase().includes(term)
-          );
-          
-          return matchNome || matchCognome || matchTelefono || matchEmail || matchCitta || matchData;
-        });
-      }
-
-      filtered.sort((a, b) => {
-        let valA = (a[sortBy] || '').toString().toLowerCase();
-        let valB = (b[sortBy] || '').toString().toLowerCase();
-
-        if (sortBy === 'dataRegistrazione') {
-          valA = new Date(a[sortBy] || 0).getTime();
-          valB = new Date(b[sortBy] || 0).getTime();
-        }
-
-        if (valA < valB) return sortDir === 'asc' ? -1 : 1;
-        if (valA > valB) return sortDir === 'asc' ? 1 : -1;
-        return 0;
-      });
-
-      const start = page * size;
-      const paginated = filtered.slice(start, start + size);
-      setProprietari(paginated);
-      setTotalPages(Math.ceil(filtered.length / size));
-      setLoading(false);
-    }, 500);
-  }, [page, size, appliedSearchTerm, statoFiltro, sortBy, sortDir]);
-
-  const handleSizeChange = (newSize) => {
-    setSize(newSize);
-    setPage(0);
-  };
-
-  const goToPreviousPage = () => { if (page > 0) setPage(page - 1); };
-  const goToNextPage = () => { if (page < totalPages - 1) setPage(page + 1); };
-
-  const handleSort = (columnName) => {
-    if (sortBy === columnName) {
-      setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortBy(columnName);
-      setSortDir('asc');
+    if (appliedSearchTerm) {
+      params.append('search', appliedSearchTerm);
     }
-    setPage(0);
-  };
 
-  const getSortIndicator = (columnName) => {
-    if (sortBy !== columnName) return null;
-    return sortDir === 'asc' ? '↑' : '↓';
-  };
+    if (statoFiltro) {
+      params.append('stato', statoFiltro);
+    }
+
+    fetch(`/api/proprietari?${params.toString()}`)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Errore nel fetching dei dati dei proprietari');
+        }
+        return response.json();
+      })
+      .then(data => {
+        setProprietari(data.content);
+        setTotalPages(data.totalPages);
+        setLoading(false);
+      })
+      .catch(err => {
+        setError(err.message);
+        setLoading(false);
+      });
+  }, [page, size, appliedSearchTerm, statoFiltro, sortBy, sortDir]);
 
   const clearFilters = () => {
     setSearchTerm('');
@@ -158,6 +129,7 @@ function ProprietariLista() {
     setPage(0);
   };
 
+  // TODO: Implementare la logica per il conteggio dei proprietari totali, attivi e inattivi basata sui dati reali
   const totali = MOCK_PROPRIETARI.content.length;
   const attivi = MOCK_PROPRIETARI.content.filter(p => p.statoAttivita === 'Attivo').length;
   const inattivi = MOCK_PROPRIETARI.content.filter(p => p.statoAttivita === 'Inattivo').length;
@@ -238,14 +210,14 @@ function ProprietariLista() {
                 onChange={(e) => setSearchTerm(e.target.value)}
                 onKeyPress={(e) => { if (e.key === 'Enter') { setAppliedSearchTerm(searchTerm); setPage(0); } }}
               />
-              <svg 
-                className="search-icon" 
-                xmlns="http://www.w3.org/2000/svg" 
-                viewBox="0 0 24 24" 
-                width="16" 
+              <svg
+                className="search-icon"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                width="16"
                 height="16"
               >
-                <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+                <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
               </svg>
             </div>
           </div>
@@ -361,7 +333,7 @@ function ProprietariLista() {
               <span className="pagination-page-info">
                 <strong>{page + 1}</strong> di <strong>{totalPages}</strong>
               </span>
-              <button className="pagination-btn" onClick={goToNextPage} disabled={page >= totalPages - 1}>
+              <button className="pagination-btn" onClick={() => goToNextPage(totalPages)} disabled={page >= totalPages - 1}>
                 Successivo
               </button>
             </div>

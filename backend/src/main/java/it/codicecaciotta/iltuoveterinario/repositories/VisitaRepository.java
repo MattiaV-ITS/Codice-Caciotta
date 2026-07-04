@@ -12,7 +12,4 @@ public interface VisitaRepository extends JpaRepository<Visita, Long> {
     
     // Trova la visita associata a una specifica prenotazione (se presente)
     Optional<Visita> findByPrenotazioneId(Long prenotazioneId);
-    
-    // Filtra le visite in base allo stato (es. 'Pianificata', 'In corso', 'Completata')
-    List<Visita> findByStato(String stato);
 }

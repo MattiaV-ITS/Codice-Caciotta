@@ -1,4 +1,7 @@
 import React, { useEffect, useState } from 'react';
+import { formatDate, getIconLetter } from '../../utils';
+import { useTableControls } from '../../utils/useTableControls';
+import { useApi } from '../../services/apiService';
 
 // ---- MOCK DATI (35 animali) ----
 const MOCK_ANIMALI = {
@@ -54,17 +57,30 @@ const MOCK_ANIMALI = {
 // ---- FINE MOCK ----
 
 function AnimaliLista() {
+  const { get } = useApi();
   const [animali, setAnimali] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [page, setPage] = useState(0);
-  const [size, setSize] = useState(15);
   const [searchTerm, setSearchTerm] = useState('');
   const [appliedSearchTerm, setAppliedSearchTerm] = useState('');
   const [specieFilter, setSpecieFilter] = useState('');
   const [totalPages, setTotalPages] = useState(0);
-  const [sortBy, setSortBy] = useState('id');
-  const [sortDir, setSortDir] = useState('asc');
+
+  const { 
+    sortBy, 
+    sortDir, 
+    page, 
+    size, 
+    handleSort, 
+    handleSizeChange, 
+    getSortIndicator, 
+    goToPreviousPage, 
+    goToNextPage 
+  } = useTableControls({
+    defaultSortBy: 'id',
+    defaultSortDir: 'asc', 
+    defaultPageSize: 15
+  });
 
   const pageSizeOptions = [5, 10, 15, 20];
 
@@ -78,73 +94,41 @@ function AnimaliLista() {
     return map[stato] || { label: 'Sconosciuto', className: 'badge-sconosciuto' };
   };
 
-  // Funzione per formattare la data nel formato visualizzato in tabella
-  const formatDate = (dateStr) => {
-    if (!dateStr) return '-';
-    return new Date(dateStr).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' });
-  };
-
   useEffect(() => {
     setLoading(true);
-    setTimeout(() => {
-      let filtered = [...MOCK_ANIMALI.content];
-      if (specieFilter) filtered = filtered.filter(a => a.specie === specieFilter);
-      
-      if (appliedSearchTerm) {
-        const term = appliedSearchTerm.toLowerCase();
-        filtered = filtered.filter(a => {
-          // Ricerca "prefix" (inizia con) su tutti i campi
-          const matchNome = a.nome?.toLowerCase().startsWith(term);
-          const matchRazza = a.razza?.toLowerCase().startsWith(term);
-          const matchProprietario = a.proprietario?.toLowerCase().startsWith(term);
-          const matchMicrochip = a.microchip && a.microchip.startsWith(appliedSearchTerm);
-          
-          // Ricerca sulla data: sia sulla stringa ISO (prefix) che sulla data formattata (includes)
-          const dataFormattata = formatDate(a.dataNascita);
-          const matchData = a.dataNascita && (
-            a.dataNascita.startsWith(appliedSearchTerm) || 
-            dataFormattata.toLowerCase().includes(term)
-          );
-          
-          return matchNome || matchRazza || matchProprietario || matchMicrochip || matchData;
-        });
-      }
 
-      filtered.sort((a, b) => {
-        const valA = (a[sortBy] || '').toString().toLowerCase();
-        const valB = (b[sortBy] || '').toString().toLowerCase();
-        if (valA < valB) return sortDir === 'asc' ? -1 : 1;
-        if (valA > valB) return sortDir === 'asc' ? 1 : -1;
-        return 0;
+    // Build query parameters
+    const params = new URLSearchParams();
+    params.append('page', page);
+    params.append('size', size);
+    params.append('sortBy', sortBy);
+    params.append('sortDir', sortDir);
+    
+    if (appliedSearchTerm) {
+      params.append('search', appliedSearchTerm);
+    }
+    
+    if (specieFilter) {
+      params.append('specie', specieFilter);
+    }
+    
+    get(`/api/animali?${params.toString()}`)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Errore nel fetching dei dati degli animali');
+        }
+        return response.json();
+      })
+      .then(data => {
+        setAnimali(data.content);
+        setTotalPages(data.totalPages);
+        setLoading(false);
+      })
+      .catch(err => {
+        setError(err.message);
+        setLoading(false);
       });
-      const start = page * size;
-      const paginated = filtered.slice(start, start + size);
-      setAnimali(paginated);
-      setTotalPages(Math.ceil(filtered.length / size));
-      setLoading(false);
-    }, 500);
-  }, [page, size, appliedSearchTerm, specieFilter, sortBy, sortDir]);
-
-  const handleSizeChange = (newSize) => {
-    setSize(newSize);
-    setPage(0);
-  };
-
-  const goToPreviousPage = () => { if (page > 0) setPage(page - 1); };
-  const goToNextPage = () => { if (page < totalPages - 1) setPage(page + 1); };
-
-  const getIconLetter = (specie) => specie ? specie.charAt(0).toUpperCase() : '?';
-
-  const handleSort = (columnName) => {
-    if (sortBy === columnName) setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
-    else { setSortBy(columnName); setSortDir('asc'); }
-    setPage(0);
-  };
-
-  const getSortIndicator = (columnName) => {
-    if (sortBy !== columnName) return null;
-    return sortDir === 'asc' ? '↑' : '↓';
-  };
+  }, [page, size, appliedSearchTerm, specieFilter, sortBy, sortDir, get]);
 
   const clearFilters = () => {
     setSearchTerm('');
@@ -337,7 +321,7 @@ function AnimaliLista() {
               <span className="pagination-page-info">
                 <strong>{page + 1}</strong> di <strong>{totalPages}</strong>
               </span>
-              <button className="pagination-btn" onClick={goToNextPage} disabled={page >= totalPages - 1}>
+              <button className="pagination-btn" onClick={() => goToNextPage(totalPages)} disabled={page >= totalPages - 1}>
                 Successivo
               </button>
             </div>
