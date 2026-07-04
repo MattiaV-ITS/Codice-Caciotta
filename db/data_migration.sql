@@ -2,108 +2,109 @@
 -- 1. PROPRIETARI — inserimento diretto
 -- ============================================================
 
-INSERT INTO proprietari (nome, cognome, email, telefono, indirizzo, citta, data_registrazione)
+INSERT INTO proprietari (nome, cognome, email, telefono, indirizzo, citta, data_registrazione, stato)
 VALUES
-('Marco','Rossi','marco.rossi@email.it','335 1234567','Via Roma 12','Bergamo', to_date('15/03/2019','DD/MM/YYYY')),
-('Francesca','Bianchi','f.bianchi@gmail.com','347 2345678','Via Garibaldi 5','Bergamo Alta', to_date('22/07/2019','DD/MM/YYYY')),
-('Luigi','Colombo','l.colombo@libero.it','328 3456789','Via Manzoni 33','Sorisole', to_date('10/11/2019','DD/MM/YYYY')),
-('Anna','Ferrari','anna.ferrari@yahoo.it','339 4567890','Piazza Vecchia 1','Bergamo Alta', to_date('05/02/2020','DD/MM/YYYY')),
-('Giorgio','Ricci','g.ricci@email.it','366 5678901','Via Tasso 8','Bergamo', to_date('18/04/2020','DD/MM/YYYY')),
-('Maria','Conti','maria.conti@gmail.com','351 6789012','Via Pignolo 44','Bergamo', to_date('30/06/2020','DD/MM/YYYY')),
-('Paolo','Manzoni','p.manzoni@libero.it','342 7890123','Via Borgo Palazzo 17','Bergamo', to_date('12/09/2020','DD/MM/YYYY')),
-('Elena','Galli','e.galli@email.it','333 8901234','Via S. Tomaso 9','Bergamo Alta', to_date('25/01/2021','DD/MM/YYYY')),
-('Roberto','Esposito','r.esposito@gmail.com','370 9012345','Via Zambonate 22','Bergamo', to_date('08/03/2021','DD/MM/YYYY')),
-('Chiara','Ferretti','c.ferretti@email.it','348 0123456','Viale Papa Giovanni 15','Bergamo', to_date('19/05/2021','DD/MM/YYYY')),
-('Antonio','Moretti','a.moretti@libero.it','335 1234568','Via Tiraboschi 6','Bergamo', to_date('02/08/2021','DD/MM/YYYY')),
-('Valentina','Caruso','v.caruso@gmail.com','347 2345679','Via Quarenghi 11','Bergamo', to_date('14/10/2021','DD/MM/YYYY')),
-('Francesco','Lombardi','f.lombardi@email.it','328 3456780','Via Moroni 28','Bergamo', to_date('27/12/2021','DD/MM/YYYY')),
-('Giulia','Barbieri','g.barbieri@yahoo.it','339 4567891','Via Camozzi 3','Bergamo', to_date('09/02/2022','DD/MM/YYYY')),
-('Stefano','Marchetti','s.marchetti@gmail.com','366 5678902','Via Angelo Mai 19','Bergamo Alta', to_date('21/04/2022','DD/MM/YYYY'))
+('Marco','Rossi','marco.rossi@email.it','335 1234567','Via Roma 12','Bergamo', to_date('15/03/2019','DD/MM/YYYY'), true),
+('Francesca','Bianchi','f.bianchi@gmail.com','347 2345678','Via Garibaldi 5','Bergamo Alta', to_date('22/07/2019','DD/MM/YYYY'), false), --TODO: cambiare a true
+('Luigi','Colombo','l.colombo@libero.it','328 3456789','Via Manzoni 33','Sorisole', to_date('10/11/2019','DD/MM/YYYY'), true),
+('Anna','Ferrari','anna.ferrari@yahoo.it','339 4567890','Piazza Vecchia 1','Bergamo Alta', to_date('05/02/2020','DD/MM/YYYY'), true),
+('Giorgio','Ricci','g.ricci@email.it','366 5678901','Via Tasso 8','Bergamo', to_date('18/04/2020','DD/MM/YYYY'), true),
+('Maria','Conti','maria.conti@gmail.com','351 6789012','Via Pignolo 44','Bergamo', to_date('30/06/2020','DD/MM/YYYY'), true),
+('Paolo','Manzoni','p.manzoni@libero.it','342 7890123','Via Borgo Palazzo 17','Bergamo', to_date('12/09/2020','DD/MM/YYYY'), true),
+('Elena','Galli','e.galli@email.it','333 8901234','Via S. Tomaso 9','Bergamo Alta', to_date('25/01/2021','DD/MM/YYYY'), true),
+('Roberto','Esposito','r.esposito@gmail.com','370 9012345','Via Zambonate 22','Bergamo', to_date('08/03/2021','DD/MM/YYYY'), true),
+('Chiara','Ferretti','c.ferretti@email.it','348 0123456','Viale Papa Giovanni 15','Bergamo', to_date('19/05/2021','DD/MM/YYYY'), true),
+('Antonio','Moretti','a.moretti@libero.it','335 1234568','Via Tiraboschi 6','Bergamo', to_date('02/08/2021','DD/MM/YYYY'), true),
+('Valentina','Caruso','v.caruso@gmail.com','347 2345679','Via Quarenghi 11','Bergamo', to_date('14/10/2021','DD/MM/YYYY'), true),
+('Francesco','Lombardi','f.lombardi@email.it','328 3456780','Via Moroni 28','Bergamo', to_date('27/12/2021','DD/MM/YYYY'), true),
+('Giulia','Barbieri','g.barbieri@yahoo.it','339 4567891','Via Camozzi 3','Bergamo', to_date('09/02/2022','DD/MM/YYYY'), true),
+('Stefano','Marchetti','s.marchetti@gmail.com','366 5678902','Via Angelo Mai 19','Bergamo Alta', to_date('21/04/2022','DD/MM/YYYY'), true)
 ON CONFLICT (email) DO NOTHING;
 
 -- ============================================================
 -- 2. ANIMALI — mapping tramite nome+cognome
 -- ============================================================
 
-INSERT INTO animali (nome, specie, razza, data_nascita, sesso, peso, microchip, proprietario_id, note_generali)
+-- TODO: cambiare stato a SANO o a stato congruente con le note generali (es. FIV positivo -> MALATO)
+INSERT INTO animali (nome, specie, razza, data_di_nascita, sesso, peso, microchip, proprietario_id, note_generali, stato)
 VALUES
 ('Briciola','Cane','Labrador', to_date('12/05/2017','DD/MM/YYYY'),'F',28.5,'380260040123456',
     (SELECT id FROM proprietari WHERE nome='Marco' AND cognome='Rossi'),
-    NULL),
+    NULL, 'SANO'),
 
 ('Rex','Cane','Pastore Tedesco', to_date('03/09/2018','DD/MM/YYYY'),'M',34,'380260040234567',
     (SELECT id FROM proprietari WHERE nome='Francesca' AND cognome='Bianchi'),
-    'Allergia al pollame'),
+    'Allergia al pollame', 'MALATO'),
 
 ('Luna','Gatto','Europeo Comune', to_date('17/02/2020','DD/MM/YYYY'),'F',4.2,'380260040345678',
     (SELECT id FROM proprietari WHERE nome='Francesca' AND cognome='Bianchi'),
-    NULL),
+    NULL, 'SANO'),
 
 ('Pallina','Cane','Bassotto', to_date('28/11/2016','DD/MM/YYYY'),'F',9.1,'380260040456789',
     (SELECT id FROM proprietari WHERE nome='Luigi' AND cognome='Colombo'),
-    'Problemi alla schiena'),
+    'Problemi alla schiena', 'IN_CURA'),
 
 ('Micio','Gatto','Persiano', to_date('06/04/2019','DD/MM/YYYY'),'M',5.8,'380260040567890',
     (SELECT id FROM proprietari WHERE nome='Anna' AND cognome='Ferrari'),
-    NULL),
+    NULL, 'DECEDUTO'),
 
 ('Fido','Cane','Golden Retriever', to_date('14/08/2018','DD/MM/YYYY'),'M',31.2,'380260040678901',
     (SELECT id FROM proprietari WHERE nome='Giorgio' AND cognome='Ricci'),
-    NULL),
+    NULL, 'SANO'),
 
 ('Neve','Gatto','Siamese', to_date('22/01/2021','DD/MM/YYYY'),'F',3.9,'380260040789012',
     (SELECT id FROM proprietari WHERE nome='Maria' AND cognome='Conti'),
-    NULL),
+    NULL, 'SANO'),
 
 ('Birillo','Cane','Beagle', to_date('09/06/2017','DD/MM/YYYY'),'M',12.4,'380260040890123',
     (SELECT id FROM proprietari WHERE nome='Paolo' AND cognome='Manzoni'),
-    'Tendenza all''obesità'),
+    'Tendenza all''obesità', 'SANO'),
 
 ('Cioccolata','Cane','Labrador', to_date('30/03/2019','DD/MM/YYYY'),'F',26,'380260040901234',
     (SELECT id FROM proprietari WHERE nome='Elena' AND cognome='Galli'),
-    NULL),
+    NULL, 'SANO'),
 
 ('Tigre','Gatto','Maine Coon', to_date('11/10/2018','DD/MM/YYYY'),'M',7.3,'380260041012345',
     (SELECT id FROM proprietari WHERE nome='Roberto' AND cognome='Esposito'),
-    NULL),
+    NULL, 'SANO'),
 
 ('Oscar','Cane','Boxer', to_date('05/07/2020','DD/MM/YYYY'),'M',29.5,'380260041123456',
     (SELECT id FROM proprietari WHERE nome='Chiara' AND cognome='Ferretti'),
-    NULL),
+    NULL, 'SANO'),
 
 ('Puffo','Coniglio','Nano Olandese', to_date('18/12/2021','DD/MM/YYYY'),'M',1.4,NULL,
     (SELECT id FROM proprietari WHERE nome='Antonio' AND cognome='Moretti'),
-    NULL),
+    NULL, 'SANO'),
 
 ('Stella','Gatto','Europeo Comune', to_date('24/05/2019','DD/MM/YYYY'),'F',3.6,'380260041234567',
     (SELECT id FROM proprietari WHERE nome='Valentina' AND cognome='Caruso'),
-    'FIV positivo'),
+    'FIV positivo', 'SANO'),
 
 ('Zeus','Cane','Rottweiler', to_date('02/02/2017','DD/MM/YYYY'),'M',44,'380260041345678',
     (SELECT id FROM proprietari WHERE nome='Francesco' AND cognome='Lombardi'),
-    NULL),
+    NULL, 'SANO'),
 
 ('Mia','Gatto','Ragdoll', to_date('16/09/2020','DD/MM/YYYY'),'F',5.1,'380260041456789',
     (SELECT id FROM proprietari WHERE nome='Giulia' AND cognome='Barbieri'),
-    NULL),
+    NULL, 'SANO'),
 
 ('Artù','Cane','Border Collie', to_date('07/11/2018','DD/MM/YYYY'),'M',18.7,'380260041567890',
     (SELECT id FROM proprietari WHERE nome='Stefano' AND cognome='Marchetti'),
-    NULL),
+    NULL, 'SANO'),
 
 ('Mochi','Gatto','Birmano', to_date('29/06/2021','DD/MM/YYYY'),'M',4.4,'380260041678901',
     (SELECT id FROM proprietari WHERE nome='Marco' AND cognome='Rossi'),
-    NULL),
+    NULL, 'SANO'),
 
 ('Lilly','Cane','Barboncino', to_date('13/03/2020','DD/MM/YYYY'),'F',5.2,'380260041789012',
     (SELECT id FROM proprietari WHERE nome='Giorgio' AND cognome='Ricci'),
-    NULL),
+    NULL, 'SANO'),
 
 ('Charlie','Cane','Cocker Spaniel', to_date('25/08/2019','DD/MM/YYYY'),'M',11.8,'380260041890123',
     (SELECT id FROM proprietari WHERE nome='Elena' AND cognome='Galli'),
-    'Otite cronica'),
+    'Otite cronica', 'SANO'),
 
 ('Fiocco','Coniglio','Ariete', to_date('04/01/2022','DD/MM/YYYY'),'F',2.1,NULL,
     (SELECT id FROM proprietari WHERE nome='Antonio' AND cognome='Moretti'),
-    NULL)
+    NULL, 'SANO')
 ON CONFLICT (microchip) DO NOTHING;

@@ -52,7 +52,7 @@ public class Animale {
     private String coloreMantello;
 
     @Column(nullable = true) // Sterilizzazione opzionale, default false
-    private boolean sterilizzato = false;
+    private Boolean sterilizzato = false;
 
     @Column(name = "gruppo_sanguigno", nullable = true) // Alcune specie non hanno gruppo sanguigno, quindi non è obbligatorio
     private String gruppoSanguigno;

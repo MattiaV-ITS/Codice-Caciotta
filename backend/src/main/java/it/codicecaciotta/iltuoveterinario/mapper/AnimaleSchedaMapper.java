@@ -27,7 +27,7 @@ public class AnimaleSchedaMapper {
         dto.setMicrochip(animale.getMicrochip());
         dto.setTaglia(animale.getTaglia());
         dto.setColoreMantello(animale.getColoreMantello());
-        dto.setSterilizzato(animale.isSterilizzato());
+        dto.setSterilizzato(animale.getSterilizzato());
         dto.setGruppoSanguigno(animale.getGruppoSanguigno());
         dto.setAllergie(animale.getAllergie());
         dto.setPatologie(animale.getPatologie());
