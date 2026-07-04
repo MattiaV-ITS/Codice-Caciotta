@@ -6,6 +6,9 @@ import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
 import java.time.LocalDateTime;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import java.math.BigDecimal;
 
 @Entity
@@ -37,4 +40,11 @@ public class Visita {
     @EqualsAndHashCode.Exclude
     @ToString.Exclude
     private Animale animale;
+
+    @OneToOne(mappedBy = "visita", fetch = FetchType.LAZY)
+    @EqualsAndHashCode.Exclude
+    @ToString.Exclude
+    @JsonIgnore
+    private DiarioClinico diarioClinico;
+
 }

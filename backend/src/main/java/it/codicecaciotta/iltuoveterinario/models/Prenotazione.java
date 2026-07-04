@@ -22,7 +22,7 @@ public class Prenotazione {
     private LocalDateTime dataOraAppuntamento;
     
     @Column(nullable = false)
-    private String motivo;
+    private String tipoVisita; // es. "Visita di controllo", "Vaccinazione", ecc.
 
     @Column(name = "stato_prenotazione", nullable = false, length = 20)
     private String statoPrenotazione = "Attesa";
