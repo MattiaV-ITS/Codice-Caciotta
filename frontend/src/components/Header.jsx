@@ -1,9 +1,10 @@
 // components/Header.jsx
 import { useAuth } from '../context/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
+import logo from '../assets/logo.svg';  // ← Importa il PNG da assets
 import './Header.css';
 
-function Header({ onMenuToggle }) {  // ← Riceve la funzione per aprire/chiudere il menu
+function Header({ onMenuToggle }) {
   const { user, logout, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const isAdmin = user?.roles?.includes('ROLE_ADMIN');
@@ -16,7 +17,6 @@ function Header({ onMenuToggle }) {  // ← Riceve la funzione per aprire/chiude
       navigate('/login');
     } catch (error) {
       console.error('Logout failed:', error);
-      // Fallback navigation
       window.location.href = '/login';
     }
   };
@@ -25,7 +25,6 @@ function Header({ onMenuToggle }) {  // ← Riceve la funzione per aprire/chiude
     <header className="app-header">
       <div className="header-container">
         <div className="header-left">
-          {/* Pulsante hamburger (visibile solo su mobile) */}
           <button 
             className="menu-toggle"
             onClick={onMenuToggle}
@@ -35,7 +34,7 @@ function Header({ onMenuToggle }) {  // ← Riceve la funzione per aprire/chiude
           </button>
 
           <Link to="/" className="logo">
-            <div className="logo-icon">🐾</div>
+            <img src={logo} alt="Il Tuo Veterinario" className="logo-icon" />
             <span>Il Tuo Veterinario</span>
           </Link>
         </div>
