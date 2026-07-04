@@ -5,6 +5,8 @@ import Signup from './components/Signup';
 import { Dashboard } from './pages/Dashboard/Dashboard';
 import AnimaliLista from './pages/Animali/AnimaliLista';
 import ProprietariLista from './pages/Proprietari/ProprietariLista';
+import VisitePagina from './pages/Visite/VisitePagina';
+import VisiteLista from './pages/Visite/VisiteLista';
 import AdminRoleManagement from "./components/AdminRoleManagement";
 import { useAuth } from './context/AuthContext';
 import './App.css';
@@ -41,6 +43,8 @@ function App() {
         <Route path="/" element={<Dashboard />} />
         <Route path="/animali" element={<StaffRoute><AnimaliLista /></StaffRoute>} />
         <Route path="/proprietari" element={<StaffRoute><ProprietariLista /></StaffRoute>} />
+        <Route path="/visite" element={<StaffRoute><VisiteLista /></StaffRoute>} />
+        <Route path="/visite/:id" element={<StaffRoute><VisitePagina /></StaffRoute>} />
         <Route path="/admin" element={<AdminRoute><AdminRoleManagement /></AdminRoute>} />
       </Route>
     </Routes>
