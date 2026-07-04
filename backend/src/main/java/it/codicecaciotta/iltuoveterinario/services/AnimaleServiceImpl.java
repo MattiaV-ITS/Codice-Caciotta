@@ -6,12 +6,14 @@ import it.codicecaciotta.iltuoveterinario.models.Animale;
 import it.codicecaciotta.iltuoveterinario.models.Proprietario;
 import it.codicecaciotta.iltuoveterinario.repositories.AnimaleRepository;
 import it.codicecaciotta.iltuoveterinario.repositories.ProprietarioRepository;
+import jakarta.persistence.EntityGraph;
 
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import jakarta.persistence.EntityNotFoundException;
+import java.math.BigDecimal;
 
 @Service
 public class AnimaleServiceImpl implements AnimaleService {
@@ -136,5 +138,20 @@ public class AnimaleServiceImpl implements AnimaleService {
 
         // Delete
         animaleRepository.deleteById(id);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Animale getAnimaleWithVaccinazioni(@NonNull Long id) {
+        // Crea un EntityGraph per caricare anche le vaccinazioni
+        EntityGraph<?> graph = animaleRepository.getEntityManager().createEntityGraph(Animale.class);
+        graph.addAttributeNodes("vaccinazioni");
+
+        // Crea un hint per l'EntityGraph
+        var hints = new java.util.HashMap<String, Object>();
+        hints.put("jakarta.persistence.loadgraph", graph);
+
+        return animaleRepository.findById(id, hints)
+                .orElseThrow(() -> new EntityNotFoundException("Animale not found with id: " + id));
     }
 }

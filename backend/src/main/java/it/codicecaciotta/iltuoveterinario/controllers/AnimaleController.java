@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -53,5 +54,12 @@ public class AnimaleController {
     public ResponseEntity<Void> deleteAnimale(@PathVariable Long id) {
         animaleService.deleteAnimale(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/api/animali/{id}/vaccinazioni")
+    @PreAuthorize("hasAuthority('ROLE_STAFF') or hasAuthority('ROLE_ADMIN')")
+    public ResponseEntity<Animale> getAnimaleWithVaccinazioni(@PathVariable Long id) {
+        Animale animale = animaleService.getAnimaleWithVaccinazioni(id);
+        return ResponseEntity.ok(animale);
     }
 }

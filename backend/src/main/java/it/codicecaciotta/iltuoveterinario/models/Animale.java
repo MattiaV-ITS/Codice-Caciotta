@@ -2,6 +2,8 @@ package it.codicecaciotta.iltuoveterinario.models;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
 
 
 
@@ -11,6 +13,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 @Entity
 @Table(name = "animali")
@@ -80,4 +83,21 @@ public class Animale {
     @ToString.Exclude
     @JsonBackReference
     private Proprietario proprietario;
+
+    @OneToMany(mappedBy = "animale", cascade = CascadeType.ALL, orphanRemoval = true)
+    @EqualsAndHashCode.Exclude
+    @ToString.Exclude
+    @JsonManagedReference
+    private Set<Vaccinazione> vaccinazioni = new HashSet<>();
+
+    // Metodo helper per mantenere sincronizzati i due lati della relazione
+    public void addVaccinazione(Vaccinazione vaccinazione) {
+        vaccinazioni.add(vaccinazione);
+        vaccinazione.setAnimale(this);
+    }
+
+    public void removeVaccinazione(Vaccinazione vaccinazione) {
+        vaccinazioni.remove(vaccinazione);
+        vaccinazione.setAnimale(null);
+    }
 }
