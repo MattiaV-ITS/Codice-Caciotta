@@ -7,11 +7,14 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+@CrossOrigin(origins = "*", maxAge = 3600)
 public class ProprietarioListaController {
 
     private final ProprietarioListaServiceImpl proprietarioService;
@@ -23,6 +26,7 @@ public class ProprietarioListaController {
     }
 
     @GetMapping("/api/proprietari")
+    @PreAuthorize("hasAuthority('ROLE_STAFF') or hasAuthority('ROLE_ADMIN')")
     public Page<ProprietarioListaDTO> getProprietari(
         @RequestParam(defaultValue = "0") int page,
         @RequestParam(defaultValue = "10") int size,

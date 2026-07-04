@@ -137,4 +137,11 @@ public class AnimaleServiceImpl implements AnimaleService {
         // Delete
         animaleRepository.deleteById(id);
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Animale getAnimaleById(@NonNull Long id) {
+        return animaleRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Animale not found with id: " + id));
+    }
 }

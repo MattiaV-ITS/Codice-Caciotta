@@ -30,6 +30,7 @@ public class AnimaleController {
     }
 
     @PostMapping("/api/animali")
+    @PreAuthorize("hasAuthority('ROLE_USER') or hasAuthority('ROLE_STAFF') or hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<Animale> createAnimale(@Valid @RequestBody AnimaleCreateDTO animaleCreateDTO) {
         Animale createdAnimale = animaleService.createAnimale(animaleCreateDTO);
         

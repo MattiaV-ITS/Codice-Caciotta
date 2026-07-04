@@ -30,6 +30,7 @@ public class ProprietarioController {
     }
 
     @PostMapping("/api/proprietari")
+    @PreAuthorize("hasAuthority('ROLE_USER') or hasAuthority('ROLE_STAFF') or hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<Proprietario> createProprietario(@Valid @RequestBody ProprietarioCreateDTO proprietarioCreateDTO) {
         Proprietario createdProprietario = proprietarioService.createProprietario(proprietarioCreateDTO);
         

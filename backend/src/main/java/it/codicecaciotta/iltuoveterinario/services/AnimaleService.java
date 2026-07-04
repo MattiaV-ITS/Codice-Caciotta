@@ -10,4 +10,5 @@ public interface AnimaleService {
     Animale createAnimale(AnimaleCreateDTO animaleCreateDTO);
     Animale updateAnimale(@NonNull Long id, AnimaleUpdateDTO animaleUpdateDTO);
     void deleteAnimale(@NonNull Long id);
+    Animale getAnimaleById(@NonNull Long id);
 }
