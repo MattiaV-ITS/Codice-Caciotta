@@ -22,7 +22,8 @@ function AnimaliLista() {
     handleSizeChange, 
     getSortIndicator, 
     goToPreviousPage, 
-    goToNextPage 
+    goToNextPage, 
+    setPage
   } = useTableControls({
     defaultSortBy: 'id',
     defaultSortDir: 'asc', 
@@ -68,7 +69,8 @@ function AnimaliLista() {
       })
       .then(data => {
         setAnimali(data.content);
-        setTotalPages(data.totalPages);
+        setTotalPages(data.page.totalPages);
+        setPage(data.page.number);
         setLoading(false);
       })
       .catch(err => {

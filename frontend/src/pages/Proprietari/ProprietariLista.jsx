@@ -70,7 +70,8 @@ function ProprietariLista() {
       })
       .then(data => {
         setProprietari(data.content);
-        setTotalPages(data.totalPages);
+        setTotalPages(data.page.totalPages);
+        setPage(data.page.number);
         setLoading(false);
       })
       .catch(err => {

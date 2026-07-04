@@ -1,3 +1,8 @@
+/**
+ * @file UseTableControls.js
+ * @description Custom hook for managing table controls (sorting, pagination, etc.)
+ */
+
 import { useState } from 'react';
 
 /**

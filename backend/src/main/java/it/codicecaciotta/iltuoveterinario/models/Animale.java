@@ -10,6 +10,7 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 
 @Entity
 @Table(name = "animali")
@@ -50,7 +51,7 @@ public class Animale {
     @Column(name = "colore_mantello", nullable = true) // Colore mantello puo essere null per alcune specie, quindi non è obbligatorio
     private String coloreMantello;
 
-    @Column(nullable = false)
+    @Column(nullable = true) // Sterilizzazione opzionale, default false
     private boolean sterilizzato = false;
 
     @Column(name = "gruppo_sanguigno", nullable = true) // Alcune specie non hanno gruppo sanguigno, quindi non è obbligatorio
@@ -70,9 +71,13 @@ public class Animale {
     @Column(name = "note_generali", nullable = true) // Note opzionali
     private String noteGenerali;
 
+    @Column(name = "note_private", nullable = true) // Note private opzionali
+    private String notePrivate;
+
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "proprietario_id") // Made nullable to break circular dependency
+    @JoinColumn(name = "proprietario_id", nullable = true)
     @EqualsAndHashCode.Exclude
     @ToString.Exclude
+    @JsonBackReference
     private Proprietario proprietario;
 }
