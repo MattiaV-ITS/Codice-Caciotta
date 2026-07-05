@@ -33,7 +33,8 @@ public class ProprietarioListaController {
         @RequestParam(defaultValue = "id") String sortBy,
         @RequestParam(defaultValue = "asc") String sortDir,
         @RequestParam(required = false) String search,
-        @RequestParam(required = false) String citta) {
+        @RequestParam(required = false) String citta,
+        @RequestParam(required = false) Boolean stato) {
         
         // Validate and sanitize pagination parameters
         if (page < 0) {
@@ -66,6 +67,11 @@ public class ProprietarioListaController {
         
         if (citta != null && !citta.trim().isEmpty()) {
             return proprietarioService.getProprietariByCitta(citta.trim(), pageable);
+        }
+        
+        // Check for stato parameter (Boolean) - status filtering
+        if (stato != null) {
+            return proprietarioService.getProprietariByStato(stato, pageable);
         }
         
         return proprietarioService.getAllProprietari(pageable);

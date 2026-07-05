@@ -9,4 +9,6 @@ public interface ProprietarioListaService {
     Page<ProprietarioListaDTO> getAllProprietari(Pageable pageable);
     Page<ProprietarioListaDTO> searchProprietariComprehensive(String searchTerm, Pageable pageable);
     Page<ProprietarioListaDTO> getProprietariByCitta(String citta, Pageable pageable);
+    
+    Page<ProprietarioListaDTO> getProprietariByStato(Boolean stato, Pageable pageable);
 }

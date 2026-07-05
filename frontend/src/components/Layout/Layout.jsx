@@ -64,6 +64,14 @@ export function Layout() {
               Proprietari
             </NavLink>
             <NavLink 
+              to="/vaccinazioni" 
+              className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+              onClick={closeMenu}
+            >
+              <span className="nav-icon">💉</span>
+              Vaccinazioni
+            </NavLink>
+            <NavLink 
               to="/visite" 
               className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
               onClick={closeMenu}

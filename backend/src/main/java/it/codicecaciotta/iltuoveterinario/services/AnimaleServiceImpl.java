@@ -6,12 +6,14 @@ import it.codicecaciotta.iltuoveterinario.models.Animale;
 import it.codicecaciotta.iltuoveterinario.models.Proprietario;
 import it.codicecaciotta.iltuoveterinario.repositories.AnimaleRepository;
 import it.codicecaciotta.iltuoveterinario.repositories.ProprietarioRepository;
+import jakarta.persistence.EntityGraph;
 
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import jakarta.persistence.EntityNotFoundException;
+import java.math.BigDecimal;
 
 @Service
 public class AnimaleServiceImpl implements AnimaleService {

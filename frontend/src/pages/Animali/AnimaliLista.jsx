@@ -2,7 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { formatDate, getIconLetter } from '../../utils';
 import { useTableControls } from '../../utils/useTableControls';
 import { useApi } from '../../services/apiService';
+import ListaTable from '../../components/ListaTable/ListaTable';
 
+/**
+ * Component per la visualizzazione e gestione dell'elenco degli animali
+ * Utilizza il componente ListaTable per la visualizzazione tabellare unificata
+ */
 function AnimaliLista() {
   const { get } = useApi();
   const [animali, setAnimali] = useState([]);
@@ -12,6 +17,7 @@ function AnimaliLista() {
   const [appliedSearchTerm, setAppliedSearchTerm] = useState('');
   const [specieFilter, setSpecieFilter] = useState('');
   const [totalPages, setTotalPages] = useState(0);
+  const [totalCount, setTotalCount] = useState(0);
 
   const { 
     sortBy, 
@@ -42,10 +48,53 @@ function AnimaliLista() {
     return map[stato] || { label: 'Sconosciuto', className: 'badge-sconosciuto' };
   };
 
+  const customColumns = [
+    {
+      header: 'NOME ANIMALE',
+      field: 'nome',
+      sortable: true,
+      render: (item) => {
+        const isFemale = item.sesso?.toLowerCase() === 'f';
+        const isMale = item.sesso?.toLowerCase() === 'm';
+        const isND = item.sesso === null || item.sesso === undefined;
+
+        let avatarClass = 'avatar-default';
+        if (isFemale) avatarClass = 'avatar-female';
+        else if (isMale) avatarClass = 'avatar-male';
+        else if (isND) avatarClass = 'avatar-nd';
+
+        return (
+          <div className="cell-content">
+            <div className={`avatar-circle ${avatarClass}`}>
+              {getIconLetter(item.specie)}
+            </div>
+            <span className={`name-colored ${isFemale ? 'name-female' : isMale ? 'name-male' : 'name-default'}`}>
+              {item.nome}
+            </span>
+          </div>
+        );
+      }
+    },
+    { header: 'RAZZA', field: 'razza', sortable: true, render: (item) => item.razza || '-' },
+    { header: 'PROPRIETARIO', field: 'proprietario', sortable: false, render: (item) => item.proprietario || '-' },
+    { header: 'DATA DI NASCITA', field: 'dataNascita', type: 'date', sortable: true },
+    { header: 'MICROCHIP', field: 'microchip', sortable: true, render: (item) => item.microchip || '-' },
+    {
+      header: 'STATO',
+      field: 'stato',
+      sortable: false,
+      style: { textAlign: 'center' },
+      render: (item) => {
+        const status = getStatoInfo(item.stato);
+        return <span className={`badge-status ${status.className}`}>{status.label}</span>;
+      }
+    }
+  ];
+
   useEffect(() => {
     setLoading(true);
 
-    // Build query parameters
+    // Costruzione parametri query
     const params = new URLSearchParams();
     params.append('page', page);
     params.append('size', size);
@@ -70,6 +119,7 @@ function AnimaliLista() {
       .then(data => {
         setAnimali(data.content);
         setTotalPages(data.page.totalPages);
+        setTotalCount(data.page.totalElements);
         setPage(data.page.number);
         setLoading(false);
       })
@@ -184,98 +234,36 @@ function AnimaliLista() {
         </div>
       </div>
 
-      {animali.length === 0 ? (
-        <div className="empty-state">
-          <div className="empty-icon">🐾</div>
-          <div className="empty-title">Nessun animale trovato</div>
-          <p className="empty-description">
-            {appliedSearchTerm || specieFilter ? 'Prova a modificare i filtri di ricerca.' : 'Inizia aggiungendo il tuo primo animale.'}
-          </p>
-        </div>
-      ) : (
-        <>
-          <div className="table-responsive">
-            <table className="table-custom">
-              <thead>
-                <tr>
-                  <th onClick={() => handleSort('nome')}>
-                    NOME ANIMALE <span className="sort-indicator">{getSortIndicator('nome')}</span>
-                  </th>
-                  <th onClick={() => handleSort('razza')}>
-                    RAZZA <span className="sort-indicator">{getSortIndicator('razza')}</span>
-                  </th>
-                  <th onClick={() => handleSort('proprietario')}>
-                    PROPRIETARIO <span className="sort-indicator">{getSortIndicator('proprietario')}</span>
-                  </th>
-                  <th onClick={() => handleSort('dataNascita')}>
-                    DATA DI NASCITA <span className="sort-indicator">{getSortIndicator('dataNascita')}</span>
-                  </th>
-                  <th onClick={() => handleSort('microchip')}>
-                    MICROCHIP <span className="sort-indicator">{getSortIndicator('microchip')}</span>
-                  </th>
-                  <th style={{ textAlign: 'center' }}>STATO</th>
-                  <th style={{ width: '40px' }}></th>
-                </tr>
-              </thead>
-              <tbody>
-                {animali.map((animale) => {
-                  const isFemale = animale.sesso?.toLowerCase() === 'f';
-                  const isMale = animale.sesso?.toLowerCase() === 'm';
-                  const isND = animale.sesso === null || animale.sesso === undefined;
+      <ListaTable
+        data={animali}
+        columns={customColumns}
+        sortBy={sortBy}
+        sortDir={sortDir}
+        onSort={handleSort}
+        getSortIndicator={getSortIndicator}
+        loading={loading}
+        error={error}
+        emptyMessage={appliedSearchTerm || specieFilter ? 'Prova a modificare i filtri di ricerca.' : 'Inizia aggiungendo il tuo primo animale.'}
+        emptyIcon="🐾"
+      />
 
-                  let avatarClass = 'avatar-default';
-                  if (isFemale) avatarClass = 'avatar-female';
-                  else if (isMale) avatarClass = 'avatar-male';
-                  else if (isND) avatarClass = 'avatar-nd';
-
-                  const status = getStatoInfo(animale.stato);
-
-                  return (
-                    <tr key={animale.id}>
-                      <td>
-                        <div className="cell-content">
-                          <div className={`avatar-circle ${avatarClass}`}>
-                            {getIconLetter(animale.specie)}
-                          </div>
-                          <span className={`name-colored ${isFemale ? 'name-female' : isMale ? 'name-male' : 'name-default'}`}>
-                            {animale.nome}
-                          </span>
-                        </div>
-                      </td>
-                      <td>{animale.razza || '-'}</td>
-                      <td>{animale.proprietario || '-'}</td>
-                      <td>{formatDate(animale.dataNascita)}</td>
-                      <td>{animale.microchip || '-'}</td>
-                      <td style={{ textAlign: 'center' }}>
-                        <span className={`badge-status ${status.className}`}>
-                          {status.label}
-                        </span>
-                      </td>
-                      <td className="actions-menu">⋯</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-
-          <div className="pagination-wrapper">
-            <span className="pagination-info">
-              Mostrati <strong>{animali.length}</strong> di <strong>{totalPages * size}</strong> animali
+      {animali.length > 0 && (
+        <div className="pagination-wrapper">
+          <span className="pagination-info">
+            Mostrati <strong>{animali.length}</strong> di <strong>{totalCount}</strong> animali
+          </span>
+          <div className="pagination-controls">
+            <button className="pagination-btn" onClick={goToPreviousPage} disabled={page === 0}>
+              Precedente
+            </button>
+            <span className="pagination-page-info">
+              <strong>{page + 1}</strong> di <strong>{totalPages}</strong>
             </span>
-            <div className="pagination-controls">
-              <button className="pagination-btn" onClick={goToPreviousPage} disabled={page === 0}>
-                Precedente
-              </button>
-              <span className="pagination-page-info">
-                <strong>{page + 1}</strong> di <strong>{totalPages}</strong>
-              </span>
-              <button className="pagination-btn" onClick={() => goToNextPage(totalPages)} disabled={page >= totalPages - 1}>
-                Successivo
-              </button>
-            </div>
+            <button className="pagination-btn" onClick={() => goToNextPage(totalPages)} disabled={page >= totalPages - 1}>
+              Successivo
+            </button>
           </div>
-        </>
+        </div>
       )}
     </div>
   );
