@@ -16,7 +16,8 @@ const ListaTable = ({
   loading, 
   error, 
   emptyMessage, 
-  emptyIcon = '🔍'
+  emptyIcon = '🔍',
+  onRowClick // ← AGGIUNTA: callback per clic sulla riga
 }) => {
   if (loading) {
     return (
@@ -56,7 +57,7 @@ const ListaTable = ({
               <th 
                 key={column.field || column.header}
                 onClick={() => column.sortable && onSort(column.field || column.header)}
-                style={{ cursor: column.sortable ? 'pointer' : 'default' }}
+                style={{ cursor: column.sortable ? 'pointer' : 'default', ...column.style }}
               >
                 {column.header} {column.sortable && <span className="sort-indicator">{getSortIndicator(column.field || column.header)}</span>}
               </th>
@@ -65,7 +66,12 @@ const ListaTable = ({
         </thead>
         <tbody>
           {data.map((item, index) => (
-            <tr key={item.id || index}>
+            <tr 
+              key={item.id || index}
+              onClick={() => onRowClick && onRowClick(item)} // ← AGGIUNTA
+              style={{ cursor: onRowClick ? 'pointer' : 'default' }} // ← AGGIUNTA
+              className={onRowClick ? 'clickable-row' : ''} // ← AGGIUNTA (se hai la classe CSS)
+            >
               {columns.map((column) => (
                 <td key={`${column.field}-${index}`} style={column.style}>
                   {column.render ? column.render(item) : (
