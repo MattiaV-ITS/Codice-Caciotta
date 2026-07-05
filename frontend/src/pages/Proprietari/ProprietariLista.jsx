@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
-import ListaTable from '../components/ListaTable/ListaTable';
-import LoadingSpinner from '../components/common/LoadingSpinner';
-import ErrorMessage from '../components/common/ErrorMessage';
-import PaginationFooter from '../components/common/PaginationFooter';
-import SearchBox from '../components/common/SearchBox';
-import FilterBar from '../components/common/FilterBar';
+import ListaTable from '../../components/ListaTable/ListaTable';
+import LoadingSpinner from '../../components/common/LoadingSpinner';
+import ErrorMessage from '../../components/common/ErrorMessage';
+import PaginationFooter from '../../components/common/PaginationFooter';
+import SearchBox from '../../components/common/SearchBox';
+import FilterBar from '../../components/common/FilterBar';
 
-import { useTableControls } from '../hooks/useTableControls';
-import { usePaginatedFetch } from '../hooks/usePaginatedFetch';
-import { useSearchControls } from '../hooks/useSearchControls';
+import { useTableControls } from '../../hooks/useTableControls';
+import { usePaginatedFetch } from '../../hooks/usePaginatedFetch';
+import { useSearchControls } from '../../hooks/useSearchControls';
 
 function ProprietariLista() {
   const table = useTableControls({

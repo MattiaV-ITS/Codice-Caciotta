@@ -1,4 +1,4 @@
-function usePaginatedFetch(endpoint, { page, size, sortBy, sortDir, filters }) {
+export function usePaginatedFetch(endpoint, { page, size, sortBy, sortDir, filters }) {
   const { get } = useApi();
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);

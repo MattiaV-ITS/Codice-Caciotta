@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useTableControls } from '../../utils/useTableControls';
+import { useTableControls } from '../../hooks/useTableControls';
 import ListaTable from '../../components/ListaTable/ListaTable';
 
 const MOCK_VISITE = [
