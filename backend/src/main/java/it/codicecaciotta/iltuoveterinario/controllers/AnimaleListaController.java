@@ -19,7 +19,7 @@ public class AnimaleListaController {
 
     private final AnimaleListaServiceImpl animaleService;
     private static final int MAX_PAGE_SIZE = 100;
-    private static final String[] ALLOWED_SORT_FIELDS = {"id", "nome", "specie", "dataNascita", "peso", "stato"};
+    private static final String[] ALLOWED_SORT_FIELDS = {"id", "nome", "specie", "razza", "dataNascita", "sesso", "peso", "microchip", "taglia", "coloreMantello", "sterilizzato", "gruppoSanguigno", "allergie", "patologie", "stato", "noteGenerali", "notePrivate", "proprietario"};
 
     public AnimaleListaController(AnimaleListaServiceImpl animaleService) {
         this.animaleService = animaleService;
@@ -35,7 +35,7 @@ public class AnimaleListaController {
         @RequestParam(required = false) String search,
         @RequestParam(required = false) String specie) {
         
-        // Validate and sanitize pagination parameters
+        // Valida e sanitizza i parametri di impaginazione
         if (page < 0) {
             page = 0;
         }
@@ -43,7 +43,7 @@ public class AnimaleListaController {
             size = 10;
         }
         
-        // Validate sortBy to prevent injection
+        // Valida e sanitizza sortBy per prevenire iniezioni
         boolean validField = false;
         for (String field : ALLOWED_SORT_FIELDS) {
             if (field.equals(sortBy)) {
@@ -55,7 +55,7 @@ public class AnimaleListaController {
             sortBy = "id";
         }
         
-        // Normalize sort direction
+        // Normalizza il sort
         sortDir = sortDir.toLowerCase().startsWith("desc") ? "desc" : "asc";
         Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
         Pageable pageable = PageRequest.of(page, size, sort);

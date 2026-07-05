@@ -10,22 +10,24 @@ import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @CrossOrigin(origins = "*", maxAge = 3600)
+@RequestMapping("/api/proprietari")
 public class ProprietarioListaController {
 
     private final ProprietarioListaServiceImpl proprietarioService;
     private static final int MAX_PAGE_SIZE = 100;
-    private static final String[] ALLOWED_SORT_FIELDS = {"id", "nome", "cognome", "email", "telefono", "citta"};
+    private static final String[] ALLOWED_SORT_FIELDS = {"id", "codiceFiscale", "nome", "cognome", "email", "telefono", "indirizzo", "citta", "dataRegistrazione", "stato"};
 
     public ProprietarioListaController(ProprietarioListaServiceImpl proprietarioService) {
         this.proprietarioService = proprietarioService;
     }
 
-    @GetMapping("/api/proprietari")
+    @GetMapping
     @PreAuthorize("hasAuthority('ROLE_STAFF') or hasAuthority('ROLE_ADMIN')")
     public Page<ProprietarioListaDTO> getProprietari(
         @RequestParam(defaultValue = "0") int page,
@@ -36,7 +38,7 @@ public class ProprietarioListaController {
         @RequestParam(required = false) String citta,
         @RequestParam(required = false) Boolean stato) {
         
-        // Validate and sanitize pagination parameters
+        // Valida e sanitizza i parametri di impaginazione
         if (page < 0) {
             page = 0;
         }
@@ -44,7 +46,7 @@ public class ProprietarioListaController {
             size = 10;
         }
         
-        // Validate sortBy to prevent injection
+        // Valida e sanitizza sortBy per prevenire iniezioni
         boolean validField = false;
         for (String field : ALLOWED_SORT_FIELDS) {
             if (field.equals(sortBy)) {
@@ -56,7 +58,7 @@ public class ProprietarioListaController {
             sortBy = "id";
         }
         
-        // Normalize sort direction
+        // Normalizza il sort
         sortDir = sortDir.toLowerCase().startsWith("desc") ? "desc" : "asc";
         Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
         Pageable pageable = PageRequest.of(page, size, sort);
