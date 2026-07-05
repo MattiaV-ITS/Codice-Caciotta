@@ -29,10 +29,6 @@ public class Vaccinazione {
     @Column(nullable = false)
     private String lotto;
 
-    @Column(nullable = false)
-    @Enumerated(EnumType.STRING)
-    private EVaccinationStatus stato;
-
     @Column(nullable = true)
     private String note;
 

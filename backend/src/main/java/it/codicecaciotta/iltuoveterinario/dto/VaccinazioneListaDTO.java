@@ -2,7 +2,7 @@ package it.codicecaciotta.iltuoveterinario.dto;
 
 import java.time.LocalDate;
 
-import it.codicecaciotta.iltuoveterinario.models.EVaccinationStatus;
+import it.codicecaciotta.iltuoveterinario.models.EStatoVaccinazione;
 import lombok.Data;
 
 /**
@@ -13,11 +13,15 @@ public class VaccinazioneListaDTO {
 
     private Long id;
 
+    private String lotto;
+
     private String tipoVaccino;
+
+    private LocalDate dataSomministrazione;
 
     private LocalDate dataScadenza;
 
-    private EVaccinationStatus stato;
+    private EStatoVaccinazione statoVaccinazione;
 
     private String nomeAnimale;
 

@@ -2,7 +2,6 @@ package it.codicecaciotta.iltuoveterinario.dto;
 
 import java.time.LocalDate;
 
-import it.codicecaciotta.iltuoveterinario.models.EVaccinationStatus;
 import lombok.Data;
 
 /**
@@ -18,8 +17,6 @@ public class VaccinazioneUpdateDTO {
     private LocalDate dataScadenza;
 
     private String lotto;
-
-    private EVaccinationStatus stato;
 
     private String note;
 }

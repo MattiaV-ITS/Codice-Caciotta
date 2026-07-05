@@ -302,6 +302,16 @@
   border-color: var(--gray-600);
 }
 
+.btn-filter.btn-filter-warning.active {
+  background: #F59E0B;
+  border-color: #F59E0B;
+}
+
+.btn-filter.btn-filter-warning.active:hover {
+  background: #D97706;
+  border-color: #D97706;
+}
+
 /* ----- Search box (a larghezza piena) ----- */
 .search-box-wrapper {
   flex: 1;
@@ -464,6 +474,7 @@
 
 .stat-card .stat-number.stat-primary { color: var(--primary); }
 .stat-card .stat-number.stat-success { color: var(--success); }
+.stat-card .stat-number.stat-warning { color: #F59E0B; }
 .stat-card .stat-number.stat-danger { color: var(--danger); }
 .stat-card .stat-number.stat-gray { color: var(--gray-500); }
 
@@ -602,6 +613,22 @@
   background: var(--danger);
 }
 
+.avatar-circle.avatar-vaccine {
+  background: #6366F1;
+  color: white;
+}
+
+.note-indicator {
+  cursor: help;
+  margin-right: 4px;
+  color: var(--gray-500);
+  font-size: 14px;
+}
+
+.note-indicator:hover {
+  color: var(--primary);
+}
+
 /* ========================================
    NOME COLORATO
    ======================================== */
@@ -670,6 +697,21 @@
 .badge-status.badge-sconosciuto {
   background: var(--gray-200);
   color: var(--gray-600);
+}
+
+.badge-status.badge-valido {
+  background: #D1FAE5;
+  color: #065F46;
+}
+
+.badge-status.badge-scaduto {
+  background: #FEE2E2;
+  color: #991B1B;
+}
+
+.badge-status.badge-prossimo {
+  background: #FEF3C7;
+  color: #92400E;
 }
 
 /* ========================================

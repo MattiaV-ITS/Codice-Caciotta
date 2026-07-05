@@ -108,3 +108,201 @@ VALUES
     (SELECT id FROM proprietari WHERE nome='Antonio' AND cognome='Moretti'),
     NULL, 'SANO')
 ON CONFLICT (microchip) DO NOTHING;
+
+-- ============================================================
+-- 3. VACCINAZIONI — lookup dinamico animale_id
+-- ============================================================
+
+INSERT INTO vaccinazioni (animale_id, tipo_vaccino, data_somministrazione, data_scadenza, lotto, note)
+VALUES
+(
+    (SELECT a.id FROM animali a
+     JOIN proprietari p ON a.proprietario_id = p.id
+     WHERE a.nome='Briciola' AND p.nome='Marco' AND p.cognome='Rossi'),
+    'Polivalente cane (DHPPI)', to_date('10/01/2024','DD/MM/YYYY'),
+    to_date('10/01/2025','DD/MM/YYYY'), 'LOT-2024-0011', NULL
+),
+(
+    (SELECT a.id FROM animali a
+     JOIN proprietari p ON a.proprietario_id = p.id
+     WHERE a.nome='Briciola' AND p.nome='Marco' AND p.cognome='Rossi'),
+    'Antirabbico', to_date('10/01/2024','DD/MM/YYYY'),
+    to_date('10/01/2027','DD/MM/YYYY'), 'LOT-2024-0012', 'Validità 3 anni'
+),
+
+(
+    (SELECT a.id FROM animali a
+     JOIN proprietari p ON a.proprietario_id = p.id
+     WHERE a.nome='Rex' AND p.nome='Francesca' AND p.cognome='Bianchi'),
+    'Polivalente cane (DHPPI)', to_date('15/03/2023','DD/MM/YYYY'),
+    to_date('15/03/2024','DD/MM/YYYY'), 'LOT-2023-0045', 'Richiamo non ancora effettuato'
+),
+(
+    (SELECT a.id FROM animali a
+     JOIN proprietari p ON a.proprietario_id = p.id
+     WHERE a.nome='Rex' AND p.nome='Francesca' AND p.cognome='Bianchi'),
+    'Antirabbico', to_date('15/03/2023','DD/MM/YYYY'),
+    to_date('15/03/2026','DD/MM/YYYY'), 'LOT-2023-0046', NULL
+),
+
+(
+    (SELECT a.id FROM animali a
+     JOIN proprietari p ON a.proprietario_id = p.id
+     WHERE a.nome='Luna' AND p.nome='Francesca' AND p.cognome='Bianchi'),
+    'Trivalente felina (HCP)', to_date('18/01/2024','DD/MM/YYYY'),
+    to_date('18/01/2025','DD/MM/YYYY'), 'LOT-2024-0031', NULL
+),
+(
+    (SELECT a.id FROM animali a
+     JOIN proprietari p ON a.proprietario_id = p.id
+     WHERE a.nome='Luna' AND p.nome='Francesca' AND p.cognome='Bianchi'),
+    'Leucemia felina (FeLV)', to_date('18/01/2024','DD/MM/YYYY'),
+    to_date('18/01/2025','DD/MM/YYYY'), 'LOT-2024-0032', NULL
+),
+
+(
+    (SELECT a.id FROM animali a
+     JOIN proprietari p ON a.proprietario_id = p.id
+     WHERE a.nome='Micio' AND p.nome='Anna' AND p.cognome='Ferrari'),
+    'Trivalente felina (HCP)', to_date('22/04/2023','DD/MM/YYYY'),
+    to_date('22/04/2024','DD/MM/YYYY'), 'LOT-2023-0078', 'Proprietaria contattata via WhatsApp'
+),
+
+(
+    (SELECT a.id FROM animali a
+     JOIN proprietari p ON a.proprietario_id = p.id
+     WHERE a.nome='Fido' AND p.nome='Giorgio' AND p.cognome='Ricci'),
+    'Polivalente cane (DHPPI)', to_date('15/01/2024','DD/MM/YYYY'),
+    to_date('15/01/2025','DD/MM/YYYY'), 'LOT-2024-0019', NULL
+),
+(
+    (SELECT a.id FROM animali a
+     JOIN proprietari p ON a.proprietario_id = p.id
+     WHERE a.nome='Fido' AND p.nome='Giorgio' AND p.cognome='Ricci'),
+    'Antirabbico', to_date('15/01/2024','DD/MM/YYYY'),
+    to_date('15/01/2027','DD/MM/YYYY'), 'LOT-2024-0020', NULL
+),
+(
+    (SELECT a.id FROM animali a
+     JOIN proprietari p ON a.proprietario_id = p.id
+     WHERE a.nome='Fido' AND p.nome='Giorgio' AND p.cognome='Ricci'),
+    'Leishmaniosi', to_date('15/01/2024','DD/MM/YYYY'),
+    to_date('15/01/2025','DD/MM/YYYY'), 'LOT-2024-0021', 'Zona a rischio'
+),
+
+(
+    (SELECT a.id FROM animali a
+     JOIN proprietari p ON a.proprietario_id = p.id
+     WHERE a.nome='Neve' AND p.nome='Maria' AND p.cognome='Conti'),
+    'Trivalente felina (HCP)', to_date('19/02/2024','DD/MM/YYYY'),
+    to_date('19/02/2025','DD/MM/YYYY'), 'LOT-2024-0041', 'Prima vaccinazione'
+),
+
+(
+    (SELECT a.id FROM animali a
+     JOIN proprietari p ON a.proprietario_id = p.id
+     WHERE a.nome='Birillo' AND p.nome='Paolo' AND p.cognome='Manzoni'),
+    'Polivalente cane (DHPPI)', to_date('20/05/2023','DD/MM/YYYY'),
+    to_date('20/05/2024','DD/MM/YYYY'), 'LOT-2023-0099', NULL
+),
+
+(
+    (SELECT a.id FROM animali a
+     JOIN proprietari p ON a.proprietario_id = p.id
+     WHERE a.nome='Cioccolata' AND p.nome='Elena' AND p.cognome='Galli'),
+    'Polivalente cane (DHPPI)', to_date('07/06/2023','DD/MM/YYYY'),
+    to_date('07/06/2024','DD/MM/YYYY'), 'LOT-2023-0102', NULL
+),
+(
+    (SELECT a.id FROM animali a
+     JOIN proprietari p ON a.proprietario_id = p.id
+     WHERE a.nome='Cioccolata' AND p.nome='Elena' AND p.cognome='Galli'),
+    'Antirabbico', to_date('07/06/2023','DD/MM/YYYY'),
+    to_date('07/06/2026','DD/MM/YYYY'), 'LOT-2023-0103', NULL
+),
+
+(
+    (SELECT a.id FROM animali a
+     JOIN proprietari p ON a.proprietario_id = p.id
+     WHERE a.nome='Tigre' AND p.nome='Roberto' AND p.cognome='Esposito'),
+    'Trivalente felina (HCP)', to_date('14/03/2023','DD/MM/YYYY'),
+    to_date('14/03/2024','DD/MM/YYYY'), 'LOT-2023-0061', NULL
+),
+
+(
+    (SELECT a.id FROM animali a
+     JOIN proprietari p ON a.proprietario_id = p.id
+     WHERE a.nome='Oscar' AND p.nome='Chiara' AND p.cognome='Ferretti'),
+    'Polivalente cane (DHPPI)', to_date('10/08/2023','DD/MM/YYYY'),
+    to_date('10/08/2024','DD/MM/YYYY'), 'LOT-2023-0121', NULL
+),
+
+(
+    (SELECT a.id FROM animali a
+     JOIN proprietari p ON a.proprietario_id = p.id
+     WHERE a.nome='Puffo' AND p.nome='Antonio' AND p.cognome='Moretti'),
+    'Trivalente felina (HCP)', to_date('26/02/2024','DD/MM/YYYY'),
+    to_date('26/02/2025','DD/MM/YYYY'), 'LOT-2024-0051', NULL
+),
+
+(
+    (SELECT a.id FROM animali a
+     JOIN proprietari p ON a.proprietario_id = p.id
+     WHERE a.nome='Stella' AND p.nome='Valentina' AND p.cognome='Caruso'),
+    'Polivalente cane (DHPPI)', to_date('29/01/2024','DD/MM/YYYY'),
+    to_date('29/01/2025','DD/MM/YYYY'), 'LOT-2024-0022', NULL
+),
+(
+    (SELECT a.id FROM animali a
+     JOIN proprietari p ON a.proprietario_id = p.id
+     WHERE a.nome='Stella' AND p.nome='Valentina' AND p.cognome='Caruso'),
+    'Antirabbico', to_date('29/01/2024','DD/MM/YYYY'),
+    to_date('29/01/2027','DD/MM/YYYY'), 'LOT-2024-0023', NULL
+),
+
+(
+    (SELECT a.id FROM animali a
+     JOIN proprietari p ON a.proprietario_id = p.id
+     WHERE a.nome='Zeus' AND p.nome='Francesco' AND p.cognome='Lombardi'),
+    'Trivalente felina (HCP)', to_date('19/03/2024','DD/MM/YYYY'),
+    to_date('19/03/2025','DD/MM/YYYY'), 'LOT-2024-0062', NULL
+),
+
+(
+    (SELECT a.id FROM animali a
+     JOIN proprietari p ON a.proprietario_id = p.id
+     WHERE a.nome='Mia' AND p.nome='Giulia' AND p.cognome='Barbieri'),
+    'Polivalente cane (DHPPI)', to_date('10/11/2023','DD/MM/YYYY'),
+    to_date('10/11/2024','DD/MM/YYYY'), 'LOT-2023-0155', NULL
+),
+(
+    (SELECT a.id FROM animali a
+     JOIN proprietari p ON a.proprietario_id = p.id
+     WHERE a.nome='Mia' AND p.nome='Giulia' AND p.cognome='Barbieri'),
+    'Antirabbico', to_date('10/11/2023','DD/MM/YYYY'),
+    to_date('10/11/2026','DD/MM/YYYY'), 'LOT-2023-0156', NULL
+),
+
+(
+    (SELECT a.id FROM animali a
+     JOIN proprietari p ON a.proprietario_id = p.id
+     WHERE a.nome='Artù' AND p.nome='Stefano' AND p.cognome='Marchetti'),
+    'Trivalente felina (HCP)', to_date('08/03/2024','DD/MM/YYYY'),
+    to_date('08/03/2025','DD/MM/YYYY'), 'LOT-2024-0058', NULL
+),
+
+(
+    (SELECT a.id FROM animali a
+     JOIN proprietari p ON a.proprietario_id = p.id
+     WHERE a.nome='Mochi' AND p.nome='Marco' AND p.cognome='Rossi'),
+    'Polivalente cane (DHPPI)', to_date('25/04/2023','DD/MM/YYYY'),
+    to_date('25/04/2024','DD/MM/YYYY'), 'LOT-2023-0088', NULL
+),
+
+(
+    (SELECT a.id FROM animali a
+     JOIN proprietari p ON a.proprietario_id = p.id
+     WHERE a.nome='Lilly' AND p.nome='Giorgio' AND p.cognome='Ricci'),
+    'Polivalente cane (DHPPI)', to_date('12/07/2023','DD/MM/YYYY'),
+    to_date('12/07/2024','DD/MM/YYYY'), 'LOT-2023-0112', NULL
+);

@@ -3,7 +3,7 @@ package it.codicecaciotta.iltuoveterinario.services;
 import it.codicecaciotta.iltuoveterinario.dto.VaccinazioneCreateDTO;
 import it.codicecaciotta.iltuoveterinario.dto.VaccinazioneUpdateDTO;
 import it.codicecaciotta.iltuoveterinario.models.Animale;
-import it.codicecaciotta.iltuoveterinario.models.EVaccinationStatus;
+import it.codicecaciotta.iltuoveterinario.models.EStatoVaccinazione;
 import it.codicecaciotta.iltuoveterinario.models.Vaccinazione;
 import it.codicecaciotta.iltuoveterinario.repositories.AnimaleRepository;
 import it.codicecaciotta.iltuoveterinario.repositories.VaccinazioneRepository;
@@ -36,11 +36,9 @@ public class VaccinazioneServiceImpl implements VaccinazioneService {
         vaccinazione.setDataSomministrazione(vaccinazioneCreateDTO.getDataSomministrazione());
         vaccinazione.setDataScadenza(vaccinazioneCreateDTO.getDataScadenza());
         vaccinazione.setLotto(vaccinazioneCreateDTO.getLotto());
-        vaccinazione.setStato(vaccinazioneCreateDTO.getStato());
         vaccinazione.setNote(vaccinazioneCreateDTO.getNote());
         vaccinazione.setAnimale(animale);
 
-        // Aggiungi la vaccinazione all'animale
         animale.addVaccinazione(vaccinazione);
 
         return vaccinazioneRepository.save(vaccinazione);
@@ -48,35 +46,32 @@ public class VaccinazioneServiceImpl implements VaccinazioneService {
 
     @Override
     public Vaccinazione updateVaccinazione(@NonNull Long id, VaccinazioneUpdateDTO vaccinazioneUpdateDTO) {
-        Vaccinazione existingVaccinazione = vaccinazioneRepository.findById(id)
+        Vaccinazione vaccinazione = vaccinazioneRepository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("Vaccinazione non trovata con ID: " + id));
 
         if (vaccinazioneUpdateDTO.getTipoVaccino() != null) {
-            existingVaccinazione.setTipoVaccino(vaccinazioneUpdateDTO.getTipoVaccino());
+            vaccinazione.setTipoVaccino(vaccinazioneUpdateDTO.getTipoVaccino());
         }
         if (vaccinazioneUpdateDTO.getDataSomministrazione() != null) {
-            existingVaccinazione.setDataSomministrazione(vaccinazioneUpdateDTO.getDataSomministrazione());
+            vaccinazione.setDataSomministrazione(vaccinazioneUpdateDTO.getDataSomministrazione());
         }
         if (vaccinazioneUpdateDTO.getDataScadenza() != null) {
-            existingVaccinazione.setDataScadenza(vaccinazioneUpdateDTO.getDataScadenza());
+            vaccinazione.setDataScadenza(vaccinazioneUpdateDTO.getDataScadenza());
         }
         if (vaccinazioneUpdateDTO.getLotto() != null) {
-            existingVaccinazione.setLotto(vaccinazioneUpdateDTO.getLotto());
-        }
-        if (vaccinazioneUpdateDTO.getStato() != null) {
-            existingVaccinazione.setStato(vaccinazioneUpdateDTO.getStato());
+            vaccinazione.setLotto(vaccinazioneUpdateDTO.getLotto());
         }
         if (vaccinazioneUpdateDTO.getNote() != null) {
-            existingVaccinazione.setNote(vaccinazioneUpdateDTO.getNote());
+            vaccinazione.setNote(vaccinazioneUpdateDTO.getNote());
         }
 
-        return vaccinazioneRepository.save(existingVaccinazione);
+        return vaccinazioneRepository.save(vaccinazione);
     }
 
     @Override
     public void deleteVaccinazione(@NonNull Long id) {
         Vaccinazione vaccinazione = vaccinazioneRepository.findById(id)
-                .orElseThrow(() -> new NoSuchElementException("Vaccinazione non trovata con ID: " + id));
+                .orElseThrow(() -> new NoSuchElementException("Vaccinazione not found with ID: " + id));
 
         // Rimuovi la vaccinazione dall'animale
         if (vaccinazione.getAnimale() != null) {
@@ -89,13 +84,13 @@ public class VaccinazioneServiceImpl implements VaccinazioneService {
     @Override
     public Vaccinazione getVaccinazioneById(@NonNull Long id) {
         return vaccinazioneRepository.findById(id)
-                .orElseThrow(() -> new NoSuchElementException("Vaccinazione non trovata con ID: " + id));
+                .orElseThrow(() -> new NoSuchElementException("Vaccinazione not found with ID: " + id));
     }
 
     @Override
     public List<Vaccinazione> getVaccinazioniByAnimaleId(@NonNull Long animaleId) {
         Animale animale = animaleRepository.findById(animaleId)
-                .orElseThrow(() -> new NoSuchElementException("Animale non trovato con ID: " + animaleId));
+                .orElseThrow(() -> new NoSuchElementException("Animale not found with ID: " + animaleId));
 
         return vaccinazioneRepository.findByAnimaleOrderByDataScadenzaAsc(animale);
     }
@@ -106,14 +101,24 @@ public class VaccinazioneServiceImpl implements VaccinazioneService {
     }
 
     @Override
-    public List<Vaccinazione> getVaccinazioniScadute() {
-        return vaccinazioneRepository.findByStato(EVaccinationStatus.SCADUTO);
+    public EStatoVaccinazione calculateStatoVaccinazione(Vaccinazione vaccinazione) {
+        if (vaccinazione == null || vaccinazione.getDataScadenza() == null) {
+            return EStatoVaccinazione.SCADUTO;
+        }
+
+        LocalDate oggi = LocalDate.now();
+        LocalDate dataScadenza = vaccinazione.getDataScadenza();
+
+        long giorniScadenza = java.time.temporal.ChronoUnit.DAYS.between(oggi, dataScadenza);
+
+        if (giorniScadenza < 0) {
+            return EStatoVaccinazione.SCADUTO; // Scaduto
+        } else if (giorniScadenza <= 30) {
+            return EStatoVaccinazione.PROSSIMO; // Scade entro 30 giorni
+        } else {
+            return EStatoVaccinazione.VALIDO; // Valido
+        }
     }
 
-    @Override
-    public List<Vaccinazione> getVaccinazioniInScadenza() {
-        // Vaccinazioni che scadono entro 30 giorni
-        LocalDate dataLimite = LocalDate.now().plusDays(30);
-        return vaccinazioneRepository.findByDataScadenzaBefore(dataLimite);
-    }
+
 }

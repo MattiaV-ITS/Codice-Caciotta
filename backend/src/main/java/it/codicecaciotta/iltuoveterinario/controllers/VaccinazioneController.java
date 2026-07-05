@@ -8,6 +8,7 @@ import it.codicecaciotta.iltuoveterinario.models.Vaccinazione;
 import it.codicecaciotta.iltuoveterinario.services.VaccinazioneService;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.lang.NonNull;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -23,9 +24,11 @@ import java.util.stream.Collectors;
 public class VaccinazioneController {
 
     private final VaccinazioneService vaccinazioneService;
+    private final VaccinazioneListaMapper vaccinazioneListaMapper;
 
-    public VaccinazioneController(VaccinazioneService vaccinazioneService) {
+    public VaccinazioneController(VaccinazioneService vaccinazioneService, VaccinazioneListaMapper vaccinazioneListaMapper) {
         this.vaccinazioneService = vaccinazioneService;
+        this.vaccinazioneListaMapper = vaccinazioneListaMapper;
     }
 
     @PostMapping
@@ -43,31 +46,31 @@ public class VaccinazioneController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('ROLE_STAFF') or hasAuthority('ROLE_ADMIN')")
-    public ResponseEntity<Vaccinazione> updateVaccinazione(@PathVariable Long id, @Valid @RequestBody VaccinazioneUpdateDTO vaccinazioneUpdateDTO) {
+    public ResponseEntity<Vaccinazione> updateVaccinazione(@PathVariable @NonNull Long id, @Valid @RequestBody VaccinazioneUpdateDTO vaccinazioneUpdateDTO) {
         Vaccinazione updatedVaccinazione = vaccinazioneService.updateVaccinazione(id, vaccinazioneUpdateDTO);
         return ResponseEntity.ok(updatedVaccinazione);
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
-    public ResponseEntity<Void> deleteVaccinazione(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteVaccinazione(@PathVariable @NonNull Long id) {
         vaccinazioneService.deleteVaccinazione(id);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAuthority('ROLE_STAFF') or hasAuthority('ROLE_ADMIN')")
-    public ResponseEntity<Vaccinazione> getVaccinazioneById(@PathVariable Long id) {
+    public ResponseEntity<Vaccinazione> getVaccinazioneById(@PathVariable @NonNull Long id) {
         Vaccinazione vaccinazione = vaccinazioneService.getVaccinazioneById(id);
         return ResponseEntity.ok(vaccinazione);
     }
 
     @GetMapping("/animale/{animaleId}")
     @PreAuthorize("hasAuthority('ROLE_STAFF') or hasAuthority('ROLE_ADMIN')")
-    public ResponseEntity<List<VaccinazioneListaDTO>> getVaccinazioniByAnimaleId(@PathVariable Long animaleId) {
+    public ResponseEntity<List<VaccinazioneListaDTO>> getVaccinazioniByAnimaleId(@PathVariable @NonNull Long animaleId) {
         List<Vaccinazione> vaccinazioni = vaccinazioneService.getVaccinazioniByAnimaleId(animaleId);
         List<VaccinazioneListaDTO> vaccinazioneListaDTOs = vaccinazioni.stream()
-                .map(VaccinazioneListaMapper::toListaDTO)
+                .map(vaccinazioneListaMapper::toListaDTO)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(vaccinazioneListaDTOs);
     }
@@ -77,28 +80,10 @@ public class VaccinazioneController {
     public ResponseEntity<List<VaccinazioneListaDTO>> getAllVaccinazioni() {
         List<Vaccinazione> vaccinazioni = vaccinazioneService.getAllVaccinazioni();
         List<VaccinazioneListaDTO> vaccinazioneListaDTOs = vaccinazioni.stream()
-                .map(VaccinazioneListaMapper::toListaDTO)
+                .map(vaccinazioneListaMapper::toListaDTO)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(vaccinazioneListaDTOs);
     }
 
-    @GetMapping("/scadute")
-    @PreAuthorize("hasAuthority('ROLE_STAFF') or hasAuthority('ROLE_ADMIN')")
-    public ResponseEntity<List<VaccinazioneListaDTO>> getVaccinazioniScadute() {
-        List<Vaccinazione> vaccinazioni = vaccinazioneService.getVaccinazioniScadute();
-        List<VaccinazioneListaDTO> vaccinazioneListaDTOs = vaccinazioni.stream()
-                .map(VaccinazioneListaMapper::toListaDTO)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(vaccinazioneListaDTOs);
-    }
 
-    @GetMapping("/scadenza")
-    @PreAuthorize("hasAuthority('ROLE_STAFF') or hasAuthority('ROLE_ADMIN')")
-    public ResponseEntity<List<VaccinazioneListaDTO>> getVaccinazioniInScadenza() {
-        List<Vaccinazione> vaccinazioni = vaccinazioneService.getVaccinazioniInScadenza();
-        List<VaccinazioneListaDTO> vaccinazioneListaDTOs = vaccinazioni.stream()
-                .map(VaccinazioneListaMapper::toListaDTO)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(vaccinazioneListaDTOs);
-    }
 }

@@ -2,7 +2,6 @@ package it.codicecaciotta.iltuoveterinario.dto;
 
 import java.time.LocalDate;
 
-import it.codicecaciotta.iltuoveterinario.models.EVaccinationStatus;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
@@ -23,9 +22,6 @@ public class VaccinazioneCreateDTO {
 
     @NotNull(message = "Lotto non può essere nullo")
     private String lotto;
-
-    @NotNull(message = "Stato non può essere nullo")
-    private EVaccinationStatus stato;
 
     private String note;
 
