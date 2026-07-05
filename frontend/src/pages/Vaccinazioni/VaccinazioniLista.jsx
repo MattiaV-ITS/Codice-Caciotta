@@ -135,6 +135,7 @@ function VaccinazioniLista() {
         <SearchBox
           searchTerm={search.searchTerm}
           setSearchTerm={search.setSearchTerm}
+          searchable="tipo, lotto, nomeAnimale"
           onEnter={() => {
             search.applySearch();
             table.setPage(0);

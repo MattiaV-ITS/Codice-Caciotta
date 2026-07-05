@@ -29,11 +29,7 @@ public class ProprietarioListaServiceImpl implements ProprietarioListaService {
 
     @Override
     public Page<ProprietarioListaDTO> searchProprietariComprehensive(String searchTerm, Pageable pageable) {
-        if (pageable == null) {
-            throw new IllegalArgumentException("Pageable cannot be null");
-        }
-        return proprietarioRepository.findByNomeContainingIgnoreCaseOrCognomeContainingIgnoreCaseOrTelefonoContainingIgnoreCaseOrEmailContainingIgnoreCaseOrCodiceFiscaleContainingIgnoreCase(
-                searchTerm, searchTerm, searchTerm, searchTerm, searchTerm, pageable)
+        return proprietarioRepository.searchComprehensive(searchTerm, pageable)
                 .map(ProprietarioListaMapper::toListaDTO);
     }
 

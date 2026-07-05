@@ -120,6 +120,7 @@ function AnimaliLista() {
         <SearchBox
           searchTerm={search.searchTerm}
           setSearchTerm={search.setSearchTerm}
+          searchable="nome, microchip, specie, o proprietario"
           onEnter={() => {
             search.applySearch();
             table.setPage(0);

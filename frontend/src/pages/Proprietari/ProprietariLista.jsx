@@ -103,6 +103,7 @@ function ProprietariLista() {
         <SearchBox
           searchTerm={search.searchTerm}
           setSearchTerm={search.setSearchTerm}
+          searchable="nome, cognome, telefono, email, codice fiscale o città"
           onEnter={() => {
             search.applySearch();
             table.setPage(0);

@@ -1,13 +1,13 @@
 import React from 'react';
 
-function SearchBox({ searchTerm, setSearchTerm, onEnter }) {
+function SearchBox({ searchTerm, setSearchTerm, onEnter, searchable = null }) {
   return (
     <div className="search-box-wrapper">
       <div className="search-icon-wrapper">
         <input
           type="text"
           className="search-input"
-          placeholder="Cerca..."
+          placeholder={searchable ? `Cerca per ${searchable}...` : "Cerca..."}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           onKeyDown={(e) => {

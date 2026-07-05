@@ -15,11 +15,12 @@ public interface VaccinazioneRepository extends JpaRepository<Vaccinazione, Long
 
     java.util.List<Vaccinazione> findByAnimaleOrderByDataScadenzaAsc(Animale animale);
 
+    //TODO: Ricerca per dataSomministrazione
+    // Ricerca completa per tipoVaccino, lotto, note e nome animale
     @Query("""
         SELECT v FROM Vaccinazione v
         WHERE LOWER(v.tipoVaccino) LIKE LOWER(CONCAT('%', :search, '%'))
            OR LOWER(v.lotto) LIKE LOWER(CONCAT('%', :search, '%'))
-           OR LOWER(v.note) LIKE LOWER(CONCAT('%', :search, '%'))
            OR LOWER(v.animale.nome) LIKE LOWER(CONCAT('%', :search, '%'))
     """)
     Page<Vaccinazione> searchComprehensive(@Param("search") String search, Pageable pageable);
