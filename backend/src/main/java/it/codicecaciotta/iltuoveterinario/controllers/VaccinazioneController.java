@@ -28,7 +28,7 @@ public class VaccinazioneController {
     private final PaginationAndSortingUtils paginationUtils;
 
     private static final java.util.List<String> ALLOWED_SORT_FIELDS =
-            java.util.List.of("id", "tipoVaccino", "dataSomministrazione", "dataScadenza", "lotto", "note", "animale");
+            java.util.List.of("id", "tipoVaccino", "dataSomministrazione", "dataScadenza", "lotto", "note", "animale.nome");
 
     public VaccinazioneController(
             VaccinazioneService vaccinazioneService,

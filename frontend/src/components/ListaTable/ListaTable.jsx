@@ -56,10 +56,10 @@ const ListaTable = ({
             {columns.map((column) => (
               <th 
                 key={column.field || column.header}
-                onClick={() => column.sortable && onSort(column.field || column.header)}
+                onClick={() => column.sortable && onSort(column.sortField || column.field || column.header)}
                 style={{ cursor: column.sortable ? 'pointer' : 'default', ...column.style }}
               >
-                {column.header} {column.sortable && <span className="sort-indicator">{getSortIndicator(column.field || column.header)}</span>}
+                {column.header} {column.sortable && <span className="sort-indicator">{getSortIndicator(column.sortField || column.field || column.header)}</span>}
               </th>
             ))}
           </tr>
@@ -85,38 +85,6 @@ const ListaTable = ({
       </table>
     </div>
   );
-};
-
-/**
- * Definizioni standard delle colonne per diversi tipi di entità
- */
-export const listaColumnDefinitions = {
-  animali: [
-    { header: 'NOME', field: 'nome', sortable: true },
-    { header: 'SPECIE', field: 'specie', sortable: true },
-    { header: 'RAZZA', field: 'razza', sortable: true },
-    { header: 'DATA NASCITA', field: 'dataNascita', type: 'date', sortable: true },
-    { header: 'MICROCHIP', field: 'microchip', sortable: true },
-    { header: 'PROPRIETARIO', field: 'proprietario', sortable: false },
-    { header: 'STATO', field: 'stato', sortable: false, style: { textAlign: 'center' } }
-  ],
-  proprietari: [
-    { header: 'NOME', field: 'nome', sortable: true },
-    { header: 'COGNOME', field: 'cognome', sortable: true },
-    { header: 'TELEFONO', field: 'telefono', sortable: true },
-    { header: 'EMAIL', field: 'email', sortable: true },
-    { header: 'CITTÀ', field: 'citta', sortable: true },
-    { header: 'DATA REGISTRAZIONE', field: 'dataRegistrazione', type: 'date', sortable: true },
-    { header: 'STATO', field: 'stato', sortable: false, style: { textAlign: 'center' } }
-  ],
-  vaccinazioni: [
-    { header: 'TIPO VACCINO', field: 'tipoVaccino', sortable: true },
-    { header: 'ANIMALE', field: 'nomeAnimale', sortable: false },
-    { header: 'DATA SOMMINISTRAZIONE', field: 'dataSomministrazione', type: 'date', sortable: true },
-    { header: 'LOTTO', field: 'lotto', sortable: true },
-    { header: 'DATA SCADENZA', field: 'dataScadenza', type: 'date', sortable: true },
-    { header: 'STATO', field: 'statoVaccinazione', sortable: false, style: { textAlign: 'center' } }
-  ]
 };
 
 export default ListaTable;

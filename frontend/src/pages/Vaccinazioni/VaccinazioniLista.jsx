@@ -67,7 +67,7 @@ function VaccinazioniLista() {
         </div>
       )
     },
-    { header: 'ANIMALE', field: 'nomeAnimale', sortable: false },
+    { header: 'ANIMALE', field: 'nomeAnimale', sortField: 'animale.nome', sortable: true },
     { header: 'DATA SOMMINISTRAZIONE', field: 'dataSomministrazione', type: 'date', sortable: true },
     { header: 'LOTTO', field: 'lotto', sortable: true },
     { header: 'DATA SCADENZA', field: 'dataScadenza', type: 'date', sortable: true },
@@ -135,7 +135,7 @@ function VaccinazioniLista() {
         <SearchBox
           searchTerm={search.searchTerm}
           setSearchTerm={search.setSearchTerm}
-          searchable="tipo, lotto, nomeAnimale"
+          searchable="tipo, lotto, nome Animale"
           onEnter={() => {
             search.applySearch();
             table.setPage(0);
