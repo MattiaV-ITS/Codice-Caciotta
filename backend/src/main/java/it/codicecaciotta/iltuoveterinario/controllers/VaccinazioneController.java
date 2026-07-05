@@ -93,7 +93,7 @@ public class VaccinazioneController {
         @RequestParam(required = false) String search,
         @RequestParam(required = false) String stato
     ) {
-        // Validate and sanitize pagination parameters
+        // Valida e sanitizza i parametri di impaginazione
         if (page < 0) {
             page = 0;
         }
@@ -101,7 +101,7 @@ public class VaccinazioneController {
             size = 15;
         }
         
-        // Validate sortBy to prevent injection
+        // Valida e sanitizza sortBy per prevenire iniezioni
         boolean validField = false;
         for (String field : ALLOWED_SORT_FIELDS) {
             if (field.equals(sortBy)) {
@@ -113,15 +113,16 @@ public class VaccinazioneController {
             sortBy = "dataScadenza";
         }
         
-        // Normalize sort direction
+        // Normalizza il sort
         sortDir = sortDir.toLowerCase().startsWith("desc") ? "desc" : "asc";
         Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
         Pageable pageable = PageRequest.of(page, size, sort);
         
-        // Get ALL vaccinazioni from service (not paginated) for filtering
+    
+        // Fa una GET vaccinazioni from service (non paginata) per il filtraggio
         List<Vaccinazione> vaccinazioni = vaccinazioneService.getAllVaccinazioni();
         
-        // Apply search filter if provided
+        // Applica filtri di ricerca se forniti
         if (search != null && !search.trim().isEmpty()) {
             String searchTerm = search.trim().toLowerCase();
             vaccinazioni = vaccinazioni.stream()
@@ -133,7 +134,7 @@ public class VaccinazioneController {
                 .collect(Collectors.toList());
         }
         
-        // Apply status filter if provided
+        // Applica filtro di stato se fornito
         if (stato != null && !stato.trim().isEmpty()) {
             try {
                 EStatoVaccinazione statoFilter = EStatoVaccinazione.valueOf(stato.trim().toUpperCase());
@@ -145,22 +146,22 @@ public class VaccinazioneController {
             }
         }
         
-        // Apply pagination to filtered results
+        // Applica impaginazione ai risultati filtrati
         int totalElements = vaccinazioni.size();
         int totalPages = (int) Math.ceil((double) totalElements / size);
         
-        // Adjust page number if it's beyond the available pages
+        // Sistema il numero di pagine se è oltre le pagine disponibili
         int currentPage = page;
         if (currentPage >= totalPages && totalPages > 0) {
             currentPage = totalPages - 1;
         }
         
-        // Get the correct page of results
+        // Trova la pagina corretta di vaccinazioni da restituire
         int start = currentPage * size;
         int end = Math.min(start + size, totalElements);
         List<Vaccinazione> paginatedVaccinazioni = vaccinazioni.subList(start, end);
         
-        // Convert to DTOs
+        // Converte per il DTO
         List<VaccinazioneListaDTO> vaccinazioneListaDTOs = paginatedVaccinazioni.stream()
             .map(vaccinazioneListaMapper::toListaDTO)
             .collect(Collectors.toList());

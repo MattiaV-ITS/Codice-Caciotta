@@ -128,7 +128,7 @@ public class AuthController {
   }
 
   /**
-   * Test endpoint to check received headers (for debugging)
+   * Test endpoint per controllare gli headers ricevuti (per debugging)
    */
   @GetMapping("/test/headers")
   public ResponseEntity<?> testHeaders() {
