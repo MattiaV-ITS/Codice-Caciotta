@@ -45,4 +45,13 @@ public class ProprietarioListaServiceImpl implements ProprietarioListaService {
         return proprietarioRepository.findByCitta(citta, pageable)
                 .map(ProprietarioListaMapper::toListaDTO);
     }
+    
+    @Override
+    public Page<ProprietarioListaDTO> getProprietariByStato(Boolean stato, Pageable pageable) {
+        if (pageable == null) {
+            throw new IllegalArgumentException("Pageable cannot be null");
+        }
+        return proprietarioRepository.findByStato(stato, pageable)
+                .map(ProprietarioListaMapper::toListaDTO);
+    }
 }

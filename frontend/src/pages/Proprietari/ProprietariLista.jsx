@@ -2,7 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { formatDate } from '../../utils';
 import { useTableControls } from '../../utils/useTableControls';
 import { useApi } from '../../services/apiService';
+import ListaTable, { listaColumnDefinitions } from '../../components/ListaTable/ListaTable';
 
+/**
+ * Component per la visualizzazione e gestione dell'elenco dei proprietari
+ * Utilizza il componente ListaTable per la visualizzazione tabellare unificata
+ */
 function ProprietariLista() {
   const { get } = useApi();
   const [proprietari, setProprietari] = useState([]);
@@ -12,6 +17,7 @@ function ProprietariLista() {
   const [appliedSearchTerm, setAppliedSearchTerm] = useState('');
   const [statoFiltro, setStatoFiltro] = useState('');
   const [totalPages, setTotalPages] = useState(0);
+  const [totalCount, setTotalCount] = useState(0);
 
   const { 
     sortBy, 
@@ -43,10 +49,43 @@ function ProprietariLista() {
       return { label: 'Sconosciuto', className: 'badge-sconosciuto' };
   };
 
+  const customColumns = [
+    {
+      header: 'NOME',
+      field: 'nome',
+      sortable: true,
+      render: (item) => (
+        <div className="cell-content" style={{ gap: '6px' }}>
+          <div className={`avatar-circle ${item.stato === true ? 'avatar-success' : 'avatar-gray'}`}>
+            {getInitials(item.nome, item.cognome)}
+          </div>
+          <span style={{ color: 'var(--gray-900)', fontWeight: '600' }}>
+            {item.nome}
+          </span>
+        </div>
+      )
+    },
+    { header: 'COGNOME', field: 'cognome', sortable: true },
+    { header: 'TELEFONO', field: 'telefono', sortable: true },
+    { header: 'EMAIL', field: 'email', sortable: true },
+    { header: 'CITTÀ', field: 'citta', sortable: true },
+    { header: 'DATA REGISTRAZIONE', field: 'dataRegistrazione', type: 'date', sortable: true },
+    {
+      header: 'STATO',
+      field: 'stato',
+      sortable: false,
+      style: { textAlign: 'center' },
+      render: (item) => {
+        const stato = getStatoInfo(item.stato);
+        return <span className={`badge-status ${stato.className}`}>{stato.label}</span>;
+      }
+    }
+  ];
+
   useEffect(() => {
     setLoading(true);
 
-    // Build query parameters
+    // Costruzione parametri query
     const params = new URLSearchParams();
     params.append('page', page);
     params.append('size', size);
@@ -58,7 +97,7 @@ function ProprietariLista() {
     }
 
     if (statoFiltro) {
-      params.append('citta', statoFiltro);
+      params.append('stato', statoFiltro);
     }
 
     get(`/api/proprietari?${params.toString()}`)
@@ -71,6 +110,7 @@ function ProprietariLista() {
       .then(data => {
         setProprietari(data.content);
         setTotalPages(data.page.totalPages);
+        setTotalCount(data.page.totalElements);
         setPage(data.page.number);
         setLoading(false);
       })
@@ -144,14 +184,14 @@ function ProprietariLista() {
             Tutti
           </button>
           <button
-            className={`btn-filter btn-filter-success ${statoFiltro === 'Attivo' ? 'active' : ''}`}
-            onClick={() => { setStatoFiltro('Attivo'); setSearchTerm(''); setAppliedSearchTerm(''); setPage(0); }}
+            className={`btn-filter btn-filter-success ${statoFiltro === 'true' ? 'active' : ''}`}
+            onClick={() => { setStatoFiltro('true'); setSearchTerm(''); setAppliedSearchTerm(''); setPage(0); }}
           >
             Attivi
           </button>
           <button
-            className={`btn-filter btn-filter-gray ${statoFiltro === 'Inattivo' ? 'active' : ''}`}
-            onClick={() => { setStatoFiltro('Inattivo'); setSearchTerm(''); setAppliedSearchTerm(''); setPage(0); }}
+            className={`btn-filter btn-filter-gray ${statoFiltro === 'false' ? 'active' : ''}`}
+            onClick={() => { setStatoFiltro('false'); setSearchTerm(''); setAppliedSearchTerm(''); setPage(0); }}
           >
             Inattivi
           </button>
@@ -199,104 +239,36 @@ function ProprietariLista() {
         </div>
       </div>
 
-      {proprietari.length === 0 ? (
-        <div className="empty-state">
-          <div className="empty-icon">👤</div>
-          <div className="empty-title">Nessun proprietario trovato</div>
-          <p className="empty-description">
-            {appliedSearchTerm || statoFiltro ? 'Prova a modificare i filtri di ricerca.' : 'Inizia aggiungendo il tuo primo proprietario.'}
-          </p>
-        </div>
-      ) : (
-        <>
-          <div className="table-responsive">
-            <table className="table-custom">
-              <thead>
-                <tr>
-                  <th
-                    onClick={() => handleSort('nome')}
-                    style={{ cursor: 'pointer', paddingRight: '4px' }}
-                  >
-                    NOME <span className="sort-indicator">{getSortIndicator('nome')}</span>
-                  </th>
-                  <th
-                    onClick={() => handleSort('cognome')}
-                    style={{ cursor: 'pointer', paddingLeft: '4px' }}
-                  >
-                    COGNOME <span className="sort-indicator">{getSortIndicator('cognome')}</span>
-                  </th>
-                  <th onClick={() => handleSort('telefono')}>
-                    TELEFONO <span className="sort-indicator">{getSortIndicator('telefono')}</span>
-                  </th>
-                  <th onClick={() => handleSort('email')}>
-                    EMAIL <span className="sort-indicator">{getSortIndicator('email')}</span>
-                  </th>
-                  <th onClick={() => handleSort('citta')}>
-                    CITTÀ <span className="sort-indicator">{getSortIndicator('citta')}</span>
-                  </th>
-                  <th onClick={() => handleSort('dataRegistrazione')}>
-                    DATA REGISTRAZIONE <span className="sort-indicator">{getSortIndicator('dataRegistrazione')}</span>
-                  </th>
-                  <th style={{ textAlign: 'center' }}>STATO</th>
-                  <th style={{ width: '40px' }}></th>
-                </tr>
-              </thead>
-              <tbody>
-                {proprietari.map((p) => {
-                  const isAttivo = p.stato === true;
-                  const stato = getStatoInfo(p.stato);
+      <ListaTable
+        data={proprietari}
+        columns={customColumns}
+        sortBy={sortBy}
+        sortDir={sortDir}
+        onSort={handleSort}
+        getSortIndicator={getSortIndicator}
+        loading={loading}
+        error={error}
+        emptyMessage={appliedSearchTerm || statoFiltro ? 'Prova a modificare i filtri di ricerca.' : 'Inizia aggiungendo il tuo primo proprietario.'}
+        emptyIcon="👤"
+      />
 
-                  return (
-                    <tr key={p.id}>
-                      <td style={{ paddingRight: '4px' }}>
-                        <div className="cell-content" style={{ gap: '6px' }}>
-                          <div className={`avatar-circle ${isAttivo ? 'avatar-success' : 'avatar-gray'}`}>
-                            {getInitials(p.nome, p.cognome)}
-                          </div>
-                          <span style={{ color: 'var(--gray-900)', fontWeight: '600' }}>
-                            {p.nome}
-                          </span>
-                        </div>
-                      </td>
-                      <td style={{ paddingLeft: '4px' }}>
-                        <span style={{ color: 'var(--gray-900)', fontWeight: '400' }}>
-                          {p.cognome}
-                        </span>
-                      </td>
-                      <td>{p.telefono}</td>
-                      <td>{p.email}</td>
-                      <td>{p.citta}</td>
-                      <td>{formatDate(p.dataRegistrazione)}</td>
-                      <td style={{ textAlign: 'center' }}>
-                        <span className={`badge-status ${stato.className}`}>
-                          {stato.label}
-                        </span>
-                      </td>
-                      <td className="actions-menu">⋯</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-
-          <div className="pagination-wrapper">
-            <span className="pagination-info">
-              Mostrati <strong>{proprietari.length}</strong> di <strong>{totalPages * size}</strong> proprietari
+      {proprietari.length > 0 && (
+        <div className="pagination-wrapper">
+          <span className="pagination-info">
+            Mostrati <strong>{proprietari.length}</strong> di <strong>{totalCount}</strong> proprietari
+          </span>
+          <div className="pagination-controls">
+            <button className="pagination-btn" onClick={goToPreviousPage} disabled={page === 0}>
+              Precedente
+            </button>
+            <span className="pagination-page-info">
+              <strong>{page + 1}</strong> di <strong>{totalPages}</strong>
             </span>
-            <div className="pagination-controls">
-              <button className="pagination-btn" onClick={goToPreviousPage} disabled={page === 0}>
-                Precedente
-              </button>
-              <span className="pagination-page-info">
-                <strong>{page + 1}</strong> di <strong>{totalPages}</strong>
-              </span>
-              <button className="pagination-btn" onClick={() => goToNextPage(totalPages)} disabled={page >= totalPages - 1}>
-                Successivo
-              </button>
-            </div>
+            <button className="pagination-btn" onClick={() => goToNextPage(totalPages)} disabled={page >= totalPages - 1}>
+              Successivo
+            </button>
           </div>
-        </>
+        </div>
       )}
     </div>
   );

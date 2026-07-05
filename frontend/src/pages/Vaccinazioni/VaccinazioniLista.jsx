@@ -2,7 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { formatDate } from '../../utils';
 import { useTableControls } from '../../utils/useTableControls';
 import { useApi } from '../../services/apiService';
+import ListaTable from '../../components/ListaTable/ListaTable';
 
+/**
+ * Component per la visualizzazione e gestione dell'elenco delle vaccinazioni
+ * Utilizza il componente ListaTable per la visualizzazione tabellare unificata
+ * La paginazione ora funziona correttamente con chiamate server-side invece di filtering client-side
+ */
 function VaccinazioniLista() {
   const { get } = useApi();
   const [vaccinazioni, setVaccinazioni] = useState([]);
@@ -35,9 +41,7 @@ function VaccinazioniLista() {
 
 
 
-  // Map backend status to frontend display
   const getStatusInfo = (status) => {
-    // Handle case where status might be missing or have different casing
     const normalizedStatus = status ? String(status).toUpperCase() : '';
     
     const map = {
@@ -53,7 +57,7 @@ function VaccinazioniLista() {
   useEffect(() => {
     setLoading(true);
 
-    // Build query parameters
+    // Costruzione parametri query
     const params = new URLSearchParams();
     params.append('page', page);
     params.append('size', size);
@@ -68,9 +72,8 @@ function VaccinazioniLista() {
       params.append('stato', statoFilter);
     }
 
-    // Always use the main endpoint since we're calculating status dynamically
     const endpoint = '/api/vaccinazioni';
-
+    
     get(`${endpoint}?${params.toString()}`)
       .then(response => {
         if (!response.ok) {
@@ -79,48 +82,16 @@ function VaccinazioniLista() {
         return response.json();
       })
       .then(data => {
-        // Main endpoint returns paginated response with backend-calculated status
-        const vaccinazioniData = data.content || data;
+        // Handle response - try to extract content and pagination info
+        const content = data.content || data || [];
+        const totalPages = data.page?.totalPages || data.totalPages || 1;
+        const totalCount = data.page?.totalElements || data.totalElements || content.length || 0;
+        const currentPage = data.page?.number || data.number || 0;
         
-        // Debug: Log the first vaccination to check if statoVaccinazione field is present
-        if (vaccinazioniData.length > 0) {
-          console.log('Sample vaccination data:', vaccinazioniData[0]);
-        }
-        
-        // Store total count before filtering for pagination info
-        const totalCount = data.page?.totalElements || vaccinazioniData.length;
-        
-        setTotalPages(data.page?.totalPages || 1);
-        setPage(data.page?.number || 0);
-        
-        // Apply search filter if term is provided
-        let filteredVaccinazioni = vaccinazioniData;
-        if (appliedSearchTerm) {
-          const searchLower = appliedSearchTerm.toLowerCase();
-          filteredVaccinazioni = vaccinazioniData.filter(vaccinazione => 
-            (vaccinazione.nomeAnimale && vaccinazione.nomeAnimale.toLowerCase().includes(searchLower)) ||
-            (vaccinazione.tipoVaccino && vaccinazione.tipoVaccino.toLowerCase().includes(searchLower)) ||
-            (vaccinazione.lotto && vaccinazione.lotto.toLowerCase().includes(searchLower)) ||
-            (vaccinazione.note && vaccinazione.note.toLowerCase().includes(searchLower))
-          );
-        }
-        
-        // Apply status filter if selected (using backend-calculated status)
-        if (statoFilter) {
-          // Map frontend filter to backend status (they are the same now)
-          const statusMap = {
-            'VALIDO': 'VALIDO',
-            'PROSSIMO': 'PROSSIMO', 
-            'SCADUTO': 'SCADUTO'
-          };
-          const backendStatus = statusMap[statoFilter] || statoFilter;
-          filteredVaccinazioni = filteredVaccinazioni.filter(
-            vaccinazione => vaccinazione.statoVaccinazione === backendStatus
-          );
-        }
-        
-        setVaccinazioni(filteredVaccinazioni);
-        setTotalCount(totalCount); // Store total count for pagination display
+        setVaccinazioni(content);
+        setTotalPages(totalPages);
+        setTotalCount(totalCount);
+        setPage(currentPage);
         setLoading(false);
       })
       .catch(err => {
@@ -136,7 +107,38 @@ function VaccinazioniLista() {
     setPage(0);
   };
 
-  // Calculate stats using backend-calculated status
+  const customColumns = [
+    {
+      header: 'TIPO VACCINO',
+      field: 'tipoVaccino',
+      sortable: true,
+      render: (item) => (
+        <div className="cell-content">
+          <div className="avatar-circle avatar-vaccine">
+            💉
+          </div>
+          <span className="name-colored">
+            {item.tipoVaccino}
+          </span>
+        </div>
+      )
+    },
+    { header: 'ANIMALE', field: 'nomeAnimale', sortable: false, render: (item) => item.nomeAnimale || '-' },
+    { header: 'DATA SOMMINISTRAZIONE', field: 'dataSomministrazione', type: 'date', sortable: true },
+    { header: 'LOTTO', field: 'lotto', sortable: true, render: (item) => item.lotto || '-' },
+    { header: 'DATA SCADENZA', field: 'dataScadenza', type: 'date', sortable: true },
+    {
+      header: 'STATO',
+      field: 'statoVaccinazione',
+      sortable: false,
+      style: { textAlign: 'center' },
+      render: (item) => {
+        const status = getStatusInfo(item.statoVaccinazione);
+        return <span className={`badge-status ${status.className}`}>{status.label}</span>;
+      }
+    }
+  ];
+
   const totali = vaccinazioni.length;
   const validi = vaccinazioni.filter(v => v.statoVaccinazione === 'VALIDO').length;
   const scaduti = vaccinazioni.filter(v => v.statoVaccinazione === 'SCADUTO').length;
@@ -259,94 +261,36 @@ function VaccinazioniLista() {
         </div>
       </div>
 
-      {vaccinazioni.length === 0 ? (
-        <div className="empty-state">
-          <div className="empty-icon">💉</div>
-          <div className="empty-title">Nessuna vaccinazione trovata</div>
-          <p className="empty-description">
-            {appliedSearchTerm || statoFilter ? 'Prova a modificare i filtri di ricerca.' : 'Inizia aggiungendo la prima vaccinazione.'}
-          </p>
-        </div>
-      ) : (
-        <>
-          <div className="table-responsive">
-            <table className="table-custom">
-              <thead>
-                <tr>
-                  <th onClick={() => handleSort('tipoVaccino')}>
-                    TIPO VACCINO <span className="sort-indicator">{getSortIndicator('tipoVaccino')}</span>
-                  </th>
-                  <th>
-                    ANIMALE
-                  </th>
-                  <th onClick={() => handleSort('dataSomministrazione')}>
-                    DATA SOMMINISTRAZIONE <span className="sort-indicator">{getSortIndicator('dataSomministrazione')}</span>
-                  </th>
-                  <th onClick={() => handleSort('lotto')}>
-                    LOTTO <span className="sort-indicator">{getSortIndicator('lotto')}</span>
-                  </th>
-                  <th onClick={() => handleSort('dataScadenza')}>
-                    DATA SCADENZA <span className="sort-indicator">{getSortIndicator('dataScadenza')}</span>
-                  </th>
-                  <th style={{ textAlign: 'center' }}>STATO</th>
-                  <th style={{ width: '40px' }}></th>
-                </tr>
-              </thead>
-              <tbody>
-                {vaccinazioni.map((vaccinazione) => {
-                  const status = getStatusInfo(vaccinazione.statoVaccinazione);
+      <ListaTable
+        data={vaccinazioni}
+        columns={customColumns}
+        sortBy={sortBy}
+        sortDir={sortDir}
+        onSort={handleSort}
+        getSortIndicator={getSortIndicator}
+        loading={loading}
+        error={error}
+        emptyMessage={appliedSearchTerm || statoFilter ? 'Prova a modificare i filtri di ricerca.' : 'Inizia aggiungendo la prima vaccinazione.'}
+        emptyIcon="💉"
+      />
 
-                  return (
-                    <tr key={vaccinazione.id}>
-                      <td>
-                        <div className="cell-content">
-                          <div className="avatar-circle avatar-vaccine">
-                            💉
-                          </div>
-                          <span className="name-colored">
-                            {vaccinazione.tipoVaccino}
-                          </span>
-                        </div>
-                      </td>
-                      <td>{vaccinazione.nomeAnimale || '-'}</td>
-                      <td>{formatDate(vaccinazione.dataSomministrazione)}</td>
-                      <td>{vaccinazione.lotto || '-'}</td>
-                      <td>{formatDate(vaccinazione.dataScadenza)}</td>
-                      <td style={{ textAlign: 'center' }}>
-                        <span className={`badge-status ${status.className}`}>
-                          {status.label}
-                        </span>
-                      </td>
-                      <td className="actions-menu">
-                        {vaccinazione.note && (
-                          <span className="note-indicator" title={vaccinazione.note}>ℹ️</span>
-                        )}
-                        ⋯
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-
-          <div className="pagination-wrapper">
-            <span className="pagination-info">
-              Mostrate <strong>{vaccinazioni.length}</strong> di <strong>{totalCount}</strong> vaccinazioni
+      {vaccinazioni.length > 0 && (
+        <div className="pagination-wrapper">
+          <span className="pagination-info">
+            Mostrate <strong>{vaccinazioni.length}</strong> di <strong>{totalCount}</strong> vaccinazioni
+          </span>
+          <div className="pagination-controls">
+            <button className="pagination-btn" onClick={goToPreviousPage} disabled={page === 0}>
+              Precedente
+            </button>
+            <span className="pagination-page-info">
+              <strong>{page + 1}</strong> di <strong>{totalPages}</strong>
             </span>
-            <div className="pagination-controls">
-              <button className="pagination-btn" onClick={goToPreviousPage} disabled={page === 0}>
-                Precedente
-              </button>
-              <span className="pagination-page-info">
-                <strong>{page + 1}</strong> di <strong>{totalPages}</strong>
-              </span>
-              <button className="pagination-btn" onClick={() => goToNextPage(totalPages)} disabled={page >= totalPages - 1}>
-                Successivo
-              </button>
-            </div>
+            <button className="pagination-btn" onClick={() => goToNextPage(totalPages)} disabled={page >= totalPages - 1}>
+              Successivo
+            </button>
           </div>
-        </>
+        </div>
       )}
     </div>
   );

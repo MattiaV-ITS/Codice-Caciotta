@@ -1,0 +1,79 @@
+/* Shared table styles for all lista components */
+
+.lista-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.lista-table th {
+  padding: 12px 16px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--gray-500);
+  border-bottom: 2px solid var(--gray-200);
+  cursor: pointer;
+  user-select: none;
+}
+
+.lista-table th:hover {
+  color: var(--gray-700);
+}
+
+.lista-table th.sortable {
+  cursor: pointer;
+}
+
+.lista-table td {
+  padding: 12px 16px;
+  vertical-align: middle;
+  color: var(--gray-700);
+}
+
+.lista-table tbody tr {
+  border-bottom: 1px solid var(--gray-100);
+}
+
+.lista-table tbody tr:hover {
+  background: var(--primary-light);
+}
+
+.sort-indicator {
+  display: inline-block;
+  margin-left: 4px;
+  font-size: 11px;
+  color: var(--gray-400);
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 4px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+  min-width: 80px;
+  letter-spacing: 0.2px;
+}
+
+.badge-valido {
+  background: #D1FAE5;
+  color: #065F46;
+}
+
+.badge-prossimo {
+  background: #FEF3C7;
+  color: #92400E;
+}
+
+.badge-scaduto {
+  background: #FEE2E2;
+  color: #991B1B;
+}
+
+.badge-sconosciuto {
+  background: var(--gray-200);
+  color: var(--gray-600);
+}

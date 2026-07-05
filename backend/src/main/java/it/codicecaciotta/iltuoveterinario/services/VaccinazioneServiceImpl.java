@@ -8,6 +8,8 @@ import it.codicecaciotta.iltuoveterinario.models.Vaccinazione;
 import it.codicecaciotta.iltuoveterinario.repositories.AnimaleRepository;
 import it.codicecaciotta.iltuoveterinario.repositories.VaccinazioneRepository;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 
@@ -98,6 +100,11 @@ public class VaccinazioneServiceImpl implements VaccinazioneService {
     @Override
     public List<Vaccinazione> getAllVaccinazioni() {
         return vaccinazioneRepository.findAll();
+    }
+
+    @Override
+    public Page<Vaccinazione> getAllVaccinazioni(Pageable pageable) {
+        return vaccinazioneRepository.findAll(pageable);
     }
 
     @Override
