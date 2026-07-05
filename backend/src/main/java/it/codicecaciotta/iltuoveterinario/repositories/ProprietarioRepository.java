@@ -3,6 +3,7 @@ package it.codicecaciotta.iltuoveterinario.repositories;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
 import it.codicecaciotta.iltuoveterinario.models.Proprietario;
 
@@ -15,4 +16,10 @@ public interface ProprietarioRepository extends JpaRepository<Proprietario, Long
     Page<Proprietario> findByCitta(String citta, Pageable pageable);
     
     Page<Proprietario> findByStato(Boolean stato, Pageable pageable);
+
+    @Query("SELECT COUNT(p) FROM Proprietario p WHERE p.stato = true")
+    long countAttivi();
+
+    @Query("SELECT COUNT(p) FROM Proprietario p WHERE p.stato = false")
+    long countInattivi();
 }
