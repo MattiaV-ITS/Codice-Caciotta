@@ -23,4 +23,20 @@ public interface VaccinazioneRepository extends JpaRepository<Vaccinazione, Long
            OR LOWER(v.animale.nome) LIKE LOWER(CONCAT('%', :search, '%'))
     """)
     Page<Vaccinazione> searchComprehensive(@Param("search") String search, Pageable pageable);
+
+    @Query("""
+        SELECT v FROM Vaccinazione v
+        WHERE (
+            (v.dataScadenza IS NULL AND :stato = 'SCADUTO') OR
+            (v.dataScadenza IS NOT NULL AND 
+                CASE 
+                    WHEN :stato = 'SCADUTO' AND v.dataScadenza < CURRENT_DATE THEN TRUE
+                    WHEN :stato = 'PROSSIMO' AND v.dataScadenza BETWEEN CURRENT_DATE AND DATEADD(day, 30, CURRENT_DATE) THEN TRUE  
+                    WHEN :stato = 'VALIDO' AND v.dataScadenza > DATEADD(day, 30, CURRENT_DATE) THEN TRUE
+                    ELSE FALSE
+                END
+            )
+        )
+    """)
+    Page<Vaccinazione> findByStato(@Param("stato") String stato, Pageable pageable);
 }

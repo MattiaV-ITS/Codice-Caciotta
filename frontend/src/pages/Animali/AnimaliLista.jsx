@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import ListaTable from '../../components/ListaTable/ListaTable';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import ErrorMessage from '../../components/common/ErrorMessage';
@@ -22,16 +22,19 @@ function AnimaliLista() {
   const search = useSearchControls();
   const [specieFilter, setSpecieFilter] = useState('');
 
+  // Memoize filters to prevent unnecessary re-renders
+  const memoizedFilters = useMemo(() => ({
+    search: search.appliedSearchTerm,
+    specie: specieFilter
+  }), [search.appliedSearchTerm, specieFilter]);
+
   const { data: animali, loading, error, totalPages, totalCount } =
     usePaginatedFetch('/api/animali', {
       page: table.page,
       size: table.size,
       sortBy: table.sortBy,
       sortDir: table.sortDir,
-      filters: {
-        search: search.appliedSearchTerm,
-        specie: specieFilter
-      }
+      filters: memoizedFilters
     });
 
   const specieOptions = [

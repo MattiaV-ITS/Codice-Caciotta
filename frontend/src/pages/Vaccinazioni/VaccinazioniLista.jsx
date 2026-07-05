@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 
 import ListaTable from '../../components/ListaTable/ListaTable';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
@@ -21,16 +21,19 @@ function VaccinazioniLista() {
   const search = useSearchControls();
   const [statoFilter, setStatoFilter] = useState('');
 
+  // Memoize filters to prevent unnecessary re-renders
+  const memoizedFilters = useMemo(() => ({
+    search: search.appliedSearchTerm,
+    stato: statoFilter
+  }), [search.appliedSearchTerm, statoFilter]);
+
   const { data: vaccinazioni, loading, error, totalPages, totalCount } =
     usePaginatedFetch('/api/vaccinazioni', {
       page: table.page,
       size: table.size,
       sortBy: table.sortBy,
       sortDir: table.sortDir,
-      filters: {
-        search: search.appliedSearchTerm,
-        stato: statoFilter
-      }
+      filters: memoizedFilters
     });
 
   const statoOptions = [

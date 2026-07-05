@@ -2,7 +2,6 @@ package it.codicecaciotta.iltuoveterinario.services;
 
 import it.codicecaciotta.iltuoveterinario.dto.VaccinazioneListaDTO;
 import it.codicecaciotta.iltuoveterinario.mappers.VaccinazioneListaMapper;
-import it.codicecaciotta.iltuoveterinario.models.EStatoVaccinazione;
 import it.codicecaciotta.iltuoveterinario.models.Vaccinazione;
 import it.codicecaciotta.iltuoveterinario.repositories.VaccinazioneRepository;
 
@@ -17,16 +16,13 @@ import org.springframework.stereotype.Service;
 public class VaccinazioneListaServiceImpl implements VaccinazioneListaService {
 
     private final VaccinazioneRepository vaccinazioneRepository;
-    private final VaccinazioneService vaccinazioneService;
     private final VaccinazioneListaMapper vaccinazioneListaMapper;
 
     public VaccinazioneListaServiceImpl(
             VaccinazioneRepository vaccinazioneRepository,
-            VaccinazioneService vaccinazioneService,
             VaccinazioneListaMapper vaccinazioneListaMapper) {
 
         this.vaccinazioneRepository = vaccinazioneRepository;
-        this.vaccinazioneService = vaccinazioneService;
         this.vaccinazioneListaMapper = vaccinazioneListaMapper;
     }
 
@@ -42,20 +38,17 @@ public class VaccinazioneListaServiceImpl implements VaccinazioneListaService {
                 .map(vaccinazioneListaMapper::toListaDTO);
     }
 
-@Override
-public Page<VaccinazioneListaDTO> getVaccinazioniByStato(String stato, Pageable pageable) {
+    @Override
+    public Page<VaccinazioneListaDTO> getVaccinazioniByStato(String stato, Pageable pageable) {
 
-    EStatoVaccinazione statoEnum = EStatoVaccinazione.valueOf(stato.toUpperCase());
+        Page<Vaccinazione> paginatedResults = vaccinazioneRepository.findByStato(stato.toUpperCase(), pageable);
 
-    Page<Vaccinazione> page = vaccinazioneRepository.findAll(pageable);
+        List<VaccinazioneListaDTO> filtrate = paginatedResults.getContent().stream()
+                .map(vaccinazioneListaMapper::toListaDTO)
+                .toList();
 
-    List<VaccinazioneListaDTO> filtrate = page.getContent().stream()
-            .filter(v -> vaccinazioneService.calculateStatoVaccinazione(v) == statoEnum)
-            .map(vaccinazioneListaMapper::toListaDTO)
-            .toList();
-
-    return new PageImpl<>(filtrate, pageable, page.getTotalElements());
-}
+        return new PageImpl<>(filtrate, pageable, paginatedResults.getTotalElements());
+    }
 
     @Override
     public Page<VaccinazioneListaDTO> getVaccinazioniByAnimale(Long animaleId, Pageable pageable) {

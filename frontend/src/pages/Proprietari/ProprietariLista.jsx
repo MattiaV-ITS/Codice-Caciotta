@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import ListaTable from '../../components/ListaTable/ListaTable';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import ErrorMessage from '../../components/common/ErrorMessage';
@@ -20,16 +20,19 @@ function ProprietariLista() {
   const search = useSearchControls();
   const [statoFiltro, setStatoFiltro] = useState('');
 
+  // Memoize filters to prevent unnecessary re-renders
+  const memoizedFilters = useMemo(() => ({
+    search: search.appliedSearchTerm,
+    stato: statoFiltro
+  }), [search.appliedSearchTerm, statoFiltro]);
+
   const { data: proprietari, loading, error, totalPages, totalCount } =
     usePaginatedFetch('/api/proprietari', {
       page: table.page,
       size: table.size,
       sortBy: table.sortBy,
       sortDir: table.sortDir,
-      filters: {
-        search: search.appliedSearchTerm,
-        stato: statoFiltro
-      }
+      filters: memoizedFilters
     });
 
   const statoOptions = [
