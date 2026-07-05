@@ -9,6 +9,21 @@ IF %ERRORLEVEL% NEQ 0 (
     goto waitloop
 )
 echo PostgreSQL is ready!
+
+:: Attende che il frontend sia pronto (il frontend parte solo dopo che il backend è healthy)
+echo Waiting for frontend to be ready...
+:waitfrontend
+docker inspect --format="{{.State.Health.Status}}" frontend | find "healthy" >nul
+IF %ERRORLEVEL% NEQ 0 (
+    echo Frontend not ready yet...
+    timeout /t 5 >nul
+    goto waitfrontend
+)
+
+:: Aspetta un po' extra per dare tempo a JPA di creare le tabelle
+echo Waiting extra time for JPA to create tables...
+timeout /t 10 >nul
+
 echo Importing initial data into PostgreSQL...
 
 docker exec -i db psql -U codicecaciotta -d vet < "%~dp0data_migration.sql"

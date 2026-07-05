@@ -10,8 +10,8 @@ import it.codicecaciotta.iltuoveterinario.services.VaccinazioneService;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.NonNull;
@@ -22,6 +22,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 
 @RestController
@@ -93,12 +94,15 @@ public class VaccinazioneController {
         @RequestParam(required = false) String search,
         @RequestParam(required = false) String stato
     ) {
+        // Validate and sanitize pagination parameters
         if (page < 0) {
             page = 0;
         }
         if (size <= 0 || size > MAX_PAGE_SIZE) {
             size = 15;
         }
+        
+        // Validate sortBy to prevent injection
         boolean validField = false;
         for (String field : ALLOWED_SORT_FIELDS) {
             if (field.equals(sortBy)) {
@@ -110,19 +114,19 @@ public class VaccinazioneController {
             sortBy = "dataScadenza";
         }
         
+        // Normalize sort direction
         sortDir = sortDir.toLowerCase().startsWith("desc") ? "desc" : "asc";
         Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
         Pageable pageable = PageRequest.of(page, size, sort);
         
-        // Get paginated vaccinazioni from service
-        Page<Vaccinazione> vaccinazioniPage = vaccinazioneService.getAllVaccinazioni(pageable);
+        // Get ALL vaccinazioni from service (not paginated) for filtering
+        List<Vaccinazione> vaccinazioni = vaccinazioneService.getAllVaccinazioni();
         
-        // Apply search filter if provided (client-side for now)
-        List<Vaccinazione> vaccinazioni = vaccinazioniPage.getContent();
+        // Apply search filter if provided
         if (search != null && !search.trim().isEmpty()) {
             String searchTerm = search.trim().toLowerCase();
             vaccinazioni = vaccinazioni.stream()
-                .filter(v -> 
+                .filter(v ->
                     (v.getTipoVaccino() != null && v.getTipoVaccino().toLowerCase().contains(searchTerm)) ||
                     (v.getLotto() != null && v.getLotto().toLowerCase().contains(searchTerm)) ||
                     (v.getAnimale() != null && v.getAnimale().getNome() != null && v.getAnimale().getNome().toLowerCase().contains(searchTerm))
@@ -142,47 +146,30 @@ public class VaccinazioneController {
             }
         }
         
-        // Create response page
-        long totalElements = (search != null || stato != null) ? vaccinazioni.size() : vaccinazioniPage.getTotalElements();
+        // Apply pagination to filtered results
+        int totalElements = vaccinazioni.size();
+        int totalPages = (int) Math.ceil((double) totalElements / size);
         
-        // If filtering is applied, we need to handle pagination differently
-        if (search != null || stato != null) {
-            // Calculate total pages based on filtered results
-            int filteredSize = vaccinazioni.size();
-            int totalPages = (int) Math.ceil((double) filteredSize / pageable.getPageSize());
-            
-            // Adjust page number if it's beyond the available pages
-            int currentPage = Math.min(pageable.getPageNumber(), totalPages - 1);
-            if (currentPage < 0) currentPage = 0;
-            
-            // Get the correct page of filtered results
-            int start = currentPage * pageable.getPageSize();
-            int end = Math.min(start + pageable.getPageSize(), filteredSize);
-            List<Vaccinazione> paginatedVaccinazioni = vaccinazioni.subList(start, end);
-            
-            // Convert only the paginated results to DTOs
-            List<VaccinazioneListaDTO> paginatedDTOs = paginatedVaccinazioni.stream()
-                .map(vaccinazioneListaMapper::toListaDTO)
-                .collect(Collectors.toList());
-            
-            return ResponseEntity.ok(new PageImpl<>(
-                paginatedDTOs, 
-                PageRequest.of(currentPage, pageable.getPageSize(), pageable.getSort()), 
-                filteredSize
-            ));
-        } else {
-            // No filtering - convert all to DTOs and return
-            List<VaccinazioneListaDTO> vaccinazioneListaDTOs = vaccinazioni.stream()
-                .map(vaccinazioneListaMapper::toListaDTO)
-                .collect(Collectors.toList());
-            
-            return ResponseEntity.ok(new PageImpl<>(
-                vaccinazioneListaDTOs, 
-                pageable, 
-                totalElements
-            ));
+        // Adjust page number if it's beyond the available pages
+        int currentPage = page;
+        if (currentPage >= totalPages && totalPages > 0) {
+            currentPage = totalPages - 1;
         }
+        
+        // Get the correct page of results
+        int start = currentPage * size;
+        int end = Math.min(start + size, totalElements);
+        List<Vaccinazione> paginatedVaccinazioni = vaccinazioni.subList(start, end);
+        
+        // Convert to DTOs
+        List<VaccinazioneListaDTO> vaccinazioneListaDTOs = paginatedVaccinazioni.stream()
+            .map(vaccinazioneListaMapper::toListaDTO)
+            .collect(Collectors.toList());
+        
+        return ResponseEntity.ok(new PageImpl<>(
+            vaccinazioneListaDTOs,
+            PageRequest.of(currentPage, size, sort),
+            totalElements
+        ));
     }
-
-
 }
