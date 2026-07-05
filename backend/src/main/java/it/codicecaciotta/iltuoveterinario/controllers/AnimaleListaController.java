@@ -19,7 +19,7 @@ public class AnimaleListaController {
 
     private final AnimaleListaServiceImpl animaleService;
     private static final int MAX_PAGE_SIZE = 100;
-    private static final String[] ALLOWED_SORT_FIELDS = {"id", "nome", "specie", "dataNascita", "peso", "stato"};
+    private static final String[] ALLOWED_SORT_FIELDS = {"id", "nome", "specie", "razza", "dataNascita", "sesso", "peso", "microchip", "taglia", "coloreMantello", "sterilizzato", "gruppoSanguigno", "allergie", "patologie", "stato", "noteGenerali", "notePrivate", "proprietario"};
 
     public AnimaleListaController(AnimaleListaServiceImpl animaleService) {
         this.animaleService = animaleService;

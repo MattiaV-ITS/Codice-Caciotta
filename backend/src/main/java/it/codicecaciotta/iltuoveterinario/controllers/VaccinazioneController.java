@@ -32,7 +32,7 @@ public class VaccinazioneController {
     private final VaccinazioneService vaccinazioneService;
     private final VaccinazioneListaMapper vaccinazioneListaMapper;
     private static final int MAX_PAGE_SIZE = 100;
-    private static final String[] ALLOWED_SORT_FIELDS = {"id", "tipoVaccino", "dataSomministrazione", "dataScadenza", "lotto"};
+    private static final String[] ALLOWED_SORT_FIELDS = {"id", "tipoVaccino", "dataSomministrazione", "dataScadenza", "lotto", "note", "animale"};
 
     public VaccinazioneController(VaccinazioneService vaccinazioneService, VaccinazioneListaMapper vaccinazioneListaMapper) {
         this.vaccinazioneService = vaccinazioneService;

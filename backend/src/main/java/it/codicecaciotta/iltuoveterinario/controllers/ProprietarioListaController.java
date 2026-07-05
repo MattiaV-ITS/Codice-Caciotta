@@ -21,7 +21,7 @@ public class ProprietarioListaController {
 
     private final ProprietarioListaServiceImpl proprietarioService;
     private static final int MAX_PAGE_SIZE = 100;
-    private static final String[] ALLOWED_SORT_FIELDS = {"id", "nome", "cognome", "email", "telefono", "citta"};
+    private static final String[] ALLOWED_SORT_FIELDS = {"id", "codiceFiscale", "nome", "cognome", "email", "telefono", "indirizzo", "citta", "dataRegistrazione", "stato"};
 
     public ProprietarioListaController(ProprietarioListaServiceImpl proprietarioService) {
         this.proprietarioService = proprietarioService;
