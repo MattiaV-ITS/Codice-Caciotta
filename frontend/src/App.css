@@ -330,7 +330,7 @@
   top: 50%;
   transform: translateY(-50%);
   pointer-events: none;
-  color: var(--gray-400); /* grigio */
+  color: var(--gray-400);
   width: 16px;
   height: 16px;
   fill: currentColor;
@@ -1169,6 +1169,11 @@
    VISITE PAGINA - Layout a tre colonne
    ======================================== */
 
+.visite-pagina,
+.visite-pagina * {
+  font-family: var(--font-sans) !important;
+}
+
 .visite-pagina {
   display: grid;
   grid-template-columns: 320px 1fr 280px;
@@ -1233,7 +1238,30 @@
   padding: var(--space-4) var(--space-5);
 }
 
-/* Dettagli animale */
+/* ========================================
+   COLONNA SINISTRA - Dati Animale
+   ======================================== */
+
+.visite-detail-section {
+  margin-bottom: var(--space-4);
+}
+
+.visite-detail-section:last-child {
+  margin-bottom: 0;
+}
+
+.visite-section-title {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--gray-400);
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--gray-200);
+  margin-bottom: 6px;
+}
+
 .visite-detail-item {
   display: flex;
   justify-content: space-between;
@@ -1260,36 +1288,41 @@
   word-break: break-word;
 }
 
-/* Badge stato */
-.badge-status {
-  display: inline-block;
-  padding: 2px 12px;
-  border-radius: 20px;
-  font-size: 12px;
+/* Allergie e patologie in rosso */
+.visite-alert-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.visite-alert-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  font-size: 13px;
+}
+
+.visite-alert-icon {
+  font-size: 14px;
+  width: 20px;
+  text-align: center;
+}
+
+.visite-alert-label {
+  font-weight: 500;
+  color: var(--gray-500);
+  min-width: 80px;
+}
+
+.visite-alert-value {
   font-weight: 500;
 }
 
-.badge-sano {
-  background: #D1FAE5;
-  color: #065F46;
-}
+/* ========================================
+   COLONNA CENTRALE - Visita
+   ======================================== */
 
-.badge-in-cura {
-  background: #FEF3C7;
-  color: #92400E;
-}
-
-.badge-malato {
-  background: #FEE2E2;
-  color: #991B1B;
-}
-
-.badge-deceduto {
-  background: #F1F5F9;
-  color: #64748B;
-}
-
-/* Form */
 .visite-form {
   display: flex;
   flex-direction: column;
@@ -1337,6 +1370,16 @@
   min-height: 60px;
 }
 
+.visite-datetime-wrapper {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.visite-datetime-wrapper .visite-form-control {
+  flex: 1;
+}
+
 .visite-divider {
   display: flex;
   align-items: center;
@@ -1360,12 +1403,26 @@
   letter-spacing: 0.5px;
 }
 
+/* Azioni in centro - allineate left/right */
 .visite-form-actions {
   display: flex;
+  justify-content: space-between;
+  align-items: center;
   gap: var(--space-3);
   margin-top: var(--space-2);
   padding-top: var(--space-4);
   border-top: 1px solid var(--gray-200);
+}
+
+.visite-form-actions-left {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.visite-form-actions-right {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
 }
 
 .visite-header-left {
@@ -1373,6 +1430,12 @@
   align-items: center;
   gap: var(--space-3);
   flex-wrap: wrap;
+}
+
+.visite-header-right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
 }
 
 .visite-badge-tipo {
@@ -1390,94 +1453,436 @@
   color: var(--gray-500);
 }
 
-/* Visite precedenti */
+/* ========================================
+   COLONNA DESTRA - Struttura, Azioni, Visite
+   ======================================== */
+
+/* ========================================
+   STRUTTURA CARTELLA - Migliorata
+   ======================================== */
+
+.folder-tree {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.folder-tree-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  font-size: 13px;
+  color: var(--gray-700);
+  transition: color 0.2s, background 0.2s;
+  border-radius: 4px;
+  padding: 4px 8px;
+}
+
+.folder-tree-item:hover {
+  background: var(--gray-50);
+  color: var(--primary);
+}
+
+.folder-tree-item .folder-icon {
+  font-size: 16px;
+  width: 22px;
+  text-align: center;
+}
+
+.folder-tree-item.folder-main .folder-name {
+  font-weight: 600;
+  color: var(--gray-900);
+}
+
+.folder-tree-children {
+  margin-left: 28px;
+  border-left: 2px solid var(--gray-200);
+  padding-left: 12px;
+}
+
+.folder-tree-children .folder-tree-item {
+  font-size: 12px;
+  color: var(--gray-600);
+  padding: 2px 8px;
+}
+
+.folder-tree-children .folder-tree-item:hover {
+  color: var(--primary);
+}
+
+/* ========================================
+   AZIONI RAPIDE - Migliorate
+   ======================================== */
+
+.visite-quick-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.quick-action-btn {
+  justify-content: flex-start !important;
+  font-size: 13px;
+  padding: 8px 14px !important;
+  border: 1px solid var(--gray-200);
+  background: var(--white);
+  color: var(--gray-700);
+  transition: all 0.2s;
+  gap: 10px !important;
+}
+
+.quick-action-btn:hover {
+  background: var(--gray-50);
+  border-color: var(--gray-300);
+}
+
+.quick-action-btn svg {
+  flex-shrink: 0;
+}
+
+/* ========================================
+   VISITE PRECEDENTI - Stile coerente
+   ======================================== */
+
+/* Card contenitore */
+.visite-card-precedenti {
+  margin-top: var(--space-3);
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--gray-200);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+/* Header compatto (come Struttura Cartella) */
+.visite-card-precedenti .visite-card-header {
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--gray-200);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--gray-50);
+}
+
+.visite-card-precedenti .visite-card-header h3 {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0;
+  color: var(--gray-900);
+}
+
+.visite-card-precedenti .visite-card-body {
+  padding: var(--space-2) var(--space-3);
+}
+
+/* Badge conteggio (coerente con gli altri badge) */
 .visite-count {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 24px;
-  height: 24px;
+  min-width: 20px;
+  height: 20px;
   padding: 0 6px;
-  border-radius: 12px;
+  border-radius: 10px;
   background: var(--primary-light);
   color: var(--primary);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
+  line-height: 1;
 }
 
+/* Lista visite */
 .visite-list {
   list-style: none;
   padding: 0;
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: var(--space-1);
 }
 
+/* Ogni item della lista (coerente con hover di Struttura Cartella) */
 .visite-list-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 14px;
+  padding: 6px 10px;
   border-radius: var(--radius);
   border: 1px solid var(--gray-200);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
   background: var(--white);
+  font-size: 12px;
 }
 
 .visite-list-item:hover {
   background: var(--gray-50);
   border-color: var(--gray-300);
+  transform: translateX(2px);
 }
 
 .visite-list-item.active {
   background: var(--primary-light);
   border-color: var(--primary);
+  box-shadow: 0 0 0 1px var(--primary);
 }
 
+/* ========================================
+   CALENDARIO - Miglioramenti
+   ======================================== */
+
+input[type="datetime-local"] {
+  appearance: none;
+  -webkit-appearance: none;
+  padding: 8px 12px;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius);
+  font-size: 14px;
+  font-family: var(--font-sans);
+  color: var(--gray-800);
+  background: var(--white);
+  transition: border-color 0.2s, box-shadow 0.2s;
+  cursor: pointer;
+}
+
+input[type="datetime-local"]:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(42, 157, 143, 0.12);
+}
+
+input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover {
+  background: var(--gray-100);
+}
+
+input[type="datetime-local"]::-webkit-datetime-edit {
+  padding: 2px 4px;
+}
+
+input[type="datetime-local"]:hover {
+  border-color: var(--gray-300);
+}
+
+/* Rimuovi le frecce di spin (se presenti) */
+input[type="datetime-local"]::-webkit-inner-spin-button,
+input[type="datetime-local"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Data e ora - Colonna destra (visite precedenti) */
 .visite-list-item-date {
   display: flex;
   flex-direction: column;
+  gap: 0px;
 }
 
 .visite-list-day {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
   color: var(--gray-800);
 }
 
 .visite-list-time {
-  font-size: 12px;
+  font-size: 10px;
   color: var(--gray-500);
 }
 
+/* Data e ora - Form centrale (prenotazione e fine) */
+.visite-datetime-group {
+  max-width: 480px;
+  width: 100%;
+}
+
+/* Limita la larghezza dei campi data/ora nel form */
+.visite-datetime-wrapper {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.visite-datetime-wrapper .visite-form-control {
+  width: auto;
+  min-width: 200px;
+  max-width: 280px;
+  flex: 0 1 auto;
+}
+/* Info a destra (tipo e ID) */
 .visite-list-item-info {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 2px;
+  gap: 1px;
 }
 
 .visite-list-tipo {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 500;
   color: var(--gray-700);
 }
 
 .visite-list-id {
-  font-size: 11px;
+  font-size: 10px;
   color: var(--gray-400);
 }
 
+/* Stato vuoto */
 .visite-empty {
   text-align: center;
   color: var(--gray-500);
-  font-size: 14px;
-  padding: var(--space-4) 0;
+  font-size: 12px;
+  padding: var(--space-2) 0;
+  margin: 0;
 }
 
-/* Responsive */
+/* Pulsante "Torna alla visita corrente" */
+.visite-corrente-btn-wrapper {
+  margin-top: var(--space-2);
+}
+
+.visite-corrente-btn-wrapper .btn {
+  width: 100%;
+  font-size: 12px;
+  padding: 4px 12px;
+  justify-content: center;
+}
+
+/* ========================================
+   COERENZA CON GLI ALTRI BLOCCHI (Struttura Cartella e Azioni Rapide)
+   ======================================== */
+
+/* Assicuriamoci che tutti gli header dei blocchi nella colonna destra abbiano lo stesso stile */
+.visite-card-header {
+  padding: var(--space-2) var(--space-3) !important;
+  border-bottom: 1px solid var(--gray-200);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--gray-50);
+}
+
+.visite-card-header h3 {
+  font-size: 14px !important;
+  font-weight: 600;
+  margin: 0;
+  color: var(--gray-900);
+}
+
+/* Unifichiamo anche i padding dei body delle card */
+.visite-card-body {
+  padding: var(--space-2) var(--space-3) !important;
+}
+
+/* Per la card delle visite precedenti, assicuriamoci che non abbia margini extra */
+.visite-card-precedenti {
+  margin-top: var(--space-3);
+}
+
+/* Se vogliamo che tutti i blocchi nella colonna destra abbiano lo stesso margine */
+.visite-colonna-destra .visite-card {
+  margin-bottom: var(--space-3);
+}
+
+.visite-colonna-destra .visite-card:last-child {
+  margin-bottom: 0;
+}
+/* ========================================
+   MODALE DI CONFERMA
+   ======================================== */
+
+.visite-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  backdrop-filter: blur(4px);
+}
+
+.visite-modal {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  max-width: 480px;
+  width: 90%;
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+  animation: modalFadeIn 0.3s ease;
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.visite-modal-header {
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--gray-200);
+  background: var(--gray-50);
+}
+
+.visite-modal-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--gray-900);
+}
+
+.visite-modal-body {
+  padding: var(--space-5);
+}
+
+.visite-modal-body p {
+  margin: 0 0 var(--space-2) 0;
+  color: var(--gray-700);
+  line-height: 1.6;
+}
+
+.visite-modal-body p:last-child {
+  margin-bottom: 0;
+}
+
+.visite-modal-footer {
+  padding: var(--space-4) var(--space-5);
+  border-top: 1px solid var(--gray-200);
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  background: var(--gray-50);
+}
+
+@media (max-width: 480px) {
+  .visite-modal-footer {
+    flex-direction: column;
+  }
+  .visite-modal-footer .btn {
+    width: 100%;
+  }
+}
+
+/* ========================================
+   RESPONSIVE - VISITE PAGINA
+   ======================================== */
+
 @media (max-width: 1200px) {
   .visite-pagina {
     grid-template-columns: 280px 1fr 240px;
@@ -1532,6 +1937,23 @@
   .visite-header-left {
     flex-direction: column;
     align-items: flex-start;
+  }
+}
+
+/* Campi data/ora su mobile piccoli */
+@media (max-width: 480px) {
+  .visite-datetime-wrapper {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .visite-datetime-wrapper .visite-form-control {
+    width: 100%;
+    max-width: 100%;
+    min-width: unset;
+  }
+  .visite-datetime-wrapper .btn {
+    width: 100%;
+    justify-content: center;
   }
 }
 
