@@ -1,4 +1,4 @@
-package it.codicecaciotta.iltuoveterinario.mapper;
+package it.codicecaciotta.iltuoveterinario.mappers;
 
 import it.codicecaciotta.iltuoveterinario.dto.AnimaleListaDTO;
 import it.codicecaciotta.iltuoveterinario.models.Animale;

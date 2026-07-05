@@ -3,16 +3,12 @@ package it.codicecaciotta.iltuoveterinario.controllers;
 import it.codicecaciotta.iltuoveterinario.dto.VaccinazioneCreateDTO;
 import it.codicecaciotta.iltuoveterinario.dto.VaccinazioneListaDTO;
 import it.codicecaciotta.iltuoveterinario.dto.VaccinazioneUpdateDTO;
-import it.codicecaciotta.iltuoveterinario.mapper.VaccinazioneListaMapper;
-import it.codicecaciotta.iltuoveterinario.models.EStatoVaccinazione;
-import it.codicecaciotta.iltuoveterinario.models.Vaccinazione;
 import it.codicecaciotta.iltuoveterinario.services.VaccinazioneService;
+import it.codicecaciotta.iltuoveterinario.services.VaccinazioneListaService;
+import it.codicecaciotta.iltuoveterinario.utils.PaginationAndSortingUtils;
 
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.NonNull;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -21,8 +17,6 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import jakarta.validation.Valid;
 import java.net.URI;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @CrossOrigin(origins = "*", maxAge = 3600)
@@ -30,33 +24,43 @@ import java.util.stream.Collectors;
 public class VaccinazioneController {
 
     private final VaccinazioneService vaccinazioneService;
-    private final VaccinazioneListaMapper vaccinazioneListaMapper;
-    private static final int MAX_PAGE_SIZE = 100;
-    private static final String[] ALLOWED_SORT_FIELDS = {"id", "tipoVaccino", "dataSomministrazione", "dataScadenza", "lotto", "note", "animale"};
+    private final VaccinazioneListaService vaccinazioneListaService;
+    private final PaginationAndSortingUtils paginationUtils;
 
-    public VaccinazioneController(VaccinazioneService vaccinazioneService, VaccinazioneListaMapper vaccinazioneListaMapper) {
+    private static final java.util.List<String> ALLOWED_SORT_FIELDS =
+            java.util.List.of("id", "tipoVaccino", "dataSomministrazione", "dataScadenza", "lotto", "note", "animale");
+
+    public VaccinazioneController(
+            VaccinazioneService vaccinazioneService,
+            VaccinazioneListaService vaccinazioneListaService,
+            PaginationAndSortingUtils paginationUtils) {
+
         this.vaccinazioneService = vaccinazioneService;
-        this.vaccinazioneListaMapper = vaccinazioneListaMapper;
+        this.vaccinazioneListaService = vaccinazioneListaService;
+        this.paginationUtils = paginationUtils;
     }
 
     @PostMapping
     @PreAuthorize("hasAuthority('ROLE_STAFF') or hasAuthority('ROLE_ADMIN')")
-    public ResponseEntity<Vaccinazione> createVaccinazione(@Valid @RequestBody VaccinazioneCreateDTO vaccinazioneCreateDTO) {
-        Vaccinazione createdVaccinazione = vaccinazioneService.createVaccinazione(vaccinazioneCreateDTO);
-        
+    public ResponseEntity<?> createVaccinazione(@Valid @RequestBody VaccinazioneCreateDTO dto) {
+
+        var created = vaccinazioneService.createVaccinazione(dto);
+
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{id}")
-                .buildAndExpand(createdVaccinazione.getId())
+                .buildAndExpand(created.getId())
                 .toUri();
 
-        return ResponseEntity.created(location).body(createdVaccinazione);
+        return ResponseEntity.created(location).body(created);
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('ROLE_STAFF') or hasAuthority('ROLE_ADMIN')")
-    public ResponseEntity<Vaccinazione> updateVaccinazione(@PathVariable @NonNull Long id, @Valid @RequestBody VaccinazioneUpdateDTO vaccinazioneUpdateDTO) {
-        Vaccinazione updatedVaccinazione = vaccinazioneService.updateVaccinazione(id, vaccinazioneUpdateDTO);
-        return ResponseEntity.ok(updatedVaccinazione);
+    public ResponseEntity<?> updateVaccinazione(
+            @PathVariable @NonNull Long id,
+            @Valid @RequestBody VaccinazioneUpdateDTO dto) {
+
+        return ResponseEntity.ok(vaccinazioneService.updateVaccinazione(id, dto));
     }
 
     @DeleteMapping("/{id}")
@@ -68,108 +72,36 @@ public class VaccinazioneController {
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAuthority('ROLE_STAFF') or hasAuthority('ROLE_ADMIN')")
-    public ResponseEntity<Vaccinazione> getVaccinazioneById(@PathVariable @NonNull Long id) {
-        Vaccinazione vaccinazione = vaccinazioneService.getVaccinazioneById(id);
-        return ResponseEntity.ok(vaccinazione);
-    }
-
-    @GetMapping("/animale/{animaleId}")
-    @PreAuthorize("hasAuthority('ROLE_STAFF') or hasAuthority('ROLE_ADMIN')")
-    public ResponseEntity<List<VaccinazioneListaDTO>> getVaccinazioniByAnimaleId(@PathVariable @NonNull Long animaleId) {
-        List<Vaccinazione> vaccinazioni = vaccinazioneService.getVaccinazioniByAnimaleId(animaleId);
-        List<VaccinazioneListaDTO> vaccinazioneListaDTOs = vaccinazioni.stream()
-                .map(vaccinazioneListaMapper::toListaDTO)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(vaccinazioneListaDTOs);
+    public ResponseEntity<?> getVaccinazioneById(@PathVariable @NonNull Long id) {
+        return ResponseEntity.ok(vaccinazioneService.getVaccinazioneById(id));
     }
 
     @GetMapping
     @PreAuthorize("hasAuthority('ROLE_STAFF') or hasAuthority('ROLE_ADMIN')")
-    public ResponseEntity<Page<VaccinazioneListaDTO>> getAllVaccinazioni(
-        @RequestParam(defaultValue = "0") int page,
-        @RequestParam(defaultValue = "15") int size,
-        @RequestParam(defaultValue = "dataScadenza") String sortBy,
-        @RequestParam(defaultValue = "asc") String sortDir,
-        @RequestParam(required = false) String search,
-        @RequestParam(required = false) String stato
-    ) {
-        // Valida e sanitizza i parametri di impaginazione
-        if (page < 0) {
-            page = 0;
+    public Page<VaccinazioneListaDTO> getVaccinazioni(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "15") int size,
+            @RequestParam(defaultValue = "dataScadenza") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDir,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String stato,
+            @RequestParam(required = false) Long animaleId) {
+
+        PageRequest pageable = paginationUtils.buildPageRequest(
+                page, size, sortBy, sortDir, ALLOWED_SORT_FIELDS);
+
+        if (search != null && !search.isBlank()) {
+            return vaccinazioneListaService.searchVaccinazioni(search.trim(), pageable);
         }
-        if (size <= 0 || size > MAX_PAGE_SIZE) {
-            size = 15;
+
+        if (stato != null && !stato.isBlank()) {
+            return vaccinazioneListaService.getVaccinazioniByStato(stato.trim(), pageable);
         }
-        
-        // Valida e sanitizza sortBy per prevenire iniezioni
-        boolean validField = false;
-        for (String field : ALLOWED_SORT_FIELDS) {
-            if (field.equals(sortBy)) {
-                validField = true;
-                break;
-            }
+
+        if (animaleId != null) {
+            return vaccinazioneListaService.getVaccinazioniByAnimale(animaleId, pageable);
         }
-        if (!validField) {
-            sortBy = "dataScadenza";
-        }
-        
-        // Normalizza il sort
-        sortDir = sortDir.toLowerCase().startsWith("desc") ? "desc" : "asc";
-        Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
-        Pageable pageable = PageRequest.of(page, size, sort);
-        
-    
-        // Fa una GET vaccinazioni from service (non paginata) per il filtraggio
-        List<Vaccinazione> vaccinazioni = vaccinazioneService.getAllVaccinazioni();
-        
-        // Applica filtri di ricerca se forniti
-        if (search != null && !search.trim().isEmpty()) {
-            String searchTerm = search.trim().toLowerCase();
-            vaccinazioni = vaccinazioni.stream()
-                .filter(v ->
-                    (v.getTipoVaccino() != null && v.getTipoVaccino().toLowerCase().contains(searchTerm)) ||
-                    (v.getLotto() != null && v.getLotto().toLowerCase().contains(searchTerm)) ||
-                    (v.getAnimale() != null && v.getAnimale().getNome() != null && v.getAnimale().getNome().toLowerCase().contains(searchTerm))
-                )
-                .collect(Collectors.toList());
-        }
-        
-        // Applica filtro di stato se fornito
-        if (stato != null && !stato.trim().isEmpty()) {
-            try {
-                EStatoVaccinazione statoFilter = EStatoVaccinazione.valueOf(stato.trim().toUpperCase());
-                vaccinazioni = vaccinazioni.stream()
-                    .filter(v -> vaccinazioneService.calculateStatoVaccinazione(v) == statoFilter)
-                    .collect(Collectors.toList());
-            } catch (IllegalArgumentException e) {
-                // Invalid status value, ignore filter
-            }
-        }
-        
-        // Applica impaginazione ai risultati filtrati
-        int totalElements = vaccinazioni.size();
-        int totalPages = (int) Math.ceil((double) totalElements / size);
-        
-        // Sistema il numero di pagine se è oltre le pagine disponibili
-        int currentPage = page;
-        if (currentPage >= totalPages && totalPages > 0) {
-            currentPage = totalPages - 1;
-        }
-        
-        // Trova la pagina corretta di vaccinazioni da restituire
-        int start = currentPage * size;
-        int end = Math.min(start + size, totalElements);
-        List<Vaccinazione> paginatedVaccinazioni = vaccinazioni.subList(start, end);
-        
-        // Converte per il DTO
-        List<VaccinazioneListaDTO> vaccinazioneListaDTOs = paginatedVaccinazioni.stream()
-            .map(vaccinazioneListaMapper::toListaDTO)
-            .collect(Collectors.toList());
-        
-        return ResponseEntity.ok(new PageImpl<>(
-            vaccinazioneListaDTOs,
-            PageRequest.of(currentPage, size, sort),
-            totalElements
-        ));
+
+        return vaccinazioneListaService.getAllVaccinazioni(pageable);
     }
 }

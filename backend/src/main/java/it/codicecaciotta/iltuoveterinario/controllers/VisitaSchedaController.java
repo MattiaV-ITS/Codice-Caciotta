@@ -1,7 +1,7 @@
 package it.codicecaciotta.iltuoveterinario.controllers;
 
 import it.codicecaciotta.iltuoveterinario.dto.VisitaSchedaDTO;
-import it.codicecaciotta.iltuoveterinario.mapper.VisitaSchedaMapper;
+import it.codicecaciotta.iltuoveterinario.mappers.VisitaSchedaMapper;
 import it.codicecaciotta.iltuoveterinario.services.VisitaService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;

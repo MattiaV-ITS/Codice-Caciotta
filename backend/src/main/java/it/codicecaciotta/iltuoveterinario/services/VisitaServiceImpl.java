@@ -1,7 +1,7 @@
 package it.codicecaciotta.iltuoveterinario.services;
 
 import it.codicecaciotta.iltuoveterinario.dto.VisitaSchedaDTO;
-import it.codicecaciotta.iltuoveterinario.mapper.VisitaSchedaMapper;
+import it.codicecaciotta.iltuoveterinario.mappers.VisitaSchedaMapper;
 import it.codicecaciotta.iltuoveterinario.models.Visita;
 import it.codicecaciotta.iltuoveterinario.repositories.VisitaRepository;
 import org.springframework.lang.NonNull;

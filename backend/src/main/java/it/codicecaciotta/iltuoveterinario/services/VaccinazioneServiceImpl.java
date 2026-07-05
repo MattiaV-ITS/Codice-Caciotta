@@ -8,8 +8,6 @@ import it.codicecaciotta.iltuoveterinario.models.Vaccinazione;
 import it.codicecaciotta.iltuoveterinario.repositories.AnimaleRepository;
 import it.codicecaciotta.iltuoveterinario.repositories.VaccinazioneRepository;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 
@@ -23,22 +21,27 @@ public class VaccinazioneServiceImpl implements VaccinazioneService {
     private final VaccinazioneRepository vaccinazioneRepository;
     private final AnimaleRepository animaleRepository;
 
-    public VaccinazioneServiceImpl(VaccinazioneRepository vaccinazioneRepository, AnimaleRepository animaleRepository) {
+    public VaccinazioneServiceImpl(
+            VaccinazioneRepository vaccinazioneRepository,
+            AnimaleRepository animaleRepository) {
+
         this.vaccinazioneRepository = vaccinazioneRepository;
         this.animaleRepository = animaleRepository;
     }
 
     @Override
-    public Vaccinazione createVaccinazione(VaccinazioneCreateDTO vaccinazioneCreateDTO) {
-        Animale animale = animaleRepository.findById(vaccinazioneCreateDTO.getAnimaleId())
-                .orElseThrow(() -> new NoSuchElementException("Animale non trovato con ID: " + vaccinazioneCreateDTO.getAnimaleId()));
+    public Vaccinazione createVaccinazione(VaccinazioneCreateDTO dto) {
+
+        Animale animale = animaleRepository.findById(dto.getAnimaleId())
+                .orElseThrow(() ->
+                        new NoSuchElementException("Animale non trovato con ID: " + dto.getAnimaleId()));
 
         Vaccinazione vaccinazione = new Vaccinazione();
-        vaccinazione.setTipoVaccino(vaccinazioneCreateDTO.getTipoVaccino());
-        vaccinazione.setDataSomministrazione(vaccinazioneCreateDTO.getDataSomministrazione());
-        vaccinazione.setDataScadenza(vaccinazioneCreateDTO.getDataScadenza());
-        vaccinazione.setLotto(vaccinazioneCreateDTO.getLotto());
-        vaccinazione.setNote(vaccinazioneCreateDTO.getNote());
+        vaccinazione.setTipoVaccino(dto.getTipoVaccino());
+        vaccinazione.setDataSomministrazione(dto.getDataSomministrazione());
+        vaccinazione.setDataScadenza(dto.getDataScadenza());
+        vaccinazione.setLotto(dto.getLotto());
+        vaccinazione.setNote(dto.getNote());
         vaccinazione.setAnimale(animale);
 
         animale.addVaccinazione(vaccinazione);
@@ -47,35 +50,37 @@ public class VaccinazioneServiceImpl implements VaccinazioneService {
     }
 
     @Override
-    public Vaccinazione updateVaccinazione(@NonNull Long id, VaccinazioneUpdateDTO vaccinazioneUpdateDTO) {
-        Vaccinazione vaccinazione = vaccinazioneRepository.findById(id)
-                .orElseThrow(() -> new NoSuchElementException("Vaccinazione non trovata con ID: " + id));
+    public Vaccinazione updateVaccinazione(@NonNull Long id, VaccinazioneUpdateDTO dto) {
 
-        if (vaccinazioneUpdateDTO.getTipoVaccino() != null) {
-            vaccinazione.setTipoVaccino(vaccinazioneUpdateDTO.getTipoVaccino());
-        }
-        if (vaccinazioneUpdateDTO.getDataSomministrazione() != null) {
-            vaccinazione.setDataSomministrazione(vaccinazioneUpdateDTO.getDataSomministrazione());
-        }
-        if (vaccinazioneUpdateDTO.getDataScadenza() != null) {
-            vaccinazione.setDataScadenza(vaccinazioneUpdateDTO.getDataScadenza());
-        }
-        if (vaccinazioneUpdateDTO.getLotto() != null) {
-            vaccinazione.setLotto(vaccinazioneUpdateDTO.getLotto());
-        }
-        if (vaccinazioneUpdateDTO.getNote() != null) {
-            vaccinazione.setNote(vaccinazioneUpdateDTO.getNote());
-        }
+        Vaccinazione vaccinazione = vaccinazioneRepository.findById(id)
+                .orElseThrow(() ->
+                        new NoSuchElementException("Vaccinazione non trovata con ID: " + id));
+
+        if (dto.getTipoVaccino() != null)
+            vaccinazione.setTipoVaccino(dto.getTipoVaccino());
+
+        if (dto.getDataSomministrazione() != null)
+            vaccinazione.setDataSomministrazione(dto.getDataSomministrazione());
+
+        if (dto.getDataScadenza() != null)
+            vaccinazione.setDataScadenza(dto.getDataScadenza());
+
+        if (dto.getLotto() != null)
+            vaccinazione.setLotto(dto.getLotto());
+
+        if (dto.getNote() != null)
+            vaccinazione.setNote(dto.getNote());
 
         return vaccinazioneRepository.save(vaccinazione);
     }
 
     @Override
     public void deleteVaccinazione(@NonNull Long id) {
-        Vaccinazione vaccinazione = vaccinazioneRepository.findById(id)
-                .orElseThrow(() -> new NoSuchElementException("Vaccinazione not found with ID: " + id));
 
-        // Rimuovi la vaccinazione dall'animale
+        Vaccinazione vaccinazione = vaccinazioneRepository.findById(id)
+                .orElseThrow(() ->
+                        new NoSuchElementException("Vaccinazione non trovata con ID: " + id));
+
         if (vaccinazione.getAnimale() != null) {
             vaccinazione.getAnimale().removeVaccinazione(vaccinazione);
         }
@@ -85,14 +90,18 @@ public class VaccinazioneServiceImpl implements VaccinazioneService {
 
     @Override
     public Vaccinazione getVaccinazioneById(@NonNull Long id) {
+
         return vaccinazioneRepository.findById(id)
-                .orElseThrow(() -> new NoSuchElementException("Vaccinazione not found with ID: " + id));
+                .orElseThrow(() ->
+                        new NoSuchElementException("Vaccinazione non trovata con ID: " + id));
     }
 
     @Override
     public List<Vaccinazione> getVaccinazioniByAnimaleId(@NonNull Long animaleId) {
+
         Animale animale = animaleRepository.findById(animaleId)
-                .orElseThrow(() -> new NoSuchElementException("Animale not found with ID: " + animaleId));
+                .orElseThrow(() ->
+                        new NoSuchElementException("Animale non trovato con ID: " + animaleId));
 
         return vaccinazioneRepository.findByAnimaleOrderByDataScadenzaAsc(animale);
     }
@@ -103,29 +112,19 @@ public class VaccinazioneServiceImpl implements VaccinazioneService {
     }
 
     @Override
-    public Page<Vaccinazione> getAllVaccinazioni(Pageable pageable) {
-        return vaccinazioneRepository.findAll(pageable);
-    }
-
-    @Override
     public EStatoVaccinazione calculateStatoVaccinazione(Vaccinazione vaccinazione) {
+
         if (vaccinazione == null || vaccinazione.getDataScadenza() == null) {
             return EStatoVaccinazione.SCADUTO;
         }
 
         LocalDate oggi = LocalDate.now();
-        LocalDate dataScadenza = vaccinazione.getDataScadenza();
+        LocalDate scadenza = vaccinazione.getDataScadenza();
 
-        long giorniScadenza = java.time.temporal.ChronoUnit.DAYS.between(oggi, dataScadenza);
+        long giorni = java.time.temporal.ChronoUnit.DAYS.between(oggi, scadenza);
 
-        if (giorniScadenza < 0) {
-            return EStatoVaccinazione.SCADUTO; // Scaduto
-        } else if (giorniScadenza <= 30) {
-            return EStatoVaccinazione.PROSSIMO; // Scade entro 30 giorni
-        } else {
-            return EStatoVaccinazione.VALIDO; // Valido
-        }
+        if (giorni < 0) return EStatoVaccinazione.SCADUTO;
+        if (giorni <= 30) return EStatoVaccinazione.PROSSIMO;
+        return EStatoVaccinazione.VALIDO;
     }
-
-
 }

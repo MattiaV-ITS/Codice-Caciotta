@@ -3,34 +3,24 @@ package it.codicecaciotta.iltuoveterinario.repositories;
 import it.codicecaciotta.iltuoveterinario.models.Animale;
 import it.codicecaciotta.iltuoveterinario.models.Vaccinazione;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-
-import java.time.LocalDate;
-import java.util.List;
+import org.springframework.data.repository.query.Param;
 
 public interface VaccinazioneRepository extends JpaRepository<Vaccinazione, Long> {
 
-    List<Vaccinazione> findByAnimale(Animale animale);
+    Page<Vaccinazione> findByAnimaleId(Long animaleId, Pageable pageable);
 
-    List<Vaccinazione> findByAnimaleOrderByDataScadenzaAsc(Animale animale);
+    java.util.List<Vaccinazione> findByAnimaleOrderByDataScadenzaAsc(Animale animale);
 
-    List<Vaccinazione> findByDataScadenzaBefore(LocalDate data);
-
-    List<Vaccinazione> findByAnimaleAndDataScadenzaBefore(Animale animale, LocalDate data);
-
-    List<Vaccinazione> findByTipoVaccino(String tipoVaccino);
-
-    List<Vaccinazione> findByAnimaleAndTipoVaccino(Animale animale, String tipoVaccino);
-
-    @Query("SELECT COUNT(v) FROM Vaccinazione v WHERE v.dataScadenza > CURRENT_DATE")
-    Long countValide();
-
-    @Query("SELECT COUNT(v) FROM Vaccinazione v WHERE v.dataScadenza < CURRENT_DATE")
-    Long countScadute();
-
-    @Query(value = "SELECT COUNT(*) FROM vaccinazione v " +
-            "WHERE v.data_scadenza BETWEEN CURRENT_DATE AND CURRENT_DATE + INTERVAL '30 days'", nativeQuery = true)
-    Long countInScadenza();
-
+    @Query("""
+        SELECT v FROM Vaccinazione v
+        WHERE LOWER(v.tipoVaccino) LIKE LOWER(CONCAT('%', :search, '%'))
+           OR LOWER(v.lotto) LIKE LOWER(CONCAT('%', :search, '%'))
+           OR LOWER(v.note) LIKE LOWER(CONCAT('%', :search, '%'))
+           OR LOWER(v.animale.nome) LIKE LOWER(CONCAT('%', :search, '%'))
+    """)
+    Page<Vaccinazione> searchComprehensive(@Param("search") String search, Pageable pageable);
 }

@@ -1,7 +1,7 @@
 package it.codicecaciotta.iltuoveterinario.services;
 
 import it.codicecaciotta.iltuoveterinario.dto.ProprietarioListaDTO;
-import it.codicecaciotta.iltuoveterinario.mapper.ProprietarioListaMapper;
+import it.codicecaciotta.iltuoveterinario.mappers.ProprietarioListaMapper;
 import it.codicecaciotta.iltuoveterinario.repositories.ProprietarioRepository;
 
 import org.springframework.data.domain.Page;
