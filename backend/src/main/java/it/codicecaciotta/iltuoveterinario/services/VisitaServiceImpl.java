@@ -33,7 +33,7 @@ public class VisitaServiceImpl implements VisitaService {
 
     @Override
     @Transactional
-    public Visita createVisita(Visita visita) {
+    public Visita createVisita(@NonNull Visita visita) {
         return visitaRepository.save(visita);
     }
 

@@ -4,6 +4,7 @@ import it.codicecaciotta.iltuoveterinario.dto.VisitaSchedaDTO;
 import it.codicecaciotta.iltuoveterinario.mappers.VisitaSchedaMapper;
 import it.codicecaciotta.iltuoveterinario.services.VisitaService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.lang.NonNull;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,7 +26,7 @@ public class VisitaSchedaController {
 
     @GetMapping("/api/visite/animale/{animaleId}")
     @PreAuthorize("hasAuthority('ROLE_STAFF') or hasAuthority('ROLE_ADMIN') or hasAuthority('ROLE_USER')")
-    public ResponseEntity<List<VisitaSchedaDTO>> getVisiteByAnimaleId(@PathVariable Long animaleId) {
+    public ResponseEntity<List<VisitaSchedaDTO>> getVisiteByAnimaleId(@PathVariable @NonNull Long animaleId) {
         List<VisitaSchedaDTO> visiteDTO = visitaService.getVisiteByAnimaleId(animaleId)
                 .stream()
                 .map(VisitaSchedaMapper::toSchedaDTO)
@@ -36,7 +37,7 @@ public class VisitaSchedaController {
 
     @GetMapping("/api/visite/{visitaId}")
     @PreAuthorize("hasAuthority('ROLE_STAFF') or hasAuthority('ROLE_ADMIN') or hasAuthority('ROLE_USER')")
-    public ResponseEntity<VisitaSchedaDTO> getVisitaById(@PathVariable Long visitaId) {
+    public ResponseEntity<VisitaSchedaDTO> getVisitaById(@PathVariable @NonNull Long visitaId) {
         VisitaSchedaDTO visitaDTO = VisitaSchedaMapper.toSchedaDTO(visitaService.getVisitaById(visitaId));
         return ResponseEntity.ok(visitaDTO);
     }

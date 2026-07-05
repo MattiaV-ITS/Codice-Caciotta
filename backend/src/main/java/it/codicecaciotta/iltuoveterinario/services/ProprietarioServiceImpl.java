@@ -82,12 +82,11 @@ public class ProprietarioServiceImpl implements ProprietarioService {
     @Override
     @Transactional
     public void deleteProprietario(@NonNull Long id) {
-        // Check if owner exists
         if (!proprietarioRepository.existsById(id)) {
             throw new EntityNotFoundException("Proprietario not found with id: " + id);
         }
 
-        // Delete the owner
+        // Delete
         proprietarioRepository.deleteById(id);
     }
 }

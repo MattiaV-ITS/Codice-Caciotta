@@ -10,6 +10,7 @@ import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -27,7 +28,7 @@ public class VaccinazioneListaServiceImpl implements VaccinazioneListaService {
     }
 
     @Override
-    public Page<VaccinazioneListaDTO> getAllVaccinazioni(Pageable pageable) {
+    public Page<VaccinazioneListaDTO> getAllVaccinazioni(@NonNull Pageable pageable) {
         return vaccinazioneRepository.findAll(pageable)
                 .map(vaccinazioneListaMapper::toListaDTO);
     }

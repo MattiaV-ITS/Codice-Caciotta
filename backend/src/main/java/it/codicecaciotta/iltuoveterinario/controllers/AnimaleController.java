@@ -62,7 +62,7 @@ public class AnimaleController {
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAuthority('ROLE_STAFF') or hasAuthority('ROLE_ADMIN') or hasAuthority('ROLE_USER')")
-    public ResponseEntity<AnimaleSchedaDTO> getAnimaleSchedaById(@PathVariable Long id) {
+    public ResponseEntity<AnimaleSchedaDTO> getAnimaleSchedaById(@PathVariable @NonNull Long id) {
         Animale animale = animaleService.getAnimaleById(id);
         AnimaleSchedaDTO schedaDTO = AnimaleSchedaMapper.toSchedaDTO(animale);
         
