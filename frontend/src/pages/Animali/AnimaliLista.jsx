@@ -1,52 +1,44 @@
-import React, { useEffect, useState } from 'react';
-import { formatDate, getIconLetter } from '../../utils';
-import { useTableControls } from '../../utils/useTableControls';
-import { useApi } from '../../services/apiService';
-import ListaTable from '../../components/ListaTable/ListaTable';
+import React, { useState } from 'react';
+import ListaTable from '../components/ListaTable/ListaTable';
+import LoadingSpinner from '../components/common/LoadingSpinner';
+import ErrorMessage from '../components/common/ErrorMessage';
+import PaginationFooter from '../components/common/PaginationFooter';
+import SearchBox from '../components/common/SearchBox';
+import FilterBar from '../components/common/FilterBar';
 
-/**
- * Component per la visualizzazione e gestione dell'elenco degli animali
- * Utilizza il componente ListaTable per la visualizzazione tabellare unificata
- */
+import { useTableControls } from '../hooks/useTableControls';
+import { usePaginatedFetch } from '../hooks/usePaginatedFetch';
+import { useSearchControls } from '../hooks/useSearchControls';
+import { getIconLetter } from '../utils/getIconLetter';
+
 function AnimaliLista() {
-  const { get } = useApi();
-  const [animali, setAnimali] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [appliedSearchTerm, setAppliedSearchTerm] = useState('');
-  const [specieFilter, setSpecieFilter] = useState('');
-  const [totalPages, setTotalPages] = useState(0);
-  const [totalCount, setTotalCount] = useState(0);
-
-  const { 
-    sortBy, 
-    sortDir, 
-    page, 
-    size, 
-    handleSort, 
-    handleSizeChange, 
-    getSortIndicator, 
-    goToPreviousPage, 
-    goToNextPage, 
-    setPage
-  } = useTableControls({
+  const table = useTableControls({
     defaultSortBy: 'id',
-    defaultSortDir: 'asc', 
+    defaultSortDir: 'asc',
     defaultPageSize: 15
   });
 
-  const pageSizeOptions = [5, 10, 15, 20];
+  const search = useSearchControls();
+  const [specieFilter, setSpecieFilter] = useState('');
 
-  const getStatoInfo = (stato) => {
-    const map = {
-      'SANO': { label: 'Sano', className: 'badge-sano' },
-      'MALATO': { label: 'Malato', className: 'badge-malato' },
-      'IN_CURA': { label: 'In cura', className: 'badge-in-cura' },
-      'DECEDUTO': { label: 'Deceduto', className: 'badge-deceduto' }
-    };
-    return map[stato] || { label: 'Sconosciuto', className: 'badge-sconosciuto' };
-  };
+  const { data: animali, loading, error, totalPages, totalCount } =
+    usePaginatedFetch('/api/animali', {
+      page: table.page,
+      size: table.size,
+      sortBy: table.sortBy,
+      sortDir: table.sortDir,
+      filters: {
+        search: search.appliedSearchTerm,
+        specie: specieFilter
+      }
+    });
+
+  const specieOptions = [
+    { label: 'Tutti', value: '' },
+    { label: 'Cane', value: 'cane' },
+    { label: 'Gatto', value: 'gatto' },
+    { label: 'Altri', value: 'altro' }
+  ];
 
   const customColumns = [
     {
@@ -56,102 +48,48 @@ function AnimaliLista() {
       render: (item) => {
         const isFemale = item.sesso?.toLowerCase() === 'f';
         const isMale = item.sesso?.toLowerCase() === 'm';
-        const isND = item.sesso === null || item.sesso === undefined;
 
-        let avatarClass = 'avatar-default';
-        if (isFemale) avatarClass = 'avatar-female';
-        else if (isMale) avatarClass = 'avatar-male';
-        else if (isND) avatarClass = 'avatar-nd';
+        const avatarClass = isFemale
+          ? 'avatar-female'
+          : isMale
+          ? 'avatar-male'
+          : 'avatar-default';
 
         return (
           <div className="cell-content">
             <div className={`avatar-circle ${avatarClass}`}>
               {getIconLetter(item.specie)}
             </div>
-            <span className={`name-colored ${isFemale ? 'name-female' : isMale ? 'name-male' : 'name-default'}`}>
+            <span className={`name-colored ${isFemale ? 'name-female' : isMale ? 'name-male' : ''}`}>
               {item.nome}
             </span>
           </div>
         );
       }
     },
-    { header: 'RAZZA', field: 'razza', sortable: true, render: (item) => item.razza || '-' },
-    { header: 'PROPRIETARIO', field: 'proprietario', sortable: false, render: (item) => item.proprietario || '-' },
+    { header: 'RAZZA', field: 'razza', sortable: true },
+    { header: 'PROPRIETARIO', field: 'proprietario', sortable: false },
     { header: 'DATA DI NASCITA', field: 'dataNascita', type: 'date', sortable: true },
-    { header: 'MICROCHIP', field: 'microchip', sortable: true, render: (item) => item.microchip || '-' },
+    { header: 'MICROCHIP', field: 'microchip', sortable: true },
     {
       header: 'STATO',
       field: 'stato',
       sortable: false,
-      style: { textAlign: 'center' },
       render: (item) => {
-        const status = getStatoInfo(item.stato);
+        const map = {
+          SANO: { label: 'Sano', className: 'badge-sano' },
+          MALATO: { label: 'Malato', className: 'badge-malato' },
+          IN_CURA: { label: 'In cura', className: 'badge-in-cura' },
+          DECEDUTO: { label: 'Deceduto', className: 'badge-deceduto' }
+        };
+        const status = map[item.stato] || { label: 'Sconosciuto', className: 'badge-sconosciuto' };
         return <span className={`badge-status ${status.className}`}>{status.label}</span>;
       }
     }
   ];
 
-  useEffect(() => {
-    setLoading(true);
-
-    // Costruzione parametri query
-    const params = new URLSearchParams();
-    params.append('page', page);
-    params.append('size', size);
-    params.append('sortBy', sortBy);
-    params.append('sortDir', sortDir);
-    
-    if (appliedSearchTerm) {
-      params.append('search', appliedSearchTerm);
-    }
-    
-    if (specieFilter) {
-      params.append('specie', specieFilter);
-    }
-    
-    get(`/api/animali?${params.toString()}`)
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Errore nel fetching dei dati degli animali');
-        }
-        return response.json();
-      })
-      .then(data => {
-        setAnimali(data.content);
-        setTotalPages(data.page.totalPages);
-        setTotalCount(data.page.totalElements);
-        setPage(data.page.number);
-        setLoading(false);
-      })
-      .catch(err => {
-        setError(err.message);
-        setLoading(false);
-      });
-  }, [page, size, appliedSearchTerm, specieFilter, sortBy, sortDir, get]);
-
-  const clearFilters = () => {
-    setSearchTerm('');
-    setAppliedSearchTerm('');
-    setSpecieFilter('');
-    setPage(0);
-  };
-
-  if (loading) {
-    return (
-      <div className="loading-wrapper">
-        <div className="loading-spinner-custom"></div>
-        <span>Caricamento animali...</span>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="page-container">
-        <div className="form-error">Errore: {error}</div>
-      </div>
-    );
-  }
+  if (loading) return <LoadingSpinner label="Caricamento animali..." />;
+  if (error) return <ErrorMessage error={error} />;
 
   return (
     <div className="page-container">
@@ -163,107 +101,67 @@ function AnimaliLista() {
         <button className="btn-add">+ Nuovo Animale</button>
       </div>
 
-      <div className="toolbar-wrapper">
-        <div className="toolbar-filters">
-          <span className="filter-label">Specie:</span>
-          <button
-            className={`btn-filter ${specieFilter === '' ? 'active' : ''}`}
-            onClick={() => { setSpecieFilter(''); setSearchTerm(''); setAppliedSearchTerm(''); setPage(0); }}
-          >
-            Tutti
-          </button>
-          <button
-            className={`btn-filter ${specieFilter === 'cane' ? 'active' : ''}`}
-            onClick={() => { setSpecieFilter('cane'); setSearchTerm(''); setAppliedSearchTerm(''); setPage(0); }}
-          >
-            Cane
-          </button>
-          <button
-            className={`btn-filter ${specieFilter === 'gatto' ? 'active' : ''}`}
-            onClick={() => { setSpecieFilter('gatto'); setSearchTerm(''); setAppliedSearchTerm(''); setPage(0); }}
-          >
-            Gatto
-          </button>
-          <button
-            className={`btn-filter ${specieFilter === 'altro' ? 'active' : ''}`}
-            onClick={() => { setSpecieFilter('altro'); setSearchTerm(''); setAppliedSearchTerm(''); setPage(0); }}
-          >
-            Altri
-          </button>
-        </div>
+      <FilterBar
+        label="Specie"
+        options={specieOptions}
+        active={specieFilter}
+        onSelect={(v) => {
+          setSpecieFilter(v);
+          search.clearSearch();
+          table.setPage(0);
+        }}
+      />
 
-        <div className="toolbar-actions">
-          <div className="search-box-wrapper">
-            <div className="search-icon-wrapper">
-              <input
-                type="text"
-                className="search-input"
-                placeholder="Cerca per nome, razza, proprietario, data nascita o microchip..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                onKeyPress={(e) => { if (e.key === 'Enter') { setAppliedSearchTerm(searchTerm); setPage(0); } }}
-              />
-              <svg 
-                className="search-icon" 
-                xmlns="http://www.w3.org/2000/svg" 
-                viewBox="0 0 24 24" 
-                width="16" 
-                height="16"
-              >
-                <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
-              </svg>
-            </div>
-          </div>
-          <button className="btn-clear-filters" onClick={clearFilters}>
-            Cancella Filtri
-          </button>
-          <div className="page-size-selector">
-            <span className="page-size-label">Righe:</span>
-            <select
-              className="page-size-select"
-              value={size}
-              onChange={(e) => handleSizeChange(Number(e.target.value))}
-            >
-              {pageSizeOptions.map(option => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </select>
-          </div>
+      <div className="toolbar-actions">
+        <SearchBox
+          searchTerm={search.searchTerm}
+          setSearchTerm={search.setSearchTerm}
+          onEnter={() => {
+            search.applySearch();
+            table.setPage(0);
+          }}
+        />
+
+        <button className="btn-clear-filters" onClick={() => {
+          search.clearSearch();
+          setSpecieFilter('');
+          table.setPage(0);
+        }}>
+          Cancella Filtri
+        </button>
+
+        <div className="page-size-selector">
+          <span className="page-size-label">Righe:</span>
+          <select
+            className="page-size-select"
+            value={table.size}
+            onChange={(e) => table.handleSizeChange(Number(e.target.value))}
+          >
+            {[5, 10, 15, 20].map(n => <option key={n} value={n}>{n}</option>)}
+          </select>
         </div>
       </div>
 
       <ListaTable
         data={animali}
         columns={customColumns}
-        sortBy={sortBy}
-        sortDir={sortDir}
-        onSort={handleSort}
-        getSortIndicator={getSortIndicator}
-        loading={loading}
-        error={error}
-        emptyMessage={appliedSearchTerm || specieFilter ? 'Prova a modificare i filtri di ricerca.' : 'Inizia aggiungendo il tuo primo animale.'}
+        sortBy={table.sortBy}
+        sortDir={table.sortDir}
+        onSort={table.handleSort}
+        getSortIndicator={table.getSortIndicator}
+        emptyMessage={search.appliedSearchTerm || specieFilter ? 'Prova a modificare i filtri.' : 'Inizia aggiungendo il tuo primo animale.'}
         emptyIcon="🐾"
       />
 
       {animali.length > 0 && (
-        <div className="pagination-wrapper">
-          <span className="pagination-info">
-            Mostrati <strong>{animali.length}</strong> di <strong>{totalCount}</strong> animali
-          </span>
-          <div className="pagination-controls">
-            <button className="pagination-btn" onClick={goToPreviousPage} disabled={page === 0}>
-              Precedente
-            </button>
-            <span className="pagination-page-info">
-              <strong>{page + 1}</strong> di <strong>{totalPages}</strong>
-            </span>
-            <button className="pagination-btn" onClick={() => goToNextPage(totalPages)} disabled={page >= totalPages - 1}>
-              Successivo
-            </button>
-          </div>
-        </div>
+        <PaginationFooter
+          page={table.page}
+          totalPages={totalPages}
+          totalCount={totalCount}
+          length={animali.length}
+          goToPreviousPage={table.goToPreviousPage}
+          goToNextPage={table.goToNextPage}
+        />
       )}
     </div>
   );
