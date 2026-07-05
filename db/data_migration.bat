@@ -10,14 +10,14 @@ IF %ERRORLEVEL% NEQ 0 (
 )
 echo PostgreSQL is ready!
 
-:: Attende che il frontend sia pronto (il frontend parte solo dopo che il backend è healthy)
-echo Waiting for frontend to be ready...
-:waitfrontend
-docker inspect --format="{{.State.Health.Status}}" frontend | find "healthy" >nul
+:: Attende che il backend sia pronto (il backend parte solo dopo che il database è ready)
+echo Waiting for backend to be ready...
+:waitbackend
+docker inspect --format="{{.State.Health.Status}}" backend | find "healthy" >nul
 IF %ERRORLEVEL% NEQ 0 (
-    echo Frontend not ready yet...
+    echo Backend not ready yet...
     timeout /t 5 >nul
-    goto waitfrontend
+    goto waitbackend
 )
 
 :: Aspetta un po' extra per dare tempo a JPA di creare le tabelle
