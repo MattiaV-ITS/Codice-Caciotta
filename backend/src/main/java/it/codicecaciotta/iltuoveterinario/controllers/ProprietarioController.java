@@ -84,7 +84,6 @@ public class ProprietarioController {
             @RequestParam(defaultValue = "id") String sortBy,
             @RequestParam(defaultValue = "asc") String sortDir,
             @RequestParam(required = false) String search,
-            @RequestParam(required = false) String citta,
             @RequestParam(required = false) Boolean stato) {
 
         PageRequest pageable = paginationAndSortingUtils.buildPageRequest(
@@ -94,9 +93,6 @@ public class ProprietarioController {
             return proprietarioListaService.searchProprietariComprehensive(search.trim(), pageable);
         }
 
-        if (citta != null && !citta.trim().isEmpty()) {
-            return proprietarioListaService.getProprietariByCitta(citta.trim(), pageable);
-        }
 
         if (stato != null) {
             return proprietarioListaService.getProprietariByStato(stato, pageable);

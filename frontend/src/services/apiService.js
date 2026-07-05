@@ -123,7 +123,7 @@ export const useListaApi = (endpoint) => {
         params.append('search', searchTerm);
       }
       
-      // Add additional filters
+      // Add additional filters to the query parameters
       Object.entries(filters).forEach(([key, value]) => {
         if (value !== null && value !== undefined && value !== '') {
           params.append(key, value);

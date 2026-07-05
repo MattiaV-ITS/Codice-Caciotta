@@ -38,15 +38,6 @@ public class ProprietarioListaServiceImpl implements ProprietarioListaService {
     }
 
     @Override
-    public Page<ProprietarioListaDTO> getProprietariByCitta(String citta, Pageable pageable) {
-        if (pageable == null) {
-            throw new IllegalArgumentException("Pageable cannot be null");
-        }
-        return proprietarioRepository.findByCitta(citta, pageable)
-                .map(ProprietarioListaMapper::toListaDTO);
-    }
-    
-    @Override
     public Page<ProprietarioListaDTO> getProprietariByStato(Boolean stato, Pageable pageable) {
         if (pageable == null) {
             throw new IllegalArgumentException("Pageable cannot be null");

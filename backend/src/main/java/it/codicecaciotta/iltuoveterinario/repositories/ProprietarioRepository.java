@@ -13,8 +13,6 @@ public interface ProprietarioRepository extends JpaRepository<Proprietario, Long
     Page<Proprietario> findByNomeContainingIgnoreCaseOrCognomeContainingIgnoreCaseOrTelefonoContainingIgnoreCaseOrEmailContainingIgnoreCaseOrCodiceFiscaleContainingIgnoreCase(
         String nome, String cognome, String telefono, String email, String codiceFiscale, Pageable pageable);
     
-    Page<Proprietario> findByCitta(String citta, Pageable pageable);
-    
     Page<Proprietario> findByStato(Boolean stato, Pageable pageable);
 
     @Query("SELECT COUNT(p) FROM Proprietario p WHERE p.stato = true")
