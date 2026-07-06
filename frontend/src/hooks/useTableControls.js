@@ -32,7 +32,7 @@ export const useTableControls = ({
       setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
     } else {
       setSortBy(columnName);
-      setSortDir('asc');
+      setSortDir('desc');
     }
     setPage(0); // Reset alla prima pagina quando cambia l'ordinamento
   };
@@ -53,7 +53,7 @@ export const useTableControls = ({
    */
   const getSortIndicator = (columnName) => {
     if (sortBy !== columnName) return null;
-    return sortDir === 'asc' ? '↑' : '↓';
+    return sortDir === 'asc' ? '↓' : '↑';
   };
 
   /**
