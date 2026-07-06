@@ -14,9 +14,6 @@ public class ProprietarioListaMapper {
         dto.setCognome(proprietario.getCognome());
         dto.setEmail(proprietario.getEmail());
         dto.setTelefono(proprietario.getTelefono());
-        dto.setIndirizzo(proprietario.getIndirizzo());
-        dto.setCitta(proprietario.getCitta());
-        dto.setDataRegistrazione(proprietario.getDataRegistrazione());
         dto.setCodiceFiscale(proprietario.getCodiceFiscale());
         dto.setStato(proprietario.getStato());
         
