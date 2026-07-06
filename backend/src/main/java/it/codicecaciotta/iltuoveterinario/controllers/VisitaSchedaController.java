@@ -2,15 +2,22 @@ package it.codicecaciotta.iltuoveterinario.controllers;
 
 import it.codicecaciotta.iltuoveterinario.dto.VisitaSchedaDTO;
 import it.codicecaciotta.iltuoveterinario.mappers.VisitaSchedaMapper;
+import it.codicecaciotta.iltuoveterinario.models.Visita;
 import it.codicecaciotta.iltuoveterinario.services.VisitaService;
+import jakarta.validation.Valid;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.NonNull;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.net.URI;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -31,7 +38,7 @@ public class VisitaSchedaController {
                 .stream()
                 .map(VisitaSchedaMapper::toSchedaDTO)
                 .collect(Collectors.toList());
-        
+
         return ResponseEntity.ok(visiteDTO);
     }
 
@@ -40,5 +47,18 @@ public class VisitaSchedaController {
     public ResponseEntity<VisitaSchedaDTO> getVisitaById(@PathVariable @NonNull Long visitaId) {
         VisitaSchedaDTO visitaDTO = VisitaSchedaMapper.toSchedaDTO(visitaService.getVisitaById(visitaId));
         return ResponseEntity.ok(visitaDTO);
+    }
+
+    @PostMapping("/api/visite/animale/{animaleId}")
+    @PreAuthorize("hasAuthority('ROLE_STAFF') or hasAuthority('ROLE_ADMIN')")
+    public ResponseEntity<VisitaSchedaDTO> createVisita(
+            @Valid @RequestBody VisitaSchedaDTO visitaDTO) {
+                Visita visita = visitaService.createVisita(visitaDTO);
+                URI location = ServletUriComponentsBuilder.fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(createdProprietario.getId())
+                .toUri();
+
+            return ResponseEntity.created(location).body(VisitaSchedaMapper.toSchedaDTO(visita));
     }
 }
