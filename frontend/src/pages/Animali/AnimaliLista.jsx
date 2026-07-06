@@ -14,7 +14,7 @@ import { getIconLetter } from "../../utils";
 
 function AnimaliLista() {
   const table = useTableControls({
-    defaultSortBy: 'id',
+    defaultSortBy: 'nome',
     defaultSortDir: 'desc',
     defaultPageSize: 15
   });
