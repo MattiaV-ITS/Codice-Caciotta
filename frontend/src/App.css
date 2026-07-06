@@ -1452,6 +1452,24 @@
   font-size: 13px;
   color: var(--gray-500);
 }
+/* ========================================
+    PRENOTAZIONE - Badge Priorità
+   ======================================== */
+/* Badge priorità */
+.badge-priorita-alta {
+  background: #FEE2E2;
+  color: #991B1B;
+}
+
+.badge-priorita-media {
+  background: #FEF3C7;
+  color: #92400E;
+}
+
+.badge-priorita-bassa {
+  background: #D1FAE5;
+  color: #065F46;
+}
 
 /* ========================================
    COLONNA DESTRA - Struttura, Azioni, Visite
