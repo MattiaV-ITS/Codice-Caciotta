@@ -53,7 +53,7 @@ export const useTableControls = ({
    */
   const getSortIndicator = (columnName) => {
     if (sortBy !== columnName) return null;
-    return sortDir === 'desc' ? '↓' : '↑';
+    return sortDir === 'asc' ? '↑' : '↓';
   };
 
   /**
