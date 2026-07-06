@@ -60,8 +60,9 @@ function ProprietariLista() {
     { header: 'COGNOME', field: 'cognome', sortable: true },
     { header: 'TELEFONO', field: 'telefono', sortable: true },
     { header: 'EMAIL', field: 'email', sortable: true },
-    { header: 'CITTÀ', field: 'citta', sortable: true },
+    { header: 'CODICE FISCALE', field: 'codiceFiscale', sortable: true },
     { header: 'DATA REGISTRAZIONE', field: 'dataRegistrazione', type: 'date', sortable: true },
+    { header: 'NUMERO ANIMALI', field: 'numeroAnimali', sortable: true },
     {
       header: 'STATO',
       field: 'stato',

@@ -73,7 +73,7 @@ function AnimaliLista() {
     },
     { header: 'SPECIE', field: 'specie', sortable: true },
     { header: 'RAZZA', field: 'razza', sortable: true },
-    { header: 'PROPRIETARIO', field: 'proprietario', sortable: false },
+    { header: 'PROPRIETARIO', field: 'proprietario', sortable: true },
     { header: 'DATA DI NASCITA', field: 'dataNascita', type: 'date', sortable: true },
     { header: 'MICROCHIP', field: 'microchip', sortable: true },
     {

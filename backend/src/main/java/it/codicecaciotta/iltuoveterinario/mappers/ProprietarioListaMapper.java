@@ -15,6 +15,7 @@ public class ProprietarioListaMapper {
         dto.setEmail(proprietario.getEmail());
         dto.setTelefono(proprietario.getTelefono());
         dto.setCodiceFiscale(proprietario.getCodiceFiscale());
+        dto.setDataRegistrazione(proprietario.getDataRegistrazione());
         dto.setStato(proprietario.getStato());
         
         // Count the number of animals
