@@ -1,17 +1,17 @@
 /**
  * @file UseTableControls.js
- * @description Custom hook for managing table controls (sorting, pagination, etc.)
+ * @description Hook personalizzato per gestire i controlli della tabella (ordinamento, paginazione, ecc.)
  */
 
 import { useState } from 'react';
 
 /**
- * Custom hook for managing table controls (sorting, pagination, etc.)
- * @param {Object} options - Configuration options
- * @param {string} options.defaultSortBy - Default column to sort by
- * @param {string} options.defaultSortDir - Default sort direction ('asc' or 'desc')
- * @param {number} options.defaultPageSize - Default page size
- * @returns {Object} Table control functions and state
+ * Hook personalizzato per gestire i controlli della tabella (ordinamento, paginazione, ecc.)
+ * @param {Object} options - Opzioni di configurazione
+ * @param {string} options.defaultSortBy - Colonna di default per l'ordinamento
+ * @param {string} options.defaultSortDir - Direzione di ordinamento di default ('asc' o 'desc')
+ * @param {number} options.defaultPageSize - Dimensione della pagina di default
+ * @returns {Object} Funzioni e stato dei controlli della tabella
  */
 export const useTableControls = ({ 
   defaultSortBy = 'id', 
@@ -24,8 +24,8 @@ export const useTableControls = ({
   const [size, setSize] = useState(defaultPageSize);
 
   /**
-   * Handle sorting for a column
-   * @param {string} columnName - Column to sort by
+   * Gestisce l'ordinamento per una colonna
+   * @param {string} columnName - Colonna da ordinare
    */
   const handleSort = (columnName) => {
     if (sortBy === columnName) {
@@ -34,38 +34,38 @@ export const useTableControls = ({
       setSortBy(columnName);
       setSortDir('asc');
     }
-    setPage(0); // Reset to first page when sorting changes
+    setPage(0); // Reset alla prima pagina quando cambia l'ordinamento
   };
 
   /**
-   * Handle page size change
-   * @param {number} newSize - New page size
+   * Gestisce il cambiamento della dimensione della pagina
+   * @param {number} newSize - Nuova dimensione della pagina
    */
   const handleSizeChange = (newSize) => {
     setSize(newSize);
-    setPage(0); // Reset to first page when size changes
+    setPage(0); // Reset alla prima pagina quando cambia la dimensione della pagina
   };
 
   /**
-   * Get sort indicator for a column
-   * @param {string} columnName - Column to check
-   * @returns {string|null} Sort indicator (↑/↓) or null
+   * Ottiene l'indicatore di ordinamento per una colonna
+   * @param {string} columnName - Colonna da controllare
+   * @returns {string|null} Indicatore di ordinamento (↑/↓) o null
    */
   const getSortIndicator = (columnName) => {
     if (sortBy !== columnName) return null;
-    return sortDir === 'asc' ? '↑' : '↓';
+    return sortDir === 'desc' ? '↓' : '↑';
   };
 
   /**
-   * Go to previous page
+   * Vai alla pagina precedente
    */
   const goToPreviousPage = () => {
     if (page > 0) setPage(page - 1);
   };
 
   /**
-   * Go to next page
-   * @param {number} totalPages - Total number of pages
+   * Vai alla pagina successiva
+   * @param {number} totalPages - Numero totale di pagine
    */
   const goToNextPage = (totalPages) => {
     if (page < totalPages - 1) setPage(page + 1);
@@ -76,7 +76,7 @@ export const useTableControls = ({
     sortDir,
     page,
     size,
-    setPage, // Export setPage for external use if needed
+    setPage, // Esporta setPage per uso esterno se necessario
     handleSort,
     handleSizeChange,
     getSortIndicator,

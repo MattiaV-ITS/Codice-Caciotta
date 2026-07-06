@@ -2,15 +2,15 @@ import { useAuth } from '../context/AuthContext';
 import { useCallback } from 'react';
 
 /**
- * Custom hook for making authenticated API calls
- * @returns {Object} Object with methods for making authenticated requests
+ * Hook personalizzata per effettuare chiamate API autenticate
+ * @returns {Object} Oggetto con metodi per effettuare richieste autenticate
  */
 export function useApi() {
   const { token } = useAuth();
 
   /**
-   * Get headers for authenticated requests
-   * @returns {Object} Headers object with Authorization if token exists
+   * Ottiene gli header per le richieste autenticate
+   * @returns {Object} Oggetto headers con Authorization se il token esiste
    */
   const getAuthHeaders = useCallback(() => {
     if (!token) {
@@ -26,10 +26,10 @@ export function useApi() {
   }, [token]);
 
   /**
-   * Make an authenticated GET request
-   * @param {string} url - The URL to fetch
-   * @param {Object} [options] - Additional fetch options
-   * @returns {Promise<Response>} Fetch response
+   * Effettua una richiesta GET autenticata
+   * @param {string} url - L'URL da richiedere
+   * @param {Object} [options] - Opzioni aggiuntive per fetch
+   * @returns {Promise<Response>} Risposta fetch
    */
   const get = useCallback((url, options = {}) => {
     return fetch(url, {
@@ -40,11 +40,11 @@ export function useApi() {
   }, [getAuthHeaders]);
 
   /**
-   * Make an authenticated POST request
-   * @param {string} url - The URL to fetch
-   * @param {Object} body - The request body
-   * @param {Object} [options] - Additional fetch options
-   * @returns {Promise<Response>} Fetch response
+   * Effettua una richiesta POST autenticata
+   * @param {string} url - L'URL da richiedere
+   * @param {Object} body - Il corpo della richiesta
+   * @param {Object} [options] - Opzioni aggiuntive per fetch
+   * @returns {Promise<Response>} Risposta fetch
    */
   const post = useCallback((url, body, options = {}) => {
     return fetch(url, {
@@ -56,11 +56,11 @@ export function useApi() {
   }, [getAuthHeaders]);
 
   /**
-   * Make an authenticated PUT request
-   * @param {string} url - The URL to fetch
-   * @param {Object} body - The request body
-   * @param {Object} [options] - Additional fetch options
-   * @returns {Promise<Response>} Fetch response
+   * Effettua una richiesta PUT autenticata
+   * @param {string} url - L'URL da richiedere
+   * @param {Object} body - Il corpo della richiesta
+   * @param {Object} [options] - Opzioni aggiuntive per fetch
+   * @returns {Promise<Response>} Risposta fetch
    */
   const put = useCallback((url, body, options = {}) => {
     return fetch(url, {
@@ -72,10 +72,10 @@ export function useApi() {
   }, [getAuthHeaders]);
 
   /**
-   * Make an authenticated DELETE request
-   * @param {string} url - The URL to fetch
-   * @param {Object} [options] - Additional fetch options
-   * @returns {Promise<Response>} Fetch response
+   * Effettua una richiesta DELETE autenticata
+   * @param {string} url - L'URL da richiedere
+   * @param {Object} [options] - Opzioni aggiuntive per fetch
+   * @returns {Promise<Response>} Risposta fetch
    */
   const remove = useCallback((url, options = {}) => {
     return fetch(url, {
@@ -95,17 +95,17 @@ export function useApi() {
 };
 
 /**
- * Unified API service for lista components
- * Provides consistent pagination, sorting, and filtering support
+ * Servizio API unificato per i componenti lista
+ * Fornisce supporto coerente per paginazione, ordinamento e filtraggio
  */
 export const useListaApi = (endpoint) => {
   const { get } = useApi();
   
   /**
-   * Fetch paginated data with sorting and filtering
-   * @param {number} page - Current page
-   * @param {number} size - Page size
-   * @param {string} sortBy - Field to sort by
+   * Recupera dati paginati con ordinamento e filtraggio
+   * @param {number} page - Pagina corrente
+   * @param {number} size - Dimensione della pagina
+   * @param {string} sortBy - Campo per l'ordinamento
    * @param {string} sortDir - Sort direction ('asc' or 'desc')
    * @param {string} searchTerm - Search term
    * @param {Object} filters - Additional filters (e.g., { specie: 'cane' })
@@ -123,7 +123,7 @@ export const useListaApi = (endpoint) => {
         params.append('search', searchTerm);
       }
       
-      // Add additional filters to the query parameters
+      // Aggiungi filtri aggiuntivi ai parametri della query
       Object.entries(filters).forEach(([key, value]) => {
         if (value !== null && value !== undefined && value !== '') {
           params.append(key, value);
@@ -152,9 +152,9 @@ export const useListaApi = (endpoint) => {
 };
 
 /**
- * Shared status mapping for consistent badge display
- * @param {string} status - Status value
- * @param {Object} statusMap - Mapping of status values to display info
+ * Mappatura dello stato condivisa per una visualizzazione coerente dei badge
+ * @param {string} status - Valore dello stato
+ * @param {Object} statusMap - Mappatura dei valori di stato alle informazioni di visualizzazione
  * @returns {Object} - { label: string, className: string }
  */
 export const getStatusInfo = (status, statusMap) => {
@@ -165,11 +165,11 @@ export const getStatusInfo = (status, statusMap) => {
 };
 
 /**
- * Shared utility for applying filters
- * @param {Array} data - Array of items
- * @param {string} searchTerm - Term to search for
- * @param {Array} searchFields - Fields to search in
- * @returns {Array} - Filtered array
+ * Utility condivisa per l'applicazione dei filtri
+ * @param {Array} data - Array di elementi
+ * @param {string} searchTerm - Termine da cercare
+ * @param {Array} searchFields - Campi in cui cercare
+ * @returns {Array} - Array filtrato
  */
 export const applySearchFilter = (data, searchTerm, searchFields) => {
   if (!searchTerm || !data || data.length === 0) {
@@ -185,11 +185,11 @@ export const applySearchFilter = (data, searchTerm, searchFields) => {
 };
 
 /**
- * Shared utility for applying status filters
- * @param {Array} data - Array of items
- * @param {string} statusFilter - Status to filter by
- * @param {string} statusField - Field containing status
- * @returns {Array} - Filtered array
+ * Utility condivisa per l'applicazione dei filtri di stato
+ * @param {Array} data - Array di elementi
+ * @param {string} statusFilter - Stato da filtrare
+ * @param {string} statusField - Campo contenente lo stato
+ * @returns {Array} - Array filtrato
  */
 export const applyStatusFilter = (data, statusFilter, statusField) => {
   if (!statusFilter || !data || data.length === 0) {
@@ -200,26 +200,26 @@ export const applyStatusFilter = (data, statusFilter, statusField) => {
 };
 
 /**
- * Shared utility for combining filters
- * @param {Array} data - Original data
- * @param {string} searchTerm - Search term
- * @param {string} statusFilter - Status filter
- * @param {Object} statusMap - Status mapping
- * @param {Array} searchFields - Fields to search in
- * @param {string} statusField - Field containing status
- * @returns {Array} - Filtered data
+ * Utility condivisa per la combinazione dei filtri
+ * @param {Array} data - Dati originali
+ * @param {string} searchTerm - Termine di ricerca
+ * @param {string} statusFilter - Filtro di stato
+ * @param {Object} statusMap - Mappatura dei valori di stato
+ * @param {Array} searchFields - Campi in cui cercare
+ * @param {string} statusField - Campo contenente lo stato
+ * @returns {Array} - Array filtrato
  */
 export const applyCombinedFilters = (data, searchTerm, statusFilter, statusMap, searchFields, statusField) => {
   let filteredData = [...data];
   
-  // Apply search filter first
+  // Applica prima il filtro di ricerca
   if (searchTerm) {
     filteredData = applySearchFilter(filteredData, searchTerm, searchFields);
   }
   
-  // Then apply status filter
+  // Applica poi il filtro di stato
   if (statusFilter) {
-    // Handle status mapping if needed
+    // Gestisci la mappatura dello stato se necessario
     const backendStatus = statusMap?.[statusFilter] || statusFilter;
     filteredData = applyStatusFilter(filteredData, backendStatus, statusField);
   }

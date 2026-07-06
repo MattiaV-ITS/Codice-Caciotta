@@ -21,7 +21,7 @@ function VaccinazioniLista() {
   const search = useSearchControls();
   const [statoFilter, setStatoFilter] = useState('');
 
-  // Memoize filters to prevent unnecessary re-renders
+  // Memoizza i filtri per evitare ricalcoli inutili e garantire stabilità dei riferimenti
   const memoizedFilters = useMemo(() => ({
     search: search.appliedSearchTerm,
     stato: statoFilter

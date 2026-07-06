@@ -1,6 +1,6 @@
 /**
- * API Configuration - Production only
- * Uses Nginx proxy for all API calls
+ * Configurazione API - Solo produzione
+ * Utilizza il proxy Nginx per tutte le chiamate API
  */
 
 export function getApiUrl(endpoint) {

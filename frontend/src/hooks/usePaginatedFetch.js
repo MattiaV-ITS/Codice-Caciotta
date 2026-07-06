@@ -9,7 +9,7 @@ export function usePaginatedFetch(endpoint, { page, size, sortBy, sortDir, filte
   const [totalPages, setTotalPages] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
 
-  // Create memoized filters with stable reference when content doesn't change
+  // Crea filtri memoizzati con riferimento stabile quando il contenuto non cambia
   const memoizedFilters = useMemo(() => {
     const filtered = {};
     Object.entries(filters || {}).forEach(([key, value]) => {
@@ -19,12 +19,12 @@ export function usePaginatedFetch(endpoint, { page, size, sortBy, sortDir, filte
     });
     return filtered;
   }, [
-    // Individual dependencies for maximum stability
+    // Dipendenze individuali per la massima stabilità
     filters?.search,
     filters?.stato,
     filters?.specie, 
     filters?.citta,
-    filters?.animaleId // Add other potential filter fields
+    filters?.animaleId // Aggiungi altri campi filtro potenziali
   ]);
 
   useEffect(() => {

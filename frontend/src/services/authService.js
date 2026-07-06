@@ -34,7 +34,7 @@ class AuthService {
       throw new Error(data.message || 'Login failed');
     }
 
-    // Store token and user data
+    // Salva il token e i dati dell'utente nel localStorage
     return {
       token: data.accessToken || data.token,
       user: {
