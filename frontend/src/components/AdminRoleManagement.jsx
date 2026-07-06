@@ -20,7 +20,7 @@ const AdminRoleManagement = () => {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState(null);
 
-  // Only allow admins to access this component
+  // Consentire il rendering solo se l'utente è un admin
   const isAdmin = useMemo(() => {
     return user?.roles?.includes("ROLE_ADMIN");
   }, [user]);
@@ -39,7 +39,7 @@ const AdminRoleManagement = () => {
       try {
         console.log('Fetching admin users...');
         
-        // Create get function inside useEffect to avoid dependency issues
+        // Crea una funzione per ottenere gli header di autorizzazione
         const getAuthHeaders = () => {
           if (!token) {
             return {
@@ -88,7 +88,7 @@ const AdminRoleManagement = () => {
     return users.find((u) => u.id === selectedUserId) || null;
   }, [users, selectedUserId]);
 
-  // When selected user changes, update draft roles
+  // Quando l'utente selezionato cambia, aggiorna i ruoli temporanei
   useEffect(() => {
     if (selectedUser) {
       setDraftRoles(selectedUser.roles || []);
@@ -111,7 +111,7 @@ const AdminRoleManagement = () => {
     setSaving(true);
     setMessage(null);
     try {
-      // Create fetch function inside the handler to avoid dependency issues
+      // Crea una funzione per ottenere gli header di autorizzazione
       const getAuthHeaders = () => {
         if (!token) {
           return {

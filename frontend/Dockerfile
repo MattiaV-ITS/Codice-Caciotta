@@ -1,4 +1,4 @@
-# Stage 1: Build React app
+# Stage 1: Costriusci l'applicazione React
 FROM node:24-alpine as build
 
 WORKDIR /frontend
@@ -9,13 +9,13 @@ RUN npm install
 COPY . .
 RUN npm run build
 
-# Stage 2: Serve with nginx
+# Stage 2: Servi con nginx
 FROM nginx:stable-alpine
 
 COPY --from=build /frontend/dist /usr/share/nginx/html
 
-# Copy custom nginx config if needed, else default serves index.html
-# COPY nginx.conf /etc/nginx/nginx.conf
+# Copia la configurazione personalizzata di nginx se necessario, altrimenti il default serve index.html
+# Copia nginx.conf /etc/nginx/nginx.conf
 
 EXPOSE 80
 

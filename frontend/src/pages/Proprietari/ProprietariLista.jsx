@@ -20,7 +20,7 @@ function ProprietariLista() {
   const search = useSearchControls();
   const [statoFiltro, setStatoFiltro] = useState('');
 
-  // Memoize filters to prevent unnecessary re-renders
+  // Memoizza i filtri per evitare ricalcoli inutili e garantire stabilità dei riferimenti
   const memoizedFilters = useMemo(() => ({
     search: search.appliedSearchTerm,
     stato: statoFiltro

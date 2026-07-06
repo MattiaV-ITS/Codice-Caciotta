@@ -10,16 +10,16 @@ const normalizeToken = (value) => (value && value !== 'undefined' && value !== '
 const isTokenExpired = (token) => {
   if (!token) return true;
   try {
-    // JWT format: header.payload.signature
+    // Formato JWT : header.payload.signature
     const parts = token.split('.');
     if (parts.length !== 3) return true;
     
     const payload = JSON.parse(atob(parts[1]));
     const exp = payload.exp;
     
-    if (!exp) return false; // No expiration claim
+    if (!exp) return false; // Nessuna scadenza indicata, consideriamo il token valido
     
-    // Check if token is expired (with 60 second buffer)
+    // Controlla se il token è scaduto (con buffer di 60 secondi)
     return Date.now() >= exp * 1000 - 60000;
   } catch (e) {
     return true;
@@ -31,7 +31,7 @@ export function AuthProvider({ children }) {
   const [token, setToken] = useState(normalizeToken(localStorage.getItem(TOKEN_KEY)));
   const [isLoading, setIsLoading] = useState(true);
   
-  // Debug token state
+  // Debug dello stato del token
   useEffect(() => {
     console.log('AuthContext token state:', token ? token.substring(0, 20) + '...' : 'null');
   }, [token]);
@@ -39,7 +39,7 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     const storedUser = localStorage.getItem(USER_KEY);
     
-    // Check if token is expired
+    // Controlla se il token è scaduto
     if (token && isTokenExpired(token)) {
       localStorage.removeItem(TOKEN_KEY);
       localStorage.removeItem(USER_KEY);
@@ -71,7 +71,7 @@ export function AuthProvider({ children }) {
       throw new Error('Invalid authentication token received from server');
     }
     
-    // Validate token before storing
+    // Valida il token prima di memorizzarlo
     if (isTokenExpired(normalizedToken)) {
       throw new Error('Received token is already expired');
     }
