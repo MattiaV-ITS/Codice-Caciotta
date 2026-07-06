@@ -1,12 +1,11 @@
 package it.codicecaciotta.iltuoveterinario.dto;
 
-import java.time.LocalDate;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 import com.fasterxml.jackson.annotation.JsonSetter;
 import com.fasterxml.jackson.annotation.Nulls;
 
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 /**
@@ -14,5 +13,12 @@ import lombok.Data;
  */
 @Data
 public class VisitaUpdateDTO {
-    
+    // Visita
+    @JsonSetter(nulls = Nulls.FAIL)
+    private LocalDateTime dataOraVisita;
+
+    private Integer durata;
+
+    @JsonSetter(nulls = Nulls.FAIL)
+    private BigDecimal importoTotale;
 }

@@ -29,12 +29,6 @@ public class Visita {
     @Column(name = "importo_totale", nullable = false, precision = 10, scale = 2)
     private BigDecimal importoTotale;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "prenotazione_id", nullable = true)
-    @EqualsAndHashCode.Exclude
-    @ToString.Exclude
-    private Prenotazione prenotazione;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "animale_id", nullable = false)
     @EqualsAndHashCode.Exclude
@@ -47,4 +41,9 @@ public class Visita {
     @JsonIgnore
     private DiarioClinico diarioClinico;
 
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "prenotazione_id", nullable = true)
+    @EqualsAndHashCode.Exclude
+    @ToString.Exclude
+    private Prenotazione prenotazione;
 }

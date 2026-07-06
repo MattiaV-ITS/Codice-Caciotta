@@ -8,7 +8,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 /**
- * DTO per la creazione di una nuova visita.
+ * DTO per la creazione di una nuova visita e di un nuovo diario clinico.
  */
 @Data
 public class VisitaCreateDTO {
@@ -22,10 +22,10 @@ public class VisitaCreateDTO {
     @DecimalMin(value = "0.0", inclusive = false, message = "Importo totale deve essere maggiore di zero")
     private BigDecimal importoTotale;
 
+    @NotNull(message = "ID prenotazione non può essere nullo")
     private Long prenotazioneId;
 
-    @NotNull(message = "ID animale non può essere nullo")
-    private Long animaleId;
-
-    private Long diarioClinicoId;
+    // @NotNull(message = "ID animale non può essere nullo")
+    // private Long animaleId;
+    // TODO: non serve più perchè fa parte del path dell'endpoint, quindi lo prendo direttamente da lì
 }
