@@ -17,10 +17,10 @@ public class Prenotazione {
 
     @Column(name = "data_prenotazione", nullable = false)
     private LocalDateTime dataPrenotazione;
-    
+
     @Column(name = "data_ora_appuntamento", nullable = false)
     private LocalDateTime dataOraAppuntamento;
-    
+
     @Column(nullable = false)
     private String tipoVisita; // es. "Visita di controllo", "Vaccinazione", ecc.
 
@@ -44,9 +44,9 @@ public class Prenotazione {
     @EqualsAndHashCode.Exclude
     @ToString.Exclude
     private Proprietario proprietario;
-    
-    @PrePersist
-    public void onCreate() {
-        dataPrenotazione = LocalDateTime.now();
-    }
+
+    @OneToOne(mappedBy = "prenotazione", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @EqualsAndHashCode.Exclude
+    @ToString.Exclude
+    private Visita visita;
 }
