@@ -8,6 +8,8 @@ import ProprietariLista from './pages/Proprietari/ProprietariLista';
 import VisitePagina from './pages/Visite/VisitePagina';
 import VisiteLista from './pages/Visite/VisiteLista';
 import VaccinazioniLista from './pages/Vaccinazioni/VaccinazioniLista';
+import PrenotazioniLista from './pages/Prenotazioni/PrenotazioniLista';
+
 import AdminRoleManagement from "./components/AdminRoleManagement";
 import { useAuth } from './context/AuthContext';
 import './App.css';
@@ -47,6 +49,7 @@ function App() {
         <Route path="/vaccinazioni" element={<StaffRoute><VaccinazioniLista /></StaffRoute>} />
         <Route path="/visite" element={<StaffRoute><VisiteLista /></StaffRoute>} />
         <Route path="/visite/:id" element={<StaffRoute><VisitePagina /></StaffRoute>} />
+        <Route path="/prenotazioni" element={<StaffRoute><PrenotazioniLista /></StaffRoute>} />
         <Route path="/admin" element={<AdminRoute><AdminRoleManagement /></AdminRoute>} />
       </Route>
     </Routes>
