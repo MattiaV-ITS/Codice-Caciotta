@@ -240,11 +240,14 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-2);
+  column-gap: 0.75rem;  /* spazio orizzontale */
+  row-gap: 1rem;        /* spazio verticale*/
   flex: 1;
   justify-content: flex-end;
 }
-
+.toolbar-actions > * {
+  margin: 0.5rem 0.5rem;
+}
 /* ----- Bottoni filtro ----- */
 .btn-filter {
   padding: 6px 16px;
