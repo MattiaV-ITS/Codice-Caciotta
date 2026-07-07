@@ -816,8 +816,16 @@
 
 .empty-state .empty-icon {
   font-size: 56px;
+  color: var(--gray-400);
   margin-bottom: var(--space-4);
   opacity: 0.5;
+}
+
+.empty-state .empty-icon svg {
+  width: 56px;
+  height: 56px;
+  display: block;
+  margin: 0 auto;
 }
 
 .empty-state .empty-title {
