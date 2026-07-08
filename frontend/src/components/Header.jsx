@@ -40,9 +40,6 @@ function Header({ onMenuToggle }) {
         </div>
 
         <nav className="nav-links">
-          <span className="badge badge-info" style={{ marginRight: '12px' }}>
-            Area Clinica
-          </span>
 
           {isAuthenticated() ? (
             <>
