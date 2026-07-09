@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useTableControls } from '../../hooks/useTableControls';  // ← CORRETTO
+import { useTableControls } from '../../hooks/useTableControls';
 import { useApi } from '../../services/apiService';
 import ListaTable from '../../components/ListaTable/ListaTable';
 
 // ==============================
-// MOCK DATI PRENOTAZIONI
+// MOCK DATI PRENOTAZIONI (senza stato)
 // ==============================
 const MOCK_PRENOTAZIONI = [
   {
@@ -13,7 +13,6 @@ const MOCK_PRENOTAZIONI = [
     dataPrenotazione: '2024-07-05T09:00:00',
     dataOraAppuntamento: '2024-07-10T10:30:00',
     motivo: 'Visita di controllo',
-    statoPrenotazione: 'Confermata',
     priorita: 'Media',
     note: 'Richiesto esame del sangue',
     animaleNome: 'Fido',
@@ -24,7 +23,6 @@ const MOCK_PRENOTAZIONI = [
     dataPrenotazione: '2024-07-06T14:30:00',
     dataOraAppuntamento: '2024-07-10T09:00:00',
     motivo: 'Vaccinazione',
-    statoPrenotazione: 'Completata',
     priorita: 'Bassa',
     note: '',
     animaleNome: 'Mimì',
@@ -35,7 +33,6 @@ const MOCK_PRENOTAZIONI = [
     dataPrenotazione: '2024-07-07T11:00:00',
     dataOraAppuntamento: '2024-07-11T14:30:00',
     motivo: 'Visita specialistica',
-    statoPrenotazione: 'Attesa',
     priorita: 'Alta',
     note: 'Richiesta ecografia',
     animaleNome: 'Rex',
@@ -46,7 +43,6 @@ const MOCK_PRENOTAZIONI = [
     dataPrenotazione: '2024-07-08T16:00:00',
     dataOraAppuntamento: '2024-07-12T11:00:00',
     motivo: 'Visita d\'urgenza',
-    statoPrenotazione: 'Confermata',
     priorita: 'Alta',
     note: 'Animale con febbre',
     animaleNome: 'Luna',
@@ -57,7 +53,6 @@ const MOCK_PRENOTAZIONI = [
     dataPrenotazione: '2024-07-09T08:30:00',
     dataOraAppuntamento: '2024-07-12T16:15:00',
     motivo: 'Controllo post-operatorio',
-    statoPrenotazione: 'Annullata',
     priorita: 'Bassa',
     note: 'Annullato dal proprietario',
     animaleNome: 'Pippo',
@@ -68,7 +63,6 @@ const MOCK_PRENOTAZIONI = [
     dataPrenotazione: '2024-07-10T10:15:00',
     dataOraAppuntamento: '2024-07-13T08:00:00',
     motivo: 'Vaccinazione',
-    statoPrenotazione: 'Attesa',
     priorita: 'Media',
     note: '',
     animaleNome: 'Bella',
@@ -79,7 +73,6 @@ const MOCK_PRENOTAZIONI = [
     dataPrenotazione: '2024-07-10T13:45:00',
     dataOraAppuntamento: '2024-07-13T15:30:00',
     motivo: 'Visita di controllo',
-    statoPrenotazione: 'Confermata',
     priorita: 'Bassa',
     note: 'Controllo peso',
     animaleNome: 'Leo',
@@ -90,7 +83,6 @@ const MOCK_PRENOTAZIONI = [
     dataPrenotazione: '2024-07-11T09:20:00',
     dataOraAppuntamento: '2024-07-14T10:00:00',
     motivo: 'Visita d\'urgenza',
-    statoPrenotazione: 'Attesa',
     priorita: 'Alta',
     note: 'Vomito e diarrea',
     animaleNome: 'Daisy',
@@ -101,7 +93,6 @@ const MOCK_PRENOTAZIONI = [
     dataPrenotazione: '2024-07-11T12:00:00',
     dataOraAppuntamento: '2024-07-14T13:00:00',
     motivo: 'Visita specialistica',
-    statoPrenotazione: 'Confermata',
     priorita: 'Media',
     note: 'Visita cardiologica',
     animaleNome: 'Thor',
@@ -112,7 +103,6 @@ const MOCK_PRENOTAZIONI = [
     dataPrenotazione: '2024-07-12T07:30:00',
     dataOraAppuntamento: '2024-07-15T09:30:00',
     motivo: 'Vaccinazione',
-    statoPrenotazione: 'Attesa',
     priorita: 'Bassa',
     note: '',
     animaleNome: 'Mia',
@@ -130,9 +120,13 @@ function PrenotazioniLista() {
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [appliedSearchTerm, setAppliedSearchTerm] = useState('');
-  const [statoFiltro, setStatoFiltro] = useState('');
   const [totalPages, setTotalPages] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
+
+  // Stato per il modale di annullamento
+  const [showModal, setShowModal] = useState(false);
+  const [selectedPrenotazione, setSelectedPrenotazione] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const {
     sortBy,
@@ -160,16 +154,6 @@ function PrenotazioniLista() {
       'Bassa': { label: 'Bassa', className: 'badge-priorita-bassa' }
     };
     return map[priorita] || { label: priorita || 'Media', className: 'badge-priorita-media' };
-  };
-
-  const getStatoInfo = (stato) => {
-    const map = {
-      'Attesa': { label: 'In attesa', className: 'badge-attesa' },
-      'Confermata': { label: 'Confermata', className: 'badge-confermata' },
-      'Completata': { label: 'Completata', className: 'badge-completata' },
-      'Annullata': { label: 'Annullata', className: 'badge-annullata' }
-    };
-    return map[stato] || { label: stato || 'Sconosciuto', className: 'badge-sconosciuto' };
   };
 
   const customColumns = [
@@ -200,28 +184,49 @@ function PrenotazioniLista() {
         const priorita = getPrioritaInfo(item.priorita);
         return <span className={`badge-status ${priorita.className}`}>{priorita.label}</span>;
       }
-    },
-    {
-      header: 'STATO',
-      field: 'statoPrenotazione',
-      sortable: false,
-      style: { textAlign: 'center' },
-      render: (item) => {
-        const stato = getStatoInfo(item.statoPrenotazione);
-        return <span className={`badge-status ${stato.className}`}>{stato.label}</span>;
-      }
     }
   ];
+
+  // Funzione per aprire il modale di annullamento
+  const handleRowClick = (item) => {
+    setSelectedPrenotazione(item);
+    setShowModal(true);
+  };
+
+  // Funzione per chiudere il modale senza annullare
+  const closeModal = () => {
+    setShowModal(false);
+    setSelectedPrenotazione(null);
+  };
+
+  // Funzione per confermare l'annullamento
+  const handleConfirmAnnulla = () => {
+    if (!selectedPrenotazione) return;
+
+    setIsDeleting(true);
+
+    // Simula una chiamata API per annullare la prenotazione
+    setTimeout(() => {
+      // Rimuovi la prenotazione dalla lista
+      const updatedPrenotazioni = prenotazioni.filter(p => p.id !== selectedPrenotazione.id);
+      setPrenotazioni(updatedPrenotazioni);
+      setTotalCount(prev => prev - 1);
+      setTotalPages(Math.ceil(updatedPrenotazioni.length / size));
+
+      // Chiudi il modale
+      setIsDeleting(false);
+      closeModal();
+
+      // Messaggio di successo (opzionale)
+      alert(`Prenotazione per ${selectedPrenotazione.animaleNome} annullata con successo.`);
+    }, 500);
+  };
 
   useEffect(() => {
     setLoading(true);
 
     setTimeout(() => {
       let filtered = [...MOCK_PRENOTAZIONI];
-
-      if (statoFiltro) {
-        filtered = filtered.filter(p => p.statoPrenotazione === statoFiltro);
-      }
 
       if (appliedSearchTerm) {
         const term = appliedSearchTerm.toLowerCase().trim();
@@ -252,17 +257,12 @@ function PrenotazioniLista() {
       setTotalCount(filtered.length);
       setLoading(false);
     }, 500);
-  }, [page, size, appliedSearchTerm, statoFiltro, sortBy, sortDir]);
+  }, [page, size, appliedSearchTerm, sortBy, sortDir]);
 
   const clearFilters = () => {
     setSearchTerm('');
     setAppliedSearchTerm('');
-    setStatoFiltro('');
     setPage(0);
-  };
-
-  const handleRowClick = (item) => {
-    navigate(`/prenotazioni/${item.id}`);
   };
 
   if (loading) {
@@ -293,40 +293,6 @@ function PrenotazioniLista() {
       </div>
 
       <div className="toolbar-wrapper">
-        <div className="toolbar-filters">
-          <span className="filter-label">Stato:</span>
-          <button
-            className={`btn-filter ${statoFiltro === '' ? 'active' : ''}`}
-            onClick={() => { setStatoFiltro(''); setSearchTerm(''); setAppliedSearchTerm(''); setPage(0); }}
-          >
-            Tutti
-          </button>
-          <button
-            className={`btn-filter ${statoFiltro === 'Attesa' ? 'active' : ''}`}
-            onClick={() => { setStatoFiltro('Attesa'); setSearchTerm(''); setAppliedSearchTerm(''); setPage(0); }}
-          >
-            In attesa
-          </button>
-          <button
-            className={`btn-filter ${statoFiltro === 'Confermata' ? 'active' : ''}`}
-            onClick={() => { setStatoFiltro('Confermata'); setSearchTerm(''); setAppliedSearchTerm(''); setPage(0); }}
-          >
-            Confermate
-          </button>
-          <button
-            className={`btn-filter ${statoFiltro === 'Completata' ? 'active' : ''}`}
-            onClick={() => { setStatoFiltro('Completata'); setSearchTerm(''); setAppliedSearchTerm(''); setPage(0); }}
-          >
-            Completate
-          </button>
-          <button
-            className={`btn-filter ${statoFiltro === 'Annullata' ? 'active' : ''}`}
-            onClick={() => { setStatoFiltro('Annullata'); setSearchTerm(''); setAppliedSearchTerm(''); setPage(0); }}
-          >
-            Annullate
-          </button>
-        </div>
-
         <div className="toolbar-actions">
           <div className="search-box-wrapper">
             <div className="search-icon-wrapper">
@@ -383,7 +349,7 @@ function PrenotazioniLista() {
         getSortIndicator={getSortIndicator}
         loading={loading}
         error={error}
-        emptyMessage={appliedSearchTerm || statoFiltro ? 'Prova a modificare i filtri di ricerca.' : 'Inizia aggiungendo la tua prima prenotazione.'}
+        emptyMessage={appliedSearchTerm ? 'Prova a modificare i filtri di ricerca.' : 'Inizia aggiungendo la tua prima prenotazione.'}
         emptyIcon="📅"
         onRowClick={handleRowClick}
       />
@@ -403,6 +369,43 @@ function PrenotazioniLista() {
             <button className="pagination-btn" onClick={() => goToNextPage(totalPages)} disabled={page >= totalPages - 1}>
               Successivo
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* ======================================== */}
+      {/* MODALE DI CONFERMA ANNULLAMENTO */}
+      {/* ======================================== */}
+      {showModal && selectedPrenotazione && (
+        <div className="visite-modal-overlay" onClick={closeModal}>
+          <div className="visite-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="visite-modal-header">
+              <h3>Annulla Prenotazione</h3>
+            </div>
+            <div className="visite-modal-body">
+              <p>
+                Sei sicuro di voler annullare la prenotazione di <strong>{selectedPrenotazione.animaleNome}</strong>?
+              </p>
+              <p style={{ color: 'var(--gray-500)', fontSize: '14px' }}>
+                Proprietario: {selectedPrenotazione.proprietarioNome}
+                <br />
+                Data: {new Date(selectedPrenotazione.dataOraAppuntamento).toLocaleDateString('it-IT', {
+                  day: '2-digit',
+                  month: 'short',
+                  year: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })}
+              </p>
+            </div>
+            <div className="visite-modal-footer">
+              <button className="btn btn-secondary" onClick={closeModal} disabled={isDeleting}>
+                Annulla
+              </button>
+              <button className="btn btn-danger" onClick={handleConfirmAnnulla} disabled={isDeleting}>
+                {isDeleting ? 'Annullamento...' : 'Conferma Annullamento'}
+              </button>
+            </div>
           </div>
         </div>
       )}

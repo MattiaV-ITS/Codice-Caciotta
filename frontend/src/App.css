@@ -1652,7 +1652,13 @@
   background: #D1FAE5;
   color: #065F46;
 }
-
+.btn-danger {
+  background: var(--danger);
+  color: white;
+}
+.btn-danger:hover {
+  background: #DC2626;
+}
 /* ========================================
    COLONNA DESTRA - Struttura, Azioni, Visite
    ======================================== */
