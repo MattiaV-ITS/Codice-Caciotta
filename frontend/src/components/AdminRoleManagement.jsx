@@ -1,15 +1,47 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 
-import { useApi } from "../services/apiService";
-
 const AVAILABLE_ROLES = ["ROLE_USER", "ROLE_STAFF", "ROLE_ADMIN"];
+
+// Ordine di visualizzazione dei ruoli nella lista (Admin prima, poi Staff, poi Utente)
+const ROLE_DISPLAY_ORDER = ["ROLE_ADMIN", "ROLE_STAFF", "ROLE_USER"];
 
 const ROLE_LABELS = {
   ROLE_USER: "Utente",
   ROLE_STAFF: "Staff",
   ROLE_ADMIN: "Admin",
 };
+
+// ============================================================
+// COLORI: Admin = Verde acqua, Staff = Blu, Utente = Neutro
+// ============================================================
+const ROLE_COLORS = {
+  ROLE_USER: "", // Neutro (nessuna classe)
+  ROLE_STAFF: "badge-confermata", // Blu
+  ROLE_ADMIN: "badge-attivo", // Verde acqua
+};
+
+// ==============================
+// SVG LUCCETTO (solo per Admin)
+// ==============================
+const LockIconSmall = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    width="12"
+    height="12"
+    fill="none"
+    stroke="var(--gray-500)"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    style={{ marginLeft: "4px", verticalAlign: "middle" }}
+  >
+    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+    <circle cx="12" cy="16" r="1.5" fill="var(--gray-500)" />
+  </svg>
+);
 
 const AdminRoleManagement = () => {
   const { token, user } = useAuth();
@@ -19,50 +51,36 @@ const AdminRoleManagement = () => {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState(null);
+  const [showModal, setShowModal] = useState(false);
 
-  // Consentire il rendering solo se l'utente è un admin
-  const isAdmin = useMemo(() => {
-    return user?.roles?.includes("ROLE_ADMIN");
-  }, [user]);
-
-
+  const isAdmin = useMemo(() => user?.roles?.includes("ROLE_ADMIN"), [user]);
 
   useEffect(() => {
-    if (!isAdmin) {
-      return;
-    }
+    if (!isAdmin) return;
 
     const loadUsers = async () => {
       setLoading(true);
       setMessage(null);
 
       try {
-        console.log('Fetching admin users...');
-        
-        // Crea una funzione per ottenere gli header di autorizzazione
         const getAuthHeaders = () => {
           if (!token) {
-            return {
-              'Content-Type': 'application/json',
-            };
+            return { "Content-Type": "application/json" };
           }
           return {
             Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           };
         };
-        
-        const apiUrl = '/api/admin/users';
-        console.log('Admin fetch URL:', apiUrl);
+
+        const apiUrl = "/api/admin/users";
         const response = await fetch(apiUrl, {
-          method: 'GET',
+          method: "GET",
           headers: getAuthHeaders(),
         });
-        console.log('Admin users response status:', response.status);
         const data = await response.json();
 
         if (!response.ok) {
-          console.error('Admin users fetch failed:', response.status, data);
           throw new Error(data.message || "Failed to fetch users");
         }
 
@@ -88,7 +106,6 @@ const AdminRoleManagement = () => {
     return users.find((u) => u.id === selectedUserId) || null;
   }, [users, selectedUserId]);
 
-  // Quando l'utente selezionato cambia, aggiorna i ruoli temporanei
   useEffect(() => {
     if (selectedUser) {
       setDraftRoles(selectedUser.roles || []);
@@ -102,32 +119,34 @@ const AdminRoleManagement = () => {
     );
   };
 
-  const saveRoles = async () => {
+  const handleSaveClick = () => {
     if (!selectedUser) return;
     if (draftRoles.length === 0) {
-      setMessage({ type: "error", text: "User must have at least one role." });
+      setMessage({ type: "error", text: "L'utente deve avere almeno un ruolo." });
       return;
     }
+    setShowModal(true);
+  };
+
+  const saveRoles = async () => {
     setSaving(true);
     setMessage(null);
+    setShowModal(false);
+
     try {
-      // Crea una funzione per ottenere gli header di autorizzazione
       const getAuthHeaders = () => {
         if (!token) {
-          return {
-            'Content-Type': 'application/json',
-          };
+          return { "Content-Type": "application/json" };
         }
         return {
           Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         };
       };
-      
+
       const apiUrl = `/api/admin/users/${selectedUser.username}/roles`;
-      console.log('Admin update URL:', apiUrl);
       const response = await fetch(apiUrl, {
-        method: 'PUT',
+        method: "PUT",
         headers: getAuthHeaders(),
         body: JSON.stringify({ roles: draftRoles }),
       });
@@ -142,7 +161,7 @@ const AdminRoleManagement = () => {
           u.id === selectedUser.id ? { ...u, roles: [...draftRoles] } : u
         )
       );
-      setMessage({ type: "success", text: data.message || "Roles updated successfully." });
+      setMessage({ type: "success", text: data.message || "Ruoli aggiornati con successo!" });
     } catch (error) {
       setMessage({
         type: "error",
@@ -155,112 +174,199 @@ const AdminRoleManagement = () => {
 
   if (!isAdmin) {
     return (
-      <div style={{ padding: 20 }}>
-        <h2>Accesso Negato</h2>
-        <p>Non hai i permessi per accedere a questa pagina.</p>
+      <div className="page-container">
+        <div className="card">
+          <div className="card-body" style={{ textAlign: "center", padding: "var(--space-8)" }}>
+            <h3 style={{ color: "var(--gray-700)" }}>Accesso Negato</h3>
+            <p className="text-muted">Non hai i permessi per accedere a questa pagina.</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="page-container">
+        <div className="loading-wrapper">
+          <div className="loading-spinner-custom"></div>
+          <span>Caricamento utenti...</span>
+        </div>
       </div>
     );
   }
 
   return (
-    <div style={{ display: "grid", gap: 24, padding: 20, maxWidth: 1100, margin: "0 auto" }}>
-      <section style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+    <div className="page-container">
+      <div className="page-header">
         <div>
-          <h1 style={{ marginBottom: 8 }}>Pannello Amministratore</h1>
-          <p style={{ margin: 0, color: "#555" }}>Assegna ruoli agli utenti esistenti.</p>
+          <h2>Pannello Amministratore</h2>
+          <p className="page-subtitle">Gestisci i ruoli degli utenti del sistema</p>
         </div>
-        {message?.type === "error" && (
-          <p role="alert" style={{ margin: 0, color: "#b42318" }}>
-            {message.text}
-          </p>
-        )}
-        {loading ? (
-            <p>Caricamento utenti...</p>
-        ) : message?.type === "error" ? (
-            <p role="alert" style={{ margin: 0, color: "#b42318" }}>
-                {message.text}
-            </p>
-        ) : users.length === 0 ? (
-            <p>Nessun utente trovato.</p>
-        ) : (
-          <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 12 }}>
-            {users.map((user) => (
-              <li
-                key={user.id}
-                onClick={() => setSelectedUserId(user.id)}
-                style={{
-                  cursor: "pointer",
-                  padding: 16,
-                  backgroundColor: user.id === selectedUserId ? "#eef6ff" : "#fff",
-                  borderRadius: 12,
-                  border: "1px solid #dbe4f0",
-                  boxShadow: user.id === selectedUserId ? "0 8px 24px rgba(12, 68, 139, 0.08)" : "none",
-                }}
-                aria-selected={user.id === selectedUserId}
-                tabIndex={0}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    setSelectedUserId(user.id);
-                  }
-                }}
-              >
-                <strong>{user.username}</strong>
-                <div style={{ color: "#555", marginTop: 4 }}>{user.email}</div>
-                <div style={{ marginTop: 8, fontSize: 14 }}>
-                  {user.roles?.map((role) => ROLE_LABELS[role] || role).join(", ") || "No roles"}
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+      </div>
 
-      <section style={{ padding: 20, borderRadius: 16, border: "1px solid #dbe4f0", background: "#fff" }}>
-        <h2 style={{ marginTop: 0 }}>Modifica ruoli</h2>
-        {selectedUser ? (
-          <>
-            <p>
-              Modifica ruoli per <strong>{selectedUser.username}</strong>
-            </p>
-            <div style={{ display: "grid", gap: 10 }}>
-              {AVAILABLE_ROLES.map((role) => (
-                <label key={role} style={{ display: "flex", gap: 10, alignItems: "center" }}>
-                  <input
-                    type="checkbox"
-                    checked={draftRoles.includes(role)}
-                    onChange={() => toggleRole(role)}
-                  />{" "}
-                  <span>{ROLE_LABELS[role] || role}</span>
-                </label>
-              ))}
-            </div>
-            <button
-              onClick={saveRoles}
-              disabled={saving}
-              style={{
-                marginTop: 12,
-                padding: "10px 18px",
-                cursor: saving ? "not-allowed" : "pointer",
-              }}
-            >
-              {saving ? "Salvataggio..." : "Salva Ruoli"}
-            </button>
-            {message && (
-              <p
-                style={{
-                  marginTop: 12,
-                  color: message.type === "error" ? "red" : "green",
-                }}
-                role="alert"
+      {message && (
+        <div
+          className={message.type === "error" ? "form-error" : "form-success"}
+          style={{ marginBottom: "var(--space-4)" }}
+        >
+          {message.text}
+        </div>
+      )}
+
+      {users.length === 0 ? (
+        <div className="card">
+          <div className="card-body" style={{ textAlign: "center", padding: "var(--space-8)" }}>
+            <h3 style={{ color: "var(--gray-700)" }}>Nessun utente trovato</h3>
+            <p className="text-muted">Non ci sono utenti registrati nel sistema.</p>
+          </div>
+        </div>
+      ) : (
+        <div className="admin-grid">
+          {/* Colonna sinistra - Lista utenti */}
+          <div className="card">
+            <div className="card-header">
+              <h3>Utenti</h3>
+              <span
+                className="badge badge-info"
+                style={{ background: "var(--primary-light)", color: "var(--primary)" }}
               >
-                {message.text}
+                {users.length}
+              </span>
+            </div>
+            <div className="card-body admin-user-list">
+              {users.map((u) => {
+                const isAdminUser = u.roles?.includes("ROLE_ADMIN");
+
+                // Ordina i ruoli: Admin prima, poi Staff, poi Utente
+                const sortedRoles = [...(u.roles || [])].sort(
+                  (a, b) => ROLE_DISPLAY_ORDER.indexOf(a) - ROLE_DISPLAY_ORDER.indexOf(b)
+                );
+
+                return (
+                  <div
+                    key={u.id}
+                    className={`admin-user-item ${u.id === selectedUserId ? "active" : ""}`}
+                    onClick={() => setSelectedUserId(u.id)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        setSelectedUserId(u.id);
+                      }
+                    }}
+                    tabIndex={0}
+                  >
+                    <div className="admin-user-info">
+                      <div className="admin-user-name">
+                        {u.username}
+                        {isAdminUser && <LockIconSmall />}
+                      </div>
+                      <div className="admin-user-email">{u.email}</div>
+                    </div>
+                    <div className="admin-user-roles">
+                      {sortedRoles.map((role) => {
+                        const colorClass = ROLE_COLORS[role] || "";
+                        return (
+                          <span
+                            key={role}
+                            className={`badge-status ${colorClass}`}
+                          >
+                            {ROLE_LABELS[role] || role}
+                          </span>
+                        );
+                      })}
+                      {(!u.roles || u.roles.length === 0) && (
+                        <span className="badge-status badge-sconosciuto">Nessun ruolo</span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Colonna destra - Modifica ruoli */}
+          <div className="card">
+            <div className="card-header">
+              <h3>Modifica Ruoli</h3>
+            </div>
+            <div className="card-body">
+              {selectedUser ? (
+                <>
+                  <p className="admin-selected-user">
+                    Modifica i ruoli per <strong>{selectedUser.username}</strong>
+                  </p>
+                  <div className="admin-roles-list">
+                    {AVAILABLE_ROLES.map((role) => {
+                      const colorClass = ROLE_COLORS[role] || "";
+                      return (
+                        <label
+                          key={role}
+                          className={`admin-role-checkbox ${draftRoles.includes(role) ? "checked" : ""}`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={draftRoles.includes(role)}
+                            onChange={() => toggleRole(role)}
+                          />
+                          <span className="admin-role-label">{ROLE_LABELS[role] || role}</span>
+                          <span className={`badge-status ${colorClass}`}>
+                            {role.replace("ROLE_", "")}
+                          </span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                  <div className="admin-actions">
+                    <button className="btn btn-primary" onClick={handleSaveClick} disabled={saving}>
+                      {saving ? "Salvataggio..." : "Salva Ruoli"}
+                    </button>
+                    <button
+                      className="btn btn-secondary"
+                      onClick={() => {
+                        if (selectedUser) setDraftRoles(selectedUser.roles || []);
+                        setMessage(null);
+                      }}
+                    >
+                      Annulla
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <p className="text-muted admin-no-selection">
+                  Seleziona un utente per modificarne i ruoli.
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ======================================== */}
+      {/* MODALE DI CONFERMA */}
+      {/* ======================================== */}
+      {showModal && (
+        <div className="visite-modal-overlay" onClick={() => setShowModal(false)}>
+          <div className="visite-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="visite-modal-header">
+              <h3>Conferma Modifica</h3>
+            </div>
+            <div className="visite-modal-body">
+              <p>
+                Stai per modificare i ruoli di <strong>{selectedUser?.username}</strong>.
               </p>
-            )}
-          </>
-        ) : (
-          <p>Select a user to edit roles.</p>
-        )}
-      </section>
+              <p>Confermi di voler procedere con le modifiche?</p>
+            </div>
+            <div className="visite-modal-footer">
+              <button className="btn btn-secondary" onClick={() => setShowModal(false)}>
+                Annulla
+              </button>
+              <button className="btn btn-primary" onClick={saveRoles} disabled={saving}>
+                {saving ? "Salvataggio..." : "Conferma"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -155,8 +155,24 @@ function AnimaliLista() {
         sortDir={table.sortDir}
         onSort={table.handleSort}
         getSortIndicator={table.getSortIndicator}
-        emptyMessage={search.appliedSearchTerm || specieFilter ? 'Prova a modificare i filtri.' : 'Inizia aggiungendo il tuo primo animale.'}
-        emptyIcon="🐾"
+        emptyMessage={search.appliedSearchTerm || specieFilter ? 'Prova a modificare i filtri.' : 'Inizia aggiungendo primo animale.'}
+        emptyIcon={
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="48" height="48">
+            <g fill="var(--gray-400)" opacity="0.5">
+              <ellipse cx="110" cy="235" rx="43" ry="58" transform="rotate(-30 110 235)" />
+              <ellipse cx="195" cy="144" rx="43" ry="68" transform="rotate(-8 195 144)" />
+              <ellipse cx="317" cy="144" rx="43" ry="68" transform="rotate(8 317 144)" />
+              <ellipse cx="402" cy="235" rx="43" ry="58" transform="rotate(30 402 235)" />
+              <path d="M 256, 240 
+                      C 214, 240 148, 275 128, 332 
+                      C 105, 396 150, 436 210, 436 
+                      C 230, 436 244, 424 256, 419
+                      C 268, 424 282, 436 302, 436 
+                      C 362, 436 407, 396 384, 332 
+                      C 364, 275 298, 240 256, 240 Z" />
+            </g>
+          </svg>
+        }
       />
 
       {animali.length > 0 && (
