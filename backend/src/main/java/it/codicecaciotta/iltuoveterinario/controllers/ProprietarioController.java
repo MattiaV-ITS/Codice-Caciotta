@@ -9,7 +9,7 @@ import it.codicecaciotta.iltuoveterinario.services.ProprietarioService;
 import it.codicecaciotta.iltuoveterinario.utils.PaginationAndSortingUtils;
 
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.NonNull;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -86,7 +86,7 @@ public class ProprietarioController {
             @RequestParam(required = false) String search,
             @RequestParam(required = false) Boolean stato) {
 
-        PageRequest pageable = paginationAndSortingUtils.buildPageRequest(
+        Pageable pageable = paginationAndSortingUtils.buildPageRequest(
                 page, size, sortBy, sortDir, ALLOWED_SORT_FIELDS);
 
         if (search != null && !search.trim().isEmpty()) {

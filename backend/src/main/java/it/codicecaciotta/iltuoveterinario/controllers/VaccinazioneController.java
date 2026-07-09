@@ -8,7 +8,7 @@ import it.codicecaciotta.iltuoveterinario.services.VaccinazioneListaService;
 import it.codicecaciotta.iltuoveterinario.utils.PaginationAndSortingUtils;
 
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.NonNull;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -87,7 +87,7 @@ public class VaccinazioneController {
             @RequestParam(required = false) String stato,
             @RequestParam(required = false) Long animaleId) {
 
-        PageRequest pageable = paginationUtils.buildPageRequest(
+        Pageable pageable = paginationUtils.buildPageRequest(
                 page, size, sortBy, sortDir, ALLOWED_SORT_FIELDS);
 
         if (search != null && !search.isBlank()) {

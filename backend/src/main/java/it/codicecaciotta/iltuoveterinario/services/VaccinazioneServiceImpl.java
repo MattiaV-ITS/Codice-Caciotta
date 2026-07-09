@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 
 @Service
 public class VaccinazioneServiceImpl implements VaccinazioneService {
@@ -32,9 +33,10 @@ public class VaccinazioneServiceImpl implements VaccinazioneService {
     @Override
     public Vaccinazione createVaccinazione(VaccinazioneCreateDTO dto) {
 
-        Animale animale = animaleRepository.findById(dto.getAnimaleId())
+        Long animaleId = dto.getAnimaleId();
+        Animale animale = animaleRepository.findById(Objects.requireNonNull(animaleId))
                 .orElseThrow(() ->
-                        new NoSuchElementException("Animale non trovato con ID: " + dto.getAnimaleId()));
+                new NoSuchElementException("Animale non trovato con ID: " + animaleId));
 
         Vaccinazione vaccinazione = new Vaccinazione();
         vaccinazione.setTipoVaccino(dto.getTipoVaccino());
@@ -46,7 +48,7 @@ public class VaccinazioneServiceImpl implements VaccinazioneService {
 
         animale.addVaccinazione(vaccinazione);
 
-        return vaccinazioneRepository.save(vaccinazione);
+        return vaccinazioneRepository.save(Objects.requireNonNull(vaccinazione));
     }
 
     @Override
@@ -71,7 +73,7 @@ public class VaccinazioneServiceImpl implements VaccinazioneService {
         if (dto.getNote() != null)
             vaccinazione.setNote(dto.getNote());
 
-        return vaccinazioneRepository.save(vaccinazione);
+        return vaccinazioneRepository.save(Objects.requireNonNull(vaccinazione));
     }
 
     @Override
@@ -85,7 +87,7 @@ public class VaccinazioneServiceImpl implements VaccinazioneService {
             vaccinazione.getAnimale().removeVaccinazione(vaccinazione);
         }
 
-        vaccinazioneRepository.delete(vaccinazione);
+        vaccinazioneRepository.delete(Objects.requireNonNull(vaccinazione));
     }
 
     @Override
