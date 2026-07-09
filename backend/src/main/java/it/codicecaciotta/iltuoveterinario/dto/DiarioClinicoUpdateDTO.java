@@ -3,7 +3,7 @@ package it.codicecaciotta.iltuoveterinario.dto;
 import lombok.Data;
 
 @Data
-public class DiarioCreateDTO {
+public class DiarioClinicoUpdateDTO {
 
     private String sintomi;
 
