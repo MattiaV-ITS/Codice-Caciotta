@@ -8,7 +8,11 @@ import ProprietariLista from './pages/Proprietari/ProprietariLista';
 import VisitePagina from './pages/Visite/VisitePagina';
 import VisiteLista from './pages/Visite/VisiteLista';
 import VaccinazioniLista from './pages/Vaccinazioni/VaccinazioniLista';
-import PrenotazioniLista from './pages/Prenotazioni/PrenotazioniLista';
+
+
+import PrenotazioniCalendario from './pages/Prenotazioni/PrenotazioniCalendario'; //TODO: elminare
+import PrenotazioniProgramma from './pages/Prenotazioni/PrenotazioniProgramma'; //TODO: elminare
+
 
 import AdminRoleManagement from "./components/AdminRoleManagement";
 import { useAuth } from './context/AuthContext';
@@ -41,6 +45,8 @@ function App() {
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
+      <Route path="/calendario" element={<PrenotazioniCalendario />} />  //TODO: elminare
+      <Route path="/programma" element={<PrenotazioniProgramma />} />  //TODO: elminare
 
       <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
         <Route path="/" element={<Dashboard />} />
@@ -49,7 +55,6 @@ function App() {
         <Route path="/vaccinazioni" element={<StaffRoute><VaccinazioniLista /></StaffRoute>} />
         <Route path="/visite" element={<StaffRoute><VisiteLista /></StaffRoute>} />
         <Route path="/visite/:id" element={<StaffRoute><VisitePagina /></StaffRoute>} />
-        <Route path="/prenotazioni" element={<StaffRoute><PrenotazioniLista /></StaffRoute>} />
         <Route path="/admin" element={<AdminRoute><AdminRoleManagement /></AdminRoute>} />
       </Route>
     </Routes>

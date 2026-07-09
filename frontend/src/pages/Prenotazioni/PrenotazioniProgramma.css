@@ -1,0 +1,247 @@
+/* ==============================
+   PRENOTAZIONI - VISTA PROGRAMMA (AGENDA)
+   ============================== */
+
+.prog-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+  padding: var(--space-3);
+  background: var(--gray-50);
+  border-radius: var(--radius);
+  border: 1px solid var(--gray-200);
+}
+
+.prog-list {
+  position: relative;
+}
+
+/* ----- Gruppo giorno ----- */
+.prog-day-group {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--gray-100);
+}
+
+.prog-day-group:last-child {
+  border-bottom: none;
+}
+
+.prog-day-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 48px;
+  flex-shrink: 0;
+  padding-top: 2px;
+}
+
+.prog-day-name {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--gray-400);
+}
+
+.prog-day-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  margin-top: 4px;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--gray-800);
+}
+
+.prog-day-num.is-today {
+  background: var(--success);
+  color: var(--white);
+}
+
+/* ----- Colonna eventi del giorno ----- */
+.prog-day-events {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.prog-empty {
+  font-size: 13px;
+  color: var(--gray-400);
+  font-style: italic;
+  padding: 8px 2px;
+}
+
+/* ----- Etichetta intervallo senza prenotazioni ----- */
+.prog-gap-label {
+  padding: var(--space-2) 0 var(--space-2) 60px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gray-400);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+/* ----- Barra "adesso" ----- */
+.prog-now-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 2px 0;
+}
+
+.prog-now-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--danger);
+  flex-shrink: 0;
+}
+
+.prog-now-time {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--danger);
+  flex-shrink: 0;
+}
+
+.prog-now-rule {
+  flex: 1;
+  height: 2px;
+  background: var(--danger);
+  border-radius: 1px;
+}
+
+/* ----- Card evento ----- */
+.prog-event {
+  border-left: 4px solid var(--gray-400);
+  background: var(--gray-100);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.15s ease, transform 0.1s ease;
+}
+
+.prog-event:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+.prog-event-title {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.prog-event-time {
+  font-size: 12px;
+  font-weight: 600;
+  opacity: 0.85;
+  margin-top: 2px;
+}
+
+.prog-event-owner {
+  font-size: 12.5px;
+  opacity: 0.9;
+  margin-top: 4px;
+}
+
+.prog-event-motivo {
+  font-size: 12px;
+  opacity: 0.75;
+  margin-top: 1px;
+}
+
+.prog-event.tipo-controllo {
+  background: #DBEAFE;
+  border-left-color: #3B82F6;
+  color: #1E40AF;
+}
+
+.prog-event.tipo-vaccinazione {
+  background: #EDE9FE;
+  border-left-color: #8B5CF6;
+  color: #5B21B6;
+}
+
+.prog-event.tipo-specialistica {
+  background: #E6F6F4;
+  border-left-color: #2A9D8F;
+  color: #1F7A70;
+}
+
+.prog-event.tipo-urgenza {
+  background: #FEE2E2;
+  border-left-color: #EF4444;
+  color: #991B1B;
+}
+
+.prog-event.tipo-post-operatorio {
+  background: #FFEDD5;
+  border-left-color: #F59E0B;
+  color: #92400E;
+}
+
+.prog-event.tipo-altro {
+  background: var(--gray-100);
+  border-left-color: var(--gray-400);
+  color: var(--gray-700);
+}
+
+.prog-event.is-attesa {
+  border-left-style: dashed;
+}
+
+.prog-event.is-annullata {
+  opacity: 0.55;
+  text-decoration: line-through;
+  text-decoration-color: currentColor;
+}
+
+/* ----- Pulsante flottante "+" ----- */
+.prog-fab {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: none;
+  background: var(--primary);
+  color: var(--white);
+  font-size: 28px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: var(--shadow-lg);
+  transition: all 0.2s ease;
+  z-index: 20;
+}
+
+.prog-fab:hover {
+  background: var(--primary-dark);
+  transform: translateY(-2px) scale(1.03);
+}
+
+@media (max-width: 640px) {
+  .prog-day-label {
+    width: 40px;
+  }
+  .prog-gap-label {
+    padding-left: 48px;
+  }
+}
