@@ -54,7 +54,7 @@ public class VaccinazioneController {
         return ResponseEntity.created(location).body(created);
     }
 
-    @PutMapping("/{id}")
+    @PatchMapping("/{id}")
     @PreAuthorize("hasAuthority('ROLE_STAFF') or hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<?> updateVaccinazione(
             @PathVariable @NonNull Long id,
