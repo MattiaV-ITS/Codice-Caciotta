@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -59,7 +59,7 @@ public class ProprietarioController {
         return ResponseEntity.created(location).body(createdProprietario);
     }
 
-    @PutMapping("/{id}")
+    @PatchMapping("/{id}")
     @PreAuthorize("hasAuthority('ROLE_STAFF') or hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<Proprietario> updateProprietario(@PathVariable @NonNull Long id,
             @Valid @RequestBody ProprietarioUpdateDTO proprietarioUpdateDTO) {
@@ -69,7 +69,7 @@ public class ProprietarioController {
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
-    public ResponseEntity<Void> deleteProprietario(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteProprietario(@PathVariable @NonNull Long id) {
         proprietarioService.deleteProprietario(id);
         return ResponseEntity.noContent().build();
     }
