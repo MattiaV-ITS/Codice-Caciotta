@@ -11,7 +11,6 @@ import it.codicecaciotta.iltuoveterinario.utils.PaginationAndSortingUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
-import org.springframework.lang.NonNull;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -61,15 +60,21 @@ public class ProprietarioController {
 
     @PatchMapping("/{id}")
     @PreAuthorize("hasAuthority('ROLE_STAFF') or hasAuthority('ROLE_ADMIN')")
-    public ResponseEntity<Proprietario> updateProprietario(@PathVariable @NonNull Long id,
+    public ResponseEntity<Proprietario> updateProprietario(@PathVariable Long id,
             @Valid @RequestBody ProprietarioUpdateDTO proprietarioUpdateDTO) {
+        if (id == null) {
+            return ResponseEntity.badRequest().build();
+        }
         Proprietario updatedProprietario = proprietarioService.updateProprietario(id, proprietarioUpdateDTO);
         return ResponseEntity.ok(updatedProprietario);
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
-    public ResponseEntity<Void> deleteProprietario(@PathVariable @NonNull Long id) {
+    public ResponseEntity<Void> deleteProprietario(@PathVariable Long id) {
+        if (id == null) {
+            return ResponseEntity.badRequest().build();
+        }
         proprietarioService.deleteProprietario(id);
         return ResponseEntity.noContent().build();
     }

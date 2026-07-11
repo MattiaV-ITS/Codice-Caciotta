@@ -11,11 +11,12 @@ public class VisitaSchedaMapper {
 
         VisitaSchedaDTO dto = new VisitaSchedaDTO();
         dto.setId(visita.getId());
+        dto.setAnimaleId(visita.getAnimale() != null ? visita.getAnimale().getId() : null);
         dto.setDataOraVisita(visita.getDataOraVisita() != null
                 ? visita.getDataOraVisita().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))
                 : null);
         dto.setDurata(visita.getDurata());
-        dto.setTipoVisita(visita.getPrenotazione() != null ? visita.getPrenotazione().getTipoVisita() : null);
+        dto.setTipoVisita(visita.getTipoVisita() != null ? visita.getTipoVisita() : (visita.getPrenotazione() != null ? visita.getPrenotazione().getTipoVisita() : null));
         DiarioClinico diario = visita.getDiarioClinico();
         if (diario != null) {
             dto.setSintomi(diario.getSintomi());

@@ -307,8 +307,9 @@ VALUES
 );
 
 -- ============================================================
--- VISTE — lookup dinamico proprietario_id e animale_id
+-- VISITE — lookup dinamico proprietario_id e animale_id
 -- ============================================================
+
 INSERT INTO visite (data_ora_visita, durata, importo_totale, animale_id, prenotazione_id) VALUES
 ('2024-01-10T00:00:00', NULL, 45.00,
  (SELECT a.id FROM animali a JOIN proprietari p ON a.proprietario_id=p.id
@@ -409,3 +410,133 @@ INSERT INTO visite (data_ora_visita, durata, importo_totale, animale_id, prenota
 ('2024-04-16T00:00:00', NULL, 35.00,
  (SELECT a.id FROM animali a JOIN proprietari p ON a.proprietario_id=p.id
   WHERE a.nome='Zeus' AND p.nome='Francesco' AND p.cognome='Lombardi' LIMIT 1), NULL);
+
+-- ============================================================
+-- DIARIO CLINICO — lookup dinamico proprietario_id e animale_id e scomposizione Visite
+-- ============================================================
+
+INSERT INTO diario_clinico (sintomi, diagnosi, trattamento_terapia, note, note_private, visita_id) VALUES
+('Controllo routine', NULL, 'Vaccinazione polivalente', NULL, NULL,
+ (SELECT v.id FROM visite v JOIN animali a ON v.animale_id=a.id JOIN proprietari p ON a.proprietario_id=p.id
+  WHERE a.nome='Briciola' AND p.nome='Marco' AND p.cognome='Rossi'
+    AND v.data_ora_visita='2024-01-10T00:00:00' LIMIT 1)),
+
+('Zoppia arto posteriore dx', NULL, 'Rx arto, anti-infiammatori', 'Rx allegato alla cartella', NULL,
+ (SELECT v.id FROM visite v JOIN animali a ON v.animale_id=a.id JOIN proprietari p ON a.proprietario_id=p.id
+  WHERE a.nome='Rex' AND p.nome='Francesca' AND p.cognome='Bianchi'
+    AND v.data_ora_visita='2024-01-12T00:00:00' LIMIT 1)),
+
+('Controllo peso e dentizione', NULL, 'Pulizia denti professionale', NULL, NULL,
+ (SELECT v.id FROM visite v JOIN animali a ON v.animale_id=a.id JOIN proprietari p ON a.proprietario_id=p.id
+  WHERE a.nome='Fido' AND p.nome='Giorgio' AND p.cognome='Ricci'
+    AND v.data_ora_visita='2024-01-15T00:00:00' LIMIT 1)),
+
+(NULL, 'Sterilizzazione programmata', 'Ovariectomia', 'Decorso regolare', NULL,
+ (SELECT v.id FROM visite v JOIN animali a ON v.animale_id=a.id JOIN proprietari p ON a.proprietario_id=p.id
+  WHERE a.nome='Luna' AND p.nome='Francesca' AND p.cognome='Bianchi'
+    AND v.data_ora_visita='2024-01-18T00:00:00' LIMIT 1)),
+
+('Vomito persistente', NULL, 'Fluidoterapia, antiemetico', NULL, NULL,
+ (SELECT v.id FROM visite v JOIN animali a ON v.animale_id=a.id JOIN proprietari p ON a.proprietario_id=p.id
+  WHERE a.nome='Tigre' AND p.nome='Roberto' AND p.cognome='Esposito'
+    AND v.data_ora_visita='2024-01-22T00:00:00' LIMIT 1)),
+
+('Sovrappeso', NULL, 'Piano dietetico', 'Peso: 13,1 kg', NULL,
+ (SELECT v.id FROM visite v JOIN animali a ON v.animale_id=a.id JOIN proprietari p ON a.proprietario_id=p.id
+  WHERE a.nome='Birillo' AND p.nome='Paolo' AND p.cognome='Manzoni'
+    AND v.data_ora_visita='2024-01-25T00:00:00' LIMIT 1)),
+
+('Richiamo annuale', NULL, 'Polivalente + antirabbico', NULL, NULL,
+ (SELECT v.id FROM visite v JOIN animali a ON v.animale_id=a.id JOIN proprietari p ON a.proprietario_id=p.id
+  WHERE a.nome='Zeus' AND p.nome='Francesco' AND p.cognome='Lombardi'
+    AND v.data_ora_visita='2024-01-29T00:00:00' LIMIT 1)),
+
+('Alopecia localizzata', NULL, 'Esame micologico, antifungino', NULL, NULL,
+ (SELECT v.id FROM visite v JOIN animali a ON v.animale_id=a.id JOIN proprietari p ON a.proprietario_id=p.id
+  WHERE a.nome='Micio' AND p.nome='Anna' AND p.cognome='Ferrari'
+    AND v.data_ora_visita='2024-02-02T00:00:00' LIMIT 1)),
+
+(NULL, 'Controllo gravidanza', 'Ecografia addominale', '4 cuccioli attesi', NULL,
+ (SELECT v.id FROM visite v JOIN animali a ON v.animale_id=a.id JOIN proprietari p ON a.proprietario_id=p.id
+  WHERE a.nome='Cioccolata' AND p.nome='Elena' AND p.cognome='Galli'
+    AND v.data_ora_visita='2024-02-07T00:00:00' LIMIT 1)),
+
+('Ingestione corpo estraneo', NULL, 'Rx addome, emesi indotta', NULL, NULL,
+ (SELECT v.id FROM visite v JOIN animali a ON v.animale_id=a.id JOIN proprietari p ON a.proprietario_id=p.id
+  WHERE a.nome='Artù' AND p.nome='Stefano' AND p.cognome='Marchetti'
+    AND v.data_ora_visita='2024-02-12T00:00:00' LIMIT 1)),
+
+('Difficoltà deambulazione', NULL, 'Rx colonna, cortisone', 'Riposo 2 settimane', NULL,
+ (SELECT v.id FROM visite v JOIN animali a ON v.animale_id=a.id JOIN proprietari p ON a.proprietario_id=p.id
+  WHERE a.nome='Pallina' AND p.nome='Luigi' AND p.cognome='Colombo'
+    AND v.data_ora_visita='2024-02-15T00:00:00' LIMIT 1)),
+
+('Prima vaccinazione', NULL, 'Trivalente felina', NULL, NULL,
+ (SELECT v.id FROM visite v JOIN animali a ON v.animale_id=a.id JOIN proprietari p ON a.proprietario_id=p.id
+  WHERE a.nome='Neve' AND p.nome='Maria' AND p.cognome='Conti'
+    AND v.data_ora_visita='2024-02-19T00:00:00' LIMIT 1)),
+
+(NULL, 'Follow-up sterilizzazione', 'Rimozione punti', NULL, NULL,
+ (SELECT v.id FROM visite v JOIN animali a ON v.animale_id=a.id JOIN proprietari p ON a.proprietario_id=p.id
+  WHERE a.nome='Oscar' AND p.nome='Chiara' AND p.cognome='Ferretti'
+    AND v.data_ora_visita='2024-02-22T00:00:00' LIMIT 1)),
+
+(NULL, 'Monitoraggio FIV', 'Esami ematochimici', 'Condizioni stabili', NULL,
+ (SELECT v.id FROM visite v JOIN animali a ON v.animale_id=a.id JOIN proprietari p ON a.proprietario_id=p.id
+  WHERE a.nome='Stella' AND p.nome='Valentina' AND p.cognome='Caruso'
+    AND v.data_ora_visita='2024-02-26T00:00:00' LIMIT 1)),
+
+('Visita di routine', NULL, NULL, NULL, NULL,
+ (SELECT v.id FROM visite v JOIN animali a ON v.animale_id=a.id JOIN proprietari p ON a.proprietario_id=p.id
+  WHERE a.nome='Briciola' AND p.nome='Marco' AND p.cognome='Rossi'
+    AND v.data_ora_visita='2024-03-01T00:00:00' LIMIT 1)),
+
+('Otite esterna ricorrente', NULL, 'Pulizia auricolare, antibiotico', 'Terza recidiva in 1 anno', NULL,
+ (SELECT v.id FROM visite v JOIN animali a ON v.animale_id=a.id JOIN proprietari p ON a.proprietario_id=p.id
+  WHERE a.nome='Charlie' AND p.nome='Elena' AND p.cognome='Galli'
+    AND v.data_ora_visita='2024-03-05T00:00:00' LIMIT 1)),
+
+('Richiamo annuale', NULL, 'Trivalente felina', NULL, NULL,
+ (SELECT v.id FROM visite v JOIN animali a ON v.animale_id=a.id JOIN proprietari p ON a.proprietario_id=p.id
+  WHERE a.nome='Mochi' AND p.nome='Marco' AND p.cognome='Rossi'
+    AND v.data_ora_visita='2024-03-08T00:00:00' LIMIT 1)),
+
+('Unghie + visita generale', NULL, 'Taglio unghie', NULL, NULL,
+ (SELECT v.id FROM visite v JOIN animali a ON v.animale_id=a.id JOIN proprietari p ON a.proprietario_id=p.id
+  WHERE a.nome='Lilly' AND p.nome='Giorgio' AND p.cognome='Ricci'
+    AND v.data_ora_visita='2024-03-12T00:00:00' LIMIT 1)),
+
+(NULL, 'Ernia inguinale', 'Intervento chirurgico', 'Decorso ottimale', NULL,
+ (SELECT v.id FROM visite v JOIN animali a ON v.animale_id=a.id JOIN proprietari p ON a.proprietario_id=p.id
+  WHERE a.nome='Fido' AND p.nome='Giorgio' AND p.cognome='Ricci'
+    AND v.data_ora_visita='2024-03-15T00:00:00' LIMIT 1)),
+
+('Visita + antiparassitario', NULL, 'Vaccino + spot-on antiparassitario', NULL, NULL,
+ (SELECT v.id FROM visite v JOIN animali a ON v.animale_id=a.id JOIN proprietari p ON a.proprietario_id=p.id
+  WHERE a.nome='Mia' AND p.nome='Giulia' AND p.cognome='Barbieri'
+    AND v.data_ora_visita='2024-03-19T00:00:00' LIMIT 1)),
+
+(NULL, 'Follow-up zoppia', 'Fisioterapia consigliata', 'Miglioramento evidente', NULL,
+ (SELECT v.id FROM visite v JOIN animali a ON v.animale_id=a.id JOIN proprietari p ON a.proprietario_id=p.id
+  WHERE a.nome='Rex' AND p.nome='Francesca' AND p.cognome='Bianchi'
+    AND v.data_ora_visita='2024-03-22T00:00:00' LIMIT 1)),
+
+('Nuovo paziente', NULL, 'Visita completa, peso, parassiti', NULL, NULL,
+ (SELECT v.id FROM visite v JOIN animali a ON v.animale_id=a.id JOIN proprietari p ON a.proprietario_id=p.id
+  WHERE a.nome='Fiocco' AND p.nome='Antonio' AND p.cognome='Moretti'
+    AND v.data_ora_visita='2024-03-26T00:00:00' LIMIT 1)),
+
+('Nuovo paziente', NULL, 'Visita completa coniglio', NULL, NULL,
+ (SELECT v.id FROM visite v JOIN animali a ON v.animale_id=a.id JOIN proprietari p ON a.proprietario_id=p.id
+  WHERE a.nome='Puffo' AND p.nome='Antonio' AND p.cognome='Moretti'
+    AND v.data_ora_visita='2024-04-02T00:00:00' LIMIT 1)),
+
+(NULL, 'Follow-up ovariectomia', 'Controllo cicatrice', 'Guarigione completa', NULL,
+ (SELECT v.id FROM visite v JOIN animali a ON v.animale_id=a.id JOIN proprietari p ON a.proprietario_id=p.id
+  WHERE a.nome='Luna' AND p.nome='Francesca' AND p.cognome='Bianchi'
+    AND v.data_ora_visita='2024-04-09T00:00:00' LIMIT 1)),
+
+('Visita di routine', NULL, NULL, 'Tutto nella norma', NULL,
+ (SELECT v.id FROM visite v JOIN animali a ON v.animale_id=a.id JOIN proprietari p ON a.proprietario_id=p.id
+  WHERE a.nome='Zeus' AND p.nome='Francesco' AND p.cognome='Lombardi'
+    AND v.data_ora_visita='2024-04-16T00:00:00' LIMIT 1));

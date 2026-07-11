@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './PrenotazioniProgramma.css';
+import { formatDate, formatTime } from '../../utils/dateUtils';
 
 // ==============================
 // MOCK DATI PRENOTAZIONI
@@ -112,7 +113,7 @@ function PrenotazioniProgramma() {
     const map = new Map();
 
     prenotazioni.forEach((p) => {
-      const start = new Date(p.dataOraAppuntamento);
+      const start = parseDate(p.dataOraAppuntamento) || new Date();
       const key = dateKey(start);
       if (!map.has(key)) map.set(key, { date: startOfDay(start), events: [] });
       map.get(key).events.push({ ...p, _start: start });

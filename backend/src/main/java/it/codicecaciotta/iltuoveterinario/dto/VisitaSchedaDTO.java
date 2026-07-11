@@ -8,6 +8,7 @@ import lombok.Data;
 @Data
 public class VisitaSchedaDTO {
     public Long id;
+    public Long animaleId; // ID dell'animale associato alla visita
     public String dataOraVisita; // per visualizzazione nella scheda, formato dd/MM/yyyy HH:mm
     public Integer durata; // in minuti, puo essere null se non effettuata
     public String tipoVisita; // per visualizzazione nella scheda, es. "Visita di controllo", "Vaccinazione", ecc.

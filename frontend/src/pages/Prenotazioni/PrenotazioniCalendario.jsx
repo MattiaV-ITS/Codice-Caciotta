@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './PrenotazioniCalendario.css';
+import { formatDate, formatTime } from '../../utils/dateUtils';
 
 // ==============================
 // MOCK DATI PRENOTAZIONI
@@ -171,7 +172,7 @@ function PrenotazioniCalendario() {
   const eventsByDay = useMemo(() => {
     const map = weekDays.map(() => []);
     prenotazioni.forEach((p) => {
-      const start = new Date(p.dataOraAppuntamento);
+      const start = parseDate(p.dataOraAppuntamento) || new Date();
       const dayIdx = weekDays.findIndex((d) => isSameDay(d, start));
       if (dayIdx === -1) return;
       const startMin = Math.max(0, minutesFromGridStart(start));

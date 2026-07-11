@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { toISODatetimeFormat, toISODateFormat } from '../../utils/dateUtils';
 
 // ==============================
 // MOCK PRENOTAZIONI (per controllo date/ore libere)
@@ -151,15 +152,19 @@ function PrenotazioneCreate({ onClose, onSuccess }) {
   // ============================================================
   const handleDateChange = (e) => {
     const date = e.target.value;
-    setSelectedDate(date);
+    // Ensure the date is in ISO format
+    const formattedDate = toISODateFormat(date);
+    setSelectedDate(formattedDate);
     setFormData(prev => ({ ...prev, dataOraAppuntamento: '' }));
     setDateError('');
   };
 
   const handleHourSelect = (hour) => {
+    // Ensure the date is in ISO format
+    const formattedDate = toISODateFormat(selectedDate);
     setFormData(prev => ({
       ...prev,
-      dataOraAppuntamento: `${selectedDate}T${hour}:00`
+      dataOraAppuntamento: `${formattedDate}T${hour}:00`
     }));
     setTouched(prev => ({ ...prev, dataOraAppuntamento: true }));
     setDateError('');
@@ -258,9 +263,12 @@ function PrenotazioneCreate({ onClose, onSuccess }) {
     });
     setTouched(allTouched);
     if (validateForm()) {
+      // Ensure the date is in the correct ISO format before submission
+      const finalDate = toISODatetimeFormat(formData.dataOraAppuntamento);
+      
       const payload = {
         dataPrenotazione: new Date().toISOString(),
-        dataOraAppuntamento: formData.dataOraAppuntamento,
+        dataOraAppuntamento: finalDate,
         tipoVisita: formData.tipoVisita === 'Altro' ? formData.specificaTipoVisita : formData.tipoVisita,
         priorita: formData.tipoVisita === 'Visita d\'urgenza' ? 'Alta' : 'Media',
         note: formData.note || '',

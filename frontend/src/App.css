@@ -281,6 +281,11 @@
   border-color: var(--primary);
 }
 
+.admin-role-checkbox.disabled {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
 .admin-role-checkbox input[type="checkbox"] {
   width: 18px;
   height: 18px;
@@ -1540,6 +1545,12 @@
 
 .visite-card-body {
   padding: var(--space-4) var(--space-5);
+}
+
+.visite-card-footer {
+  padding: var(--space-3) var(--space-5);
+  border-top: 1px solid var(--gray-200);
+  background: var(--gray-50);
 }
 
 /* ========================================

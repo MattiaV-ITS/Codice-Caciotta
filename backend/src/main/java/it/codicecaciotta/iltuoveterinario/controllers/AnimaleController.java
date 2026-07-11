@@ -13,7 +13,6 @@ import it.codicecaciotta.iltuoveterinario.utils.PaginationAndSortingUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
-import org.springframework.lang.NonNull;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -62,7 +61,10 @@ public class AnimaleController {
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAuthority('ROLE_STAFF') or hasAuthority('ROLE_ADMIN') or hasAuthority('ROLE_USER')")
-    public ResponseEntity<AnimaleSchedaDTO> getAnimaleSchedaById(@PathVariable @NonNull Long id) {
+    public ResponseEntity<AnimaleSchedaDTO> getAnimaleSchedaById(@PathVariable Long id) {
+        if (id == null) {
+            return ResponseEntity.badRequest().build();
+        }
         Animale animale = animaleService.getAnimaleById(id);
         AnimaleSchedaDTO schedaDTO = AnimaleSchedaMapper.toSchedaDTO(animale);
         
@@ -71,15 +73,21 @@ public class AnimaleController {
 
     @PatchMapping("/{id}")
     @PreAuthorize("hasAuthority('ROLE_STAFF') or hasAuthority('ROLE_ADMIN')")
-    public ResponseEntity<Animale> updateAnimale(@PathVariable @NonNull Long id,
+    public ResponseEntity<Animale> updateAnimale(@PathVariable Long id,
             @Valid @RequestBody AnimaleUpdateDTO animaleUpdateDTO) {
+        if (id == null) {
+            return ResponseEntity.badRequest().build();
+        }
         Animale updatedAnimale = animaleService.updateAnimale(id, animaleUpdateDTO);
         return ResponseEntity.ok(updatedAnimale);
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
-    public ResponseEntity<Void> deleteAnimale(@PathVariable @NonNull Long id) {
+    public ResponseEntity<Void> deleteAnimale(@PathVariable Long id) {
+        if (id == null) {
+            return ResponseEntity.badRequest().build();
+        }
         animaleService.deleteAnimale(id);
         return ResponseEntity.noContent().build();
     }

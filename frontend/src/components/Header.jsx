@@ -1,7 +1,7 @@
 // components/Header.jsx
 import { useAuth } from '../context/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
-import logo from '../assets/logo.svg';  // ← Importa il PNG da assets
+import logo from '../assets/logo.svg';
 import './Header.css';
 
 function Header({ onMenuToggle }) {

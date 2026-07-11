@@ -10,7 +10,6 @@ import it.codicecaciotta.iltuoveterinario.utils.PaginationAndSortingUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
-import org.springframework.lang.NonNull;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -57,22 +56,31 @@ public class VaccinazioneController {
     @PatchMapping("/{id}")
     @PreAuthorize("hasAuthority('ROLE_STAFF') or hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<?> updateVaccinazione(
-            @PathVariable @NonNull Long id,
+            @PathVariable Long id,
             @Valid @RequestBody VaccinazioneUpdateDTO dto) {
+        if (id == null) {
+            return ResponseEntity.badRequest().build();
+        }
 
         return ResponseEntity.ok(vaccinazioneService.updateVaccinazione(id, dto));
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
-    public ResponseEntity<Void> deleteVaccinazione(@PathVariable @NonNull Long id) {
+    public ResponseEntity<Void> deleteVaccinazione(@PathVariable Long id) {
+        if (id == null) {
+            return ResponseEntity.badRequest().build();
+        }
         vaccinazioneService.deleteVaccinazione(id);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAuthority('ROLE_STAFF') or hasAuthority('ROLE_ADMIN')")
-    public ResponseEntity<?> getVaccinazioneById(@PathVariable @NonNull Long id) {
+    public ResponseEntity<?> getVaccinazioneById(@PathVariable Long id) {
+        if (id == null) {
+            return ResponseEntity.badRequest().build();
+        }
         return ResponseEntity.ok(vaccinazioneService.getVaccinazioneById(id));
     }
 

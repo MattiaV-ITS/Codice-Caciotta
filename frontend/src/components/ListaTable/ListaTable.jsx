@@ -1,6 +1,6 @@
 import React from 'react';
-import { formatDate } from '../../utils';
 import './ListaTable.css';
+import { formatDate } from '../../utils/dateUtils';
 
 /**
  * Componente tabella unificato per le viste lista

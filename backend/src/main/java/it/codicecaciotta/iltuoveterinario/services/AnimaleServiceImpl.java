@@ -142,7 +142,10 @@ public class AnimaleServiceImpl implements AnimaleService {
 
     @Override
     @Transactional(readOnly = true)
-    public Animale getAnimaleById(@NonNull Long id) {
+    public Animale getAnimaleById(Long id) {
+        if (id == null) {
+            throw new IllegalArgumentException("Animale ID cannot be null");
+        }
         return animaleRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Animale not found with id: " + id));
     }

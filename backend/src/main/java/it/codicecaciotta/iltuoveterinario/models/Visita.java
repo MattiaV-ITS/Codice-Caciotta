@@ -29,6 +29,9 @@ public class Visita {
     @Column(name = "importo_totale", nullable = false, precision = 10, scale = 2)
     private BigDecimal importoTotale;
 
+    @Column(name = "tipo_visita", nullable = true)
+    private String tipoVisita;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "animale_id", nullable = false)
     @EqualsAndHashCode.Exclude

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useApi } from '../../services/apiService';
 import FormModal from '../../components/FormModal/FormModal';
 import { validateRequired, validateEmail, validatePhone, validateFiscalCode } from '../../utils/validationUtils';
+import { getCurrentISODate } from '../../utils/dateUtils';
 
 function ProprietarioCreate({ onClose, onSuccess }) {
   const { post } = useApi();
@@ -96,7 +97,7 @@ function ProprietarioCreate({ onClose, onSuccess }) {
         // Crea il payload con data e stato automatici
         const payload = {
           ...formData,
-          dataRegistrazione: new Date().toISOString().split('T')[0], // Data corrente
+          dataRegistrazione: getCurrentISODate(), // Data corrente
           stato: true // Sempre attivo
         };
 

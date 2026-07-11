@@ -72,6 +72,22 @@ export function useApi() {
   }, [getAuthHeaders]);
 
   /**
+   * Effettua una richiesta PATCH autenticata
+   * @param {string} url - L'URL da richiedere
+   * @param {Object} body - Il corpo della richiesta
+   * @param {Object} [options] - Opzioni aggiuntive per fetch
+   * @returns {Promise<Response>} Risposta fetch
+   */
+  const patch = useCallback((url, body, options = {}) => {
+    return fetch(url, {
+      method: 'PATCH',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(body),
+      ...options,
+    });
+  }, [getAuthHeaders]);
+
+  /**
    * Effettua una richiesta DELETE autenticata
    * @param {string} url - L'URL da richiedere
    * @param {Object} [options] - Opzioni aggiuntive per fetch
@@ -89,6 +105,7 @@ export function useApi() {
     get,
     post,
     put,
+    patch,
     remove,
     getAuthHeaders,
   };

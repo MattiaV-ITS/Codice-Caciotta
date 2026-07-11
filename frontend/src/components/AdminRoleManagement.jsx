@@ -1,10 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 
-const AVAILABLE_ROLES = ["ROLE_USER", "ROLE_STAFF", "ROLE_ADMIN"];
-
-// Ordine di visualizzazione dei ruoli nella lista (Admin prima, poi Staff, poi Utente)
-const ROLE_DISPLAY_ORDER = ["ROLE_ADMIN", "ROLE_STAFF", "ROLE_USER"];
+const AVAILABLE_ROLES = ["ROLE_ADMIN", "ROLE_STAFF", "ROLE_USER"];
 
 const ROLE_LABELS = {
   ROLE_USER: "Utente",
@@ -12,18 +9,13 @@ const ROLE_LABELS = {
   ROLE_ADMIN: "Admin",
 };
 
-// ============================================================
-// COLORI: Admin = Verde acqua, Staff = Blu, Utente = Neutro
-// ============================================================
 const ROLE_COLORS = {
   ROLE_USER: "", // Neutro (nessuna classe)
   ROLE_STAFF: "badge-confermata", // Blu
   ROLE_ADMIN: "badge-attivo", // Verde acqua
 };
 
-// ==============================
-// SVG LUCCETTO (solo per Admin)
-// ==============================
+// Lucchetto admin
 const LockIconSmall = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -55,13 +47,19 @@ const AdminRoleManagement = () => {
 
   const isAdmin = useMemo(() => user?.roles?.includes("ROLE_ADMIN"), [user]);
 
+  const selectedUser = useMemo(() => {
+    return users.find((u) => u.id === selectedUserId) || null;
+  }, [users, selectedUserId]);
+
+  const isSelf = selectedUser?.id === user?.id;
+  
   useEffect(() => {
     if (!isAdmin) return;
-
+    
     const loadUsers = async () => {
       setLoading(true);
       setMessage(null);
-
+      
       try {
         const getAuthHeaders = () => {
           if (!token) {
@@ -72,18 +70,18 @@ const AdminRoleManagement = () => {
             "Content-Type": "application/json",
           };
         };
-
+        
         const apiUrl = "/api/admin/users";
         const response = await fetch(apiUrl, {
           method: "GET",
           headers: getAuthHeaders(),
         });
         const data = await response.json();
-
+        
         if (!response.ok) {
           throw new Error(data.message || "Failed to fetch users");
         }
-
+        
         setUsers(data);
         if (data.length > 0) {
           setSelectedUserId(data[0].id);
@@ -98,13 +96,9 @@ const AdminRoleManagement = () => {
         setLoading(false);
       }
     };
-
+    
     loadUsers();
   }, [isAdmin, token]);
-
-  const selectedUser = useMemo(() => {
-    return users.find((u) => u.id === selectedUserId) || null;
-  }, [users, selectedUserId]);
 
   useEffect(() => {
     if (selectedUser) {
@@ -239,9 +233,16 @@ const AdminRoleManagement = () => {
                 const isAdminUser = u.roles?.includes("ROLE_ADMIN");
 
                 // Ordina i ruoli: Admin prima, poi Staff, poi Utente
-                const sortedRoles = [...(u.roles || [])].sort(
-                  (a, b) => ROLE_DISPLAY_ORDER.indexOf(a) - ROLE_DISPLAY_ORDER.indexOf(b)
-                );
+                {
+                  (u.roles || []).map((role) => {
+                    const colorClass = ROLE_COLORS[role] || "";
+                    return (
+                      <span key={role} className={`badge-status ${colorClass}`}>
+                        {ROLE_LABELS[role] || role}
+                      </span>
+                    );
+                  })
+                }
 
                 return (
                   <div
@@ -263,13 +264,10 @@ const AdminRoleManagement = () => {
                       <div className="admin-user-email">{u.email}</div>
                     </div>
                     <div className="admin-user-roles">
-                      {sortedRoles.map((role) => {
+                      {(u.roles || []).map((role) => {
                         const colorClass = ROLE_COLORS[role] || "";
                         return (
-                          <span
-                            key={role}
-                            className={`badge-status ${colorClass}`}
-                          >
+                          <span key={role} className={`badge-status ${colorClass}`}>
                             {ROLE_LABELS[role] || role}
                           </span>
                         );
@@ -294,19 +292,33 @@ const AdminRoleManagement = () => {
                 <>
                   <p className="admin-selected-user">
                     Modifica i ruoli per <strong>{selectedUser.username}</strong>
+                    {isSelf && (
+                      <span className="badge-status badge-sconosciuto" style={{ marginLeft: 8 }}>
+                        (tu)
+                      </span>
+                    )}
                   </p>
+
+                  {isSelf && (
+                    <div className="form-error" style={{ marginBottom: "var(--space-4)" }}>
+                      Non puoi modificare i tuoi stessi ruoli.
+                    </div>
+                  )}
+
                   <div className="admin-roles-list">
                     {AVAILABLE_ROLES.map((role) => {
                       const colorClass = ROLE_COLORS[role] || "";
                       return (
                         <label
                           key={role}
-                          className={`admin-role-checkbox ${draftRoles.includes(role) ? "checked" : ""}`}
+                          className={`admin-role-checkbox ${draftRoles.includes(role) ? "checked" : ""} ${isSelf ? "disabled" : ""
+                            }`}
                         >
                           <input
                             type="checkbox"
                             checked={draftRoles.includes(role)}
                             onChange={() => toggleRole(role)}
+                            disabled={isSelf}
                           />
                           <span className="admin-role-label">{ROLE_LABELS[role] || role}</span>
                           <span className={`badge-status ${colorClass}`}>
@@ -316,10 +328,16 @@ const AdminRoleManagement = () => {
                       );
                     })}
                   </div>
+
                   <div className="admin-actions">
-                    <button className="btn btn-primary" onClick={handleSaveClick} disabled={saving}>
+                    <button
+                      className="btn btn-primary"
+                      onClick={handleSaveClick}
+                      disabled={saving || isSelf}
+                    >
                       {saving ? "Salvataggio..." : "Salva Ruoli"}
                     </button>
+
                     <button
                       className="btn btn-secondary"
                       onClick={() => {
