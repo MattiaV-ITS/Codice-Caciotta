@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import jakarta.persistence.EntityNotFoundException;
+import java.util.Objects;
 
 @Service
 public class DiarioClinicoServiceImpl implements DiarioClinicoService {
@@ -32,13 +33,13 @@ public class DiarioClinicoServiceImpl implements DiarioClinicoService {
     @Override
     @Transactional
     public DiarioClinico createDiarioClinico(DiarioClinico diarioClinico) {
-        return diarioClinicoRepository.save(diarioClinico);
+        return diarioClinicoRepository.save(Objects.requireNonNull(diarioClinico));
     }
 
     @Override
     @Transactional
     public DiarioClinico updateDiarioClinico(@NonNull Long id, DiarioClinico diarioClinico) {
-        DiarioClinico existingDiario = getDiarioClinicoById(id);
+        DiarioClinico existingDiario = Objects.requireNonNull(getDiarioClinicoById(id));
         
         // Update fields
         if (diarioClinico.getSintomi() != null) {
@@ -60,7 +61,7 @@ public class DiarioClinicoServiceImpl implements DiarioClinicoService {
             existingDiario.setVisita(diarioClinico.getVisita());
         }
         
-        return diarioClinicoRepository.save(existingDiario);
+        return diarioClinicoRepository.save(Objects.requireNonNull(existingDiario));
     }
 
     @Override

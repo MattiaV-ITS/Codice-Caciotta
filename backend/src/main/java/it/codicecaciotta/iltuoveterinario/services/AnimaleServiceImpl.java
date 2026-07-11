@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import jakarta.persistence.EntityNotFoundException;
+import java.util.Objects;
 
 @Service
 public class AnimaleServiceImpl implements AnimaleService {
@@ -45,15 +46,16 @@ public class AnimaleServiceImpl implements AnimaleService {
         animale.setStato(animaleCreateDTO.getStato());
         animale.setNoteGenerali(animaleCreateDTO.getNoteGenerali());
 
-        if (animaleCreateDTO.getProprietarioId() != null) {
-            Proprietario proprietario = proprietarioRepository.findById(animaleCreateDTO.getProprietarioId())
+        Long proprietarioId = animaleCreateDTO.getProprietarioId();
+        if (proprietarioId != null) {
+            Proprietario proprietario = proprietarioRepository.findById(proprietarioId)
                     .orElseThrow(() -> new EntityNotFoundException(
-                            "Proprietario not found with id: " + animaleCreateDTO.getProprietarioId()));
+                            "Proprietario not found with id: " + proprietarioId));
             animale.setProprietario(proprietario);
         }
 
         // Save
-        return animaleRepository.save(animale);
+        return animaleRepository.save(Objects.requireNonNull(animale));
     }
 
     @Override
@@ -116,14 +118,15 @@ public class AnimaleServiceImpl implements AnimaleService {
         }
 
         // Proprietario: aggiorna se proprietarioId ha un valore
-        if (dto.getProprietarioId() != null) {
-            Proprietario proprietario = proprietarioRepository.findById(dto.getProprietarioId())
+        Long proprietarioId = dto.getProprietarioId();
+        if (proprietarioId != null) {
+            Proprietario proprietario = proprietarioRepository.findById(proprietarioId)
                     .orElseThrow(() -> new EntityNotFoundException(
-                            "Proprietario not found with id: " + dto.getProprietarioId()));
+                            "Proprietario not found with id: " + proprietarioId));
             animale.setProprietario(proprietario);
         }
 
-        return animaleRepository.save(animale);
+        return animaleRepository.save(Objects.requireNonNull(animale));
     }
 
     @Override

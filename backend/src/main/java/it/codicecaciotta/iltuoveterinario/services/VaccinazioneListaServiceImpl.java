@@ -6,6 +6,7 @@ import it.codicecaciotta.iltuoveterinario.models.Vaccinazione;
 import it.codicecaciotta.iltuoveterinario.repositories.VaccinazioneRepository;
 
 import java.util.List;
+import java.util.Objects;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -34,13 +35,13 @@ public class VaccinazioneListaServiceImpl implements VaccinazioneListaService {
     }
 
     @Override
-    public Page<VaccinazioneListaDTO> searchVaccinazioni(String search, Pageable pageable) {
+    public Page<VaccinazioneListaDTO> searchVaccinazioni(String search, @NonNull Pageable pageable) {
         return vaccinazioneRepository.searchComprehensive(search, pageable)
                 .map(vaccinazioneListaMapper::toListaDTO);
     }
 
     @Override
-    public Page<VaccinazioneListaDTO> getVaccinazioniByStato(String stato, Pageable pageable) {
+    public Page<VaccinazioneListaDTO> getVaccinazioniByStato(String stato, @NonNull Pageable pageable) {
 
         Page<Vaccinazione> paginatedResults = vaccinazioneRepository.findByStato(stato.toUpperCase(), pageable);
 
@@ -48,11 +49,11 @@ public class VaccinazioneListaServiceImpl implements VaccinazioneListaService {
                 .map(vaccinazioneListaMapper::toListaDTO)
                 .toList();
 
-        return new PageImpl<>(filtrate, pageable, paginatedResults.getTotalElements());
+        return new PageImpl<>(Objects.requireNonNull(filtrate), Objects.requireNonNull(pageable), paginatedResults.getTotalElements());
     }
 
     @Override
-    public Page<VaccinazioneListaDTO> getVaccinazioniByAnimale(Long animaleId, Pageable pageable) {
+    public Page<VaccinazioneListaDTO> getVaccinazioniByAnimale(Long animaleId, @NonNull Pageable pageable) {
         return vaccinazioneRepository.findByAnimaleId(animaleId, pageable)
                 .map(vaccinazioneListaMapper::toListaDTO);
     }

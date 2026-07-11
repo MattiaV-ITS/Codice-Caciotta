@@ -53,7 +53,7 @@ public class VisitaServiceImpl implements VisitaService {
         visita.setAnimale(animale);
 
         // Save
-        return visitaRepository.save(visita);
+        return visitaRepository.save(Objects.requireNonNull(visita));
     }
 
     @Override
@@ -72,7 +72,7 @@ public class VisitaServiceImpl implements VisitaService {
             visita.setImportoTotale(dto.getImportoTotale());
         }
         // Save
-        return visitaRepository.save(visita);
+        return visitaRepository.save(Objects.requireNonNull(visita));
     }
 
     @Override

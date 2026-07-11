@@ -9,9 +9,9 @@ public interface VaccinazioneListaService {
 
     Page<VaccinazioneListaDTO> getAllVaccinazioni(@NonNull Pageable pageable);
 
-    Page<VaccinazioneListaDTO> searchVaccinazioni(String search, Pageable pageable);
+    Page<VaccinazioneListaDTO> searchVaccinazioni(String search, @NonNull Pageable pageable);
 
-    Page<VaccinazioneListaDTO> getVaccinazioniByStato(String stato, Pageable pageable);
+    Page<VaccinazioneListaDTO> getVaccinazioniByStato(String stato, @NonNull Pageable pageable);
 
-    Page<VaccinazioneListaDTO> getVaccinazioniByAnimale(Long animaleId, Pageable pageable);
+    Page<VaccinazioneListaDTO> getVaccinazioniByAnimale(Long animaleId, @NonNull Pageable pageable);
 }

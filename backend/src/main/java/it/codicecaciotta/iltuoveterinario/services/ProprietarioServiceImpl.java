@@ -5,6 +5,7 @@ import it.codicecaciotta.iltuoveterinario.dto.ProprietarioUpdateDTO;
 import it.codicecaciotta.iltuoveterinario.models.Proprietario;
 import it.codicecaciotta.iltuoveterinario.repositories.ProprietarioRepository;
 import jakarta.persistence.EntityNotFoundException;
+import java.util.Objects;
 
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
@@ -35,7 +36,7 @@ public class ProprietarioServiceImpl implements ProprietarioService {
         proprietario.setStato(proprietarioCreateDTO.getStato());
 
         // Save
-        return proprietarioRepository.save(proprietario);
+        return proprietarioRepository.save(Objects.requireNonNull(proprietario));
     }
 
     @Override
@@ -76,7 +77,7 @@ public class ProprietarioServiceImpl implements ProprietarioService {
             proprietario.setCodiceFiscale(dto.getCodiceFiscale());
         }
 
-        return proprietarioRepository.save(proprietario);
+        return proprietarioRepository.save(Objects.requireNonNull(proprietario));
     }
 
     @Override

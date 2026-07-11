@@ -2,8 +2,10 @@ package it.codicecaciotta.iltuoveterinario.utils;
 
 import java.util.List;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -21,7 +23,7 @@ public class PaginationAndSortingUtils {
      * @param allowedSortFields lista dei campi consentiti per questo endpoint
      * @return PageRequest validato
      */
-    public PageRequest buildPageRequest(
+    public @NonNull Pageable buildPageRequest(
             int page,
             int size,
             String sortBy,
