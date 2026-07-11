@@ -23,7 +23,6 @@ public class VisitaSchedaCreateDTO {
     @DecimalMin(value = "0.0", inclusive = false, message = "Importo totale deve essere maggiore di zero")
     private BigDecimal importoTotale;
 
-    @NotNull(message = "ID prenotazione non può essere nullo")
     private Long prenotazioneId;
 
     // Dati clinici (per DiarioClinico)
