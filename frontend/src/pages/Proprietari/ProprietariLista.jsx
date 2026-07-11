@@ -1,6 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import ProprietarioCreate from './ProprietarioCreate';
 import ListPageTemplate from '../../components/ListPageTemplate/ListPageTemplate';
+import { GearMenu } from '../../components/ContextMenu/ContextMenu';
+import { loadFullProprietarioData } from '../../utils/dataLoader';
 
 import { useTableControls } from '../../hooks/useTableControls';
 import { usePaginatedFetch } from '../../hooks/usePaginatedFetch';
@@ -16,6 +18,8 @@ function ProprietariLista() {
   const search = useSearchControls();
   const [statoFiltro, setStatoFiltro] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingProprietario, setEditingProprietario] = useState(null);
 
   // Memoizza i filtri per evitare ricalcoli inutili e garantire stabilità dei riferimenti
   const memoizedFilters = useMemo(() => ({
@@ -76,6 +80,21 @@ function ProprietariLista() {
           : { label: 'Inattivo', className: 'badge-inattivo' };
         return <span className={`badge-status ${stato.className}`}>{stato.label}</span>;
       }
+    },
+    {
+      header: '',
+      field: 'azioni',
+      sortable: false,
+      render: (item) => (
+        <GearMenu
+          menuItems={[
+            {
+              label: 'Modifica',
+              onClick: () => handleEditProprietario(item)
+            }
+          ]}
+        />
+      )
     }
   ];
 
@@ -90,17 +109,52 @@ function ProprietariLista() {
     ? 'Prova a modificare i filtri.' 
     : 'Inizia aggiungendo primo proprietario.';
 
-  const additionalContent = showCreateModal && (
-    <ProprietarioCreate
-      onClose={() => setShowCreateModal(false)}
-      onSuccess={(newProprietario) => {
-        // Ricarica i dati dopo la creazione
-        // Questo triggererà un nuovo fetch dei dati
-        table.setPage(0);
-        search.clearSearch();
-        setStatoFiltro('');
-      }}
-    />
+  const handleEditProprietario = (proprietario) => {
+    // Load full proprietario data before opening the edit modal
+    loadFullProprietarioData(proprietario.id,
+      (fullProprietarioData) => {
+        setEditingProprietario(fullProprietarioData);
+        setShowEditModal(true);
+      },
+      (error) => {
+        console.error('Failed to load full proprietario data, using partial data:', error);
+        // Fallback to partial data if full data load fails
+        setEditingProprietario(proprietario);
+        setShowEditModal(true);
+      }
+    );
+  };
+
+  const additionalContent = (
+    <>
+      {showCreateModal && (
+        <ProprietarioCreate
+          onClose={() => setShowCreateModal(false)}
+          onSuccess={(newProprietario) => {
+            // Ricarica i dati dopo la creazione
+            // Questo triggererà un nuovo fetch dei dati
+            table.setPage(0);
+            search.clearSearch();
+            setStatoFiltro('');
+          }}
+        />
+      )}
+      {showEditModal && editingProprietario && (
+        <ProprietarioCreate
+          onClose={() => setShowEditModal(false)}
+          onSuccess={(updatedProprietario) => {
+            // Ricarica i dati dopo l'aggiornamento
+            table.setPage(0);
+            search.clearSearch();
+            setStatoFiltro('');
+            setShowEditModal(false);
+            setEditingProprietario(null);
+          }}
+          proprietario={editingProprietario}
+          isEditMode={true}
+        />
+      )}
+    </>
   );
 
   return (

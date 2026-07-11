@@ -2,7 +2,9 @@ package it.codicecaciotta.iltuoveterinario.controllers;
 
 import it.codicecaciotta.iltuoveterinario.dto.ProprietarioCreateDTO;
 import it.codicecaciotta.iltuoveterinario.dto.ProprietarioListaDTO;
+import it.codicecaciotta.iltuoveterinario.dto.ProprietarioSchedaDTO;
 import it.codicecaciotta.iltuoveterinario.dto.ProprietarioUpdateDTO;
+import it.codicecaciotta.iltuoveterinario.mappers.ProprietarioSchedaMapper;
 import it.codicecaciotta.iltuoveterinario.models.Proprietario;
 import it.codicecaciotta.iltuoveterinario.services.ProprietarioListaServiceImpl;
 import it.codicecaciotta.iltuoveterinario.services.ProprietarioService;
@@ -77,6 +79,18 @@ public class ProprietarioController {
         }
         proprietarioService.deleteProprietario(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('ROLE_STAFF') or hasAuthority('ROLE_ADMIN') or hasAuthority('ROLE_USER')")
+    public ResponseEntity<ProprietarioSchedaDTO> getProprietarioSchedaById(@PathVariable Long id) {
+        if (id == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        Proprietario proprietario = proprietarioService.getProprietarioById(id);
+        ProprietarioSchedaDTO schedaDTO = ProprietarioSchedaMapper.toSchedaDTO(proprietario);
+        
+        return ResponseEntity.ok(schedaDTO);
     }
 
     private static final List<String> ALLOWED_SORT_FIELDS = List.of("id", "nome", "cognome", "email", "telefono", "citta", "stato");

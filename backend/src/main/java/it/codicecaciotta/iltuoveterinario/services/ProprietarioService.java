@@ -8,6 +8,7 @@ import it.codicecaciotta.iltuoveterinario.models.Proprietario;
 
 public interface ProprietarioService {
     Proprietario createProprietario(ProprietarioCreateDTO proprietarioCreateDTO);
+    Proprietario getProprietarioById(@NonNull Long id);
     Proprietario updateProprietario(@NonNull Long id, ProprietarioUpdateDTO proprietarioUpdateDTO);
     void deleteProprietario(@NonNull Long id);
 }

@@ -40,6 +40,13 @@ public class ProprietarioServiceImpl implements ProprietarioService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public Proprietario getProprietarioById(@NonNull Long id) {
+        return proprietarioRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Proprietario not found with id: " + id));
+    }
+
+    @Override
     @Transactional
     public Proprietario updateProprietario(@NonNull Long id, ProprietarioUpdateDTO dto) {
 

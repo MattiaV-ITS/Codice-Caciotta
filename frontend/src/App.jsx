@@ -7,7 +7,7 @@ import AnimaliLista from './pages/Animali/AnimaliLista';
 import AnimaleDettaglio from './pages/Animali/AnimaleDettaglio';
 import ProprietariLista from './pages/Proprietari/ProprietariLista';
 import VaccinazioniLista from './pages/Vaccinazioni/VaccinazioniLista';
-import VisiteScheda from './pages/Visite/VisitaScheda';
+import VisitePagina from './pages/Visite/VisitePagina';
 
 
 import PrenotazioniCalendario from './pages/Prenotazioni/PrenotazioniCalendario'; //TODO: elminare
@@ -52,8 +52,8 @@ function App() {
         <Route path="/" element={<Dashboard />} />
         <Route path="/animali" element={<StaffRoute><AnimaliLista /></StaffRoute>} />
         <Route path="/animali/:id" element={<StaffRoute><AnimaleDettaglio /></StaffRoute>} />
-        <Route path="/visite/:id" element={<StaffRoute><VisiteScheda /></StaffRoute>} />
-        <Route path="/visite/new" element={<StaffRoute><VisiteScheda /></StaffRoute>} />
+        <Route path="/visite/:id" element={<StaffRoute><VisitePagina /></StaffRoute>} />
+        <Route path="/visite/new" element={<StaffRoute><VisitePagina /></StaffRoute>} />
         <Route path="/proprietari" element={<StaffRoute><ProprietariLista /></StaffRoute>} />
         <Route path="/vaccinazioni" element={<StaffRoute><VaccinazioniLista /></StaffRoute>} />
         <Route path="/admin" element={<AdminRoute><AdminRoleManagement /></AdminRoute>} />

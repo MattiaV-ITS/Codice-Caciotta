@@ -1,28 +1,52 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useApi } from '../../services/apiService';
 import FormModal from '../../components/FormModal/FormModal';
 import { validateRequired, validateEmail, validatePhone, validateMicrochip, validatePositiveNumber, capitalizeFirstLetter } from '../../utils/validationUtils';
 
-function AnimaleCreate({ onClose, onSuccess }) {
-  const [formData, setFormData] = useState({
-    nome: '',
-    specie: '',
-    specificaSpecie: '',
-    razza: '',
-    dataNascita: '',
-    sesso: '',
-    peso: '',
-    microchip: '',
-    taglia: null, // Default: Altro/Sconosciuta
-    coloreMantello: '',
-    sterilizzato: false,
-    gruppoSanguigno: '',
-    allergie: '',
-    patologie: '',
-    stato: 'SANO',
-    noteGenerali: '',
-    notePrivate: '',
-    proprietarioId: ''
+function AnimaleCreate({ onClose, onSuccess, animale, isEditMode = false }) {
+  const [formData, setFormData] = useState(() => {
+    if (isEditMode && animale) {
+      return {
+        nome: animale.nome || '',
+        specie: animale.specie || '',
+        specificaSpecie: animale.specificaSpecie || '',
+        razza: animale.razza || '',
+        dataNascita: animale.dataNascita ? (typeof animale.dataNascita === 'string' ? animale.dataNascita.split('T')[0] : animale.dataNascita) : '',
+        sesso: animale.sesso || '',
+        peso: animale.peso ? String(animale.peso) : '',
+        microchip: animale.microchip || '',
+        taglia: animale.taglia || null,
+        coloreMantello: animale.coloreMantello || '',
+        sterilizzato: animale.sterilizzato || false,
+        gruppoSanguigno: animale.gruppoSanguigno || '',
+        allergie: animale.allergie || '',
+        patologie: animale.patologie || '',
+        stato: animale.stato || 'SANO',
+        noteGenerali: animale.noteGenerali || '',
+        notePrivate: animale.notePrivate || '',
+        proprietarioId: animale.idProprietario ? String(animale.idProprietario) : (animale.proprietarioId ? String(animale.proprietarioId) : '')
+      };
+    }
+    
+    return {
+      nome: '',
+      specie: '',
+      specificaSpecie: '',
+      razza: '',
+      dataNascita: '',
+      sesso: '',
+      peso: '',
+      microchip: '',
+      taglia: null, // Default: Altro/Sconosciuta
+      coloreMantello: '',
+      sterilizzato: false,
+      gruppoSanguigno: '',
+      allergie: '',
+      patologie: '',
+      stato: 'SANO',
+      noteGenerali: '',
+      notePrivate: '',
+      proprietarioId: ''
+    };
   });
 
   const [errors, setErrors] = useState({});
@@ -34,9 +58,37 @@ function AnimaleCreate({ onClose, onSuccess }) {
   const [selectedProprietario, setSelectedProprietario] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
+
   const searchRef = useRef(null);
   
-  const { post, get } = useApi();
+
+  // Load proprietario data when in edit mode and animale has a proprietario
+  useEffect(() => {
+  if (isEditMode && animale && (animale.idProprietario || animale.proprietarioId) && !selectedProprietario) {
+    const proprietarioId = animale.idProprietario || animale.proprietarioId;
+    const loadProprietario = async () => {
+      try {
+        const token = localStorage.getItem('jwtToken');
+        const response = await fetch(`/api/proprietari/${proprietarioId}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        if (response.ok) {
+          const proprietarioData = await response.json();
+          setSelectedProprietario(proprietarioData);
+          setSearchTerm(`${proprietarioData.nome} ${proprietarioData.cognome}`);
+        }
+      } catch (error) {
+        console.error('Errore nel caricamento del proprietario:', error);
+      }
+    };
+    loadProprietario();
+  }
+}, [isEditMode, animale, selectedProprietario]);
+
+
 
 
 
@@ -65,11 +117,37 @@ function AnimaleCreate({ onClose, onSuccess }) {
       if (searchTerm.length >= 1) {
         setSearchLoading(true);
         try {
-          const response = await get(`/api/proprietari?search=${encodeURIComponent(searchTerm)}&page=0&size=10`);
+          const token = localStorage.getItem('jwtToken');
+          const response = await fetch(`/api/proprietari?search=${encodeURIComponent(searchTerm)}&page=0&size=10`, {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          });
           if (response.ok) {
             const data = await response.json();
-            setSuggestions(data.content || []);
-            setShowSuggestions((data.content?.length || 0) > 0);
+            // Fetch full proprietario data for each suggestion
+            const fullSuggestions = await Promise.all(
+              data.content.map(async (proprietario) => {
+                try {
+                  const fullResponse = await fetch(`/api/proprietari/${proprietario.id}`, {
+                    headers: {
+                      'Authorization': `Bearer ${token}`,
+                      'Content-Type': 'application/json'
+                    }
+                  });
+                  if (fullResponse.ok) {
+                    return await fullResponse.json();
+                  }
+                  return proprietario;
+                } catch (error) {
+                  console.error('Errore nel recupero dei dati completi del proprietario:', error);
+                  return proprietario;
+                }
+              })
+            );
+            setSuggestions(fullSuggestions);
+            setShowSuggestions((fullSuggestions.length || 0) > 0);
           } else {
             setSuggestions([]);
             setShowSuggestions(false);
@@ -89,7 +167,9 @@ function AnimaleCreate({ onClose, onSuccess }) {
 
     const debounceTimer = setTimeout(searchProprietari, 300);
     return () => clearTimeout(debounceTimer);
-  }, [searchTerm, get]);
+  }, [searchTerm]);
+
+
 
   // Chiudi suggerimenti cliccando fuori
   useEffect(() => {
@@ -179,6 +259,7 @@ function AnimaleCreate({ onClose, onSuccess }) {
     if (validateForm()) {
       setIsLoading(true);
       try {
+        const token = localStorage.getItem('jwtToken');
         const payload = {
           ...formData,
           specie: formData.specie ? capitalizeFirstLetter(formData.specie) : formData.specie,
@@ -191,18 +272,28 @@ function AnimaleCreate({ onClose, onSuccess }) {
           proprietarioId: formData.proprietarioId ? parseInt(formData.proprietarioId) : null
         };
 
-        const response = await post('/api/animali', payload);
+        const url = isEditMode && animale?.id ? `/api/animali/${animale.id}` : '/api/animali';
+        const method = isEditMode && animale?.id ? 'PUT' : 'POST';
+        
+        const response = await fetch(url, {
+          method: method,
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload)
+        });
         
         if (response.ok) {
-          const createdAnimale = await response.json();
-          onSuccess(createdAnimale);
+          const resultAnimale = await response.json();
+          onSuccess(resultAnimale);
           onClose();
         } else {
           const errorData = await response.json();
-          console.error('Creazione animale fallita:', errorData);
+          console.error(isEditMode ? 'Aggiornamento animale fallito:' : 'Creazione animale fallita:', errorData);
           setErrors(prev => ({
             ...prev,
-            form: 'Failed to create animale: ' + (errorData.message || 'Unknown error')
+            form: (isEditMode ? 'Failed to update animale: ' : 'Failed to create animale: ') + (errorData.message || 'Unknown error')
           }));
         }
       } catch (error) {
@@ -231,7 +322,7 @@ function AnimaleCreate({ onClose, onSuccess }) {
 
   return (
     <FormModal
-      title="Nuovo Animale"
+      title={isEditMode ? "Modifica Animale" : "Nuovo Animale"}
       onClose={onClose}
       isSubmitting={isLoading}
       submitError={errors.form}

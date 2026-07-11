@@ -108,7 +108,7 @@ function PrenotazioniProgramma() {
   }, []);
 
   // Raggruppa le prenotazioni per giorno e garantisce sempre la presenza
-  // del giorno odierno (anche se vuoto), cosi' la barra "adesso" e' sempre visibile.
+  // del giorno odierno (anche se vuoto), cosi' la barra "Ora" e' sempre visibile.
   const dayGroups = useMemo(() => {
     const map = new Map();
 

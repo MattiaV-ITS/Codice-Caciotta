@@ -5,7 +5,7 @@ import { formatDate, toISODatetimeFormat, toISODateFormat } from '../../utils/da
 import { validateRequired, validatePositiveNumber } from '../../utils/validationUtils';
 
 // ==============================
-// ICONE SVG
+// ICONE SVG (invariate)
 // ==============================
 const PlusIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -31,7 +31,30 @@ const LightningIcon = () => (
 );
 
 // ==============================
-// COMPONENTE
+// MODALE DI CONFERMA (personalizzato)
+// ==============================
+const ConfirmModal = ({ isOpen, message, onConfirm, onCancel }) => {
+  if (!isOpen) return null;
+  return (
+    <div className="modal-overlay" onClick={onCancel}>
+      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header">
+          <h3>Conferma</h3>
+        </div>
+        <div className="modal-body">
+          <p>{message}</p>
+        </div>
+        <div className="modal-footer">
+          <button className="btn btn-secondary" onClick={onCancel}>Annulla</button>
+          <button className="btn btn-primary" onClick={onConfirm}>Conferma</button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ==============================
+// COMPONENTE PRINCIPALE
 // ==============================
 function VisitaForm({ visita, animale, onSave, onCancel, isSaving }) {
   const [formData, setFormData] = useState(() => prepareVisitaData(visita));
@@ -39,133 +62,38 @@ function VisitaForm({ visita, animale, onSave, onCancel, isSaving }) {
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
   const [formError, setFormError] = useState('');
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [pendingSave, setPendingSave] = useState(false);
 
-  // Parse datetime into separate date and time components
-  const parseDatetime = (datetimeStr) => {
-    if (!datetimeStr) return { date: '', time: '' };
-    
-    const dateObj = new Date(datetimeStr);
-    if (isNaN(dateObj.getTime())) return { date: '', time: '' };
-    
-    const date = dateObj.toISOString().split('T')[0];
-    const time = dateObj.toTimeString().substring(0, 5);
-    
-    return { date, time };
-  };
-
-  // Prepare visita data by converting Italian dates to ISO format
+  // ----- Preparazione dati (modifica) -----
   function prepareVisitaData(visitaData) {
     if (!visitaData) return getDefaultVisita();
     
-    // Convert any Italian date formats to ISO format
-    const convertedData = { ...visitaData };
+    const converted = { ...visitaData };
     
     if (visitaData.dataOraVisita) {
-      convertedData.dataOraVisita = toISODatetimeFormat(visitaData.dataOraVisita);
-      // Set visitStart to dataOraVisita from DTO
-      convertedData.visitStart = toISODatetimeFormat(visitaData.dataOraVisita);
+      converted.dataOraVisita = toISODatetimeFormat(visitaData.dataOraVisita);
     }
     
-    return convertedData;
+    // Calcola la fine se presente la durata, altrimenti la impostiamo uguale all'inizio
+    if (visitaData.dataOraVisita && visitaData.durata && visitaData.durata > 0) {
+      const start = new Date(visitaData.dataOraVisita);
+      const end = new Date(start.getTime() + visitaData.durata * 60 * 1000);
+      converted.dataOraFine = toISODatetimeFormat(end.toISOString());
+    } else if (visitaData.dataOraVisita) {
+      // Se non c'è durata, fine = inizio (default)
+      converted.dataOraFine = toISODatetimeFormat(visitaData.dataOraVisita);
+    } else {
+      converted.dataOraFine = '';
+    }
+    
+    return converted;
   }
 
-  // Validazione campo singolo
-  const validateField = (name, value) => {
-    switch (name) {
-      case 'dataOraVisita':
-        return validateRequired(value, 'Data e ora visita');
-      case 'visitStart':
-        return validateRequired(value, 'Data inizio');
-      case 'tipoVisita':
-        return ''; // Tipo visita is not required
-
-      case 'durata':
-        return '';
-      case 'altroTipoVisita':
-        if (formData.tipoVisita === 'Altro' && !value.trim()) {
-          return 'Specifica il tipo di visita';
-        }
-        return '';
-      default:
-        return '';
-    }
-  };
-
-  // Validate that end time is after start time
-  const validateTimeOrder = () => {
-    if (!formData.visitStart || !formData.dataOraVisita) return '';
-    
-    const startDate = new Date(formData.visitStart);
-    const endDate = new Date(formData.dataOraVisita);
-    
-    if (endDate <= startDate) {
-      return 'L\'ora di fine deve essere successiva all\'ora di inizio';
-    }
-    
-    return '';
-  };
-
-  const validateForm = () => {
-    const newErrors = {};
-    const fieldsToValidate = ['dataOraVisita', 'visitStart'];
-    
-    fieldsToValidate.forEach(field => {
-      const error = validateField(field, formData[field]);
-      if (error) newErrors[field] = error;
-    });
-    
-    // Validate altroTipoVisita if tipoVisita is "Altro"
-    if (formData.tipoVisita === 'Altro') {
-      const error = validateField('altroTipoVisita', formData.altroTipoVisita);
-      if (error) newErrors.altroTipoVisita = error;
-    }
-    
-    // Validate time order
-    const timeOrderError = validateTimeOrder();
-    if (timeOrderError) {
-      newErrors.dataOraVisita = timeOrderError;
-    }
-    
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  useEffect(() => {
-    if (visita) {
-      const preparedData = prepareVisitaData(visita);
-      setFormData(preparedData);
-      setDefaultDataPrenotazione(preparedData.dataOraVisita || '');
-    } else {
-      // Set default values for new visita
-      const now = new Date();
-      const nowStr = now.toLocaleString('sv-SE', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit'
-      }).replace(' ', 'T');
-      
-      // Set end time to be 1 hour after start time by default
-      const endTime = new Date(now.getTime() + 60 * 60 * 1000); // +1 hour
-      const endStr = endTime.toLocaleString('sv-SE', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit'
-      }).replace(' ', 'T');
-      
-      const defaultData = getDefaultVisita(nowStr);
-      defaultData.dataOraVisita = endStr;
-      
-      setFormData(defaultData);
-      setDefaultDataPrenotazione(nowStr);
-    }
-  }, [visita]);
-
-  function getDefaultVisita(nowStr) {
-    const now = nowStr || new Date().toLocaleString('sv-SE', {
+  // ----- Valori di default per nuova visita -----
+  function getDefaultVisita() {
+    const now = new Date();
+    const nowStr = now.toLocaleString('sv-SE', {
       year: 'numeric',
       month: '2-digit',
       day: '2-digit',
@@ -175,8 +103,8 @@ function VisitaForm({ visita, animale, onSave, onCancel, isSaving }) {
 
     return {
       id: null,
-      dataOraVisita: now,
-      visitStart: now, // Initialize visitStart with current date/time for new visits
+      dataOraVisita: nowStr,   // inizio
+      dataOraFine: nowStr,     // fine = inizio (default)
       durata: 0,
       tipoVisita: '',
       altroTipoVisita: '',
@@ -188,224 +116,221 @@ function VisitaForm({ visita, animale, onSave, onCancel, isSaving }) {
     };
   }
 
-  // Imposta data/ora inizio corrente (pulsante "Adesso")
-  const setOraCorrenteInizio = () => {
-    const now = new Date();
-    const nowStr = now.toLocaleString('sv-SE', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit'
-    }).replace(' ', 'T');
-    
-    setFormData(prev => ({
-      ...prev, 
-      visitStart: nowStr
-    }));
-  };
-
-  // Imposta data/ora fine corrente (pulsante "Adesso")
-  const setOraCorrente = () => {
-    const now = new Date();
-    const nowStr = now.toLocaleString('sv-SE', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit'
-    }).replace(' ', 'T');
-    
-    // Calculate duration based on the difference between start and current time
-    const durataCalcolata = calcolaDurata(formData.visitStart, nowStr);
-    
-    setFormData(prev => ({
-      ...prev, 
-      dataOraVisita: nowStr,
-      durata: durataCalcolata
-    }));
-  };
-
-  // Resetta la data di prenotazione al valore di default
-  const resetDataPrenotazione = () => {
-    if (defaultDataPrenotazione) {
-      setFormData(prev => ({ ...prev, visitStart: defaultDataPrenotazione }));
+  useEffect(() => {
+    if (visita) {
+      const prepared = prepareVisitaData(visita);
+      setFormData(prepared);
+      setDefaultDataPrenotazione(prepared.dataOraVisita || '');
+    } else {
+      setFormData(getDefaultVisita());
+      setDefaultDataPrenotazione('');
     }
-  };
+  }, [visita]);
 
-  // Calcola automaticamente la durata quando cambiano visitStart o dataOraVisita
-  const calcolaDurata = (dataInizio, dataFine) => {
-    if (!dataInizio || !dataFine) return 0;
-    const start = new Date(dataInizio);
-    const end = new Date(dataFine);
+  // ----- Calcolo durata -----
+  const calcolaDurata = (inizio, fine) => {
+    if (!inizio || !fine) return 0;
+    const start = new Date(inizio);
+    const end = new Date(fine);
     const diffMs = end - start;
     if (diffMs <= 0) return 0;
     return Math.round(diffMs / (1000 * 60)); // minuti
   };
 
+  // ----- Gestione cambiamenti -----
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => {
       const updated = { ...prev, [name]: value };
-      
-      // Se cambia visitStart o dataOraVisita, ricalcola la durata
-      if (name === 'visitStart' || name === 'dataOraVisita') {
+      if (name === 'dataOraVisita' || name === 'dataOraFine') {
         const durata = calcolaDurata(
-          name === 'visitStart' ? value : prev.visitStart,
-          name === 'dataOraVisita' ? value : prev.dataOraVisita
+          name === 'dataOraVisita' ? value : prev.dataOraVisita,
+          name === 'dataOraFine' ? value : prev.dataOraFine
         );
         updated.durata = durata;
       }
-      
       return updated;
     });
-    
-    // Validate field on change if already touched
     if (touched[name]) {
       const error = validateField(name, value);
       setErrors(prev => ({ ...prev, [name]: error }));
     }
   };
 
-  // Handle date changes (for date inputs)
+  // Gestione data/ora separati
   const handleDateChange = (e) => {
     const { name, value } = e.target;
     const fieldName = name.replace('Date', '');
-    
     setFormData(prev => {
       const currentDatetime = prev[fieldName] || `${value}T00:00`;
       const [, timePart] = currentDatetime.split('T');
       const newDatetime = `${value}T${timePart || '00:00'}`;
-      
       const updated = { ...prev, [fieldName]: newDatetime };
-      
-      // Recalculate duration if both start and end dates are set
-      if (prev.visitStart && prev.dataOraVisita) {
-        const durata = calcolaDurata(
-          fieldName === 'visitStart' ? newDatetime : prev.visitStart,
-          fieldName === 'dataOraVisita' ? newDatetime : prev.dataOraVisita
-        );
-        updated.durata = durata;
+      if (prev.dataOraVisita && prev.dataOraFine) {
+        updated.durata = calcolaDurata(updated.dataOraVisita, updated.dataOraFine);
       }
-      
       return updated;
     });
-    
-    // Validate field on change if already touched
-    if (touched[name]) {
-      const error = validateField(fieldName, value);
-      setErrors(prev => ({ ...prev, [fieldName]: error }));
-    }
   };
 
-  // Handle time changes (for time inputs)
   const handleTimeChange = (e) => {
     const { name, value } = e.target;
     const fieldName = name.replace('Time', '');
-    
     setFormData(prev => {
       const currentDatetime = prev[fieldName] || `1970-01-01T${value}`;
       const [datePart] = currentDatetime.split('T');
       const newDatetime = `${datePart}T${value}`;
-      
       const updated = { ...prev, [fieldName]: newDatetime };
-      
-      // Recalculate duration if both start and end times are set
-      if (prev.visitStart && prev.dataOraVisita) {
-        const durata = calcolaDurata(
-          fieldName === 'visitStart' ? newDatetime : prev.visitStart,
-          fieldName === 'dataOraVisita' ? newDatetime : prev.dataOraVisita
-        );
-        updated.durata = durata;
+      if (prev.dataOraVisita && prev.dataOraFine) {
+        updated.durata = calcolaDurata(updated.dataOraVisita, updated.dataOraFine);
       }
-      
       return updated;
     });
-    
-    // Validate field on change if already touched
-    if (touched[name]) {
-      const error = validateField(fieldName, value);
-      setErrors(prev => ({ ...prev, [fieldName]: error }));
-    }
   };
 
-  const handleBlur = (e) => {
-    const { name, value } = e.target;
-    const fieldName = name.includes('Date') || name.includes('Time') ? name.replace(/Date$/, '').replace(/Time$/, '') : name;
-    
-    setTouched(prev => ({ ...prev, [fieldName]: true }));
-    const fieldValue = value;
-    const error = validateField(fieldName, fieldValue);
-    setErrors(prev => ({ ...prev, [fieldName]: error }));
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    
-    // Ensure same day by default if dates are different
+  // Pulsanti "Ora"
+  const setOraCorrenteInizio = () => {
+    const now = new Date();
+    const nowStr = now.toLocaleString('sv-SE', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }).replace(' ', 'T');
     setFormData(prev => {
-      if (prev.visitStart && prev.dataOraVisita) {
-        const startDate = prev.visitStart.split('T')[0];
-        const endDate = prev.dataOraVisita.split('T')[0];
-        
-        if (startDate !== endDate) {
-          // Make end date same as start date
-          const endTime = prev.dataOraVisita.split('T')[1];
-          return {
-            ...prev,
-            dataOraVisita: `${startDate}T${endTime}`
-          };
-        }
+      const updated = { ...prev, dataOraVisita: nowStr };
+      if (prev.dataOraFine) {
+        updated.durata = calcolaDurata(updated.dataOraVisita, updated.dataOraFine);
       }
-      return prev;
+      return updated;
     });
-    
-    // Mark all fields as touched
-    const allTouched = {};
-    ['visitStart', 'dataOraVisita', 'tipoVisita', 'durata'].forEach(field => {
-      allTouched[field] = true;
+  };
+
+  const setOraCorrenteFine = () => {
+    const now = new Date();
+    const nowStr = now.toLocaleString('sv-SE', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }).replace(' ', 'T');
+    setFormData(prev => {
+      const updated = { ...prev, dataOraFine: nowStr };
+      if (prev.dataOraVisita) {
+        updated.durata = calcolaDurata(updated.dataOraVisita, updated.dataOraFine);
+      }
+      return updated;
     });
-    setTouched(allTouched);
-    
-    if (validateForm()) {
-      saveVisita();
+  };
+
+  // Validazione
+  const validateField = (name, value) => {
+    switch (name) {
+      case 'dataOraVisita':
+        return validateRequired(value, 'Data e ora inizio');
+      case 'tipoVisita':
+        return '';
+      case 'altroTipoVisita':
+        if (formData.tipoVisita === 'Altro' && !value.trim()) {
+          return 'Specifica il tipo di visita';
+        }
+        return '';
+      default:
+        return '';
     }
   };
 
-  const saveVisita = async () => {
+  const validateForm = () => {
+    const newErrors = {};
+    if (!formData.dataOraVisita) newErrors.dataOraVisita = 'Data e ora inizio obbligatoria';
+    if (formData.tipoVisita === 'Altro' && !formData.altroTipoVisita?.trim()) {
+      newErrors.altroTipoVisita = 'Specifica il tipo di visita';
+    }
+    // Se la fine è anteriore all'inizio → errore
+    if (formData.dataOraVisita && formData.dataOraFine) {
+      const start = new Date(formData.dataOraVisita);
+      const end = new Date(formData.dataOraFine);
+      if (end < start) {
+        newErrors.dataOraFine = 'La fine non può essere precedente all\'inizio';
+      }
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  // Salvataggio
+  const saveVisita = async (endTimeToUse) => {
     try {
+      let finalEnd = endTimeToUse || formData.dataOraFine;
+      let finalStart = formData.dataOraVisita;
+
+      if (!finalEnd) {
+        const now = new Date();
+        finalEnd = now.toLocaleString('sv-SE', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }).replace(' ', 'T');
+      }
+
+      const durataFinale = calcolaDurata(finalStart, finalEnd);
+
       const visitaData = {
-        dataOraVisita: toISODatetimeFormat(formData.visitStart), // Use visitStart as dataOraVisita
-        durata: formData.durata,
+        dataOraVisita: toISODatetimeFormat(finalStart),
+        durata: durataFinale,
         tipoVisita: formData.tipoVisita === 'Altro' ? formData.altroTipoVisita : formData.tipoVisita,
-        importoTotale: 0, // Default importoTotale as required by backend
-        prenotazioneId: null, // Optional prenotazioneId
+        importoTotale: 0.00,
+        prenotazioneId: null,
         sintomi: formData.sintomi,
         diagnosi: formData.diagnosi,
         trattamentoTerapia: formData.trattamentoTerapia,
         note: formData.note,
         notePrivate: formData.notePrivate
       };
-      
-      // Call the onSave callback which should handle the actual API call
+
       await onSave(visitaData);
-      
     } catch (error) {
       console.error('Error saving visita:', error);
       setFormError(error.message || 'Errore durante il salvataggio della visita');
     }
   };
 
-  const hasError = (field) => touched[field] && errors[field];
-  
-  const showAltroTipo = formData.tipoVisita === 'Altro';
+  // Submit
+  const handleSubmit = (e) => {
+    e.preventDefault();
 
-  // Determina il testo del pulsante di salvataggio
+    const allTouched = {};
+    ['dataOraVisita', 'tipoVisita', 'dataOraFine'].forEach(field => {
+      allTouched[field] = true;
+    });
+    setTouched(allTouched);
+
+    // Validazione base (controlla se fine < inizio)
+    if (!validateForm()) return;
+
+    // Caso particolare: nuova visita e fine == inizio
+    if (!formData.id && formData.dataOraFine === formData.dataOraVisita) {
+      const now = new Date();
+      const nowStr = now.toLocaleString('it-IT', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' });
+      const message = `La data/ora fine è uguale all'inizio. Vuoi impostarla all'ora corrente (${nowStr})?`;
+      setShowConfirmModal(true);
+      setPendingSave(now.toISOString());
+      return;
+    }
+
+    // Altrimenti salva direttamente
+    saveVisita();
+  };
+
+  const handleConfirmModal = () => {
+    setShowConfirmModal(false);
+    const now = new Date();
+    const nowStr = now.toLocaleString('sv-SE', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }).replace(' ', 'T');
+    setFormData(prev => ({
+      ...prev,
+      dataOraFine: nowStr,
+      durata: calcolaDurata(prev.dataOraVisita, nowStr)
+    }));
+    saveVisita(nowStr);
+  };
+
+  const handleCancelModal = () => {
+    setShowConfirmModal(false);
+    setPendingSave(false);
+  };
+
+  // ----- Render -----
+  const hasError = (field) => touched[field] && errors[field];
+  const showAltroTipo = formData.tipoVisita === 'Altro';
   const getButtonText = () => {
     if (isSaving) return 'Salvataggio...';
-    if (formData.id) return 'Salva Visita';
-    if (!formData.id) return 'Crea Visita';
-    return 'Salva Visita';
+    return formData.id ? 'Salva Visita' : 'Crea Visita';
   };
 
   return (
@@ -423,98 +348,91 @@ function VisitaForm({ visita, animale, onSave, onCancel, isSaving }) {
               <span className="visite-badge-tipo">{formData.altroTipoVisita}</span>
             )}
           </div>
-          <span className="visite-durata">Durata: {formData.durata || '0'} min</span>
+          <span className="visite-durata">Durata: {formData.durata || 0} min</span>
         </div>
         <div className="visite-card-body">
           <form onSubmit={handleSubmit} className="visite-form">
 
-            {/* Blocco Data e Ora - separati in data e ora */}
-            <div className="visite-datetime-group">
-
-              {/* Data Inizio */}
-              <div className="visite-form-group">
-                <label className="visite-form-label">Data inizio *</label>
-                <div className="visite-datetime-wrapper">
-                  <input
-                    type="date"
-                    name="visitStartDate"
-                    className={`visite-form-control ${hasError('visitStart') ? 'is-invalid' : ''}`}
-                    value={formData.visitStart ? formData.visitStart.split('T')[0] : ''}
-                    onChange={handleDateChange}
-                    onBlur={handleBlur}
-                    required
-                    style={{ minWidth: '150px' }}
-                  />
-                  <input
-                    type="time"
-                    name="visitStartTime"
-                    className={`visite-form-control ${hasError('visitStart') ? 'is-invalid' : ''}`}
-                    value={formData.visitStart ? formData.visitStart.split('T')[1].substring(0, 5) : ''}
-                    onChange={handleTimeChange}
-                    onBlur={handleBlur}
-                    required
-                    step="60"
-                    style={{ minWidth: '120px' }}
-                  />
-                  <button
-                    type="button"
-                    className="btn btn-sm btn-secondary"
-                    onClick={() => setOraCorrenteInizio()}
-                    style={{ whiteSpace: 'nowrap' }}
-                  >
-                    ⏱ Adesso
-                  </button>
-                </div>
-                {hasError('visitStart') && <div className="form-error">{errors.visitStart}</div>}
+            {/* ===== INIZIO ===== */}
+            <div className="visite-form-group">
+              <label className="visite-form-label">Data e ora inizio *</label>
+              <div className="visite-datetime-wrapper">
+                <input
+                  type="date"
+                  name="dataOraVisitaDate"
+                  className={`visite-form-control ${hasError('dataOraVisita') ? 'is-invalid' : ''}`}
+                  value={formData.dataOraVisita ? formData.dataOraVisita.split('T')[0] : ''}
+                  onChange={handleDateChange}
+                  onBlur={() => setTouched(prev => ({ ...prev, dataOraVisita: true }))}
+                  required
+                />
+                <input
+                  type="time"
+                  name="dataOraVisitaTime"
+                  className={`visite-form-control ${hasError('dataOraVisita') ? 'is-invalid' : ''}`}
+                  value={formData.dataOraVisita ? formData.dataOraVisita.split('T')[1].substring(0, 5) : ''}
+                  onChange={handleTimeChange}
+                  onBlur={() => setTouched(prev => ({ ...prev, dataOraVisita: true }))}
+                  required
+                  step="60"
+                />
+                <button
+                  type="button"
+                  className="btn btn-sm btn-secondary"
+                  onClick={setOraCorrenteInizio}
+                >
+                  ⏱ Ora
+                </button>
               </div>
-
-              {/* Data e Ora Fine */}
-              <div className="visite-form-group" style={{ marginTop: 'var(--space-2)' }}>
-                <label className="visite-form-label">Data e Ora Fine *</label>
-                <div className="visite-datetime-wrapper">
-                  <input
-                    type="date"
-                    name="dataOraVisitaDate"
-                    className={`visite-form-control ${hasError('dataOraVisita') ? 'is-invalid' : ''}`}
-                    value={formData.dataOraVisita ? formData.dataOraVisita.split('T')[0] : ''}
-                    onChange={handleDateChange}
-                    onBlur={handleBlur}
-                    required
-                    style={{ minWidth: '150px' }}
-                  />
-                  <input
-                    type="time"
-                    name="dataOraVisitaTime"
-                    className={`visite-form-control ${hasError('dataOraVisita') ? 'is-invalid' : ''}`}
-                    value={formData.dataOraVisita ? formData.dataOraVisita.split('T')[1].substring(0, 5) : ''}
-                    onChange={handleTimeChange}
-                    onBlur={handleBlur}
-                    required
-                    step="60"
-                    style={{ minWidth: '120px' }}
-                  />
-                  <button
-                    type="button"
-                    className="btn btn-sm btn-secondary"
-                    onClick={setOraCorrente}
-                    style={{ whiteSpace: 'nowrap' }}
-                  >
-                    ⏱ Adesso
-                  </button>
-                </div>
-                {hasError('dataOraVisita') && <div className="form-error">{errors.dataOraVisita}</div>}
-              </div>
-
+              {hasError('dataOraVisita') && <div className="form-error">{errors.dataOraVisita}</div>}
             </div>
 
+            {/* ===== FINE (ORA VISIBILE E PRECOMPILATA) ===== */}
+            <div className="visite-form-group" style={{ marginTop: 'var(--space-2)' }}>
+              <label className="visite-form-label">Data e ora fine</label>
+              <div className="visite-datetime-wrapper">
+                <input
+                  type="date"
+                  name="dataOraFineDate"
+                  className={`visite-form-control ${hasError('dataOraFine') ? 'is-invalid' : ''}`}
+                  value={formData.dataOraFine ? formData.dataOraFine.split('T')[0] : ''}
+                  onChange={handleDateChange}
+                  onBlur={() => setTouched(prev => ({ ...prev, dataOraFine: true }))}
+                />
+                <input
+                  type="time"
+                  name="dataOraFineTime"
+                  className={`visite-form-control ${hasError('dataOraFine') ? 'is-invalid' : ''}`}
+                  value={formData.dataOraFine ? formData.dataOraFine.split('T')[1].substring(0, 5) : ''}
+                  onChange={handleTimeChange}
+                  onBlur={() => setTouched(prev => ({ ...prev, dataOraFine: true }))}
+                  step="60"
+                />
+                <button
+                  type="button"
+                  className="btn btn-sm btn-secondary"
+                  onClick={setOraCorrenteFine}
+                >
+                  ⏱ Ora
+                </button>
+              </div>
+              {hasError('dataOraFine') && <div className="form-error">{errors.dataOraFine}</div>}
+              {!formData.id && formData.dataOraFine === formData.dataOraVisita && (
+                <div className="visite-form-hint">
+                  La fine è uguale all'inizio. Al salvataggio potrai scegliere se impostarla all'ora corrente.
+                </div>
+              )}
+            </div>
+
+            {/* ===== TIPO VISITA ===== */}
             <div className="visite-form-group" style={{ marginTop: 'var(--space-3)' }}>
-              <label className="visite-form-label">Tipo Visita *</label>
+              <label className="visite-form-label">Tipo Visita</label>
               <select
                 name="tipoVisita"
                 className={`visite-form-control ${hasError('tipoVisita') ? 'is-invalid' : ''}`}
                 value={formData.tipoVisita || ''}
                 onChange={handleChange}
-                onBlur={handleBlur}
+                onBlur={() => setTouched(prev => ({ ...prev, tipoVisita: true }))}
               >
                 <option value="">Seleziona tipo</option>
                 <option value="Visita di controllo">Visita di controllo</option>
@@ -536,77 +454,34 @@ function VisitaForm({ visita, animale, onSave, onCancel, isSaving }) {
                   className={`visite-form-control ${hasError('altroTipoVisita') ? 'is-invalid' : ''}`}
                   value={formData.altroTipoVisita || ''}
                   onChange={handleChange}
-                  onBlur={handleBlur}
+                  onBlur={() => setTouched(prev => ({ ...prev, altroTipoVisita: true }))}
                   placeholder="Inserisci il tipo di visita..."
                 />
                 {hasError('altroTipoVisita') && <div className="form-error">{errors.altroTipoVisita}</div>}
               </div>
             )}
 
-
-
-            <div className="visite-divider">
-              <span>Referto Clinico</span>
-            </div>
-
+            {/* ===== REFERTO CLINICO ===== */}
+            <div className="visite-divider"><span>Referto Clinico</span></div>
             <div className="visite-form-group">
               <label className="visite-form-label">Sintomi</label>
-              <textarea
-                name="sintomi"
-                className="visite-form-control visite-form-textarea"
-                rows="3"
-                value={formData.sintomi || ''}
-                onChange={handleChange}
-                placeholder="Descrivi i sintomi riportati..."
-              />
+              <textarea name="sintomi" className="visite-form-control visite-form-textarea" rows="3" value={formData.sintomi || ''} onChange={handleChange} placeholder="Descrivi i sintomi riportati..." />
             </div>
-
             <div className="visite-form-group">
               <label className="visite-form-label">Diagnosi</label>
-              <textarea
-                name="diagnosi"
-                className="visite-form-control visite-form-textarea"
-                rows="3"
-                value={formData.diagnosi || ''}
-                onChange={handleChange}
-                placeholder="Inserisci la diagnosi..."
-              />
+              <textarea name="diagnosi" className="visite-form-control visite-form-textarea" rows="3" value={formData.diagnosi || ''} onChange={handleChange} placeholder="Inserisci la diagnosi..." />
             </div>
-
             <div className="visite-form-group">
               <label className="visite-form-label">Trattamento / Terapia</label>
-              <textarea
-                name="trattamentoTerapia"
-                className="visite-form-control visite-form-textarea"
-                rows="3"
-                value={formData.trattamentoTerapia || ''}
-                onChange={handleChange}
-                placeholder="Indica il trattamento prescritto..."
-              />
+              <textarea name="trattamentoTerapia" className="visite-form-control visite-form-textarea" rows="3" value={formData.trattamentoTerapia || ''} onChange={handleChange} placeholder="Indica il trattamento prescritto..." />
             </div>
-
             <div className="visite-form-group">
               <label className="visite-form-label">Note</label>
-              <textarea
-                name="note"
-                className="visite-form-control visite-form-textarea"
-                rows="2"
-                value={formData.note || ''}
-                onChange={handleChange}
-                placeholder="Note aggiuntive (visibili al proprietario)..."
-              />
+              <textarea name="note" className="visite-form-control visite-form-textarea" rows="2" value={formData.note || ''} onChange={handleChange} placeholder="Note aggiuntive (visibili al proprietario)..." />
             </div>
-
             <div className="visite-form-group">
               <label className="visite-form-label">Note Private</label>
-              <textarea
-                name="notePrivate"
-                className="visite-form-control visite-form-textarea"
-                rows="2"
-                value={formData.notePrivate || ''}
-                onChange={handleChange}
-                placeholder="Note riservate al veterinario..."
-              />
+              <textarea name="notePrivate" className="visite-form-control visite-form-textarea" rows="2" value={formData.notePrivate || ''} onChange={handleChange} placeholder="Note riservate al veterinario..." />
             </div>
 
             {formError && <div className="form-error" style={{ marginBottom: 'var(--space-2)' }}>{formError}</div>}
@@ -623,7 +498,13 @@ function VisitaForm({ visita, animale, onSave, onCancel, isSaving }) {
         </div>
       </div>
 
-
+      {/* Modale di conferma */}
+      <ConfirmModal
+        isOpen={showConfirmModal}
+        message="La data/ora fine è uguale all'inizio. Vuoi impostarla all'ora corrente?"
+        onConfirm={handleConfirmModal}
+        onCancel={handleCancelModal}
+      />
     </div>
   );
 }

@@ -1,0 +1,64 @@
+.gear-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  transition: background-color 0.2s;
+}
+
+.gear-button:hover {
+  background-color: var(--gray-100);
+}
+
+.gear-button:active {
+  background-color: var(--gray-200);
+}
+
+.gear-button svg {
+  color: var(--gray-600);
+  transition: color 0.2s;
+}
+
+.gear-button:hover svg {
+  color: var(--primary);
+}
+
+.context-menu {
+  background: white;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+  min-width: 180px;
+  overflow: hidden;
+  font-size: 14px;
+  padding: 4px 0;
+  z-index: 9999;
+}
+
+.context-menu-item {
+  padding: 8px 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: background-color 0.15s;
+  color: var(--gray-800);
+}
+
+.context-menu-item:hover {
+  background-color: var(--primary-light);
+  color: var(--primary);
+}
+
+.context-menu-icon {
+  width: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

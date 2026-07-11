@@ -1,3 +1,4 @@
+// apiService.js
 import { useAuth } from '../context/AuthContext';
 import { useCallback } from 'react';
 
@@ -14,11 +15,8 @@ export function useApi() {
    */
   const getAuthHeaders = useCallback(() => {
     if (!token) {
-      return {
-        'Content-Type': 'application/json',
-      };
+      return { 'Content-Type': 'application/json' };
     }
-
     return {
       Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
@@ -117,7 +115,7 @@ export function useApi() {
  */
 export const useListaApi = (endpoint) => {
   const { get } = useApi();
-  
+
   /**
    * Recupera dati paginati con ordinamento e filtraggio
    * @param {number} page - Pagina corrente
@@ -135,36 +133,27 @@ export const useListaApi = (endpoint) => {
       params.append('size', size);
       params.append('sortBy', sortBy);
       params.append('sortDir', sortDir);
-      
-      if (searchTerm) {
-        params.append('search', searchTerm);
-      }
-      
-      // Aggiungi filtri aggiuntivi ai parametri della query
+      if (searchTerm) params.append('search', searchTerm);
       Object.entries(filters).forEach(([key, value]) => {
         if (value !== null && value !== undefined && value !== '') {
           params.append(key, value);
         }
       });
-      
       const response = await get(`${endpoint}?${params.toString()}`);
-      if (!response.ok) {
-        throw new Error(`Failed to fetch data: ${response.status}`);
-      }
-      
+      if (!response.ok) throw new Error(`Failed to fetch data: ${response.status}`);
       const data = await response.json();
       return {
         content: data.content || [],
         totalElements: data.totalElements || data.content.length,
         totalPages: data.totalPages || 1,
-        number: data.number || 0
+        number: data.number || 0,
       };
     } catch (error) {
       console.error('API error:', error);
       throw error;
     }
   };
-  
+
   return { fetchPaginatedData };
 };
 
@@ -176,7 +165,6 @@ export const useListaApi = (endpoint) => {
  */
 export const getStatusInfo = (status, statusMap) => {
   if (!status) return { label: 'Sconosciuto', className: 'badge-sconosciuto' };
-  
   const normalizedStatus = String(status).toUpperCase();
   return statusMap[normalizedStatus] || { label: 'Sconosciuto', className: 'badge-sconosciuto' };
 };
@@ -189,13 +177,10 @@ export const getStatusInfo = (status, statusMap) => {
  * @returns {Array} - Array filtrato
  */
 export const applySearchFilter = (data, searchTerm, searchFields) => {
-  if (!searchTerm || !data || data.length === 0) {
-    return data;
-  }
-  
+  if (!searchTerm || !data || data.length === 0) return data;
   const searchLower = searchTerm.toLowerCase();
-  return data.filter(item => 
-    searchFields.some(field => 
+  return data.filter(item =>
+    searchFields.some(field =>
       item[field] && String(item[field]).toLowerCase().includes(searchLower)
     )
   );
@@ -209,10 +194,7 @@ export const applySearchFilter = (data, searchTerm, searchFields) => {
  * @returns {Array} - Array filtrato
  */
 export const applyStatusFilter = (data, statusFilter, statusField) => {
-  if (!statusFilter || !data || data.length === 0) {
-    return data;
-  }
-  
+  if (!statusFilter || !data || data.length === 0) return data;
   return data.filter(item => item[statusField] === statusFilter);
 };
 
@@ -228,18 +210,10 @@ export const applyStatusFilter = (data, statusFilter, statusField) => {
  */
 export const applyCombinedFilters = (data, searchTerm, statusFilter, statusMap, searchFields, statusField) => {
   let filteredData = [...data];
-  
-  // Applica prima il filtro di ricerca
-  if (searchTerm) {
-    filteredData = applySearchFilter(filteredData, searchTerm, searchFields);
-  }
-  
-  // Applica poi il filtro di stato
+  if (searchTerm) filteredData = applySearchFilter(filteredData, searchTerm, searchFields);
   if (statusFilter) {
-    // Gestisci la mappatura dello stato se necessario
     const backendStatus = statusMap?.[statusFilter] || statusFilter;
     filteredData = applyStatusFilter(filteredData, backendStatus, statusField);
   }
-  
   return filteredData;
 };

@@ -2,6 +2,8 @@ import React, { useState, useMemo } from 'react';
 import AnimaleCreate from './AnimaleCreate';
 import ListPageTemplate from '../../components/ListPageTemplate/ListPageTemplate';
 import { useParams, useNavigate } from 'react-router-dom';
+import { GearMenu } from '../../components/ContextMenu/ContextMenu';
+import { loadFullAnimaleData } from '../../utils/dataLoader';
 
 import { useTableControls } from '../../hooks/useTableControls';
 import { usePaginatedFetch } from '../../hooks/usePaginatedFetch';
@@ -19,6 +21,8 @@ function AnimaliLista() {
   const search = useSearchControls();
   const [specieFilter, setSpecieFilter] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingAnimale, setEditingAnimale] = useState(null);
 
   // Memoizza i filtri per evitare ricalcoli inutili e garantire stabilità dei riferimenti
   const memoizedFilters = useMemo(() => ({
@@ -94,6 +98,21 @@ function AnimaliLista() {
         const status = map[item.stato] || { label: 'Sconosciuto', className: 'badge-sconosciuto' };
         return <span className={`badge-status ${status.className}`}>{status.label}</span>;
       }
+    },
+    {
+      header: '',
+      field: 'azioni',
+      sortable: false,
+      render: (item) => (
+        <GearMenu
+          menuItems={[
+            {
+              label: 'Modifica',
+              onClick: () => handleEditAnimale(item)
+            }
+          ]}
+        />
+      )
     }
   ];
 
@@ -125,17 +144,52 @@ function AnimaliLista() {
     navigate(`/animali/${animale.id}`);
   };
 
-  const additionalContent = showCreateModal && (
-    <AnimaleCreate
-      onClose={() => setShowCreateModal(false)}
-      onSuccess={(newAnimale) => {
-        // Refresh the list after successful creation
-        search.clearSearch();
-        setSpecieFilter('');
-        table.setPage(0);
-        setShowCreateModal(false);
-      }}
-    />
+  const handleEditAnimale = (animale) => {
+    // Load full animale data before opening the edit modal
+    loadFullAnimaleData(animale.id, 
+      (fullAnimaleData) => {
+        setEditingAnimale(fullAnimaleData);
+        setShowEditModal(true);
+      },
+      (error) => {
+        console.error('Failed to load full animale data, using partial data:', error);
+        // Fallback to partial data if full data load fails
+        setEditingAnimale(animale);
+        setShowEditModal(true);
+      }
+    );
+  };
+
+  const additionalContent = (
+    <>
+      {showCreateModal && (
+        <AnimaleCreate
+          onClose={() => setShowCreateModal(false)}
+          onSuccess={(newAnimale) => {
+            // Refresh the list after successful creation
+            search.clearSearch();
+            setSpecieFilter('');
+            table.setPage(0);
+            setShowCreateModal(false);
+          }}
+        />
+      )}
+      {showEditModal && editingAnimale && (
+        <AnimaleCreate
+          onClose={() => setShowEditModal(false)}
+          onSuccess={(updatedAnimale) => {
+            // Refresh the list after successful update
+            search.clearSearch();
+            setSpecieFilter('');
+            table.setPage(0);
+            setShowEditModal(false);
+            setEditingAnimale(null);
+          }}
+          animale={editingAnimale}
+          isEditMode={true}
+        />
+      )}
+    </>
   );
 
   return (

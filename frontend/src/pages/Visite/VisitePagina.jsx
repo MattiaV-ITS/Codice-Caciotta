@@ -163,39 +163,35 @@ function VisitePagina() {
     fetchData();
   }, [visitaId, get]);
 
+  // ----- SALVATAGGIO (senza popup) -----
   const saveVisita = async (visitaData) => {
+    setIsSaving(true);
     try {
-      setIsSaving(true);
-      
       if (visita.id) {
-        // Update existing visita
+        // Aggiornamento visita esistente
         const response = await patch(`/api/visite/${visita.id}`, visitaData);
         if (!response.ok) {
-          if (response.status === 400) {
-            throw new Error('Invalid visita data provided');
-          }
-          throw new Error(`Failed to update visita: ${response.status}`);
+          throw new Error(`Errore durante l'aggiornamento: ${response.status}`);
         }
-        alert('Visita aggiornata con successo!');
+        // Nessun popup, solo navigazione per ricaricare i dati
+        navigate(`/visite/${visita.id}`);
       } else {
-        // Create new visita
+        // Creazione nuova visita
         const animalId = animale?.id;
         if (!animalId) {
-          throw new Error('Animal ID is required to create a visita');
+          throw new Error('ID animale mancante');
         }
-        
         const response = await post(`/api/visite/animale/${animalId}`, visitaData);
         if (!response.ok) {
-          throw new Error(`Failed to create visita: ${response.status}`);
+          throw new Error(`Errore durante la creazione: ${response.status}`);
         }
         const createdVisita = await response.json();
-        alert('Visita creata con successo!');
+        // Naviga alla visita appena creata
         navigate(`/visite/${createdVisita.id}`);
       }
-      
-    } catch (error) {
-      console.error('Error saving visita:', error);
-      alert(`Errore durante il salvataggio: ${error.message}`);
+    } catch (err) {
+      // Rilancia l'errore per farlo gestire a VisitaForm (che lo mostrerà nel form)
+      throw err;
     } finally {
       setIsSaving(false);
     }

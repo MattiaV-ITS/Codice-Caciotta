@@ -20,7 +20,7 @@ public class VisitaSchedaCreateDTO {
 
     private String tipoVisita;
 
-    @DecimalMin(value = "0.0", inclusive = false, message = "Importo totale deve essere maggiore di zero")
+    @DecimalMin(value = "0.00", inclusive = true, message = "Importo totale deve essere maggiore o uguale a zero")
     private BigDecimal importoTotale;
 
     private Long prenotazioneId;

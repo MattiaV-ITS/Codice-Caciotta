@@ -1,25 +1,42 @@
-import React, { useState } from 'react';
-import { useApi } from '../../services/apiService';
+import React, { useState, useEffect } from 'react';
 import FormModal from '../../components/FormModal/FormModal';
 import { validateRequired, validateEmail, validatePhone, validateFiscalCode } from '../../utils/validationUtils';
 import { getCurrentISODate } from '../../utils/dateUtils';
+import { useApi } from '../../services/apiService';
 
-function ProprietarioCreate({ onClose, onSuccess }) {
-  const { post } = useApi();
+function ProprietarioCreate({ onClose, onSuccess, proprietario, isEditMode = false }) {
+  const { post, put } = useApi();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
-  const [formData, setFormData] = useState({
-    codiceFiscale: '',
-    nome: '',
-    cognome: '',
-    email: '',
-    telefono: '',
-    indirizzo: '',
-    citta: '',
+  const [formData, setFormData] = useState(() => {
+    if (isEditMode && proprietario) {
+      return {
+        codiceFiscale: proprietario.codiceFiscale || '',
+        nome: proprietario.nome || '',
+        cognome: proprietario.cognome || '',
+        email: proprietario.email || '',
+        telefono: proprietario.telefono || '',
+        indirizzo: proprietario.indirizzo || '',
+        citta: proprietario.citta || '',
+      };
+    }
+    
+    return {
+      codiceFiscale: '',
+      nome: '',
+      cognome: '',
+      email: '',
+      telefono: '',
+      indirizzo: '',
+      citta: '',
+    };
   });
 
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
+
+
+
 
   // Validazione campo singolo
   const validateField = (name, value) => {
@@ -101,8 +118,11 @@ function ProprietarioCreate({ onClose, onSuccess }) {
           stato: true // Sempre attivo
         };
 
-        // Chiamata API per creare il proprietario
-        const response = await post('/api/proprietari', payload);
+        // Chiamata API per creare o aggiornare il proprietario
+        const url = isEditMode && proprietario?.id ? `/api/proprietari/${proprietario.id}` : '/api/proprietari';
+        const response = isEditMode && proprietario?.id
+          ? await put(url, payload)
+          : await post(url, payload);
         
         if (!response.ok) {
           const errorData = await response.json();
@@ -116,8 +136,8 @@ function ProprietarioCreate({ onClose, onSuccess }) {
         onClose();
         
       } catch (error) {
-        console.error('Errore nella creazione del proprietario:', error);
-        setSubmitError(error.message || 'Si è verificato un errore durante la creazione del proprietario');
+        console.error(isEditMode ? 'Errore nell\'aggiornamento del proprietario:' : 'Errore nella creazione del proprietario:', error);
+        setSubmitError(error.message || (isEditMode ? 'Si è verificato un errore durante l\'aggiornamento del proprietario' : 'Si è verificato un errore durante la creazione del proprietario'));
         setIsSubmitting(false);
       }
     }
@@ -127,7 +147,7 @@ function ProprietarioCreate({ onClose, onSuccess }) {
 
   return (
     <FormModal
-      title="Nuovo Proprietario"
+      title={isEditMode ? "Modifica Proprietario" : "Nuovo Proprietario"}
       onClose={onClose}
       isSubmitting={isSubmitting}
       submitError={submitError}
