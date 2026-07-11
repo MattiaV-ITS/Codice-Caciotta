@@ -1,6 +1,12 @@
 import React, { useState } from 'react';
+import { useApi } from '../../services/apiService';
+import FormModal from '../../components/FormModal/FormModal';
+import { validateRequired, validateEmail, validatePhone, validateFiscalCode } from '../../utils/validationUtils';
 
 function ProprietarioCreate({ onClose, onSuccess }) {
+  const { post } = useApi();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState(null);
   const [formData, setFormData] = useState({
     codiceFiscale: '',
     nome: '',
@@ -9,7 +15,6 @@ function ProprietarioCreate({ onClose, onSuccess }) {
     telefono: '',
     indirizzo: '',
     citta: '',
-    // dataRegistrazione e stato non sono più nel form, verranno impostati al submit
   });
 
   const [errors, setErrors] = useState({});
@@ -19,24 +24,19 @@ function ProprietarioCreate({ onClose, onSuccess }) {
   const validateField = (name, value) => {
     switch (name) {
       case 'nome':
-        return !value ? 'Il nome è obbligatorio.' : '';
+        return validateRequired(value, 'Il nome');
       case 'cognome':
-        return !value ? 'Il cognome è obbligatorio.' : '';
+        return validateRequired(value, 'Il cognome');
       case 'email':
-        if (!value) return 'L\'email è obbligatoria.';
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return 'Inserisci un\'email valida.';
-        return '';
+        return validateEmail(value);
       case 'telefono':
-        if (!value) return 'Il telefono è obbligatorio.';
-        if (!/^[0-9+\s-]{6,15}$/.test(value)) return 'Inserisci un numero di telefono valido.';
-        return '';
+        return validatePhone(value);
       case 'indirizzo':
-        return !value ? 'L\'indirizzo è obbligatorio.' : '';
+        return validateRequired(value, "L'indirizzo");
       case 'citta':
-        return !value ? 'La città è obbligatoria.' : '';
+        return validateRequired(value, 'La città');
       case 'codiceFiscale':
-        if (value && !/^[A-Z0-9]{16}$/i.test(value)) return 'Il codice fiscale deve essere di 16 caratteri alfanumerici.';
-        return '';
+        return validateFiscalCode(value);
       default:
         return '';
     }
@@ -78,7 +78,7 @@ function ProprietarioCreate({ onClose, onSuccess }) {
     setErrors(prev => ({ ...prev, [name]: error }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     // Marca tutti i campi come toccati
@@ -89,30 +89,50 @@ function ProprietarioCreate({ onClose, onSuccess }) {
     setTouched(allTouched);
 
     if (validateForm()) {
-      // Crea il payload con data e stato automatici
-      const payload = {
-        ...formData,
-        dataRegistrazione: new Date().toISOString().split('T')[0], // Data corrente
-        stato: true // Sempre attivo
-      };
+      setIsSubmitting(true);
+      setSubmitError(null);
+      
+      try {
+        // Crea il payload con data e stato automatici
+        const payload = {
+          ...formData,
+          dataRegistrazione: new Date().toISOString().split('T')[0], // Data corrente
+          stato: true // Sempre attivo
+        };
 
-      onSuccess(payload);
-      onClose();
+        // Chiamata API per creare il proprietario
+        const response = await post('/api/proprietari', payload);
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Failed to create proprietario');
+        }
+
+        const createdProprietario = await response.json();
+        
+        // Chiamata onSuccess con il proprietario creato
+        onSuccess(createdProprietario);
+        onClose();
+        
+      } catch (error) {
+        console.error('Errore nella creazione del proprietario:', error);
+        setSubmitError(error.message || 'Si è verificato un errore durante la creazione del proprietario');
+        setIsSubmitting(false);
+      }
     }
   };
 
   const hasError = (field) => touched[field] && errors[field];
 
   return (
-    <div className="proprietario-modal-overlay" onClick={onClose}>
-      <div className="proprietario-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="proprietario-modal-header">
-          <h3>Nuovo Proprietario</h3>
-          <button className="proprietario-modal-close" onClick={onClose}>×</button>
-        </div>
-        <div className="proprietario-modal-body">
-          <form onSubmit={handleSubmit} className="proprietario-form">
-            <div className="proprietario-form-grid">
+    <FormModal
+      title="Nuovo Proprietario"
+      onClose={onClose}
+      isSubmitting={isSubmitting}
+      submitError={submitError}
+      onSubmit={handleSubmit}
+    >
+      <div className="proprietario-form-grid">
               {/* Nome */}
               <div className="form-group">
                 <label className="form-label">Nome *</label>
@@ -214,20 +234,7 @@ function ProprietarioCreate({ onClose, onSuccess }) {
                 {hasError('citta') && <div className="form-error">{errors.citta}</div>}
               </div>
             </div>
-
-            {/* Pulsanti */}
-            <div className="proprietario-modal-footer">
-              <button type="button" className="btn btn-secondary" onClick={onClose}>
-                Cancella
-              </button>
-              <button type="submit" className="btn btn-primary">
-                Aggiungi
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
+          </FormModal>
   );
 }
 

@@ -50,7 +50,7 @@ const ListaTable = ({
 
   return (
     <div className="table-responsive">
-      <table className="table-custom">
+      <table className="table-custom lista-table">
         <thead>
           <tr>
             {columns.map((column) => (

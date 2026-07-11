@@ -40,6 +40,15 @@
   background: var(--primary-light);
 }
 
+.lista-table tbody tr.clickable-row {
+  cursor: pointer;
+}
+
+.lista-table tbody tr.clickable-row:hover {
+  background: var(--primary-light);
+  transition: background 0.2s ease;
+}
+
 .sort-indicator {
   display: inline-block;
   margin-left: 4px;

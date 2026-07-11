@@ -1,18 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-
-// ==============================
-// MOCK PROPRIETARI (per la ricerca)
-// ==============================
-const MOCK_PROPRIETARI = [
-  { id: 1, nome: 'Mario', cognome: 'Rossi', email: 'mario.rossi@email.it', telefono: '3331234567' },
-  { id: 2, nome: 'Laura', cognome: 'Bianchi', email: 'laura.bianchi@email.it', telefono: '3349876543' },
-  { id: 3, nome: 'Giuseppe', cognome: 'Verdi', email: 'giuseppe.verdi@email.it', telefono: '3354567890' },
-  { id: 4, nome: 'Maria', cognome: 'Neri', email: 'maria.neri@email.it', telefono: '3367890123' },
-  { id: 5, nome: 'Antonio', cognome: 'Ferrari', email: 'antonio.ferrari@email.it', telefono: '3378901234' },
-  { id: 6, nome: 'Sofia', cognome: 'Esposito', email: 'sofia.esposito@email.it', telefono: '3389012345' },
-  { id: 7, nome: 'Francesco', cognome: 'Romano', email: 'francesco.romano@email.it', telefono: '3390123456' },
-  { id: 8, nome: 'Elena', cognome: 'Greco', email: 'elena.greco@email.it', telefono: '3401234567' },
-];
+import { useApi } from '../../services/apiService';
+import FormModal from '../../components/FormModal/FormModal';
+import { validateRequired, validateEmail, validatePhone, validateMicrochip, validatePositiveNumber, capitalizeFirstLetter } from '../../utils/validationUtils';
 
 function AnimaleCreate({ onClose, onSuccess }) {
   const [formData, setFormData] = useState({
@@ -21,10 +10,10 @@ function AnimaleCreate({ onClose, onSuccess }) {
     specificaSpecie: '',
     razza: '',
     dataNascita: '',
-    sesso: '', // Nessun default → obbligatorio
+    sesso: '',
     peso: '',
     microchip: '',
-    taglia: 'ALTRO_SCONOSCIUTA', // Default: Altro/Sconosciuta
+    taglia: null, // Default: Altro/Sconosciuta
     coloreMantello: '',
     sterilizzato: false,
     gruppoSanguigno: '',
@@ -43,19 +32,25 @@ function AnimaleCreate({ onClose, onSuccess }) {
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedProprietario, setSelectedProprietario] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [searchLoading, setSearchLoading] = useState(false);
   const searchRef = useRef(null);
+  
+  const { post, get } = useApi();
 
-  const specieOptions = ['cane', 'gatto', 'altro'];
+
+
+  const specieOptions = ['Cane', 'Gatto', 'Altro'];
   const sessoOptions = [
     { value: 'M', label: 'Maschio' },
     { value: 'F', label: 'Femmina' },
-    { value: 'ALTRO_SCONOSCIUTO', label: 'Altro/Sconosciuto' }
+    { value: null, label: 'Altro/Sconosciuto' }
   ];
   const tagliaOptions = [
     { value: 'PICCOLA', label: 'Piccola' },
     { value: 'MEDIA', label: 'Media' },
     { value: 'GRANDE', label: 'Grande' },
-    { value: 'ALTRO_SCONOSCIUTA', label: 'Altro/Sconosciuta' }
+    { value: null, label: 'Altro/Sconosciuta' }
   ];
   const statoOptions = [
     { value: 'SANO', label: 'Sano' },
@@ -66,33 +61,35 @@ function AnimaleCreate({ onClose, onSuccess }) {
 
   // Ricerca proprietari
   useEffect(() => {
-    if (searchTerm.length >= 1) {
-      const term = searchTerm.trim();
-      const parts = term.split(/\s+/).filter(p => p.length > 0);
-      let filtered;
-
-      if (parts.length === 1) {
-        const word = parts[0].toLowerCase();
-        filtered = MOCK_PROPRIETARI.filter(p =>
-          p.nome.toLowerCase().startsWith(word) ||
-          p.cognome.toLowerCase().startsWith(word)
-        );
-      } else if (parts.length >= 2) {
-        const firstName = parts[0].toLowerCase();
-        const lastName = parts.slice(1).join(' ').toLowerCase();
-        filtered = MOCK_PROPRIETARI.filter(p =>
-          p.nome.toLowerCase().startsWith(firstName) &&
-          p.cognome.toLowerCase().startsWith(lastName)
-        );
+    const searchProprietari = async () => {
+      if (searchTerm.length >= 1) {
+        setSearchLoading(true);
+        try {
+          const response = await get(`/api/proprietari?search=${encodeURIComponent(searchTerm)}&page=0&size=10`);
+          if (response.ok) {
+            const data = await response.json();
+            setSuggestions(data.content || []);
+            setShowSuggestions((data.content?.length || 0) > 0);
+          } else {
+            setSuggestions([]);
+            setShowSuggestions(false);
+          }
+        } catch (error) {
+          console.error('Errore ricerca proprietari:', error);
+          setSuggestions([]);
+          setShowSuggestions(false);
+        } finally {
+          setSearchLoading(false);
+        }
+      } else {
+        setSuggestions([]);
+        setShowSuggestions(false);
       }
+    };
 
-      setSuggestions(filtered);
-      setShowSuggestions(filtered.length > 0);
-    } else {
-      setSuggestions([]);
-      setShowSuggestions(false);
-    }
-  }, [searchTerm]);
+    const debounceTimer = setTimeout(searchProprietari, 300);
+    return () => clearTimeout(debounceTimer);
+  }, [searchTerm, get]);
 
   // Chiudi suggerimenti cliccando fuori
   useEffect(() => {
@@ -109,7 +106,7 @@ function AnimaleCreate({ onClose, onSuccess }) {
   const validateField = (name, value) => {
     switch (name) {
       case 'nome':
-        return !value ? 'Il nome è obbligatorio.' : '';
+        return validateRequired(value, 'Il nome');
       case 'specie':
         if (!value) return 'La specie è obbligatoria.';
         if (value === 'altro' && !formData.specificaSpecie.trim()) {
@@ -117,17 +114,13 @@ function AnimaleCreate({ onClose, onSuccess }) {
         }
         return '';
       case 'dataNascita':
-        return !value ? 'La data di nascita è obbligatoria.' : '';
+        return validateRequired(value, 'La data di nascita');
       case 'peso':
-        if (!value) return 'Il peso è obbligatorio.';
-        if (isNaN(value) || parseFloat(value) <= 0) return 'Inserisci un peso valido.';
-        return '';
+        return validatePositiveNumber(value, 'Il peso');
       case 'microchip':
-        if (value && value.length !== 15) return 'Il microchip deve avere esattamente 15 caratteri.';
-        if (value && !/^[0-9]{15}$/.test(value)) return 'Il microchip deve contenere solo numeri.';
-        return '';
+        return validateMicrochip(value);
       case 'sesso':
-        return !value ? 'Seleziona il sesso.' : '';
+        return validateRequired(value, 'Il sesso');
       default:
         return '';
     }
@@ -174,7 +167,7 @@ function AnimaleCreate({ onClose, onSuccess }) {
     setErrors(prev => ({ ...prev, [name]: error }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     const allTouched = {};
@@ -184,16 +177,43 @@ function AnimaleCreate({ onClose, onSuccess }) {
     setTouched(allTouched);
 
     if (validateForm()) {
-      const payload = {
-        ...formData,
-        peso: parseFloat(formData.peso),
-        sterilizzato: formData.sterilizzato || false,
-        stato: formData.stato || 'SANO',
-        proprietarioId: parseInt(formData.proprietarioId)
-      };
+      setIsLoading(true);
+      try {
+        const payload = {
+          ...formData,
+          specie: formData.specie ? capitalizeFirstLetter(formData.specie) : formData.specie,
+          specificaSpecie: formData.specificaSpecie ? capitalizeFirstLetter(formData.specificaSpecie) : formData.specificaSpecie,
+          peso: parseFloat(formData.peso),
+          sesso: formData.sesso === 'ALTRO_SCONOSCIUTO' ? null : formData.sesso,
+          taglia: formData.taglia === 'ALTRO_SCONOSCIUTA' ? null : formData.taglia,
+          sterilizzato: formData.sterilizzato || false,
+          stato: formData.stato || 'SANO',
+          proprietarioId: formData.proprietarioId ? parseInt(formData.proprietarioId) : null
+        };
 
-      onSuccess(payload);
-      onClose();
+        const response = await post('/api/animali', payload);
+        
+        if (response.ok) {
+          const createdAnimale = await response.json();
+          onSuccess(createdAnimale);
+          onClose();
+        } else {
+          const errorData = await response.json();
+          console.error('Creazione animale fallita:', errorData);
+          setErrors(prev => ({
+            ...prev,
+            form: 'Failed to create animale: ' + (errorData.message || 'Unknown error')
+          }));
+        }
+      } catch (error) {
+        console.error('Errore durante la creazione dell\'animale:', error);
+        setErrors(prev => ({
+          ...prev,
+          form: 'Error creating animale: ' + error.message
+        }));
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -210,15 +230,14 @@ function AnimaleCreate({ onClose, onSuccess }) {
   const showSpecificaSpecie = formData.specie === 'altro';
 
   return (
-    <div className="proprietario-modal-overlay" onClick={onClose}>
-      <div className="proprietario-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="proprietario-modal-header">
-          <h3>Nuovo Animale</h3>
-          <button className="proprietario-modal-close" onClick={onClose}>×</button>
-        </div>
-        <div className="proprietario-modal-body">
-          <form onSubmit={handleSubmit} className="proprietario-form">
-            <div className="proprietario-form-grid">
+    <FormModal
+      title="Nuovo Animale"
+      onClose={onClose}
+      isSubmitting={isLoading}
+      submitError={errors.form}
+      onSubmit={handleSubmit}
+    >
+      <div className="proprietario-form-grid">
               {/* Nome */}
               <div className="form-group">
                 <label className="form-label">Nome *</label>
@@ -508,18 +527,32 @@ function AnimaleCreate({ onClose, onSuccess }) {
               <div className="form-group" style={{ gridColumn: '1 / -1' }}>
                 <label className="form-label">Proprietario</label>
                 <div ref={searchRef} style={{ position: 'relative' }}>
-                  <input
-                    type="text"
-                    className={`form-control ${hasError('proprietarioId') ? 'is-invalid' : ''}`}
-                    placeholder="Cerca per nome o cognome..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    onFocus={() => {
-                      if (searchTerm.length >= 1) {
-                        setShowSuggestions(suggestions.length > 0);
-                      }
-                    }}
-                  />
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      type="text"
+                      className={`form-control ${hasError('proprietarioId') ? 'is-invalid' : ''}`}
+                      placeholder="Cerca per nome o cognome..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      onFocus={() => {
+                        if (searchTerm.length >= 1) {
+                          setShowSuggestions(suggestions.length > 0);
+                        }
+                      }}
+                    />
+                    {searchLoading && (
+                      <div style={{ 
+                        position: 'absolute', 
+                        right: '10px', 
+                        top: '50%', 
+                        transform: 'translateY(-50%)',
+                        fontSize: '12px',
+                        color: 'var(--gray-500)' 
+                      }}>
+                        Cercando...
+                      </div>
+                    )}
+                  </div>
                   {hasError('proprietarioId') && <div className="form-error">{errors.proprietarioId}</div>}
                   
                   {/* Dropdown suggerimenti */}
@@ -567,20 +600,7 @@ function AnimaleCreate({ onClose, onSuccess }) {
                 )}
               </div>
             </div>
-
-            {/* Pulsanti */}
-            <div className="proprietario-modal-footer">
-              <button type="button" className="btn btn-secondary" onClick={onClose}>
-                Cancella
-              </button>
-              <button type="submit" className="btn btn-primary">
-                Aggiungi
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
+          </FormModal>
   );
 }
 

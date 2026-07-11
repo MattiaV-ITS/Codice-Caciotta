@@ -1,10 +1,6 @@
 import React, { useState, useMemo } from 'react';
-import ListaTable from '../../components/ListaTable/ListaTable';
-import LoadingSpinner from '../../components/common/LoadingSpinner';
-import ErrorMessage from '../../components/common/ErrorMessage';
-import PaginationFooter from '../../components/common/PaginationFooter';
-import SearchBox from '../../components/common/SearchBox';
-import FilterBar from '../../components/common/FilterBar';
+import ProprietarioCreate from './ProprietarioCreate';
+import ListPageTemplate from '../../components/ListPageTemplate/ListPageTemplate';
 
 import { useTableControls } from '../../hooks/useTableControls';
 import { usePaginatedFetch } from '../../hooks/usePaginatedFetch';
@@ -19,6 +15,7 @@ function ProprietariLista() {
 
   const search = useSearchControls();
   const [statoFiltro, setStatoFiltro] = useState('');
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
   // Memoizza i filtri per evitare ricalcoli inutili e garantire stabilità dei riferimenti
   const memoizedFilters = useMemo(() => ({
@@ -40,6 +37,12 @@ function ProprietariLista() {
     { label: 'Attivi', value: 'true', className: 'btn-filter-success' },
     { label: 'Inattivi', value: 'false', className: 'btn-filter-gray' }
   ];
+
+  const filterOptions = {
+    label: 'Stato',
+    options: statoOptions,
+    searchable: 'nome, cognome, telefono, email, codice fiscale o città'
+  };
 
   const customColumns = [
     {
@@ -76,88 +79,48 @@ function ProprietariLista() {
     }
   ];
 
-  if (loading) return <LoadingSpinner label="Caricamento proprietari..." />;
-  if (error) return <ErrorMessage error={error} />;
+  const emptyIcon = (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+      <circle cx="12" cy="7" r="4" />
+    </svg>
+  );
+
+  const emptyMessage = search.appliedSearchTerm || statoFiltro 
+    ? 'Prova a modificare i filtri.' 
+    : 'Inizia aggiungendo primo proprietario.';
+
+  const additionalContent = showCreateModal && (
+    <ProprietarioCreate
+      onClose={() => setShowCreateModal(false)}
+      onSuccess={(newProprietario) => {
+        // Ricarica i dati dopo la creazione
+        // Questo triggererà un nuovo fetch dei dati
+        table.setPage(0);
+        search.clearSearch();
+        setStatoFiltro('');
+      }}
+    />
+  );
 
   return (
-    <div className="page-container">
-      <div className="page-header">
-        <div>
-          <h2>Elenco Proprietari</h2>
-          <p className="page-subtitle">Gestisci i tuoi clienti</p>
-        </div>
-        <button className="btn-add">+ Nuovo Proprietario</button>
-      </div>
-
-      <FilterBar
-        label="Stato"
-        options={statoOptions}
-        active={statoFiltro}
-        onSelect={(v) => {
-          setStatoFiltro(v);
-          search.clearSearch();
-          table.setPage(0);
-        }}
-      />
-
-      <div className="toolbar-actions">
-        <SearchBox
-          searchTerm={search.searchTerm}
-          setSearchTerm={search.setSearchTerm}
-          searchable="nome, cognome, telefono, email, codice fiscale o città"
-          onEnter={() => {
-            search.applySearch();
-            table.setPage(0);
-          }}
-        />
-
-        <button className="btn-clear-filters" onClick={() => {
-          search.clearSearch();
-          setStatoFiltro('');
-          table.setPage(0);
-        }}>
-          Cancella Filtri
-        </button>
-
-        <div className="page-size-selector">
-          <span className="page-size-label">Righe:</span>
-          <select
-            className="page-size-select"
-            value={table.size}
-            onChange={(e) => table.handleSizeChange(Number(e.target.value))}
-          >
-            {[5, 10, 15, 20].map(n => <option key={n} value={n}>{n}</option>)}
-          </select>
-        </div>
-      </div>
-
-      <ListaTable
-        data={proprietari}
-        columns={customColumns}
-        sortBy={table.sortBy}
-        sortDir={table.sortDir}
-        onSort={table.handleSort}
-        getSortIndicator={table.getSortIndicator}
-        emptyMessage={search.appliedSearchTerm || statoFiltro ? 'Prova a modificare i filtri.' : 'Inizia aggiungendo primo proprietario.'}
-        emptyIcon={
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-        <circle cx="12" cy="7" r="4" />
-        </svg>
-        }
-        />
-
-      {proprietari.length > 0 && (
-        <PaginationFooter
-          page={table.page}
-          totalPages={totalPages}
-          totalCount={totalCount}
-          length={proprietari.length}
-          goToPreviousPage={table.goToPreviousPage}
-          goToNextPage={table.goToNextPage}
-        />
-      )}
-    </div>
+    <ListPageTemplate
+      title="Elenco Proprietari"
+      subtitle="Gestisci i tuoi clienti"
+      data={proprietari}
+      columns={customColumns}
+      loading={loading}
+      error={error}
+      tableControls={{ ...table, totalPages, totalCount }}
+      searchControls={search}
+      filterOptions={filterOptions}
+      activeFilter={statoFiltro}
+      onFilterSelect={setStatoFiltro}
+      emptyMessage={emptyMessage}
+      emptyIcon={emptyIcon}
+      onAddClick={() => setShowCreateModal(true)}
+      additionalContent={additionalContent}
+    />
   );
 }
 

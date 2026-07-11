@@ -25,7 +25,6 @@ ON CONFLICT (email) DO NOTHING;
 -- 2. ANIMALI — mapping tramite nome+cognome
 -- ============================================================
 
--- TODO: cambiare stato a SANO o a stato congruente con le note generali (es. FIV positivo -> MALATO)
 INSERT INTO animali (nome, specie, razza, data_di_nascita, sesso, peso, microchip, proprietario_id, note_generali, stato)
 VALUES
 ('Briciola','Cane','Labrador', to_date('12/05/2017','DD/MM/YYYY'),'F',28.5,'380260040123456',
@@ -306,3 +305,107 @@ VALUES
     'Polivalente cane (DHPPI)', to_date('12/07/2023','DD/MM/YYYY'),
     to_date('12/07/2024','DD/MM/YYYY'), 'LOT-2023-0112', NULL
 );
+
+-- ============================================================
+-- VISTE — lookup dinamico proprietario_id e animale_id
+-- ============================================================
+INSERT INTO visite (data_ora_visita, durata, importo_totale, animale_id, prenotazione_id) VALUES
+('2024-01-10T00:00:00', NULL, 45.00,
+ (SELECT a.id FROM animali a JOIN proprietari p ON a.proprietario_id=p.id
+  WHERE a.nome='Briciola' AND p.nome='Marco' AND p.cognome='Rossi' LIMIT 1), NULL),
+
+('2024-01-12T00:00:00', NULL, 85.00,
+ (SELECT a.id FROM animali a JOIN proprietari p ON a.proprietario_id=p.id
+  WHERE a.nome='Rex' AND p.nome='Francesca' AND p.cognome='Bianchi' LIMIT 1), NULL),
+
+('2024-01-15T00:00:00', NULL, 60.00,
+ (SELECT a.id FROM animali a JOIN proprietari p ON a.proprietario_id=p.id
+  WHERE a.nome='Fido' AND p.nome='Giorgio' AND p.cognome='Ricci' LIMIT 1), NULL),
+
+('2024-01-18T00:00:00', NULL, 220.00,
+ (SELECT a.id FROM animali a JOIN proprietari p ON a.proprietario_id=p.id
+  WHERE a.nome='Luna' AND p.nome='Francesca' AND p.cognome='Bianchi' LIMIT 1), NULL),
+
+('2024-01-22T00:00:00', NULL, 70.00,
+ (SELECT a.id FROM animali a JOIN proprietari p ON a.proprietario_id=p.id
+  WHERE a.nome='Tigre' AND p.nome='Roberto' AND p.cognome='Esposito' LIMIT 1), NULL),
+
+('2024-01-25T00:00:00', NULL, 35.00,
+ (SELECT a.id FROM animali a JOIN proprietari p ON a.proprietario_id=p.id
+  WHERE a.nome='Birillo' AND p.nome='Paolo' AND p.cognome='Manzoni' LIMIT 1), NULL),
+
+('2024-01-29T00:00:00', NULL, 50.00,
+ (SELECT a.id FROM animali a JOIN proprietari p ON a.proprietario_id=p.id
+  WHERE a.nome='Zeus' AND p.nome='Francesco' AND p.cognome='Lombardi' LIMIT 1), NULL),
+
+('2024-02-02T00:00:00', NULL, 75.00,
+ (SELECT a.id FROM animali a JOIN proprietari p ON a.proprietario_id=p.id
+  WHERE a.nome='Micio' AND p.nome='Anna' AND p.cognome='Ferrari' LIMIT 1), NULL),
+
+('2024-02-07T00:00:00', NULL, 90.00,
+ (SELECT a.id FROM animali a JOIN proprietari p ON a.proprietario_id=p.id
+  WHERE a.nome='Cioccolata' AND p.nome='Elena' AND p.cognome='Galli' LIMIT 1), NULL),
+
+('2024-02-12T00:00:00', NULL, 95.00,
+ (SELECT a.id FROM animali a JOIN proprietari p ON a.proprietario_id=p.id
+  WHERE a.nome='Artù' AND p.nome='Stefano' AND p.cognome='Marchetti' LIMIT 1), NULL),
+
+('2024-02-15T00:00:00', NULL, 110.00,
+ (SELECT a.id FROM animali a JOIN proprietari p ON a.proprietario_id=p.id
+  WHERE a.nome='Pallina' AND p.nome='Luigi' AND p.cognome='Colombo' LIMIT 1), NULL),
+
+('2024-02-19T00:00:00', NULL, 40.00,
+ (SELECT a.id FROM animali a JOIN proprietari p ON a.proprietario_id=p.id
+  WHERE a.nome='Neve' AND p.nome='Maria' AND p.cognome='Conti' LIMIT 1), NULL),
+
+('2024-02-22T00:00:00', NULL, 30.00,
+ (SELECT a.id FROM animali a JOIN proprietari p ON a.proprietario_id=p.id
+  WHERE a.nome='Oscar' AND p.nome='Chiara' AND p.cognome='Ferretti' LIMIT 1), NULL),
+
+('2024-02-26T00:00:00', NULL, 65.00,
+ (SELECT a.id FROM animali a JOIN proprietari p ON a.proprietario_id=p.id
+  WHERE a.nome='Stella' AND p.nome='Valentina' AND p.cognome='Caruso' LIMIT 1), NULL),
+
+('2024-03-01T00:00:00', NULL, 35.00,
+ (SELECT a.id FROM animali a JOIN proprietari p ON a.proprietario_id=p.id
+  WHERE a.nome='Briciola' AND p.nome='Marco' AND p.cognome='Rossi' LIMIT 1), NULL),
+
+('2024-03-05T00:00:00', NULL, 55.00,
+ (SELECT a.id FROM animali a JOIN proprietari p ON a.proprietario_id=p.id
+  WHERE a.nome='Charlie' AND p.nome='Elena' AND p.cognome='Galli' LIMIT 1), NULL),
+
+('2024-03-08T00:00:00', NULL, 40.00,
+ (SELECT a.id FROM animali a JOIN proprietari p ON a.proprietario_id=p.id
+  WHERE a.nome='Mochi' AND p.nome='Marco' AND p.cognome='Rossi' LIMIT 1), NULL),
+
+('2024-03-12T00:00:00', NULL, 25.00,
+ (SELECT a.id FROM animali a JOIN proprietari p ON a.proprietario_id=p.id
+  WHERE a.nome='Lilly' AND p.nome='Giorgio' AND p.cognome='Ricci' LIMIT 1), NULL),
+
+('2024-03-15T00:00:00', NULL, 280.00,
+ (SELECT a.id FROM animali a JOIN proprietari p ON a.proprietario_id=p.id
+  WHERE a.nome='Fido' AND p.nome='Giorgio' AND p.cognome='Ricci' LIMIT 1), NULL),
+
+('2024-03-19T00:00:00', NULL, 55.00,
+ (SELECT a.id FROM animali a JOIN proprietari p ON a.proprietario_id=p.id
+  WHERE a.nome='Mia' AND p.nome='Giulia' AND p.cognome='Barbieri' LIMIT 1), NULL),
+
+('2024-03-22T00:00:00', NULL, 50.00,
+ (SELECT a.id FROM animali a JOIN proprietari p ON a.proprietario_id=p.id
+  WHERE a.nome='Rex' AND p.nome='Francesca' AND p.cognome='Bianchi' LIMIT 1), NULL),
+
+('2024-03-26T00:00:00', NULL, 45.00,
+ (SELECT a.id FROM animali a JOIN proprietari p ON a.proprietario_id=p.id
+  WHERE a.nome='Fiocco' AND p.nome='Antonio' AND p.cognome='Moretti' LIMIT 1), NULL),
+
+('2024-04-02T00:00:00', NULL, 40.00,
+ (SELECT a.id FROM animali a JOIN proprietari p ON a.proprietario_id=p.id
+  WHERE a.nome='Puffo' AND p.nome='Antonio' AND p.cognome='Moretti' LIMIT 1), NULL),
+
+('2024-04-09T00:00:00', NULL, 30.00,
+ (SELECT a.id FROM animali a JOIN proprietari p ON a.proprietario_id=p.id
+  WHERE a.nome='Luna' AND p.nome='Francesca' AND p.cognome='Bianchi' LIMIT 1), NULL),
+
+('2024-04-16T00:00:00', NULL, 35.00,
+ (SELECT a.id FROM animali a JOIN proprietari p ON a.proprietario_id=p.id
+  WHERE a.nome='Zeus' AND p.nome='Francesco' AND p.cognome='Lombardi' LIMIT 1), NULL);

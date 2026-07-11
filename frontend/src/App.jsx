@@ -1,13 +1,13 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { Layout } from './components/Layout/Layout';
+import { Layout } from './components/Layout';
 import Login from './components/Login';
 import Signup from './components/Signup';
 import { Dashboard } from './pages/Dashboard/Dashboard';
 import AnimaliLista from './pages/Animali/AnimaliLista';
+import AnimaleDettaglio from './pages/Animali/AnimaleDettaglio';
 import ProprietariLista from './pages/Proprietari/ProprietariLista';
-import VisitePagina from './pages/Visite/VisitePagina';
-import VisiteLista from './pages/Visite/VisiteLista';
 import VaccinazioniLista from './pages/Vaccinazioni/VaccinazioniLista';
+import VisiteScheda from './pages/Visite/VisitaScheda';
 
 
 import PrenotazioniCalendario from './pages/Prenotazioni/PrenotazioniCalendario'; //TODO: elminare
@@ -51,10 +51,11 @@ function App() {
       <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
         <Route path="/" element={<Dashboard />} />
         <Route path="/animali" element={<StaffRoute><AnimaliLista /></StaffRoute>} />
+        <Route path="/animali/:id" element={<StaffRoute><AnimaleDettaglio /></StaffRoute>} />
+        <Route path="/visite/:id" element={<StaffRoute><VisiteScheda /></StaffRoute>} />
+        <Route path="/visite/new" element={<StaffRoute><VisiteScheda /></StaffRoute>} />
         <Route path="/proprietari" element={<StaffRoute><ProprietariLista /></StaffRoute>} />
         <Route path="/vaccinazioni" element={<StaffRoute><VaccinazioniLista /></StaffRoute>} />
-        <Route path="/visite" element={<StaffRoute><VisiteLista /></StaffRoute>} />
-        <Route path="/visite/:id" element={<StaffRoute><VisitePagina /></StaffRoute>} />
         <Route path="/admin" element={<AdminRoute><AdminRoleManagement /></AdminRoute>} />
       </Route>
     </Routes>
