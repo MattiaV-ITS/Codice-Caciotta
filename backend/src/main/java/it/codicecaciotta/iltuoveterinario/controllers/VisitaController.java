@@ -5,7 +5,6 @@ import it.codicecaciotta.iltuoveterinario.dto.VisitaSchedaDTO;
 import it.codicecaciotta.iltuoveterinario.dto.VisitaSchedaUpdateDTO;
 import it.codicecaciotta.iltuoveterinario.mappers.VisitaSchedaMapper;
 import it.codicecaciotta.iltuoveterinario.models.Visita;
-import it.codicecaciotta.iltuoveterinario.services.DiarioClinicoService;
 import it.codicecaciotta.iltuoveterinario.services.VisitaService;
 import jakarta.validation.Valid;
 
@@ -32,11 +31,9 @@ import java.util.stream.Collectors;
 public class VisitaController {
 
     private final VisitaService visitaService;
-    private final DiarioClinicoService diarioClinicoService;
 
-    public VisitaController(VisitaService visitaService, DiarioClinicoService diarioClinicoService) {
+    public VisitaController(VisitaService visitaService) {
         this.visitaService = visitaService;
-        this.diarioClinicoService = diarioClinicoService;
     }
 
     @GetMapping("/animale/{animaleId}")

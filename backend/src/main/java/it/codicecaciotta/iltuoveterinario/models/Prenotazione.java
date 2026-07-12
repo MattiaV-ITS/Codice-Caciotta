@@ -24,12 +24,6 @@ public class Prenotazione {
     @Column(nullable = false)
     private String tipoVisita; // es. "Visita di controllo", "Vaccinazione", ecc.
 
-    @Column(name = "stato_prenotazione", nullable = false, length = 20)
-    private String statoPrenotazione = "Attesa";
-
-    @Column(name = "priorità", nullable = false, length = 20)
-    private String priorita = "Bassa";
-
     @Column(nullable = true)
     private String note;
 
