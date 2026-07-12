@@ -1,24 +1,11 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './PrenotazioniProgramma.css';
-import { formatDate, formatTime } from '../../utils/dateUtils';
+import { formatDate, formatTime, parseDate } from '../../utils/dateUtils';
+import { useApi } from '../../services/apiService';
+import PrenotazioneCreateStaff from './PrenotazioneCreateStaff';
 
-// ==============================
-// MOCK DATI PRENOTAZIONI
-// (stessa fonte dati di PrenotazioniCalendario)
-// ==============================
-const MOCK_PRENOTAZIONI = [
-  { id: 1, dataOraAppuntamento: '2024-07-10T10:30:00', motivo: 'Visita di controllo', statoPrenotazione: 'Confermata', priorita: 'Media', note: 'Richiesto esame del sangue', animaleNome: 'Fido', specie: 'Cane', proprietarioNome: 'Mario Rossi', durataMinuti: 30 },
-  { id: 2, dataOraAppuntamento: '2024-07-10T09:00:00', motivo: 'Vaccinazione', statoPrenotazione: 'Completata', priorita: 'Bassa', note: '', animaleNome: 'Mimì', specie: 'Gatto', proprietarioNome: 'Laura Bianchi', durataMinuti: 15 },
-  { id: 3, dataOraAppuntamento: '2024-07-11T14:30:00', motivo: 'Visita specialistica', statoPrenotazione: 'Attesa', priorita: 'Alta', note: 'Richiesta ecografia', animaleNome: 'Rex', specie: 'Cane', proprietarioNome: 'Giuseppe Verdi', durataMinuti: 60 },
-  { id: 4, dataOraAppuntamento: '2024-07-12T11:00:00', motivo: "Visita d'urgenza", statoPrenotazione: 'Confermata', priorita: 'Alta', note: 'Animale con febbre', animaleNome: 'Luna', specie: 'Gatto', proprietarioNome: 'Maria Neri', durataMinuti: 45 },
-  { id: 5, dataOraAppuntamento: '2024-07-12T16:15:00', motivo: 'Controllo post-operatorio', statoPrenotazione: 'Annullata', priorita: 'Bassa', note: 'Annullato dal proprietario', animaleNome: 'Pippo', specie: 'Cane', proprietarioNome: 'Antonio Ferrari', durataMinuti: 30 },
-  { id: 6, dataOraAppuntamento: '2024-07-13T08:00:00', motivo: 'Vaccinazione', statoPrenotazione: 'Attesa', priorita: 'Media', note: '', animaleNome: 'Bella', specie: 'Cane', proprietarioNome: 'Sofia Esposito', durataMinuti: 15 },
-  { id: 7, dataOraAppuntamento: '2024-07-13T15:30:00', motivo: 'Visita di controllo', statoPrenotazione: 'Confermata', priorita: 'Bassa', note: 'Controllo peso', animaleNome: 'Leo', specie: 'Gatto', proprietarioNome: 'Francesco Romano', durataMinuti: 30 },
-  { id: 8, dataOraAppuntamento: '2024-07-14T10:00:00', motivo: "Visita d'urgenza", statoPrenotazione: 'Attesa', priorita: 'Alta', note: 'Vomito e diarrea', animaleNome: 'Daisy', specie: 'Cane', proprietarioNome: 'Elena Greco', durataMinuti: 45 },
-  { id: 9, dataOraAppuntamento: '2024-07-14T13:00:00', motivo: 'Visita specialistica', statoPrenotazione: 'Confermata', priorita: 'Media', note: 'Visita cardiologica', animaleNome: 'Thor', specie: 'Cane', proprietarioNome: 'Marco Ferri', durataMinuti: 60 },
-  { id: 10, dataOraAppuntamento: '2024-07-15T09:30:00', motivo: 'Vaccinazione', statoPrenotazione: 'Attesa', priorita: 'Bassa', note: '', animaleNome: 'Mia', specie: 'Gatto', proprietarioNome: 'Chiara De Luca', durataMinuti: 15 }
-];
+
 
 const MOTIVO_CLASS = {
   'Visita di controllo': 'tipo-controllo',
@@ -87,20 +74,71 @@ function formatTimeRange(start, minutes) {
 // ==============================
 function PrenotazioniProgramma() {
   const navigate = useNavigate();
+  const { get, post } = useApi();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [prenotazioni, setPrenotazioni] = useState([]);
   const [now, setNow] = useState(new Date());
   const todayRef = useRef(null);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+
+  const fetchPrenotazioni = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Fetch prenotazioni from backend
+      const response = await get('/api/prenotazioni');
+      if (!response.ok) {
+        throw new Error(`Failed to fetch prenotazioni: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      // Transform backend data to match frontend format
+      const transformedData = data.map(p => {
+        // Ensure date format is correct for frontend
+        let dataOraAppuntamento = p.dataOraAppuntamento;
+        if (typeof dataOraAppuntamento === 'string') {
+          // If it's already a string, ensure it's in the right format
+          if (!dataOraAppuntamento.includes('T')) {
+            // Convert from date-only to datetime format
+            dataOraAppuntamento = `${dataOraAppuntamento}T00:00:00`;
+          }
+        } else if (dataOraAppuntamento instanceof Date) {
+          // Convert Date object to ISO string
+          dataOraAppuntamento = dataOraAppuntamento.toISOString();
+        }
+        
+        return {
+          id: p.id,
+          dataOraAppuntamento: dataOraAppuntamento,
+          motivo: p.tipoVisita,
+          statoPrenotazione: 'Confermata', // Default status
+          priorita: 'Media', // Default priority
+          note: p.note || '',
+          animaleNome: p.animale?.nome || 'Sconosciuto',
+          specie: p.animale?.specie || 'Sconosciuto',
+          proprietarioNome: `${p.proprietarioNome || 'Sconosciuto'} ${p.proprietarioCognome || ''}`.trim(),
+          durataMinuti: 30 // Default duration
+        };
+      });
+      
+      setPrenotazioni(transformedData);
+      
+    } catch (err) {
+      console.error('Error fetching prenotazioni:', err);
+      setError(err.message);
+      // Show empty array on error
+      setPrenotazioni([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    setLoading(true);
-    const timer = setTimeout(() => {
-      setPrenotazioni(MOCK_PRENOTAZIONI);
-      setLoading(false);
-    }, 400);
-    return () => clearTimeout(timer);
-  }, []);
+    fetchPrenotazioni();
+  }, [get]);
 
   useEffect(() => {
     const tick = setInterval(() => setNow(new Date()), 60000);
@@ -113,10 +151,15 @@ function PrenotazioniProgramma() {
     const map = new Map();
 
     prenotazioni.forEach((p) => {
-      const start = parseDate(p.dataOraAppuntamento) || new Date();
-      const key = dateKey(start);
-      if (!map.has(key)) map.set(key, { date: startOfDay(start), events: [] });
-      map.get(key).events.push({ ...p, _start: start });
+      try {
+        const start = parseDate(p.dataOraAppuntamento) || new Date();
+        const key = dateKey(start);
+        if (!map.has(key)) map.set(key, { date: startOfDay(start), events: [] });
+        map.get(key).events.push({ ...p, _start: start });
+      } catch (error) {
+        console.error('Error parsing date for prenotazione:', p.id, error);
+        // Skip this prenotazione if date parsing fails
+      }
     });
 
     const todayKey = dateKey(now);
@@ -147,8 +190,34 @@ function PrenotazioniProgramma() {
     return result;
   }, [dayGroups]);
 
-  const handleEventClick = (item) => {
-    navigate(`/prenotazioni/${item.id}`);
+  const handleEventClick = async (item) => {
+    try {
+      // Check if this prenotazione already has a visita
+      const visitaResponse = await get(`/api/prenotazioni/${item.id}/visita`);
+      if (!visitaResponse.ok) {
+        throw new Error(`Failed to check visita: ${visitaResponse.status}`);
+      }
+      
+      const visitaData = await visitaResponse.json();
+      
+      if (visitaData.visitaId) {
+        // Navigate to existing visita
+        navigate(`/visite/${visitaData.visitaId}`);
+      } else {
+        // Create new visita from prenotazione and navigate to it
+        const createResponse = await post(`/api/prenotazioni/${item.id}/visita`);
+        if (!createResponse.ok) {
+          throw new Error(`Failed to create visita: ${createResponse.status}`);
+        }
+        
+        const createdVisita = await createResponse.json();
+        navigate(`/visite/${createdVisita.visitaId}`);
+      }
+    } catch (error) {
+      console.error('Error handling prenotazione click:', error);
+      // Fallback to simple navigation if there's an error
+      navigate(`/prenotazioni/${item.id}`);
+    }
   };
 
   const scrollToToday = () => {
@@ -180,13 +249,13 @@ function PrenotazioniProgramma() {
           <p className="page-subtitle">Tutti gli appuntamenti in un'unica lista, giorno per giorno</p>
         </div>
         <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
-          <button className="btn-clear-filters" onClick={() => navigate('/prenotazioni')}>
-            Vista Lista
+          <button className="btn-clear-filters" onClick={() => navigate('/')}>
+            ← Dashboard
           </button>
           <button className="btn-clear-filters" onClick={() => navigate('/prenotazioni/calendario')}>
             Vista Calendario
           </button>
-          <button className="btn-add">+ Nuova Prenotazione</button>
+          <button className="btn-add" onClick={() => setShowCreateModal(true)}>+ Nuova Prenotazione</button>
         </div>
       </div>
 
@@ -253,7 +322,7 @@ function PrenotazioniProgramma() {
                     >
                       <div className="prog-event-title">{ev.animaleNome}</div>
                       <div className="prog-event-time">{formatTimeRange(ev._start, ev.durataMinuti)}</div>
-                      <div className="prog-event-owner">{ev.proprietarioNome}</div>
+                      <div className="prog-event-owner">{ev.proprietarioNome || 'Proprietario sconosciuto'}</div>
                       <div className="prog-event-motivo">{ev.motivo}</div>
                     </div>
                   </React.Fragment>
@@ -274,7 +343,17 @@ function PrenotazioniProgramma() {
         })}
       </div>
 
-      <button className="prog-fab" onClick={() => {}} aria-label="Nuova prenotazione">+</button>
+      <button className="prog-fab" onClick={() => setShowCreateModal(true)} aria-label="Nuova prenotazione">+</button>
+      {showCreateModal && (
+        <PrenotazioneCreateStaff 
+          onClose={() => setShowCreateModal(false)}
+          onSuccess={(newPrenotazione) => {
+            setShowCreateModal(false);
+            // Refresh the list after successful creation
+            fetchPrenotazioni();
+          }}
+        />
+      )}
     </div>
   );
 }

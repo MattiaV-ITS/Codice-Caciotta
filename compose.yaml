@@ -37,7 +37,7 @@ services:
     ports:
       - "${SPRING_LOCAL_PORT}:${SPRING_DOCKER_PORT}"
     healthcheck:
-      test: ["CMD", "sh", "-c", "test -f /backend/app.jar && echo 'ok' || exit 1"]
+      test: ["CMD-SHELL", "timeout 5 bash -c 'cat < /dev/null > /dev/tcp/localhost/8080' || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -55,7 +55,7 @@ services:
     volumes:
       - ./nginx:/etc/nginx/conf.d
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/"]
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1/"]
       interval: 30s
       timeout: 10s
       retries: 3

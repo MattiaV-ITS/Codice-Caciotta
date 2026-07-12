@@ -68,9 +68,9 @@ const ListaTable = ({
           {data.map((item, index) => (
             <tr 
               key={item.id || index}
-              onClick={() => onRowClick && onRowClick(item)} // ← AGGIUNTA
-              style={{ cursor: onRowClick ? 'pointer' : 'default' }} // ← AGGIUNTA
-              className={onRowClick ? 'clickable-row' : ''} // ← AGGIUNTA (se hai la classe CSS)
+              onClick={() => onRowClick && onRowClick(item)}
+              style={{ cursor: onRowClick ? 'pointer' : 'default' }}
+              className={onRowClick ? 'clickable-row' : ''}
             >
               {columns.map((column) => (
                 <td key={`${column.field}-${index}`} style={column.style}>

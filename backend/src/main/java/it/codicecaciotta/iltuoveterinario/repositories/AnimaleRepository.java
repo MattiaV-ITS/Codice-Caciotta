@@ -16,10 +16,12 @@ public interface AnimaleRepository extends JpaRepository<Animale, Long> {
     Page<Animale> findBySpecieNotInIgnoreCase(List<String> specie, Pageable pageable);
     Page<Animale> findByStato(String stato, Pageable pageable);
     
-    // Ricerca completa per nome animale, microchip, o nome/cognome proprietario
+    // Ricerca completa per nome animale, microchip, specie, razza o nome/cognome proprietario
     @Query("SELECT a FROM Animale a LEFT JOIN FETCH a.proprietario WHERE " +
            "LOWER(a.nome) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
            "LOWER(a.microchip) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
+           "LOWER(a.specie) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
+           "LOWER(a.razza) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
            "LOWER(a.proprietario.nome) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
            "LOWER(a.proprietario.cognome) LIKE LOWER(CONCAT('%', :searchTerm, '%'))")
     Page<Animale> searchComprehensive(@Param("searchTerm") String searchTerm, Pageable pageable);

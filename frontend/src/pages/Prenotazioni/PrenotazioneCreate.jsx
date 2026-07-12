@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { toISODatetimeFormat, toISODateFormat } from '../../utils/dateUtils';
+import { useApi } from '../../services/apiService';
+import FormModal from '../../components/FormModal/FormModal';
 
 // ==============================
 // MOCK PRENOTAZIONI (per controllo date/ore libere)
@@ -25,6 +28,20 @@ const MOCK_TIPI_VISITA = [
   { id: 6, nome: 'Controllo post-operatorio' },
   { id: 7, nome: 'Visita domiciliare' },
   { id: 8, nome: 'Altro' },
+];
+
+// ==============================
+// TIPI VISITA SELECT (per il dropdown)
+// ==============================
+const TIPI_VISITA_SELECT = [
+  'Visita di controllo',
+  'Vaccinazione',
+  'Visita d\'urgenza',
+  'Chirurgia',
+  'Visita specialistica',
+  'Controllo post-operatorio',
+  'Visita domiciliare',
+  'Altro'
 ];
 
 // ==============================
@@ -54,10 +71,52 @@ const MOCK_ANIMALI_PER_UTENTE = {
   6: [],       // Utente senza animali
 };
 
+// Helper function to transform animali data to ensure consistent proprietario field
+const transformAnimaliData = (animali) => {
+  if (!Array.isArray(animali)) {
+    console.warn('transformAnimaliData: expected array, got:', typeof animali);
+    return animali || [];
+  }
+
+  return animali.map(animale => {
+    // Check if proprietario field exists and has the expected structure
+    let proprietarioNome = 'Sconosciuto';
+    
+    if (animale.proprietario) {
+      if (typeof animale.proprietario === 'string') {
+        proprietarioNome = animale.proprietario;
+      } else if (typeof animale.proprietario === 'object' && animale.proprietario.nome) {
+        // Handle nested object with null/undefined checks
+        const nome = animale.proprietario.nome || '';
+        const cognome = animale.proprietario.cognome || '';
+        proprietarioNome = `${nome} ${cognome}`.trim() || 'Proprietario';
+      }
+    } else if (animale.proprietarioNome && typeof animale.proprietarioNome === 'string') {
+      // Already has proprietarioNome field
+      proprietarioNome = animale.proprietarioNome;
+    } else if (animale.idProprietario || animale.proprietarioId) {
+      proprietarioNome = 'Caricamento...';
+    }
+    
+    return {
+      ...animale,
+      proprietarioNome: proprietarioNome
+    };
+  });
+}
+
 function PrenotazioneCreate({ onClose, onSuccess }) {
   const { user } = useAuth();
+  const { get, post } = useApi();
+  const navigate = useNavigate();
   const isUser = user?.roles?.includes('ROLE_USER');
   const isStaffOrAdmin = user?.roles?.includes('ROLE_STAFF') || user?.roles?.includes('ROLE_ADMIN');
+  
+  // State for reference data
+  const [animali, setAnimali] = useState([]);
+  const [loadingAnimali, setLoadingAnimali] = useState(true);
+  const [prenotazioniEsistenti, setPrenotazioniEsistenti] = useState([]);
+  const [loadingPrenotazioni, setLoadingPrenotazioni] = useState(true);
 
   const [formData, setFormData] = useState({
     dataOraAppuntamento: '',
@@ -66,6 +125,40 @@ function PrenotazioneCreate({ onClose, onSuccess }) {
     animaleId: '',
     note: ''
   });
+
+  // Fetch reference data on component mount
+  useEffect(() => {
+    const fetchReferenceData = async () => {
+      try {
+        setLoadingAnimali(true);
+        setLoadingPrenotazioni(true);
+        
+        // Fetch animali
+        const animaliResponse = await get('/api/animali');
+        if (animaliResponse.ok) {
+          const animaliData = await animaliResponse.json();
+          // Transform animali data to ensure consistent proprietario field
+          const transformedAnimali = transformAnimaliData(animaliData.content || animaliData);
+          setAnimali(transformedAnimali);
+        }
+        
+        // Fetch existing prenotazioni for date/time conflict checking
+        const prenotazioniResponse = await get('/api/prenotazioni');
+        if (prenotazioniResponse.ok) {
+          const prenotazioniData = await prenotazioniResponse.json();
+          setPrenotazioniEsistenti(prenotazioniData);
+        }
+        
+      } catch (error) {
+        console.error('Error fetching reference data:', error);
+      } finally {
+        setLoadingAnimali(false);
+        setLoadingPrenotazioni(false);
+      }
+    };
+    
+    fetchReferenceData();
+  }, [get]);
 
   // ============================================================
   // STATO PER ANIMALE (solo per STAFF/ADMIN con autocomplete)
@@ -78,8 +171,8 @@ function PrenotazioneCreate({ onClose, onSuccess }) {
   const animaleDropdownRef = useRef(null);
 
   // Ottieni la lista degli animali per l'utente USER
-  const userAnimaliIds = isUser ? (MOCK_ANIMALI_PER_UTENTE[user?.id] || []) : [];
-  const animaliDelUtente = MOCK_TUTTI_ANIMALI.filter(a => userAnimaliIds.includes(a.id));
+  const userAnimaliIds = isUser ? (Array.isArray(animali) ? animali.filter(a => a?.proprietarioId === user?.id).map(a => a.id) : []) : [];
+  const animaliDelUtente = Array.isArray(animali) ? animali.filter(a => userAnimaliIds.includes(a?.id)) : [];
 
   // ============================================================
   // STATO PER ANIMALE (per USER - card selezionabili)
@@ -93,18 +186,18 @@ function PrenotazioneCreate({ onClose, onSuccess }) {
     if (!isStaffOrAdmin) return;
     if (animaleSearchTerm.length >= 1) {
       const term = animaleSearchTerm.toLowerCase();
-      const filtered = MOCK_TUTTI_ANIMALI.filter(a =>
-        a.nome.toLowerCase().startsWith(term) ||
-        a.proprietarioNome.toLowerCase().includes(term) ||
-        a.specie.toLowerCase().startsWith(term)
-      );
+      const filtered = Array.isArray(animali) ? animali.filter(a =>
+        a?.nome?.toLowerCase()?.startsWith(term) ||
+        a?.proprietarioNome?.toLowerCase()?.includes(term) ||
+        a?.specie?.toLowerCase()?.startsWith(term)
+      ) : [];
       setAnimaleSuggestions(filtered.slice(0, 8));
       setShowAnimaleSuggestions(filtered.length > 0);
     } else {
       setAnimaleSuggestions([]);
       setShowAnimaleSuggestions(false);
     }
-  }, [animaleSearchTerm, isStaffOrAdmin]);
+  }, [animaleSearchTerm, isStaffOrAdmin, animali]);
 
   // ============================================================
   // CHIUDI SUGGERIMENTI (solo per STAFF/ADMIN)
@@ -139,13 +232,14 @@ function PrenotazioneCreate({ onClose, onSuccess }) {
           allHours.push(hourStr);
         }
       }
-      const occupiedHours = MOCK_PRENOTAZIONI_ESISTENTI
-        .filter(p => p.dataOraAppuntamento.startsWith(selectedDate))
-        .map(p => p.dataOraAppuntamento.substring(11, 16));
+      const occupiedHours = Array.isArray(prenotazioniEsistenti)
+        ? prenotazioniEsistenti.filter(p => p.dataOraAppuntamento?.startsWith(selectedDate))
+          .map(p => p.dataOraAppuntamento.substring(11, 16))
+        : [];
       const available = allHours.filter(h => !occupiedHours.includes(h));
       setAvailableHours(available);
     }
-  }, [selectedDate]);
+  }, [selectedDate, prenotazioniEsistenti]);
 
   // ============================================================
   // HANDLER GENERICI
@@ -189,12 +283,44 @@ function PrenotazioneCreate({ onClose, onSuccess }) {
   // ============================================================
   // SELEZIONE ANIMALE (per STAFF/ADMIN)
   // ============================================================
-  const selectAnimale = (animale) => {
-    setSelectedAnimale(animale);
-    setFormData(prev => ({ ...prev, animaleId: animale.id }));
-    setAnimaleSearchTerm(`${animale.nome} (${animale.specie})`);
+  const selectAnimale = async (animale) => {
+    setFormData(prev => ({
+      ...prev, 
+      animaleId: animale.id,
+      proprietarioId: (animale.idProprietario || animale.proprietarioId) || prev.proprietarioId
+    }));
+    setAnimaleSearchTerm(animale.nome);
     setShowAnimaleSuggestions(false);
     setErrors(prev => ({ ...prev, animaleId: '' }));
+    
+    // Auto-fill proprietario info
+    const proprietarioId = animale.idProprietario || animale.proprietarioId;
+    if (proprietarioId) {
+      try {
+        const response = await get(`/api/proprietari/${proprietarioId}`);
+        if (response.ok) {
+          const proprietario = await response.json();
+          
+          // Create enhanced animal object with proprietario info for display
+          const enhancedAnimale = {
+            ...animale,
+            proprietarioNome: `${proprietario?.nome || ''} ${proprietario?.cognome || ''}`.trim(),
+            proprietarioId: proprietario.id
+          };
+          
+          setSelectedAnimale(enhancedAnimale);
+          setSelectedProprietario(proprietario);
+        } else {
+          console.error('Failed to fetch proprietario:', response.status);
+          setSelectedAnimale(animale);
+        }
+      } catch (error) {
+        console.error('Error fetching proprietario:', error);
+        setSelectedAnimale(animale);
+      }
+    } else {
+      setSelectedAnimale(animale);
+    }
   };
 
   const clearAnimaleSelection = () => {
@@ -255,7 +381,7 @@ function PrenotazioneCreate({ onClose, onSuccess }) {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const allTouched = {};
     ['dataOraAppuntamento', 'tipoVisita', 'animaleId', 'specificaTipoVisita'].forEach(field => {
@@ -263,20 +389,61 @@ function PrenotazioneCreate({ onClose, onSuccess }) {
     });
     setTouched(allTouched);
     if (validateForm()) {
-      // Ensure the date is in the correct ISO format before submission
-      const finalDate = toISODatetimeFormat(formData.dataOraAppuntamento);
-      
-      const payload = {
-        dataPrenotazione: new Date().toISOString(),
-        dataOraAppuntamento: finalDate,
-        tipoVisita: formData.tipoVisita === 'Altro' ? formData.specificaTipoVisita : formData.tipoVisita,
-        priorita: formData.tipoVisita === 'Visita d\'urgenza' ? 'Alta' : 'Media',
-        note: formData.note || '',
-        animaleId: parseInt(formData.animaleId),
-        proprietarioId: user?.id || null
-      };
-      onSuccess(payload);
-      onClose();
+      try {
+        // Ensure the date is in the correct ISO format before submission
+        const finalDate = toISODatetimeFormat(formData.dataOraAppuntamento);
+        
+        const payload = {
+          dataOraAppuntamento: finalDate,
+          tipoVisita: formData.tipoVisita === 'Altro' ? formData.specificaTipoVisita : formData.tipoVisita,
+          note: formData.note || '',
+          animaleId: parseInt(formData.animaleId),
+          proprietarioId: user?.id || null
+        };
+        
+        // Create prenotazione in backend
+        const response = await post('/api/prenotazioni', payload);
+        if (!response.ok) {
+          throw new Error(`Failed to create prenotazione: ${response.status}`);
+        }
+        
+        const createdPrenotazione = await response.json();
+        
+        // Check if this should create a visita automatically
+        const shouldCreateVisita = false; // TODO: Add logic to determine if visita should be created automatically
+        
+        if (shouldCreateVisita) {
+          // Create visita from prenotazione
+          const visitaResponse = await post(`/api/prenotazioni/${createdPrenotazione.id}/visita`);
+          if (visitaResponse.ok) {
+            const visitaData = await visitaResponse.json();
+            onSuccess({ ...createdPrenotazione, visitaId: visitaData.visitaId });
+            navigate(`/visite/${visitaData.visitaId}`);
+          } else {
+            onSuccess(createdPrenotazione);
+            onClose();
+          }
+        } else {
+          onSuccess(createdPrenotazione);
+          onClose();
+        }
+        
+      } catch (error) {
+        console.error('Error creating prenotazione:', error);
+        // Fallback to old behavior if backend call fails
+        const finalDate = toISODatetimeFormat(formData.dataOraAppuntamento);
+        const payload = {
+          dataPrenotazione: new Date().toISOString(),
+          dataOraAppuntamento: finalDate,
+          tipoVisita: formData.tipoVisita === 'Altro' ? formData.specificaTipoVisita : formData.tipoVisita,
+          priorita: formData.tipoVisita === 'Visita d\'urgenza' ? 'Alta' : 'Media',
+          note: formData.note || '',
+          animaleId: parseInt(formData.animaleId),
+          proprietarioId: user?.id || null
+        };
+        onSuccess(payload);
+        onClose();
+      }
     }
   };
 
@@ -323,7 +490,7 @@ function PrenotazioneCreate({ onClose, onSuccess }) {
             }}
             onMouseEnter={(e) => e.currentTarget.style.background = 'var(--gray-50)'}
             onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-            onClick={() => selectAnimale(a)}
+            onClick={() => selectAnimale(a).catch(console.error)}
           >
             <div
               style={{
@@ -348,7 +515,7 @@ function PrenotazioneCreate({ onClose, onSuccess }) {
               </div>
               <div style={{ fontSize: '12px', color: 'var(--gray-500)' }}>
                 {a.specie} {a.razza ? `• ${a.razza}` : ''}
-                {` • ${a.proprietarioNome}`}
+                {a.proprietarioNome ? ` • ${a.proprietarioNome}` : ''}
               </div>
             </div>
             <div
@@ -375,6 +542,17 @@ function PrenotazioneCreate({ onClose, onSuccess }) {
   const renderAnimaleField = () => {
     if (isUser) {
       // USER: card selezionabili
+      if (loadingAnimali) {
+        return (
+          <div style={{ padding: '16px', textAlign: 'center' }}>
+            <div className="loading-spinner-custom" style={{ margin: '0 auto' }}></div>
+            <div style={{ fontSize: '13px', color: 'var(--gray-600)', marginTop: '8px' }}>
+              Caricamento animali...
+            </div>
+          </div>
+        );
+      }
+      
       if (animaliDelUtente.length === 0) {
         return (
           <div
@@ -548,155 +726,135 @@ function PrenotazioneCreate({ onClose, onSuccess }) {
   };
 
   return (
-    <div className="proprietario-modal-overlay" onClick={onClose}>
-      <div className="proprietario-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="proprietario-modal-header">
-          <h3>Nuova Prenotazione</h3>
-          <button className="proprietario-modal-close" onClick={onClose}>×</button>
+    <FormModal
+      title="Nuova Prenotazione"
+      onClose={onClose}
+      onSubmit={handleSubmit}
+    >
+      <div className="proprietario-form-grid">
+        {/* Proprietario (precompilato) */}
+        <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+          <label className="form-label">Proprietario</label>
+          <input
+            type="text"
+            className="form-control"
+            value={user ? `${user.nome || user.username} ${user.cognome || ''}` : ''}
+            disabled
+            style={{ background: 'var(--gray-100)', cursor: 'not-allowed', color: 'var(--gray-600)' }}
+          />
+          <div style={{ fontSize: '12px', color: 'var(--gray-500)', marginTop: '2px' }}>
+            Utente registrato
+          </div>
         </div>
-        <div className="proprietario-modal-body">
-          <form onSubmit={handleSubmit} className="proprietario-form">
-            <div className="proprietario-form-grid">
-              {/* Proprietario (precompilato) */}
-              <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                <label className="form-label">Proprietario</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  value={user ? `${user.nome || user.username} ${user.cognome || ''}` : ''}
-                  disabled
-                  style={{ background: 'var(--gray-100)', cursor: 'not-allowed', color: 'var(--gray-600)' }}
-                />
-                <div style={{ fontSize: '12px', color: 'var(--gray-500)', marginTop: '2px' }}>
-                  Utente registrato
-                </div>
-              </div>
 
-              {/* Data Appuntamento */}
-              <div className="form-group">
-                <label className="form-label">Data Appuntamento *</label>
-                <input
-                  type="date"
-                  className={`form-control ${hasError('dataOraAppuntamento') ? 'is-invalid' : ''}`}
-                  value={selectedDate}
-                  onChange={handleDateChange}
-                  min={new Date().toISOString().split('T')[0]}
-                />
-              </div>
+        {/* Data Appuntamento */}
+        <div className="form-group">
+          <label className="form-label">Data Appuntamento *</label>
+          <input
+            type="date"
+            className={`form-control ${hasError('dataOraAppuntamento') ? 'is-invalid' : ''}`}
+            value={selectedDate}
+            onChange={handleDateChange}
+            min={new Date().toISOString().split('T')[0]}
+          />
+        </div>
 
-              {/* Ora Appuntamento */}
-              <div className="form-group">
-                <label className="form-label">Ora Appuntamento *</label>
-                {hasSelectedDate ? (
-                  availableHours.length > 0 ? (
-                    <div style={{
-                      display: 'grid',
-                      gridTemplateColumns: 'repeat(4, 1fr)',
-                      gap: '4px',
-                      maxHeight: '120px',
-                      overflowY: 'auto',
-                      padding: '4px',
-                      border: `1px solid ${hasError('dataOraAppuntamento') ? 'var(--danger)' : 'var(--gray-200)'}`,
-                      borderRadius: 'var(--radius)',
-                      background: 'var(--white)'
-                    }}>
-                      {availableHours.map(h => (
-                        <button
-                          key={h}
-                          type="button"
-                          className={`btn btn-sm ${formData.dataOraAppuntamento === `${selectedDate}T${h}:00` ? 'btn-primary' : 'btn-secondary'}`}
-                          onClick={() => handleHourSelect(h)}
-                          style={{ fontSize: '12px', padding: '4px 6px' }}
-                        >
-                          {h}
-                        </button>
-                      ))}
-                    </div>
-                  ) : (
-                    <div style={{ color: 'var(--danger)', fontSize: '14px', padding: '8px' }}>
-                      Nessuna ora disponibile per questa data
-                    </div>
-                  )
-                ) : (
-                  <div style={{ color: 'var(--gray-500)', fontSize: '14px', padding: '8px' }}>
-                    Seleziona prima una data
-                  </div>
-                )}
-                {hasError('dataOraAppuntamento') && <div className="form-error">{errors.dataOraAppuntamento}</div>}
+        {/* Ora Appuntamento */}
+        <div className="form-group">
+          <label className="form-label">Ora Appuntamento *</label>
+          {hasSelectedDate ? (
+            availableHours.length > 0 ? (
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(4, 1fr)',
+                gap: '4px',
+                maxHeight: '120px',
+                overflowY: 'auto',
+                padding: '4px',
+                border: `1px solid ${hasError('dataOraAppuntamento') ? 'var(--danger)' : 'var(--gray-200)'}`,
+                borderRadius: 'var(--radius)',
+                background: 'var(--white)'
+              }}>
+                {availableHours.map(h => (
+                  <button
+                    key={h}
+                    type="button"
+                    className={`btn btn-sm ${formData.dataOraAppuntamento === `${selectedDate}T${h}:00` ? 'btn-primary' : 'btn-secondary'}`}
+                    onClick={() => handleHourSelect(h)}
+                    style={{ fontSize: '12px', padding: '4px 6px' }}
+                  >
+                    {h}
+                  </button>
+                ))}
               </div>
-
-              {/* Tipo Visita */}
-              <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                <label className="form-label">Tipo Visita *</label>
-                <select
-                  name="tipoVisita"
-                  className={`form-control ${hasError('tipoVisita') ? 'is-invalid' : ''}`}
-                  value={formData.tipoVisita}
-                  onChange={handleChange}
-                  onBlur={handleBlur}
-                >
-                  <option value="">Seleziona tipo visita</option>
-                  {MOCK_TIPI_VISITA.map(t => (
-                    <option key={t.id} value={t.nome}>{t.nome}</option>
-                  ))}
-                </select>
-                {hasError('tipoVisita') && <div className="form-error">{errors.tipoVisita}</div>}
+            ) : (
+              <div style={{ color: 'var(--danger)', fontSize: '14px', padding: '8px' }}>
+                Nessuna ora disponibile per questa data
               </div>
-
-              {/* Specifica Tipo Visita (per Altro) */}
-              {showSpecificaTipo && (
-                <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                  <label className="form-label">Specifica tipo visita *</label>
-                  <input
-                    type="text"
-                    name="specificaTipoVisita"
-                    className={`form-control ${hasError('specificaTipoVisita') ? 'is-invalid' : ''}`}
-                    value={formData.specificaTipoVisita}
-                    onChange={handleChange}
-                    onBlur={handleBlur}
-                    placeholder="Inserisci il tipo di visita..."
-                  />
-                  {hasError('specificaTipoVisita') && <div className="form-error">{errors.specificaTipoVisita}</div>}
-                </div>
-              )}
-
-              {/* Animale */}
-              <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                <label className="form-label">Animale *</label>
-                {renderAnimaleField()}
-              </div>
-
-              {/* Note */}
-              <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                <label className="form-label">Note</label>
-                <input
-                  type="text"
-                  name="note"
-                  className="form-control"
-                  value={formData.note || ''}
-                  onChange={handleChange}
-                  placeholder="Note aggiuntive..."
-                />
-              </div>
+            )
+          ) : (
+            <div style={{ color: 'var(--gray-500)', fontSize: '14px', padding: '8px' }}>
+              Seleziona prima una data
             </div>
+          )}
+          {hasError('dataOraAppuntamento') && <div className="form-error">{errors.dataOraAppuntamento}</div>}
+        </div>
 
-            {/* Pulsanti */}
-            <div className="proprietario-modal-footer">
-              <button type="button" className="btn btn-secondary" onClick={onClose}>
-                Cancella
-              </button>
-              <button
-                type="submit"
-                className="btn btn-primary"
-                disabled={isUser && animaliDelUtente.length === 0}
-              >
-                {isUser && animaliDelUtente.length === 0 ? 'Nessun animale' : 'Aggiungi'}
-              </button>
-            </div>
-          </form>
+        {/* Tipo Visita */}
+        <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+          <label className="form-label">Tipo Visita *</label>
+          <select
+            name="tipoVisita"
+            className={`form-control ${hasError('tipoVisita') ? 'is-invalid' : ''}`}
+            value={formData.tipoVisita}
+            onChange={handleChange}
+            onBlur={handleBlur}
+          >
+            <option value="">Seleziona tipo visita</option>
+            {TIPI_VISITA_SELECT.map((tipo, index) => (
+              <option key={index} value={tipo}>{tipo}</option>
+            ))}
+          </select>
+          {hasError('tipoVisita') && <div className="form-error">{errors.tipoVisita}</div>}
+        </div>
+
+        {/* Specifica Tipo Visita (per Altro) */}
+        {showSpecificaTipo && (
+          <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+            <label className="form-label">Specifica tipo visita *</label>
+            <input
+              type="text"
+              name="specificaTipoVisita"
+              className={`form-control ${hasError('specificaTipoVisita') ? 'is-invalid' : ''}`}
+              value={formData.specificaTipoVisita}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              placeholder="Inserisci il tipo di visita..."
+            />
+            {hasError('specificaTipoVisita') && <div className="form-error">{errors.specificaTipoVisita}</div>}
+          </div>
+        )}
+
+        {/* Animale */}
+        <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+          <label className="form-label">Animale *</label>
+          {renderAnimaleField()}
+        </div>
+
+        {/* Note */}
+        <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+          <label className="form-label">Note</label>
+          <input
+            type="text"
+            name="note"
+            className="form-control"
+            value={formData.note || ''}
+            onChange={handleChange}
+            placeholder="Note aggiuntive..."
+          />
         </div>
       </div>
-    </div>
+    </FormModal>
   );
 }
 

@@ -6,6 +6,20 @@ import PaginationFooter from '../common/PaginationFooter';
 import SearchBox from '../common/SearchBox';
 import FilterBar from '../common/FilterBar';
 
+function getSingularForm(word) {
+  // Handle specific Italian plural to singular conversions
+  const singularMap = {
+    'Pazienti': 'paziente',
+    'Proprietari': 'proprietario',
+    'Animali': 'animale',
+    'Visite': 'visita',
+    'Prenotazioni': 'prenotazione',
+    'Vaccinazioni': 'vaccinazione'
+  };
+  
+  return singularMap[word] || word.toLowerCase();
+}
+
 function ListPageTemplate({
   title,
   subtitle,
@@ -38,7 +52,7 @@ function ListPageTemplate({
           <p className="page-subtitle">{subtitle}</p>
         </div>
         {showAddButton && (
-          <button className="btn-add" onClick={onAddClick}>+ Nuovo {title.split(' ')[1] || 'Elemento'}</button>
+          <button className="btn-add" onClick={onAddClick}>+ Nuovo {getSingularForm(title.split(' ')[1] || 'Elemento')}</button>
         )}
       </div>
 

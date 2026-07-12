@@ -165,6 +165,8 @@
   display: grid;
   grid-template-columns: 56px repeat(7, 1fr);
   position: relative;
+  padding-top: 50px;   /* altezza approssimativa dell’header */
+  box-sizing: border-box;
 }
 
 .cal-gutter-col {
