@@ -140,7 +140,7 @@ const AdminRoleManagement = () => {
 
       const apiUrl = `/api/admin/users/${selectedUser.username}/roles`;
       const response = await fetch(apiUrl, {
-        method: "PUT",
+        method: "PATCH",
         headers: getAuthHeaders(),
         body: JSON.stringify({ roles: draftRoles }),
       });
