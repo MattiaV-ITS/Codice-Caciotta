@@ -1,10 +1,13 @@
 package it.codicecaciotta.iltuoveterinario.services;
 
+import it.codicecaciotta.iltuoveterinario.models.DiarioClinico;
 import it.codicecaciotta.iltuoveterinario.models.Prenotazione;
 import it.codicecaciotta.iltuoveterinario.models.Visita;
+import it.codicecaciotta.iltuoveterinario.repositories.DiarioClinicoRepository;
 import it.codicecaciotta.iltuoveterinario.repositories.PrenotazioneRepository;
 import it.codicecaciotta.iltuoveterinario.repositories.VisitaRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -18,24 +21,31 @@ public class PrenotazioneService {
 
     private final VisitaRepository visitaRepository;
 
-    PrenotazioneService(PrenotazioneRepository prenotazioneRepository, VisitaRepository visitaRepository) {
+    private final DiarioClinicoRepository diarioClinicoRepository;
+
+    PrenotazioneService(PrenotazioneRepository prenotazioneRepository, VisitaRepository visitaRepository, DiarioClinicoRepository diarioClinicoRepository) {
         this.prenotazioneRepository = prenotazioneRepository;
         this.visitaRepository = visitaRepository;
+        this.diarioClinicoRepository = diarioClinicoRepository;
     }
 
+    @Transactional(readOnly = true)
     public List<Prenotazione> getAllPrenotazioni() {
         return prenotazioneRepository.findAllWithRelationships();
     }
 
+    @Transactional(readOnly = true)
     public Optional<Prenotazione> getPrenotazioneById(Long id) {
         return prenotazioneRepository.findByIdWithRelationships(id);
     }
 
+    @Transactional
     public Prenotazione createPrenotazione(Prenotazione prenotazione) {
         prenotazione.setDataPrenotazione(LocalDateTime.now());
         return prenotazioneRepository.save(prenotazione);
     }
 
+    @Transactional
     public Prenotazione updatePrenotazione(Long id, Prenotazione prenotazioneDetails) {
         return prenotazioneRepository.findById(id)
                 .map(prenotazione -> {
@@ -49,18 +59,22 @@ public class PrenotazioneService {
                 .orElseThrow(() -> new RuntimeException("Prenotazione non trovata con id: " + id));
     }
 
+    @Transactional
     public void deletePrenotazione(Long id) {
         prenotazioneRepository.deleteById(id);
     }
 
+    @Transactional(readOnly = true)
     public List<Prenotazione> getPrenotazioniByAnimale(Long animaleId) {
         return prenotazioneRepository.findByAnimaleId(animaleId);
     }
 
+    @Transactional(readOnly = true)
     public List<Prenotazione> getPrenotazioniByProprietario(Long proprietarioId) {
         return prenotazioneRepository.findByProprietarioId(proprietarioId);
     }
 
+    @Transactional(readOnly = true)
     public List<Prenotazione> getPrenotazioniByDateRange(String startDate, String endDate) {
         DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
         LocalDateTime start = LocalDateTime.parse(startDate, formatter);
@@ -68,6 +82,7 @@ public class PrenotazioneService {
         return prenotazioneRepository.findByDataOraAppuntamentoBetween(start, end);
     }
 
+    @Transactional
     public Optional<Visita> createVisitaFromPrenotazione(Long prenotazioneId) {
         return prenotazioneRepository.findByIdWithRelationships(prenotazioneId)
                 .map(prenotazione -> {
@@ -86,6 +101,17 @@ public class PrenotazioneService {
                     visita.setDurata(30); // Default duration
 
                     Visita savedVisita = visitaRepository.save(visita);
+                    
+                    // Create and save DiarioClinico for the visita
+                    DiarioClinico diarioClinico = new DiarioClinico();
+                    diarioClinico.setVisita(savedVisita);
+                    diarioClinico.setSintomi(""); // Empty default values
+                    diarioClinico.setDiagnosi("");
+                    diarioClinico.setTrattamentoTerapia("");
+                    diarioClinico.setNote("");
+                    diarioClinico.setNotePrivate("");
+                    diarioClinicoRepository.save(diarioClinico);
+
                     prenotazione.setVisita(savedVisita);
                     prenotazioneRepository.save(prenotazione);
 
@@ -93,6 +119,7 @@ public class PrenotazioneService {
                 });
     }
 
+    @Transactional(readOnly = true)
     public Optional<Visita> getVisitaForPrenotazione(Long prenotazioneId) {
         return prenotazioneRepository.findByIdWithRelationships(prenotazioneId)
                 .map(Prenotazione::getVisita);

@@ -49,20 +49,49 @@ public class PrenotazioneController {
     }
 
     @PostMapping
-    public ResponseEntity<Prenotazione> createPrenotazione(@Valid @RequestBody PrenotazioneCreateDTO prenotazioneDTO) {
+    public ResponseEntity<?> createPrenotazione(@Valid @RequestBody PrenotazioneCreateDTO prenotazioneDTO) {
         try {
             Prenotazione prenotazione = PrenotazioneMapper.toEntity(prenotazioneDTO, animaleRepository, proprietarioRepository);
-            return ResponseEntity.ok(prenotazioneService.createPrenotazione(prenotazione));
+            Prenotazione createdPrenotazione = prenotazioneService.createPrenotazione(prenotazione);
+            // Return DTO instead of entity to avoid LazyInitializationException
+            PrenotazioneDTO resultDTO = PrenotazioneMapper.toDTO(createdPrenotazione);
+            return ResponseEntity.ok(resultDTO);
+        } catch (jakarta.validation.ConstraintViolationException e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                "error", "Validation failed",
+                "message", e.getMessage(),
+                "details", e.getConstraintViolations().stream()
+                    .map(v -> v.getPropertyPath() + " " + v.getMessage())
+                    .collect(Collectors.toList())
+            ));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                "error", "Bad request",
+                "message", e.getMessage()
+            ));
         } catch (Exception e) {
-            throw new RuntimeException("Failed to create prenotazione: " + e.getMessage(), e);
+            return ResponseEntity.internalServerError().body(Map.of(
+                "error", "Internal server error",
+                "message", "Failed to create prenotazione: " + e.getMessage()
+            ));
         }
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Prenotazione> updatePrenotazione(
+    public ResponseEntity<?> updatePrenotazione(
             @PathVariable Long id, 
             @RequestBody Prenotazione prenotazioneDetails) {
-        return ResponseEntity.ok(prenotazioneService.updatePrenotazione(id, prenotazioneDetails));
+        try {
+            Prenotazione updatedPrenotazione = prenotazioneService.updatePrenotazione(id, prenotazioneDetails);
+            // Return DTO instead of entity to avoid LazyInitializationException
+            PrenotazioneDTO resultDTO = PrenotazioneMapper.toDTO(updatedPrenotazione);
+            return ResponseEntity.ok(resultDTO);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(Map.of(
+                "error", "Internal server error",
+                "message", "Failed to update prenotazione: " + e.getMessage()
+            ));
+        }
     }
 
     @DeleteMapping("/{id}")
@@ -102,15 +131,29 @@ public class PrenotazioneController {
 
     @PostMapping("/{prenotazioneId}/visita")
     public ResponseEntity<?> createVisitaFromPrenotazione(@PathVariable Long prenotazioneId) {
-        return prenotazioneService.createVisitaFromPrenotazione(prenotazioneId)
-                .map(visita -> ResponseEntity.ok().body(Map.of("visitaId", visita.getId())))
-                .orElse(ResponseEntity.notFound().build());
+        try {
+            return prenotazioneService.createVisitaFromPrenotazione(prenotazioneId)
+                    .map(visita -> ResponseEntity.ok().body(Map.of("visitaId", visita.getId())))
+                    .orElse(ResponseEntity.notFound().build());
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(Map.of(
+                "error", "Internal server error",
+                "message", "Failed to create visita from prenotazione: " + e.getMessage()
+            ));
+        }
     }
 
     @GetMapping("/{prenotazioneId}/visita")
     public ResponseEntity<?> getVisitaForPrenotazione(@PathVariable Long prenotazioneId) {
-        return prenotazioneService.getVisitaForPrenotazione(prenotazioneId)
-                .map(visita -> ResponseEntity.ok().body(Map.of("visitaId", visita.getId())))
-                .orElse(ResponseEntity.ok().body(Map.of("visitaId", null)));
+        try {
+            return prenotazioneService.getVisitaForPrenotazione(prenotazioneId)
+                    .map(visita -> ResponseEntity.ok().body(Map.of("visitaId", visita.getId())))
+                    .orElse(ResponseEntity.ok().body(Map.of("visitaId", null)));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(Map.of(
+                "error", "Internal server error",
+                "message", "Failed to get visita for prenotazione: " + e.getMessage()
+            ));
+        }
     }
 }

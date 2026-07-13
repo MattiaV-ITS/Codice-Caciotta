@@ -4,6 +4,7 @@ import './PrenotazioniCalendario.css';
 import { formatDate, formatTime, parseDate } from '../../utils/dateUtils';
 import { useApi } from '../../services/apiService';
 import PrenotazioneCreateStaff from './PrenotazioneCreateStaff';
+import PrenotazioneContextMenu from '../../components/PrenotazioneContextMenu/PrenotazioneContextMenu';
 
 
 
@@ -157,6 +158,25 @@ function PrenotazioniCalendario() {
           dataOraAppuntamento = dataOraAppuntamento.toISOString();
         }
         
+        // Handle animal name - prefer animaleNome from DTO, fallback to animal object
+        let animaleNome = 'Sconosciuto';
+        let specie = 'Sconosciuto';
+        
+        if (p.animaleNome) {
+          animaleNome = p.animaleNome;
+        } else if (p.animale && p.animale.nome) {
+          animaleNome = p.animale.nome;
+          specie = p.animale.specie || 'Sconosciuto';
+        }
+        
+        // Handle proprietario name
+        let proprietarioNome = 'Sconosciuto';
+        if (p.proprietarioNome) {
+          proprietarioNome = `${p.proprietarioNome || ''} ${p.proprietarioCognome || ''}`.trim() || 'Sconosciuto';
+        } else if (p.proprietario && p.proprietario.nome) {
+          proprietarioNome = `${p.proprietario.nome || ''} ${p.proprietario.cognome || ''}`.trim() || 'Sconosciuto';
+        }
+        
         return {
           id: p.id,
           dataOraAppuntamento: dataOraAppuntamento,
@@ -164,9 +184,9 @@ function PrenotazioniCalendario() {
           statoPrenotazione: 'Confermata', // Default status
           priorita: 'Media', // Default priority
           note: p.note || '',
-          animaleNome: p.animaleNome || 'Sconosciuto',
-          specie: p.animale?.specie || 'Sconosciuto',
-          proprietarioNome: `${p.proprietarioNome || 'Sconosciuto'} ${p.proprietarioCognome || ''}`.trim(),
+          animaleNome: animaleNome,
+          specie: specie,
+          proprietarioNome: proprietarioNome,
           durataMinuti: 30 // Default duration
         };
       });
@@ -232,34 +252,24 @@ function PrenotazioniCalendario() {
   const goToNextWeek = () => setWeekStart((d) => addDays(d, 7));
   const goToToday = () => setWeekStart(getMonday(new Date()));
 
-  const handleEventClick = async (item) => {
-    try {
-      // Check if this prenotazione already has a visita
-      const visitaResponse = await get(`/api/prenotazioni/${item.id}/visita`);
-      if (!visitaResponse.ok) {
-        throw new Error(`Failed to check visita: ${visitaResponse.status}`);
-      }
-      
-      const visitaData = await visitaResponse.json();
-      
-      if (visitaData.visitaId) {
-        // Navigate to existing visita
-        navigate(`/visite/${visitaData.visitaId}`);
-      } else {
-        // Create new visita from prenotazione and navigate to it
-        const createResponse = await post(`/api/prenotazioni/${item.id}/visita`);
-        if (!createResponse.ok) {
-          throw new Error(`Failed to create visita: ${createResponse.status}`);
-        }
-        
-        const createdVisita = await createResponse.json();
-        navigate(`/visite/${createdVisita.visitaId}`);
-      }
-    } catch (error) {
-      console.error('Error handling prenotazione click:', error);
-      // Fallback to simple navigation if there's an error
-      navigate(`/prenotazioni/${item.id}`);
-    }
+  const handlePrenotazioneDeleted = (deletedId) => {
+    // Remove the deleted prenotazione from the list
+    setPrenotazioni(prev => prev.filter(p => p.id !== deletedId));
+  };
+
+  const handlePrenotazioneUpdated = (updatedPrenotazione) => {
+    // Update the prenotazione in the list
+    setPrenotazioni(prev => 
+      prev.map(p => p.id === updatedPrenotazione.id ? {
+        ...p,
+        dataOraAppuntamento: updatedPrenotazione.dataOraAppuntamento,
+        motivo: updatedPrenotazione.tipoVisita,
+        note: updatedPrenotazione.note,
+        animaleNome: updatedPrenotazione.animale?.nome || p.animaleNome,
+        specie: updatedPrenotazione.animale?.specie || p.specie,
+        proprietarioNome: updatedPrenotazione.proprietarioNome || p.proprietarioNome
+      } : p)
+    );
   };
 
   const nowOffset = minutesFromGridStart(now);
@@ -378,27 +388,32 @@ function PrenotazioniCalendario() {
                       : '';
 
                   return (
-                    <div
+                    <PrenotazioneContextMenu
                       key={ev.id}
-                      className={`cal-event ${motivoClass} ${statoModifier}`}
-                      style={{
-                        top,
-                        height,
-                        left: `calc(${leftPct}% + 2px)`,
-                        width: `calc(${widthPct}% - 4px)`
-                      }}
-                      title={`${ev.animaleNome} (${ev.proprietarioNome || 'Proprietario sconosciuto'}) - ${ev.motivo} - ${ev.statoPrenotazione}`}
-                      onClick={() => handleEventClick(ev)}
+                      prenotazione={ev}
+                      onPrenotazioneDeleted={handlePrenotazioneDeleted}
+                      onPrenotazioneUpdated={handlePrenotazioneUpdated}
                     >
-                      {!isCompact && <div className="cal-event-time">{timeLabel}</div>}
-                      <div className="cal-event-title">
-                        {ev.animaleNome}
+                      <div
+                        className={`cal-event ${motivoClass} ${statoModifier}`}
+                        style={{
+                          top,
+                          height,
+                          left: `calc(${leftPct}% + 2px)`,
+                          width: `calc(${widthPct}% - 4px)`
+                        }}
+                        title={`${ev.animaleNome} (${ev.proprietarioNome || 'Proprietario sconosciuto'}) - ${ev.motivo} - ${ev.statoPrenotazione}`}
+                      >
+                        {!isCompact && <div className="cal-event-time">{timeLabel}</div>}
+                        <div className="cal-event-title">
+                          {ev.animaleNome}
+                        </div>
+                        <div className="cal-event-owner">{ev.proprietarioNome || 'Proprietario sconosciuto'}</div>
+                        {!isCompact && height >= 56 && (
+                          <div className="cal-event-motivo">{ev.motivo}</div>
+                        )}
                       </div>
-                      <div className="cal-event-owner">{ev.proprietarioNome || 'Proprietario sconosciuto'}</div>
-                      {!isCompact && height >= 56 && (
-                        <div className="cal-event-motivo">{ev.motivo}</div>
-                      )}
-                    </div>
+                    </PrenotazioneContextMenu>
                   );
                 })}
               </div>

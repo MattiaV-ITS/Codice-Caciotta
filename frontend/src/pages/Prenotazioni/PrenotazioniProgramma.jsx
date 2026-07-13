@@ -4,6 +4,7 @@ import './PrenotazioniProgramma.css';
 import { formatDate, formatTime, parseDate } from '../../utils/dateUtils';
 import { useApi } from '../../services/apiService';
 import PrenotazioneCreateStaff from './PrenotazioneCreateStaff';
+import PrenotazioneContextMenu from '../../components/PrenotazioneContextMenu/PrenotazioneContextMenu';
 
 
 
@@ -110,6 +111,25 @@ function PrenotazioniProgramma() {
           dataOraAppuntamento = dataOraAppuntamento.toISOString();
         }
         
+        // Handle animal name - prefer animaleNome from DTO, fallback to animal object
+        let animaleNome = 'Sconosciuto';
+        let specie = 'Sconosciuto';
+        
+        if (p.animaleNome) {
+          animaleNome = p.animaleNome;
+        } else if (p.animale && p.animale.nome) {
+          animaleNome = p.animale.nome;
+          specie = p.animale.specie || 'Sconosciuto';
+        }
+        
+        // Handle proprietario name
+        let proprietarioNome = 'Sconosciuto';
+        if (p.proprietarioNome) {
+          proprietarioNome = `${p.proprietarioNome || ''} ${p.proprietarioCognome || ''}`.trim() || 'Sconosciuto';
+        } else if (p.proprietario && p.proprietario.nome) {
+          proprietarioNome = `${p.proprietario.nome || ''} ${p.proprietario.cognome || ''}`.trim() || 'Sconosciuto';
+        }
+        
         return {
           id: p.id,
           dataOraAppuntamento: dataOraAppuntamento,
@@ -117,9 +137,9 @@ function PrenotazioniProgramma() {
           statoPrenotazione: 'Confermata', // Default status
           priorita: 'Media', // Default priority
           note: p.note || '',
-          animaleNome: p.animale?.nome || 'Sconosciuto',
-          specie: p.animale?.specie || 'Sconosciuto',
-          proprietarioNome: `${p.proprietarioNome || 'Sconosciuto'} ${p.proprietarioCognome || ''}`.trim(),
+          animaleNome: animaleNome,
+          specie: specie,
+          proprietarioNome: proprietarioNome,
           durataMinuti: 30 // Default duration
         };
       });
@@ -190,34 +210,24 @@ function PrenotazioniProgramma() {
     return result;
   }, [dayGroups]);
 
-  const handleEventClick = async (item) => {
-    try {
-      // Check if this prenotazione already has a visita
-      const visitaResponse = await get(`/api/prenotazioni/${item.id}/visita`);
-      if (!visitaResponse.ok) {
-        throw new Error(`Failed to check visita: ${visitaResponse.status}`);
-      }
-      
-      const visitaData = await visitaResponse.json();
-      
-      if (visitaData.visitaId) {
-        // Navigate to existing visita
-        navigate(`/visite/${visitaData.visitaId}`);
-      } else {
-        // Create new visita from prenotazione and navigate to it
-        const createResponse = await post(`/api/prenotazioni/${item.id}/visita`);
-        if (!createResponse.ok) {
-          throw new Error(`Failed to create visita: ${createResponse.status}`);
-        }
-        
-        const createdVisita = await createResponse.json();
-        navigate(`/visite/${createdVisita.visitaId}`);
-      }
-    } catch (error) {
-      console.error('Error handling prenotazione click:', error);
-      // Fallback to simple navigation if there's an error
-      navigate(`/prenotazioni/${item.id}`);
-    }
+  const handlePrenotazioneDeleted = (deletedId) => {
+    // Remove the deleted prenotazione from the list
+    setPrenotazioni(prev => prev.filter(p => p.id !== deletedId));
+  };
+
+  const handlePrenotazioneUpdated = (updatedPrenotazione) => {
+    // Update the prenotazione in the list
+    setPrenotazioni(prev => 
+      prev.map(p => p.id === updatedPrenotazione.id ? {
+        ...p,
+        dataOraAppuntamento: updatedPrenotazione.dataOraAppuntamento,
+        motivo: updatedPrenotazione.tipoVisita,
+        note: updatedPrenotazione.note,
+        animaleNome: updatedPrenotazione.animale?.nome || p.animaleNome,
+        specie: updatedPrenotazione.animale?.specie || p.specie,
+        proprietarioNome: updatedPrenotazione.proprietarioNome || p.proprietarioNome
+      } : p)
+    );
   };
 
   const scrollToToday = () => {
@@ -313,18 +323,23 @@ function PrenotazioniProgramma() {
                         <span className="prog-now-rule"></span>
                       </div>
                     )}
-                    <div
-                      className={`prog-event ${MOTIVO_CLASS[ev.motivo] || 'tipo-altro'} ${
-                        ev.statoPrenotazione === 'Annullata' ? 'is-annullata' :
-                        ev.statoPrenotazione === 'Attesa' ? 'is-attesa' : ''
-                      }`}
-                      onClick={() => handleEventClick(ev)}
+                    <PrenotazioneContextMenu
+                      prenotazione={ev}
+                      onPrenotazioneDeleted={handlePrenotazioneDeleted}
+                      onPrenotazioneUpdated={handlePrenotazioneUpdated}
                     >
-                      <div className="prog-event-title">{ev.animaleNome}</div>
-                      <div className="prog-event-time">{formatTimeRange(ev._start, ev.durataMinuti)}</div>
-                      <div className="prog-event-owner">{ev.proprietarioNome || 'Proprietario sconosciuto'}</div>
-                      <div className="prog-event-motivo">{ev.motivo}</div>
-                    </div>
+                      <div
+                        className={`prog-event ${MOTIVO_CLASS[ev.motivo] || 'tipo-altro'} ${
+                          ev.statoPrenotazione === 'Annullata' ? 'is-annullata' :
+                          ev.statoPrenotazione === 'Attesa' ? 'is-attesa' : ''
+                        }`}
+                      >
+                        <div className="prog-event-title">{ev.animaleNome}</div>
+                        <div className="prog-event-time">{formatTimeRange(ev._start, ev.durataMinuti)}</div>
+                        <div className="prog-event-owner">{ev.proprietarioNome || 'Proprietario sconosciuto'}</div>
+                        <div className="prog-event-motivo">{ev.motivo}</div>
+                      </div>
+                    </PrenotazioneContextMenu>
                   </React.Fragment>
                 ))}
 
