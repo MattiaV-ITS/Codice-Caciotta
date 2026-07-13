@@ -4,6 +4,33 @@ import { useApi } from '../../services/apiService';
 import { formatDate, getCurrentISODatetime, parseDate, toISODatetimeFormat, toISODateFormat } from '../../utils/dateUtils';
 import { validateRequired, validatePositiveNumber } from '../../utils/validationUtils';
 
+// Inline styles for edit mode banner
+const bannerStyles = `
+  .visite-edit-mode-banner {
+    padding: var(--space-2) var(--space-3);
+    margin-bottom: var(--space-3);
+    border-radius: var(--radius-md);
+    font-size: var(--font-sm);
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+  .visite-edit-mode-banner.read-only-mode {
+    background-color: var(--gray-50);
+    color: var(--gray-700);
+    border: 1px solid var(--gray-200);
+  }
+  .visite-edit-mode-banner.edit-mode {
+    background-color: var(--primary-light);
+    color: var(--primary-dark);
+    border: 1px solid var(--primary);
+  }
+  .visite-edit-mode-banner svg {
+    width: 16px;
+    height: 16px;
+  }
+`;
+
 // ==============================
 // ICONE SVG (invariate)
 // ==============================
@@ -68,7 +95,7 @@ const ConfirmModal = ({ isOpen, message, onConfirm, onCancel }) => {
 // ==============================
 // COMPONENTE PRINCIPALE
 // ==============================
-function VisitaForm({ visita, animale, onSave, onCancel, isSaving }) {
+function VisitaForm({ visita, animale, onSave, onCancel, isSaving, initialEditMode = false }) {
   const [formData, setFormData] = useState(() => prepareVisitaData(visita));
   const [defaultDataPrenotazione, setDefaultDataPrenotazione] = useState('');
   const [errors, setErrors] = useState({});
@@ -76,6 +103,7 @@ function VisitaForm({ visita, animale, onSave, onCancel, isSaving }) {
   const [formError, setFormError] = useState('');
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [pendingSave, setPendingSave] = useState(false);
+  const [editMode, setEditMode] = useState(initialEditMode);
 
   // ----- Preparazione dati (modifica) -----
   function prepareVisitaData(visitaData) {
@@ -374,8 +402,26 @@ function VisitaForm({ visita, animale, onSave, onCancel, isSaving }) {
     return formData.id ? 'Salva Visita' : 'Crea Visita';
   };
 
+  const toggleEditMode = () => {
+    setEditMode(!editMode);
+    // Reset errors when entering edit mode
+    if (!editMode) {
+      setErrors({});
+      setFormError('');
+    }
+  };
+
+  // Add some CSS for the edit button spacing
+  const actionStyles = `
+    .mr-2 {
+      margin-right: var(--space-2);
+    }
+  `;
+
   return (
     <div className="visite-colonna-center">
+      <style>{bannerStyles}</style>
+      <style>{actionStyles}</style>
       <div className="visite-card">
         <div className="visite-card-header">
           <div className="visite-header-left">
@@ -392,6 +438,19 @@ function VisitaForm({ visita, animale, onSave, onCancel, isSaving }) {
           <span className="visite-durata">Durata: {formData.durata || 0} min</span>
         </div>
         <div className="visite-card-body">
+          {formData.id && (
+            <div className={`visite-edit-mode-banner ${editMode ? 'edit-mode' : 'read-only-mode'}`}>
+              {editMode ? (
+                <>
+                  <strong>Modalità Modifica</strong>
+                </>
+              ) : (
+                <>
+                  <strong>Modalità Solo Lettura</strong>
+                </>
+              )}
+            </div>
+          )}
           <form onSubmit={handleSubmit} className="visite-form">
 
             {/* ===== INIZIO ===== */}
@@ -406,6 +465,8 @@ function VisitaForm({ visita, animale, onSave, onCancel, isSaving }) {
                   onChange={handleDateChange}
                   onBlur={() => setTouched(prev => ({ ...prev, dataOraVisita: true }))}
                   required
+                  readOnly={!editMode && formData.id}
+                  disabled={!editMode && formData.id}
                 />
                 <input
                   type="time"
@@ -416,11 +477,14 @@ function VisitaForm({ visita, animale, onSave, onCancel, isSaving }) {
                   onBlur={() => setTouched(prev => ({ ...prev, dataOraVisita: true }))}
                   required
                   step="60"
+                  readOnly={!editMode && formData.id}
+                  disabled={!editMode && formData.id}
                 />
                 <button
                   type="button"
                   className="btn btn-sm btn-secondary"
                   onClick={setOraCorrenteInizio}
+                  disabled={!editMode && formData.id}
                 >
                   ⏱ Ora
                 </button>
@@ -439,6 +503,8 @@ function VisitaForm({ visita, animale, onSave, onCancel, isSaving }) {
                   value={formData.dataOraFine ? formData.dataOraFine.split('T')[0] : ''}
                   onChange={handleDateChange}
                   onBlur={() => setTouched(prev => ({ ...prev, dataOraFine: true }))}
+                  readOnly={!editMode && formData.id}
+                  disabled={!editMode && formData.id}
                 />
                 <input
                   type="time"
@@ -448,11 +514,14 @@ function VisitaForm({ visita, animale, onSave, onCancel, isSaving }) {
                   onChange={handleTimeChange}
                   onBlur={() => setTouched(prev => ({ ...prev, dataOraFine: true }))}
                   step="60"
+                  readOnly={!editMode && formData.id}
+                  disabled={!editMode && formData.id}
                 />
                 <button
                   type="button"
                   className="btn btn-sm btn-secondary"
                   onClick={setOraCorrenteFine}
+                  disabled={!editMode && formData.id}
                 >
                   ⏱ Ora
                 </button>
@@ -474,6 +543,7 @@ function VisitaForm({ visita, animale, onSave, onCancel, isSaving }) {
                 value={formData.tipoVisita || ''}
                 onChange={handleChange}
                 onBlur={() => setTouched(prev => ({ ...prev, tipoVisita: true }))}
+                disabled={!editMode && formData.id}
               >
                 <option value="">Seleziona tipo</option>
                 <option value="Visita di controllo">Visita di controllo</option>
@@ -497,6 +567,8 @@ function VisitaForm({ visita, animale, onSave, onCancel, isSaving }) {
                   onChange={handleChange}
                   onBlur={() => setTouched(prev => ({ ...prev, altroTipoVisita: true }))}
                   placeholder="Inserisci il tipo di visita..."
+                  readOnly={!editMode && formData.id}
+                  disabled={!editMode && formData.id}
                 />
                 {hasError('altroTipoVisita') && <div className="form-error">{errors.altroTipoVisita}</div>}
               </div>
@@ -506,30 +578,40 @@ function VisitaForm({ visita, animale, onSave, onCancel, isSaving }) {
             <div className="visite-divider"><span>Referto Clinico</span></div>
             <div className="visite-form-group">
               <label className="visite-form-label">Sintomi</label>
-              <textarea name="sintomi" className="visite-form-control visite-form-textarea" rows="3" value={formData.sintomi || ''} onChange={handleChange} placeholder="Descrivi i sintomi riportati..." />
+              <textarea name="sintomi" className="visite-form-control visite-form-textarea" rows="3" value={formData.sintomi || ''} onChange={handleChange} placeholder="Descrivi i sintomi riportati..." readOnly={!editMode && formData.id} disabled={!editMode && formData.id} />
             </div>
             <div className="visite-form-group">
               <label className="visite-form-label">Diagnosi</label>
-              <textarea name="diagnosi" className="visite-form-control visite-form-textarea" rows="3" value={formData.diagnosi || ''} onChange={handleChange} placeholder="Inserisci la diagnosi..." />
+              <textarea name="diagnosi" className="visite-form-control visite-form-textarea" rows="3" value={formData.diagnosi || ''} onChange={handleChange} placeholder="Inserisci la diagnosi..." readOnly={!editMode && formData.id} disabled={!editMode && formData.id} />
             </div>
             <div className="visite-form-group">
               <label className="visite-form-label">Trattamento / Terapia</label>
-              <textarea name="trattamentoTerapia" className="visite-form-control visite-form-textarea" rows="3" value={formData.trattamentoTerapia || ''} onChange={handleChange} placeholder="Indica il trattamento prescritto..." />
+              <textarea name="trattamentoTerapia" className="visite-form-control visite-form-textarea" rows="3" value={formData.trattamentoTerapia || ''} onChange={handleChange} placeholder="Indica il trattamento prescritto..." readOnly={!editMode && formData.id} disabled={!editMode && formData.id} />
             </div>
             <div className="visite-form-group">
               <label className="visite-form-label">Note</label>
-              <textarea name="note" className="visite-form-control visite-form-textarea" rows="2" value={formData.note || ''} onChange={handleChange} placeholder="Note aggiuntive (visibili al proprietario)..." />
+              <textarea name="note" className="visite-form-control visite-form-textarea" rows="2" value={formData.note || ''} onChange={handleChange} placeholder="Note aggiuntive (visibili al proprietario)..." readOnly={!editMode && formData.id} disabled={!editMode && formData.id} />
             </div>
             <div className="visite-form-group">
               <label className="visite-form-label">Note Private</label>
-              <textarea name="notePrivate" className="visite-form-control visite-form-textarea" rows="2" value={formData.notePrivate || ''} onChange={handleChange} placeholder="Note riservate al veterinario..." />
+              <textarea name="notePrivate" className="visite-form-control visite-form-textarea" rows="2" value={formData.notePrivate || ''} onChange={handleChange} placeholder="Note riservate al veterinario..." readOnly={!editMode && formData.id} disabled={!editMode && formData.id} />
             </div>
 
             {formError && <div className="form-error" style={{ marginBottom: 'var(--space-2)' }}>{formError}</div>}
 
             <div className="visite-form-actions">
               <div className="visite-form-actions-left">
-                <button type="submit" className="btn btn-primary" disabled={isSaving}>
+                {formData.id && (
+                  <button 
+                    type="button" 
+                    className="btn btn-secondary mr-2"
+                    onClick={toggleEditMode}
+                    disabled={isSaving}
+                  >
+                    {editMode ? 'Annulla Modifiche' : 'Modifica'}
+                  </button>
+                )}
+                <button type="submit" className="btn btn-primary" disabled={isSaving || (!editMode && formData.id)}>
                   {getButtonText()}
                 </button>
               </div>

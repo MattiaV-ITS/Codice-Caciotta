@@ -167,8 +167,32 @@ function VisitePagina() {
         if (!response.ok) {
           throw new Error(`Errore durante l'aggiornamento: ${response.status}`);
         }
-        // Nessun popup, solo navigazione per ricaricare i dati
-        navigate(`/visite/${visita.id}`);
+        // Get the updated visita data from the response
+        const updatedVisita = await response.json();
+        
+        // Update local state with the new data to avoid stale data
+        setVisita(prev => ({
+          ...prev,
+          ...updatedVisita,
+          // Ensure we maintain the correct format for datetime fields
+          dataOraVisita: updatedVisita.dataOraVisita,
+          dataOraFineVisita: updatedVisita.dataOraFineVisita,
+          tipoVisita: updatedVisita.tipoVisita,
+          sintomi: updatedVisita.sintomi,
+          diagnosi: updatedVisita.diagnosi,
+          trattamentoTerapia: updatedVisita.trattamentoTerapia,
+          note: updatedVisita.note,
+          notePrivate: updatedVisita.notePrivate
+        }));
+        
+        // Force refresh of the visits list to ensure right panel updates
+        if (animale?.id) {
+          const visiteResponse = await get(`/api/visite/animale/${animale.id}`);
+          if (visiteResponse.ok) {
+            const visiteData = await visiteResponse.json();
+            setvisite(visiteData);
+          }
+        }
       } else {
         // Creazione nuova visita
         const animalId = animale?.id;
@@ -254,6 +278,7 @@ function VisitePagina() {
         onSave={saveVisita}
         onCancel={() => navigate('/visite')}
         isSaving={isSaving}
+        initialEditMode={!visita.id} // New visits start in edit mode, existing visits start in read-only mode
       />
 
       {/* ==================== COLONNA DESTRA ==================== */}

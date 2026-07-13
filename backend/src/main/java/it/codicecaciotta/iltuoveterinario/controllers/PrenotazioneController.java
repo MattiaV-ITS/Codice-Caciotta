@@ -4,6 +4,7 @@ import it.codicecaciotta.iltuoveterinario.dto.PrenotazioneCreateDTO;
 import it.codicecaciotta.iltuoveterinario.dto.PrenotazioneDTO;
 import it.codicecaciotta.iltuoveterinario.mappers.PrenotazioneMapper;
 import it.codicecaciotta.iltuoveterinario.models.Prenotazione;
+import it.codicecaciotta.iltuoveterinario.models.Visita;
 import it.codicecaciotta.iltuoveterinario.repositories.AnimaleRepository;
 import it.codicecaciotta.iltuoveterinario.repositories.ProprietarioRepository;
 import it.codicecaciotta.iltuoveterinario.services.PrenotazioneService;
@@ -13,11 +14,17 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @RestController
 @RequestMapping("/api/prenotazioni")
 public class PrenotazioneController {
+
+    private static final Logger logger = LoggerFactory.getLogger(PrenotazioneController.class);
 
     private final PrenotazioneService prenotazioneService;
     private final AnimaleRepository animaleRepository;
@@ -146,10 +153,28 @@ public class PrenotazioneController {
     @GetMapping("/{prenotazioneId}/visita")
     public ResponseEntity<?> getVisitaForPrenotazione(@PathVariable Long prenotazioneId) {
         try {
-            return prenotazioneService.getVisitaForPrenotazione(prenotazioneId)
-                    .map(visita -> ResponseEntity.ok().body(Map.of("visitaId", visita.getId())))
-                    .orElse(ResponseEntity.ok().body(Map.of("visitaId", null)));
+            logger.info("Checking visita for prenotazione ID: {}", prenotazioneId);
+            
+            Optional<Visita> visitaOptional = prenotazioneService.getVisitaForPrenotazione(prenotazioneId);
+            
+            if (visitaOptional.isPresent()) {
+                Visita visita = visitaOptional.get();
+                logger.info("Found visita with ID: {}", visita != null ? visita.getId() : "null");
+                // Access only the ID to avoid lazy loading issues
+                Long visitaId = visita != null ? visita.getId() : null;
+                // Use HashMap instead of Map.of to allow null values
+                java.util.Map<String, Object> response = new java.util.HashMap<>();
+                response.put("visitaId", visitaId);
+                return ResponseEntity.ok().body(response);
+            } else {
+                logger.info("No visita found for prenotazione ID: {}", prenotazioneId);
+                // Use HashMap instead of Map.of to allow null values
+                java.util.Map<String, Object> response = new java.util.HashMap<>();
+                response.put("visitaId", null);
+                return ResponseEntity.ok().body(response);
+            }
         } catch (Exception e) {
+            logger.error("Error getting visita for prenotazione ID {}: {}", prenotazioneId, e.getMessage(), e);
             return ResponseEntity.internalServerError().body(Map.of(
                 "error", "Internal server error",
                 "message", "Failed to get visita for prenotazione: " + e.getMessage()

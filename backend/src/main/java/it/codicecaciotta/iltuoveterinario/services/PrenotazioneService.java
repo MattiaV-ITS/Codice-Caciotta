@@ -122,6 +122,12 @@ public class PrenotazioneService {
     @Transactional(readOnly = true)
     public Optional<Visita> getVisitaForPrenotazione(Long prenotazioneId) {
         return prenotazioneRepository.findByIdWithRelationships(prenotazioneId)
-                .map(Prenotazione::getVisita);
+                .map(prenotazione -> {
+                    Visita visita = prenotazione.getVisita();
+                    if (visita != null) {
+                        visita.getId();
+                    }
+                    return visita;
+                });
     }
 }
