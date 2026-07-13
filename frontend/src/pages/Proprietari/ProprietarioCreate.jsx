@@ -115,7 +115,8 @@ function ProprietarioCreate({ onClose, onSuccess, proprietario, isEditMode = fal
         const payload = {
           ...formData,
           dataRegistrazione: getCurrentISODate(), // Data corrente
-          stato: true // Sempre attivo
+          stato: true, // Sempre attivo
+          codiceFiscale: formData.codiceFiscale?.trim() || null
         };
 
         // Chiamata API per creare o aggiornare il proprietario
