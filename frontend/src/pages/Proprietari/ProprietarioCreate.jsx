@@ -5,7 +5,7 @@ import { getCurrentISODate } from '../../utils/dateUtils';
 import { useApi } from '../../services/apiService';
 
 function ProprietarioCreate({ onClose, onSuccess, proprietario, isEditMode = false }) {
-  const { post, put } = useApi();
+  const { post, put, patch } = useApi();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
   const [formData, setFormData] = useState(() => {
@@ -121,7 +121,7 @@ function ProprietarioCreate({ onClose, onSuccess, proprietario, isEditMode = fal
         // Chiamata API per creare o aggiornare il proprietario
         const url = isEditMode && proprietario?.id ? `/api/proprietari/${proprietario.id}` : '/api/proprietari';
         const response = isEditMode && proprietario?.id
-          ? await put(url, payload)
+          ? await patch(url, payload)
           : await post(url, payload);
         
         if (!response.ok) {

@@ -13,7 +13,7 @@ public class VisitaSchedaUpdateDTO {
     // Dati Visita
     private LocalDateTime dataOraVisita;
 
-    private Integer durata;
+    private LocalDateTime dataOraFineVisita;
 
     private String tipoVisita;
 

@@ -15,6 +15,9 @@ public class VisitaSchedaMapper {
         dto.setDataOraVisita(visita.getDataOraVisita() != null
                 ? visita.getDataOraVisita().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))
                 : null);
+        dto.setDataOraFineVisita(visita.getDataOraFineVisita() != null
+                ? visita.getDataOraFineVisita().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))
+                : null);
         dto.setDurata(visita.getDurata());
         dto.setTipoVisita(visita.getTipoVisita() != null ? visita.getTipoVisita() : (visita.getPrenotazione() != null ? visita.getPrenotazione().getTipoVisita() : null));
         DiarioClinico diario = visita.getDiarioClinico();

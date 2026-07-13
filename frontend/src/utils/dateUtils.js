@@ -5,11 +5,47 @@
 /**
  * Parsing sicuro di una stringa data
  */
+const createLocalDate = (year, month, day, hour = 0, minute = 0, second = 0, millisecond = 0) => {
+  return new Date(year, month - 1, day, hour, minute, second, millisecond);
+};
+
 export const parseDate = (dateStr) => {
   if (!dateStr) return null;
 
   const cleaned = dateStr.trim();
   if (!cleaned) return null;
+
+  const italianDateTimeMatch = cleaned.match(
+    /^(\d{2})\/(\d{2})\/(\d{4})(?:[ T](\d{2}):(\d{2})(?::(\d{2}))?)?$/
+  );
+  if (italianDateTimeMatch) {
+    const [, day, month, year, hour = '00', minute = '00', second = '00'] = italianDateTimeMatch;
+    const date = createLocalDate(
+      Number(year),
+      Number(month),
+      Number(day),
+      Number(hour),
+      Number(minute),
+      Number(second)
+    );
+    return isNaN(date.getTime()) ? null : date;
+  }
+
+  const isoDateTimeMatch = cleaned.match(
+    /^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2})(?::(\d{2})(?:\.\d{1,3})?)?)?$/
+  );
+  if (isoDateTimeMatch && !/[zZ]|[+-]\d{2}:?\d{2}$/.test(cleaned)) {
+    const [, year, month, day, hour = '00', minute = '00', second = '00'] = isoDateTimeMatch;
+    const date = createLocalDate(
+      Number(year),
+      Number(month),
+      Number(day),
+      Number(hour),
+      Number(minute),
+      Number(second)
+    );
+    return isNaN(date.getTime()) ? null : date;
+  }
 
   // Parsing diretto (ISO)
   let date = new Date(cleaned);
@@ -23,7 +59,7 @@ export const parseDate = (dateStr) => {
     }
   }
 
-  // Tentativo con timezone
+  // Fallback finale per stringhe non riconosciute esplicitamente
   if (isNaN(date.getTime()) && !cleaned.endsWith('Z')) {
     date = new Date(cleaned + 'Z');
   }

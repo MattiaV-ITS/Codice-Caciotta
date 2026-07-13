@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useApi } from '../../services/apiService';
 import SchedaAnimale from '../Animali/SchedaAnimale';
 import VisitaForm from './VisitaForm';
-import { toISODatetimeFormat, toISODateFormat, formatDate, formatDateShort, formatTime, parseDate } from '../../utils/dateUtils';
+import { getCurrentISODatetime, toISODatetimeFormat, toISODateFormat, formatDate, formatDateShort, formatTime, parseDate } from '../../utils/dateUtils';
 
 // ==============================
 // ICONE SVG
@@ -93,7 +93,8 @@ function VisitePagina() {
             id: visitaData.id,
             visitStart: visitaData.visitStart || visitaData.dataOraVisita,
             dataOraVisita: visitaData.dataOraVisita,
-            durata: visitaData.durata || 0,
+            dataOraFineVisita: visitaData.dataOraFineVisita,
+            durata: visitaData.durata || 0, // This will be calculated from dataOraFineVisita if available
             tipoVisita: visitaData.tipoVisita || '',
             stato: visitaData.stato || 'Pianificata',
             sintomi: visitaData.sintomi || '',
@@ -129,20 +130,13 @@ function VisitePagina() {
           }
           
           // Set default values for new visita
-          const now = new Date();
-          const nowStr = now.toLocaleString('sv-SE', {
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit'
-          }).replace(' ', 'T');
+          const nowStr = getCurrentISODatetime();
           
           setVisita({
             id: null,
             visitStart: nowStr,
             dataOraVisita: nowStr,
-            durata: 0,
+            dataOraFineVisita: nowStr, // Default: end time same as start time
             tipoVisita: '',
             sintomi: '',
             diagnosi: '',

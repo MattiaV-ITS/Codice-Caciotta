@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useApi } from '../../services/apiService';
-import { formatDate, toISODatetimeFormat, toISODateFormat } from '../../utils/dateUtils';
+import { formatDate, getCurrentISODatetime, parseDate, toISODatetimeFormat, toISODateFormat } from '../../utils/dateUtils';
 import { validateRequired, validatePositiveNumber } from '../../utils/validationUtils';
 
 // ==============================
@@ -29,6 +29,18 @@ const LightningIcon = () => (
     <path d="M13 2L4 14H12L11 22L20 10H12L13 2Z" stroke="var(--primary)" strokeWidth="2" strokeLinejoin="round"/>
   </svg>
 );
+
+const formatLocalDateTime = (date) => {
+  if (!date || isNaN(date.getTime())) return '';
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hour = String(date.getHours()).padStart(2, '0');
+  const minute = String(date.getMinutes()).padStart(2, '0');
+
+  return `${year}-${month}-${day}T${hour}:${minute}`;
+};
 
 // ==============================
 // MODALE DI CONFERMA (personalizzato)
@@ -70,19 +82,32 @@ function VisitaForm({ visita, animale, onSave, onCancel, isSaving }) {
     if (!visitaData) return getDefaultVisita();
     
     const converted = { ...visitaData };
+    const normalizedStart = toISODatetimeFormat(visitaData.dataOraVisita);
     
-    if (visitaData.dataOraVisita) {
-      converted.dataOraVisita = toISODatetimeFormat(visitaData.dataOraVisita);
+    if (normalizedStart) {
+      converted.dataOraVisita = normalizedStart;
     }
     
-    // Calcola la fine se presente la durata, altrimenti la impostiamo uguale all'inizio
-    if (visitaData.dataOraVisita && visitaData.durata && visitaData.durata > 0) {
-      const start = new Date(visitaData.dataOraVisita);
-      const end = new Date(start.getTime() + visitaData.durata * 60 * 1000);
-      converted.dataOraFine = toISODatetimeFormat(end.toISOString());
-    } else if (visitaData.dataOraVisita) {
+    // Use dataOraFineVisita if available, otherwise calculate from durata for backward compatibility
+    if (visitaData.dataOraFineVisita) {
+      // Directly use the dataOraFineVisita if available
+      converted.dataOraFine = toISODatetimeFormat(visitaData.dataOraFineVisita);
+    } else if (normalizedStart && visitaData.durata && visitaData.durata > 0) {
+      // Fallback for backward compatibility: calculate from durata
+      const start = parseDate(normalizedStart);
+      if (start && !isNaN(start.getTime())) { // Validate the date is valid
+        const end = new Date(start.getTime() + visitaData.durata * 60 * 1000);
+        if (!isNaN(end.getTime())) { // Validate the end date is valid
+          converted.dataOraFine = formatLocalDateTime(end);
+        } else {
+          converted.dataOraFine = normalizedStart;
+        }
+      } else {
+        converted.dataOraFine = normalizedStart;
+      }
+    } else if (normalizedStart) {
       // Se non c'è durata, fine = inizio (default)
-      converted.dataOraFine = toISODatetimeFormat(visitaData.dataOraVisita);
+      converted.dataOraFine = normalizedStart;
     } else {
       converted.dataOraFine = '';
     }
@@ -92,20 +117,12 @@ function VisitaForm({ visita, animale, onSave, onCancel, isSaving }) {
 
   // ----- Valori di default per nuova visita -----
   function getDefaultVisita() {
-    const now = new Date();
-    const nowStr = now.toLocaleString('sv-SE', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit'
-    }).replace(' ', 'T');
+    const nowStr = getCurrentISODatetime();
 
     return {
       id: null,
       dataOraVisita: nowStr,   // inizio
       dataOraFine: nowStr,     // fine = inizio (default)
-      durata: 0,
       tipoVisita: '',
       altroTipoVisita: '',
       sintomi: '',
@@ -132,6 +149,7 @@ function VisitaForm({ visita, animale, onSave, onCancel, isSaving }) {
     if (!inizio || !fine) return 0;
     const start = new Date(inizio);
     const end = new Date(fine);
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) return 0;
     const diffMs = end - start;
     if (diffMs <= 0) return 0;
     return Math.round(diffMs / (1000 * 60)); // minuti
@@ -162,11 +180,20 @@ function VisitaForm({ visita, animale, onSave, onCancel, isSaving }) {
     const { name, value } = e.target;
     const fieldName = name.replace('Date', '');
     setFormData(prev => {
-      const currentDatetime = prev[fieldName] || `${value}T00:00`;
-      const [, timePart] = currentDatetime.split('T');
-      const newDatetime = `${value}T${timePart || '00:00'}`;
+      const currentDatetime = prev[fieldName] || '';
+      let timePart = '00:00';
+      
+      // Safely extract time part from existing datetime
+      if (currentDatetime && currentDatetime.includes('T')) {
+        const parts = currentDatetime.split('T');
+        if (parts.length === 2 && parts[1]) {
+          timePart = parts[1].split(':').slice(0, 2).join(':'); // Get only HH:MM
+        }
+      }
+      
+      const newDatetime = `${value}T${timePart}`;
       const updated = { ...prev, [fieldName]: newDatetime };
-      if (prev.dataOraVisita && prev.dataOraFine) {
+      if (updated.dataOraVisita && updated.dataOraFine) {
         updated.durata = calcolaDurata(updated.dataOraVisita, updated.dataOraFine);
       }
       return updated;
@@ -177,11 +204,23 @@ function VisitaForm({ visita, animale, onSave, onCancel, isSaving }) {
     const { name, value } = e.target;
     const fieldName = name.replace('Time', '');
     setFormData(prev => {
-      const currentDatetime = prev[fieldName] || `1970-01-01T${value}`;
-      const [datePart] = currentDatetime.split('T');
+      const currentDatetime = prev[fieldName] || '';
+      let datePart = getCurrentISODatetime().split('T')[0]; // Default to today in local time
+      
+      // Safely extract date part from existing datetime
+      if (currentDatetime && currentDatetime.includes('T')) {
+        const parts = currentDatetime.split('T');
+        if (parts.length === 2 && parts[0]) {
+          datePart = parts[0];
+        }
+      } else if (currentDatetime) {
+        // Handle case where datetime might be just a date
+        datePart = currentDatetime;
+      }
+      
       const newDatetime = `${datePart}T${value}`;
       const updated = { ...prev, [fieldName]: newDatetime };
-      if (prev.dataOraVisita && prev.dataOraFine) {
+      if (updated.dataOraVisita && updated.dataOraFine) {
         updated.durata = calcolaDurata(updated.dataOraVisita, updated.dataOraFine);
       }
       return updated;
@@ -190,8 +229,7 @@ function VisitaForm({ visita, animale, onSave, onCancel, isSaving }) {
 
   // Pulsanti "Ora"
   const setOraCorrenteInizio = () => {
-    const now = new Date();
-    const nowStr = now.toLocaleString('sv-SE', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }).replace(' ', 'T');
+    const nowStr = getCurrentISODatetime();
     setFormData(prev => {
       const updated = { ...prev, dataOraVisita: nowStr };
       if (prev.dataOraFine) {
@@ -202,8 +240,7 @@ function VisitaForm({ visita, animale, onSave, onCancel, isSaving }) {
   };
 
   const setOraCorrenteFine = () => {
-    const now = new Date();
-    const nowStr = now.toLocaleString('sv-SE', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }).replace(' ', 'T');
+    const nowStr = getCurrentISODatetime();
     setFormData(prev => {
       const updated = { ...prev, dataOraFine: nowStr };
       if (prev.dataOraVisita) {
@@ -240,7 +277,7 @@ function VisitaForm({ visita, animale, onSave, onCancel, isSaving }) {
     if (formData.dataOraVisita && formData.dataOraFine) {
       const start = new Date(formData.dataOraVisita);
       const end = new Date(formData.dataOraFine);
-      if (end < start) {
+      if (!isNaN(start.getTime()) && !isNaN(end.getTime()) && end < start) {
         newErrors.dataOraFine = 'La fine non può essere precedente all\'inizio';
       }
     }
@@ -254,16 +291,21 @@ function VisitaForm({ visita, animale, onSave, onCancel, isSaving }) {
       let finalEnd = endTimeToUse || formData.dataOraFine;
       let finalStart = formData.dataOraVisita;
 
-      if (!finalEnd) {
+      // Only use current time if both start and end are missing (shouldn't happen in normal flow)
+      if (!finalEnd && !finalStart) {
         const now = new Date();
         finalEnd = now.toLocaleString('sv-SE', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }).replace(' ', 'T');
+        finalStart = finalEnd;
+      } else if (!finalEnd) {
+        // If only end is missing, use start time (duration will be 0)
+        finalEnd = finalStart;
       }
 
       const durataFinale = calcolaDurata(finalStart, finalEnd);
 
       const visitaData = {
         dataOraVisita: toISODatetimeFormat(finalStart),
-        durata: durataFinale,
+        dataOraFineVisita: toISODatetimeFormat(finalEnd),
         tipoVisita: formData.tipoVisita === 'Altro' ? formData.altroTipoVisita : formData.tipoVisita,
         importoTotale: 0.00,
         prenotazioneId: null,
@@ -310,8 +352,7 @@ function VisitaForm({ visita, animale, onSave, onCancel, isSaving }) {
 
   const handleConfirmModal = () => {
     setShowConfirmModal(false);
-    const now = new Date();
-    const nowStr = now.toLocaleString('sv-SE', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }).replace(' ', 'T');
+    const nowStr = getCurrentISODatetime();
     setFormData(prev => ({
       ...prev,
       dataOraFine: nowStr,
