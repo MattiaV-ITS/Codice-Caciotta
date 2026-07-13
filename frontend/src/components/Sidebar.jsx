@@ -33,7 +33,7 @@ export default function Sidebar({ isOpen, closeMenu }) {
             onClick={closeMenu}
           >
             <span className="nav-icon">🐕</span>
-            Pazienti
+            Animali
           </NavLink>
 
           <NavLink

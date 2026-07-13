@@ -151,7 +151,7 @@ function VaccinazioniLista() {
   return (
     <ListPageTemplate
       title="Elenco Vaccinazioni"
-      subtitle="Gestisci le vaccinazioni dei pazienti"
+      subtitle="Gestisci le vaccinazioni degli animali"
       data={vaccinazioni}
       columns={customColumns}
       loading={loading}
