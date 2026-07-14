@@ -9,6 +9,7 @@ import ProprietariLista from './pages/Proprietari/ProprietariLista';
 import VaccinazioniLista from './pages/Vaccinazioni/VaccinazioniLista';
 import VisitePagina from './pages/Visite/VisitePagina';
 
+import DashboardUser from './pages/Dashboard/DashboardUser';
 
 import PrenotazioniCalendario from './pages/Prenotazioni/PrenotazioniCalendario';
 import PrenotazioniProgramma from './pages/Prenotazioni/PrenotazioniProgramma';
@@ -49,7 +50,6 @@ function App() {
       <Route path="/prenotazioni" element={<StaffRoute><PrenotazioniLista /></StaffRoute>} />
       <Route path="/prenotazioni/calendario" element={<StaffRoute><PrenotazioniCalendario /></StaffRoute>} />
       <Route path="/prenotazioni/programma" element={<StaffRoute><PrenotazioniProgramma /></StaffRoute>} />
-
       <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
         <Route path="/" element={<Dashboard />} />
         <Route path="/animali" element={<StaffRoute><AnimaliLista /></StaffRoute>} />
@@ -58,6 +58,7 @@ function App() {
         <Route path="/visite/new" element={<StaffRoute><VisitePagina /></StaffRoute>} />
         <Route path="/proprietari" element={<StaffRoute><ProprietariLista /></StaffRoute>} />
         <Route path="/vaccinazioni" element={<StaffRoute><VaccinazioniLista /></StaffRoute>} />
+        <Route path="/dashboard/user" element={<ProtectedRoute><DashboardUser /></ProtectedRoute>} />
         <Route path="/admin" element={<AdminRoute><AdminRoleManagement /></AdminRoute>} />
       </Route>
     </Routes>

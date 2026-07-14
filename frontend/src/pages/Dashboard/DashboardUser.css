@@ -1,0 +1,120 @@
+/* ========================================
+   DASHBOARD USER
+   ======================================== */
+
+.dashboard-user {
+  padding: var(--space-4);
+}
+
+.dashboard-user-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+
+.dashboard-user-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--gray-900);
+  margin: 0;
+  letter-spacing: -0.3px;
+}
+
+.dashboard-user-name {
+  color: var(--primary);
+}
+
+.dashboard-user-subtitle {
+  font-size: 16px;
+  color: var(--gray-500);
+  margin: 4px 0 0;
+}
+
+/* Animali compatti */
+.animali-user-grid-compact {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: var(--space-3);
+}
+
+.animali-user-card-compact {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: var(--white);
+}
+
+.animali-user-card-compact:hover {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  box-shadow: var(--shadow-sm);
+}
+
+.animali-user-avatar-small {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.animali-user-card-info-compact {
+  flex: 1;
+  min-width: 0;
+}
+
+.animali-user-card-info-compact .animali-user-card-nome {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--gray-900);
+}
+
+.animali-user-card-info-compact .animali-user-card-specie {
+  font-size: 12px;
+  color: var(--gray-500);
+}
+
+/* KPI Cards - override per la dashboard user */
+.dashboard-user .kpi-grid {
+  margin-bottom: var(--space-6);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .dashboard-user-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .dashboard-user-title {
+    font-size: 24px;
+  }
+
+  .dashboard-user-subtitle {
+    font-size: 14px;
+  }
+
+  .animali-user-grid-compact {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .animali-user-grid-compact {
+    grid-template-columns: 1fr;
+  }
+}
