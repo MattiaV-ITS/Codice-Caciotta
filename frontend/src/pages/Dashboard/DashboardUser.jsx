@@ -122,7 +122,7 @@ function DashboardUser() {
                 {formatDate(prossimaVisita.dataOraAppuntamento)}
               </span>
             ) : (
-              '—'
+              '-'
             )}
           </div>
           <div className="kpi-change" style={{ color: 'var(--gray-500)', fontSize: '13px' }}>
