@@ -1,0 +1,103 @@
+.prenotazione-edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.prenotazione-edit-form .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.prenotazione-edit-form label {
+  font-weight: 500;
+  color: var(--gray-800);
+  font-size: 14px;
+}
+
+.prenotazione-edit-form input,
+.prenotazione-edit-form select,
+.prenotazione-edit-form textarea {
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius);
+  font-size: 14px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.prenotazione-edit-form input:focus,
+.prenotazione-edit-form select:focus,
+.prenotazione-edit-form textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px var(--primary-light);
+}
+
+.prenotazione-edit-form input.error,
+.prenotazione-edit-form select.error,
+.prenotazione-edit-form textarea.error {
+  border-color: var(--error);
+}
+
+.prenotazione-edit-form .error-message {
+  color: var(--error);
+  font-size: 12px;
+  margin-top: var(--space-1);
+}
+
+.prenotazione-edit-form .form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}
+
+/* Readonly field styles */
+.readonly-field {
+  padding: 8px 12px;
+  background-color: var(--gray-50);
+  border-radius: var(--radius);
+  border: 1px solid var(--gray-200);
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  color: var(--gray-700);
+  font-size: 14px;
+}
+
+.prenotazione-edit-form .btn-secondary {
+  background: var(--gray-100);
+  color: var(--gray-800);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius);
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+.prenotazione-edit-form .btn-secondary:hover {
+  background: var(--gray-200);
+}
+
+.prenotazione-edit-form .btn-primary {
+  background: var(--primary);
+  color: white;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius);
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+.prenotazione-edit-form .btn-primary:hover {
+  background: var(--primary-dark);
+}
+
+.prenotazione-edit-form .btn-primary:disabled,
+.prenotazione-edit-form .btn-secondary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

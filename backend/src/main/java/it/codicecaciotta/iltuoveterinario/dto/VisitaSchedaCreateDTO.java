@@ -16,7 +16,7 @@ public class VisitaSchedaCreateDTO {
     @NotNull(message = "Data e ora della visita non possono essere nulle")
     private LocalDateTime dataOraVisita;
 
-    private Integer durata;
+    private LocalDateTime dataOraFineVisita;
 
     private String tipoVisita;
 

@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useApi } from '../../services/apiService';
 import SchedaAnimale from '../Animali/SchedaAnimale';
 import VisitaForm from './VisitaForm';
-import { toISODatetimeFormat, toISODateFormat, formatDate, formatDateShort, formatTime, parseDate } from '../../utils/dateUtils';
+import { getCurrentISODatetime, toISODatetimeFormat, toISODateFormat, formatDate, formatDateShort, formatTime, parseDate } from '../../utils/dateUtils';
 
 // ==============================
 // ICONE SVG
@@ -93,7 +93,8 @@ function VisitePagina() {
             id: visitaData.id,
             visitStart: visitaData.visitStart || visitaData.dataOraVisita,
             dataOraVisita: visitaData.dataOraVisita,
-            durata: visitaData.durata || 0,
+            dataOraFineVisita: visitaData.dataOraFineVisita,
+            durata: visitaData.durata || 0, // This will be calculated from dataOraFineVisita if available
             tipoVisita: visitaData.tipoVisita || '',
             stato: visitaData.stato || 'Pianificata',
             sintomi: visitaData.sintomi || '',
@@ -129,20 +130,13 @@ function VisitePagina() {
           }
           
           // Set default values for new visita
-          const now = new Date();
-          const nowStr = now.toLocaleString('sv-SE', {
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit'
-          }).replace(' ', 'T');
+          const nowStr = getCurrentISODatetime();
           
           setVisita({
             id: null,
             visitStart: nowStr,
             dataOraVisita: nowStr,
-            durata: 0,
+            dataOraFineVisita: nowStr, // Default: end time same as start time
             tipoVisita: '',
             sintomi: '',
             diagnosi: '',
@@ -173,8 +167,32 @@ function VisitePagina() {
         if (!response.ok) {
           throw new Error(`Errore durante l'aggiornamento: ${response.status}`);
         }
-        // Nessun popup, solo navigazione per ricaricare i dati
-        navigate(`/visite/${visita.id}`);
+        // Get the updated visita data from the response
+        const updatedVisita = await response.json();
+        
+        // Update local state with the new data to avoid stale data
+        setVisita(prev => ({
+          ...prev,
+          ...updatedVisita,
+          // Ensure we maintain the correct format for datetime fields
+          dataOraVisita: updatedVisita.dataOraVisita,
+          dataOraFineVisita: updatedVisita.dataOraFineVisita,
+          tipoVisita: updatedVisita.tipoVisita,
+          sintomi: updatedVisita.sintomi,
+          diagnosi: updatedVisita.diagnosi,
+          trattamentoTerapia: updatedVisita.trattamentoTerapia,
+          note: updatedVisita.note,
+          notePrivate: updatedVisita.notePrivate
+        }));
+        
+        // Force refresh of the visits list to ensure right panel updates
+        if (animale?.id) {
+          const visiteResponse = await get(`/api/visite/animale/${animale.id}`);
+          if (visiteResponse.ok) {
+            const visiteData = await visiteResponse.json();
+            setvisite(visiteData);
+          }
+        }
       } else {
         // Creazione nuova visita
         const animalId = animale?.id;
@@ -260,6 +278,7 @@ function VisitePagina() {
         onSave={saveVisita}
         onCancel={() => navigate('/visite')}
         isSaving={isSaving}
+        initialEditMode={!visita.id} // New visits start in edit mode, existing visits start in read-only mode
       />
 
       {/* ==================== COLONNA DESTRA ==================== */}

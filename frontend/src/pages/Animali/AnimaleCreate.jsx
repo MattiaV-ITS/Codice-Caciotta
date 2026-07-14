@@ -269,11 +269,12 @@ function AnimaleCreate({ onClose, onSuccess, animale, isEditMode = false }) {
           taglia: formData.taglia === 'ALTRO_SCONOSCIUTA' ? null : formData.taglia,
           sterilizzato: formData.sterilizzato || false,
           stato: formData.stato || 'SANO',
-          proprietarioId: formData.proprietarioId ? parseInt(formData.proprietarioId) : null
+          proprietarioId: formData.proprietarioId ? parseInt(formData.proprietarioId) : null,
+          microchip: formData.microchip?.trim() || null
         };
 
         const url = isEditMode && animale?.id ? `/api/animali/${animale.id}` : '/api/animali';
-        const method = isEditMode && animale?.id ? 'PUT' : 'POST';
+        const method = isEditMode && animale?.id ? 'PATCH' : 'POST';
         
         const response = await fetch(url, {
           method: method,

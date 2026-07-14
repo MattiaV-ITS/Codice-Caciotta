@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.math.BigDecimal;
+import java.time.Duration;
 
 @Entity
 @Table(name = "visite")
@@ -23,8 +24,8 @@ public class Visita {
     @Column(name = "data_ora_visita", nullable = false)
     private LocalDateTime dataOraVisita;
 
-    @Column(nullable = true) // in minuti, puo essere null se non effettuata
-    private Integer durata;
+    @Column(name = "data_ora_fine_visita", nullable = true) // puo essere null se non ancora terminata
+    private LocalDateTime dataOraFineVisita;
 
     @Column(name = "importo_totale", nullable = false, precision = 10, scale = 2)
     private BigDecimal importoTotale;
@@ -49,4 +50,22 @@ public class Visita {
     @EqualsAndHashCode.Exclude
     @ToString.Exclude
     private Prenotazione prenotazione;
+
+    // Metodo per calcolare la durata in minuti (calcolata dinamicamente)
+    public Integer getDurata() {
+        if (dataOraVisita == null || dataOraFineVisita == null) {
+            return null;
+        }
+        Duration duration = Duration.between(dataOraVisita, dataOraFineVisita);
+        return (int) duration.toMinutes();
+    }
+
+    // Metodo per impostare la durata (calcola dataOraFineVisita)
+    public void setDurata(Integer durataMinuti) {
+        if (durataMinuti == null || dataOraVisita == null) {
+            dataOraFineVisita = null;
+        } else {
+            dataOraFineVisita = dataOraVisita.plusMinutes(durataMinuti);
+        }
+    }
 }

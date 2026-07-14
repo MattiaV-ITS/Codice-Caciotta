@@ -1,0 +1,18 @@
+/* PrenotazioneContextMenu specific styles */
+.prenotazione-context-menu {
+  /* This component uses the base ContextMenu styles */
+}
+
+/* Danger item style for delete action */
+.context-menu-item.danger {
+  color: var(--error);
+}
+
+.context-menu-item.danger:hover {
+  background-color: var(--error-light);
+  color: var(--error);
+}
+
+.context-menu-item.danger .context-menu-icon {
+  color: var(--error);
+}

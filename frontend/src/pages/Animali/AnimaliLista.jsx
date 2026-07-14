@@ -194,7 +194,7 @@ function AnimaliLista() {
 
   return (
     <ListPageTemplate
-      title="Elenco Pazienti"
+      title="Elenco Animali"
       subtitle="Gestisci i tuoi animali"
       data={animali}
       columns={customColumns}

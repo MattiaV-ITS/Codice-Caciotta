@@ -9,7 +9,7 @@ import FilterBar from '../common/FilterBar';
 function getSingularForm(word) {
   // Handle specific Italian plural to singular conversions
   const singularMap = {
-    'Pazienti': 'paziente',
+    'Animali': 'animale',
     'Proprietari': 'proprietario',
     'Animali': 'animale',
     'Visite': 'visita',

@@ -1,8 +1,35 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useApi } from '../../services/apiService';
-import { formatDate, toISODatetimeFormat, toISODateFormat } from '../../utils/dateUtils';
+import { formatDate, getCurrentISODatetime, parseDate, toISODatetimeFormat, toISODateFormat } from '../../utils/dateUtils';
 import { validateRequired, validatePositiveNumber } from '../../utils/validationUtils';
+
+// Inline styles for edit mode banner
+const bannerStyles = `
+  .visite-edit-mode-banner {
+    padding: var(--space-2) var(--space-3);
+    margin-bottom: var(--space-3);
+    border-radius: var(--radius-md);
+    font-size: var(--font-sm);
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+  .visite-edit-mode-banner.read-only-mode {
+    background-color: var(--gray-50);
+    color: var(--gray-700);
+    border: 1px solid var(--gray-200);
+  }
+  .visite-edit-mode-banner.edit-mode {
+    background-color: var(--primary-light);
+    color: var(--primary-dark);
+    border: 1px solid var(--primary);
+  }
+  .visite-edit-mode-banner svg {
+    width: 16px;
+    height: 16px;
+  }
+`;
 
 // ==============================
 // ICONE SVG (invariate)
@@ -30,6 +57,18 @@ const LightningIcon = () => (
   </svg>
 );
 
+const formatLocalDateTime = (date) => {
+  if (!date || isNaN(date.getTime())) return '';
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hour = String(date.getHours()).padStart(2, '0');
+  const minute = String(date.getMinutes()).padStart(2, '0');
+
+  return `${year}-${month}-${day}T${hour}:${minute}`;
+};
+
 // ==============================
 // MODALE DI CONFERMA (personalizzato)
 // ==============================
@@ -56,7 +95,7 @@ const ConfirmModal = ({ isOpen, message, onConfirm, onCancel }) => {
 // ==============================
 // COMPONENTE PRINCIPALE
 // ==============================
-function VisitaForm({ visita, animale, onSave, onCancel, isSaving }) {
+function VisitaForm({ visita, animale, onSave, onCancel, isSaving, initialEditMode = false }) {
   const [formData, setFormData] = useState(() => prepareVisitaData(visita));
   const [defaultDataPrenotazione, setDefaultDataPrenotazione] = useState('');
   const [errors, setErrors] = useState({});
@@ -64,25 +103,39 @@ function VisitaForm({ visita, animale, onSave, onCancel, isSaving }) {
   const [formError, setFormError] = useState('');
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [pendingSave, setPendingSave] = useState(false);
+  const [editMode, setEditMode] = useState(initialEditMode);
 
   // ----- Preparazione dati (modifica) -----
   function prepareVisitaData(visitaData) {
     if (!visitaData) return getDefaultVisita();
     
     const converted = { ...visitaData };
+    const normalizedStart = toISODatetimeFormat(visitaData.dataOraVisita);
     
-    if (visitaData.dataOraVisita) {
-      converted.dataOraVisita = toISODatetimeFormat(visitaData.dataOraVisita);
+    if (normalizedStart) {
+      converted.dataOraVisita = normalizedStart;
     }
     
-    // Calcola la fine se presente la durata, altrimenti la impostiamo uguale all'inizio
-    if (visitaData.dataOraVisita && visitaData.durata && visitaData.durata > 0) {
-      const start = new Date(visitaData.dataOraVisita);
-      const end = new Date(start.getTime() + visitaData.durata * 60 * 1000);
-      converted.dataOraFine = toISODatetimeFormat(end.toISOString());
-    } else if (visitaData.dataOraVisita) {
+    // Use dataOraFineVisita if available, otherwise calculate from durata for backward compatibility
+    if (visitaData.dataOraFineVisita) {
+      // Directly use the dataOraFineVisita if available
+      converted.dataOraFine = toISODatetimeFormat(visitaData.dataOraFineVisita);
+    } else if (normalizedStart && visitaData.durata && visitaData.durata > 0) {
+      // Fallback for backward compatibility: calculate from durata
+      const start = parseDate(normalizedStart);
+      if (start && !isNaN(start.getTime())) { // Validate the date is valid
+        const end = new Date(start.getTime() + visitaData.durata * 60 * 1000);
+        if (!isNaN(end.getTime())) { // Validate the end date is valid
+          converted.dataOraFine = formatLocalDateTime(end);
+        } else {
+          converted.dataOraFine = normalizedStart;
+        }
+      } else {
+        converted.dataOraFine = normalizedStart;
+      }
+    } else if (normalizedStart) {
       // Se non c'è durata, fine = inizio (default)
-      converted.dataOraFine = toISODatetimeFormat(visitaData.dataOraVisita);
+      converted.dataOraFine = normalizedStart;
     } else {
       converted.dataOraFine = '';
     }
@@ -92,20 +145,12 @@ function VisitaForm({ visita, animale, onSave, onCancel, isSaving }) {
 
   // ----- Valori di default per nuova visita -----
   function getDefaultVisita() {
-    const now = new Date();
-    const nowStr = now.toLocaleString('sv-SE', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit'
-    }).replace(' ', 'T');
+    const nowStr = getCurrentISODatetime();
 
     return {
       id: null,
       dataOraVisita: nowStr,   // inizio
       dataOraFine: nowStr,     // fine = inizio (default)
-      durata: 0,
       tipoVisita: '',
       altroTipoVisita: '',
       sintomi: '',
@@ -132,6 +177,7 @@ function VisitaForm({ visita, animale, onSave, onCancel, isSaving }) {
     if (!inizio || !fine) return 0;
     const start = new Date(inizio);
     const end = new Date(fine);
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) return 0;
     const diffMs = end - start;
     if (diffMs <= 0) return 0;
     return Math.round(diffMs / (1000 * 60)); // minuti
@@ -162,11 +208,20 @@ function VisitaForm({ visita, animale, onSave, onCancel, isSaving }) {
     const { name, value } = e.target;
     const fieldName = name.replace('Date', '');
     setFormData(prev => {
-      const currentDatetime = prev[fieldName] || `${value}T00:00`;
-      const [, timePart] = currentDatetime.split('T');
-      const newDatetime = `${value}T${timePart || '00:00'}`;
+      const currentDatetime = prev[fieldName] || '';
+      let timePart = '00:00';
+      
+      // Safely extract time part from existing datetime
+      if (currentDatetime && currentDatetime.includes('T')) {
+        const parts = currentDatetime.split('T');
+        if (parts.length === 2 && parts[1]) {
+          timePart = parts[1].split(':').slice(0, 2).join(':'); // Get only HH:MM
+        }
+      }
+      
+      const newDatetime = `${value}T${timePart}`;
       const updated = { ...prev, [fieldName]: newDatetime };
-      if (prev.dataOraVisita && prev.dataOraFine) {
+      if (updated.dataOraVisita && updated.dataOraFine) {
         updated.durata = calcolaDurata(updated.dataOraVisita, updated.dataOraFine);
       }
       return updated;
@@ -177,11 +232,23 @@ function VisitaForm({ visita, animale, onSave, onCancel, isSaving }) {
     const { name, value } = e.target;
     const fieldName = name.replace('Time', '');
     setFormData(prev => {
-      const currentDatetime = prev[fieldName] || `1970-01-01T${value}`;
-      const [datePart] = currentDatetime.split('T');
+      const currentDatetime = prev[fieldName] || '';
+      let datePart = getCurrentISODatetime().split('T')[0]; // Default to today in local time
+      
+      // Safely extract date part from existing datetime
+      if (currentDatetime && currentDatetime.includes('T')) {
+        const parts = currentDatetime.split('T');
+        if (parts.length === 2 && parts[0]) {
+          datePart = parts[0];
+        }
+      } else if (currentDatetime) {
+        // Handle case where datetime might be just a date
+        datePart = currentDatetime;
+      }
+      
       const newDatetime = `${datePart}T${value}`;
       const updated = { ...prev, [fieldName]: newDatetime };
-      if (prev.dataOraVisita && prev.dataOraFine) {
+      if (updated.dataOraVisita && updated.dataOraFine) {
         updated.durata = calcolaDurata(updated.dataOraVisita, updated.dataOraFine);
       }
       return updated;
@@ -190,8 +257,7 @@ function VisitaForm({ visita, animale, onSave, onCancel, isSaving }) {
 
   // Pulsanti "Ora"
   const setOraCorrenteInizio = () => {
-    const now = new Date();
-    const nowStr = now.toLocaleString('sv-SE', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }).replace(' ', 'T');
+    const nowStr = getCurrentISODatetime();
     setFormData(prev => {
       const updated = { ...prev, dataOraVisita: nowStr };
       if (prev.dataOraFine) {
@@ -202,8 +268,7 @@ function VisitaForm({ visita, animale, onSave, onCancel, isSaving }) {
   };
 
   const setOraCorrenteFine = () => {
-    const now = new Date();
-    const nowStr = now.toLocaleString('sv-SE', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }).replace(' ', 'T');
+    const nowStr = getCurrentISODatetime();
     setFormData(prev => {
       const updated = { ...prev, dataOraFine: nowStr };
       if (prev.dataOraVisita) {
@@ -240,7 +305,7 @@ function VisitaForm({ visita, animale, onSave, onCancel, isSaving }) {
     if (formData.dataOraVisita && formData.dataOraFine) {
       const start = new Date(formData.dataOraVisita);
       const end = new Date(formData.dataOraFine);
-      if (end < start) {
+      if (!isNaN(start.getTime()) && !isNaN(end.getTime()) && end < start) {
         newErrors.dataOraFine = 'La fine non può essere precedente all\'inizio';
       }
     }
@@ -254,16 +319,21 @@ function VisitaForm({ visita, animale, onSave, onCancel, isSaving }) {
       let finalEnd = endTimeToUse || formData.dataOraFine;
       let finalStart = formData.dataOraVisita;
 
-      if (!finalEnd) {
+      // Only use current time if both start and end are missing (shouldn't happen in normal flow)
+      if (!finalEnd && !finalStart) {
         const now = new Date();
         finalEnd = now.toLocaleString('sv-SE', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }).replace(' ', 'T');
+        finalStart = finalEnd;
+      } else if (!finalEnd) {
+        // If only end is missing, use start time (duration will be 0)
+        finalEnd = finalStart;
       }
 
       const durataFinale = calcolaDurata(finalStart, finalEnd);
 
       const visitaData = {
         dataOraVisita: toISODatetimeFormat(finalStart),
-        durata: durataFinale,
+        dataOraFineVisita: toISODatetimeFormat(finalEnd),
         tipoVisita: formData.tipoVisita === 'Altro' ? formData.altroTipoVisita : formData.tipoVisita,
         importoTotale: 0.00,
         prenotazioneId: null,
@@ -310,8 +380,7 @@ function VisitaForm({ visita, animale, onSave, onCancel, isSaving }) {
 
   const handleConfirmModal = () => {
     setShowConfirmModal(false);
-    const now = new Date();
-    const nowStr = now.toLocaleString('sv-SE', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }).replace(' ', 'T');
+    const nowStr = getCurrentISODatetime();
     setFormData(prev => ({
       ...prev,
       dataOraFine: nowStr,
@@ -333,8 +402,26 @@ function VisitaForm({ visita, animale, onSave, onCancel, isSaving }) {
     return formData.id ? 'Salva Visita' : 'Crea Visita';
   };
 
+  const toggleEditMode = () => {
+    setEditMode(!editMode);
+    // Reset errors when entering edit mode
+    if (!editMode) {
+      setErrors({});
+      setFormError('');
+    }
+  };
+
+  // Add some CSS for the edit button spacing
+  const actionStyles = `
+    .mr-2 {
+      margin-right: var(--space-2);
+    }
+  `;
+
   return (
     <div className="visite-colonna-center">
+      <style>{bannerStyles}</style>
+      <style>{actionStyles}</style>
       <div className="visite-card">
         <div className="visite-card-header">
           <div className="visite-header-left">
@@ -351,6 +438,19 @@ function VisitaForm({ visita, animale, onSave, onCancel, isSaving }) {
           <span className="visite-durata">Durata: {formData.durata || 0} min</span>
         </div>
         <div className="visite-card-body">
+          {formData.id && (
+            <div className={`visite-edit-mode-banner ${editMode ? 'edit-mode' : 'read-only-mode'}`}>
+              {editMode ? (
+                <>
+                  <strong>Modalità Modifica</strong>
+                </>
+              ) : (
+                <>
+                  <strong>Modalità Solo Lettura</strong>
+                </>
+              )}
+            </div>
+          )}
           <form onSubmit={handleSubmit} className="visite-form">
 
             {/* ===== INIZIO ===== */}
@@ -365,6 +465,8 @@ function VisitaForm({ visita, animale, onSave, onCancel, isSaving }) {
                   onChange={handleDateChange}
                   onBlur={() => setTouched(prev => ({ ...prev, dataOraVisita: true }))}
                   required
+                  readOnly={!editMode && formData.id}
+                  disabled={!editMode && formData.id}
                 />
                 <input
                   type="time"
@@ -375,11 +477,14 @@ function VisitaForm({ visita, animale, onSave, onCancel, isSaving }) {
                   onBlur={() => setTouched(prev => ({ ...prev, dataOraVisita: true }))}
                   required
                   step="60"
+                  readOnly={!editMode && formData.id}
+                  disabled={!editMode && formData.id}
                 />
                 <button
                   type="button"
                   className="btn btn-sm btn-secondary"
                   onClick={setOraCorrenteInizio}
+                  disabled={!editMode && formData.id}
                 >
                   ⏱ Ora
                 </button>
@@ -398,6 +503,8 @@ function VisitaForm({ visita, animale, onSave, onCancel, isSaving }) {
                   value={formData.dataOraFine ? formData.dataOraFine.split('T')[0] : ''}
                   onChange={handleDateChange}
                   onBlur={() => setTouched(prev => ({ ...prev, dataOraFine: true }))}
+                  readOnly={!editMode && formData.id}
+                  disabled={!editMode && formData.id}
                 />
                 <input
                   type="time"
@@ -407,11 +514,14 @@ function VisitaForm({ visita, animale, onSave, onCancel, isSaving }) {
                   onChange={handleTimeChange}
                   onBlur={() => setTouched(prev => ({ ...prev, dataOraFine: true }))}
                   step="60"
+                  readOnly={!editMode && formData.id}
+                  disabled={!editMode && formData.id}
                 />
                 <button
                   type="button"
                   className="btn btn-sm btn-secondary"
                   onClick={setOraCorrenteFine}
+                  disabled={!editMode && formData.id}
                 >
                   ⏱ Ora
                 </button>
@@ -433,6 +543,7 @@ function VisitaForm({ visita, animale, onSave, onCancel, isSaving }) {
                 value={formData.tipoVisita || ''}
                 onChange={handleChange}
                 onBlur={() => setTouched(prev => ({ ...prev, tipoVisita: true }))}
+                disabled={!editMode && formData.id}
               >
                 <option value="">Seleziona tipo</option>
                 <option value="Visita di controllo">Visita di controllo</option>
@@ -456,6 +567,8 @@ function VisitaForm({ visita, animale, onSave, onCancel, isSaving }) {
                   onChange={handleChange}
                   onBlur={() => setTouched(prev => ({ ...prev, altroTipoVisita: true }))}
                   placeholder="Inserisci il tipo di visita..."
+                  readOnly={!editMode && formData.id}
+                  disabled={!editMode && formData.id}
                 />
                 {hasError('altroTipoVisita') && <div className="form-error">{errors.altroTipoVisita}</div>}
               </div>
@@ -465,30 +578,40 @@ function VisitaForm({ visita, animale, onSave, onCancel, isSaving }) {
             <div className="visite-divider"><span>Referto Clinico</span></div>
             <div className="visite-form-group">
               <label className="visite-form-label">Sintomi</label>
-              <textarea name="sintomi" className="visite-form-control visite-form-textarea" rows="3" value={formData.sintomi || ''} onChange={handleChange} placeholder="Descrivi i sintomi riportati..." />
+              <textarea name="sintomi" className="visite-form-control visite-form-textarea" rows="3" value={formData.sintomi || ''} onChange={handleChange} placeholder="Descrivi i sintomi riportati..." readOnly={!editMode && formData.id} disabled={!editMode && formData.id} />
             </div>
             <div className="visite-form-group">
               <label className="visite-form-label">Diagnosi</label>
-              <textarea name="diagnosi" className="visite-form-control visite-form-textarea" rows="3" value={formData.diagnosi || ''} onChange={handleChange} placeholder="Inserisci la diagnosi..." />
+              <textarea name="diagnosi" className="visite-form-control visite-form-textarea" rows="3" value={formData.diagnosi || ''} onChange={handleChange} placeholder="Inserisci la diagnosi..." readOnly={!editMode && formData.id} disabled={!editMode && formData.id} />
             </div>
             <div className="visite-form-group">
               <label className="visite-form-label">Trattamento / Terapia</label>
-              <textarea name="trattamentoTerapia" className="visite-form-control visite-form-textarea" rows="3" value={formData.trattamentoTerapia || ''} onChange={handleChange} placeholder="Indica il trattamento prescritto..." />
+              <textarea name="trattamentoTerapia" className="visite-form-control visite-form-textarea" rows="3" value={formData.trattamentoTerapia || ''} onChange={handleChange} placeholder="Indica il trattamento prescritto..." readOnly={!editMode && formData.id} disabled={!editMode && formData.id} />
             </div>
             <div className="visite-form-group">
               <label className="visite-form-label">Note</label>
-              <textarea name="note" className="visite-form-control visite-form-textarea" rows="2" value={formData.note || ''} onChange={handleChange} placeholder="Note aggiuntive (visibili al proprietario)..." />
+              <textarea name="note" className="visite-form-control visite-form-textarea" rows="2" value={formData.note || ''} onChange={handleChange} placeholder="Note aggiuntive (visibili al proprietario)..." readOnly={!editMode && formData.id} disabled={!editMode && formData.id} />
             </div>
             <div className="visite-form-group">
               <label className="visite-form-label">Note Private</label>
-              <textarea name="notePrivate" className="visite-form-control visite-form-textarea" rows="2" value={formData.notePrivate || ''} onChange={handleChange} placeholder="Note riservate al veterinario..." />
+              <textarea name="notePrivate" className="visite-form-control visite-form-textarea" rows="2" value={formData.notePrivate || ''} onChange={handleChange} placeholder="Note riservate al veterinario..." readOnly={!editMode && formData.id} disabled={!editMode && formData.id} />
             </div>
 
             {formError && <div className="form-error" style={{ marginBottom: 'var(--space-2)' }}>{formError}</div>}
 
             <div className="visite-form-actions">
               <div className="visite-form-actions-left">
-                <button type="submit" className="btn btn-primary" disabled={isSaving}>
+                {formData.id && (
+                  <button 
+                    type="button" 
+                    className="btn btn-secondary mr-2"
+                    onClick={toggleEditMode}
+                    disabled={isSaving}
+                  >
+                    {editMode ? 'Annulla Modifiche' : 'Modifica'}
+                  </button>
+                )}
+                <button type="submit" className="btn btn-primary" disabled={isSaving || (!editMode && formData.id)}>
                   {getButtonText()}
                 </button>
               </div>

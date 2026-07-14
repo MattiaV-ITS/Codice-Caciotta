@@ -42,7 +42,7 @@ public class VisitaServiceImpl implements VisitaService {
         Visita visita = new Visita();
         visita.setDataOraVisita(dto.getDataOraVisita());
         visita.setTipoVisita(dto.getTipoVisita());
-        visita.setDurata(dto.getDurata());
+        visita.setDataOraFineVisita(dto.getDataOraFineVisita());
         visita.setImportoTotale(dto.getImportoTotale() != null ? dto.getImportoTotale() : BigDecimal.ZERO);
 
         Animale animale = animaleRepository.findById(animaleId)
@@ -79,8 +79,8 @@ public class VisitaServiceImpl implements VisitaService {
         if (dto.getDataOraVisita() != null) {
             visita.setDataOraVisita(dto.getDataOraVisita());
         }
-        if (dto.getDurata() != null) {
-            visita.setDurata(dto.getDurata());
+        if (dto.getDataOraFineVisita() != null) {
+            visita.setDataOraFineVisita(dto.getDataOraFineVisita());
         }
         if (dto.getTipoVisita() != null) {
             visita.setTipoVisita(dto.getTipoVisita());

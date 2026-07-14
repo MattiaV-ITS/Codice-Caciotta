@@ -59,15 +59,6 @@ function Sidebar({ isOpen, closeMenu }) {
             </NavLink>
 
             <NavLink
-              to="/visite"
-              className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
-              onClick={closeMenu}
-            >
-              <span className="nav-icon">🩺</span>
-              Visite
-            </NavLink>
-
-            <NavLink
               to="/prenotazioni"
               className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
               onClick={closeMenu}

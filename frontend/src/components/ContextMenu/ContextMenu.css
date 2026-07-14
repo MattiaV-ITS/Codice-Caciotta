@@ -56,6 +56,11 @@
   color: var(--primary);
 }
 
+.context-menu-item.danger:hover {
+  background-color: var(--error-light);
+  color: var(--error);
+}
+
 .context-menu-icon {
   width: 16px;
   display: flex;
