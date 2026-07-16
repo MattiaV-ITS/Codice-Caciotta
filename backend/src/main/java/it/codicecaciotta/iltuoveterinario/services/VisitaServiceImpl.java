@@ -4,11 +4,9 @@ import it.codicecaciotta.iltuoveterinario.dto.VisitaSchedaCreateDTO;
 import it.codicecaciotta.iltuoveterinario.dto.VisitaSchedaUpdateDTO;
 import it.codicecaciotta.iltuoveterinario.models.Animale;
 import it.codicecaciotta.iltuoveterinario.models.DiarioClinico;
-import it.codicecaciotta.iltuoveterinario.models.Prenotazione;
 import it.codicecaciotta.iltuoveterinario.models.Visita;
 import it.codicecaciotta.iltuoveterinario.repositories.AnimaleRepository;
 import java.math.BigDecimal;
-import it.codicecaciotta.iltuoveterinario.repositories.PrenotazioneRepository;
 import it.codicecaciotta.iltuoveterinario.repositories.VisitaRepository;
 import jakarta.persistence.EntityNotFoundException;
 
@@ -24,14 +22,12 @@ public class VisitaServiceImpl implements VisitaService {
 
     private final VisitaRepository visitaRepository;
     private final AnimaleRepository animaleRepository;
-    private final PrenotazioneRepository prenotazioneRepository;
     private final DiarioClinicoService diarioClinicoService;
 
     public VisitaServiceImpl(VisitaRepository visitaRepository, AnimaleRepository animaleRepository,
-            PrenotazioneRepository prenotazioneRepository, DiarioClinicoService diarioClinicoService) {
+            DiarioClinicoService diarioClinicoService) {
         this.visitaRepository = visitaRepository;
         this.animaleRepository = animaleRepository;
-        this.prenotazioneRepository = prenotazioneRepository;
         this.diarioClinicoService = diarioClinicoService;
     }
 
@@ -89,7 +85,7 @@ public class VisitaServiceImpl implements VisitaService {
             visita.setImportoTotale(dto.getImportoTotale());
         }
         
-        Visita savedVisita = visitaRepository.save(visita);
+        Visita savedVisita = visitaRepository.save(Objects.requireNonNull(visita));
 
         // Update or create DiarioClinico
         DiarioClinico diarioClinico = savedVisita.getDiarioClinico();
@@ -117,7 +113,8 @@ public class VisitaServiceImpl implements VisitaService {
         if (diarioClinico.getId() == null) {
             diarioClinicoService.createDiarioClinico(diarioClinico);
         } else {
-            diarioClinicoService.updateDiarioClinico(diarioClinico.getId(), diarioClinico);
+            Long diarioClinicoId = Objects.requireNonNull(diarioClinico.getId(), "DiarioClinico id cannot be null");
+            diarioClinicoService.updateDiarioClinico(diarioClinicoId, diarioClinico);
         }
         
         return savedVisita;
