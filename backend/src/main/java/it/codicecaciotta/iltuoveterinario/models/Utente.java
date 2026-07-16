@@ -37,6 +37,9 @@ public class Utente {
     @JoinTable(name = "utente_ruoli", joinColumns = @JoinColumn(name = "utente_id"), inverseJoinColumns = @JoinColumn(name = "ruolo_id"))
     private Set<Ruolo> ruoli = new HashSet<>();
 
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JoinColumn(name = "proprietario_id", nullable = true)
+    private Proprietario proprietario;
 
     public Utente() {
     }

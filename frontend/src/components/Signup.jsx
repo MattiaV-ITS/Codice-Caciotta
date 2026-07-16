@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import AuthService from '../services/authService';
+import ProprietarioRegistrationModal from './ProprietarioRegistrationModal';
 import './Auth.css';
 
 function Signup() {
@@ -14,6 +15,7 @@ function Signup() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showProprietarioModal, setShowProprietarioModal] = useState(false);
   
   const navigate = useNavigate();
 
@@ -68,13 +70,24 @@ function Signup() {
         formData.password,
         ['user']
       );
-      setSuccess('Registrazione completata! Ora puoi effettuare il login.');
-      setTimeout(() => navigate('/login'), 2000);
+      setSuccess('Registrazione completata!');
+      // Show proprietario creation modal instead of immediately navigating to login
+      setShowProprietarioModal(true);
     } catch (err) {
       setError(err.message);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleProprietarioSuccess = () => {
+    setSuccess('Profilo proprietario creato con successo! Ora puoi effettuare il login.');
+    setTimeout(() => navigate('/login'), 2000);
+  };
+
+  const handleProprietarioSkip = () => {
+    setSuccess('Registrazione completata! Ora puoi effettuare il login.');
+    setTimeout(() => navigate('/login'), 2000);
   };
 
   return (
@@ -87,7 +100,7 @@ function Signup() {
           <p className="auth-subtitle">Crea il tuo account per accedere al sistema.</p>
           
           {error && <div className="form-error">{error}</div>}
-          {success && <div className="form-success" style={{ 
+          {success && !showProprietarioModal && <div className="form-success" style={{ 
             background: '#D1FAE5', 
             color: '#065F46', 
             padding: '12px', 
@@ -200,6 +213,14 @@ function Signup() {
           </p>
         </div>
       </div>
+      
+      {showProprietarioModal && (
+        <ProprietarioRegistrationModal
+          onClose={() => setShowProprietarioModal(false)}
+          onSuccess={handleProprietarioSuccess}
+          onSkip={handleProprietarioSkip}
+        />
+      )}
     </div>
   );
 }

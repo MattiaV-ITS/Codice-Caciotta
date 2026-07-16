@@ -27,6 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
 import it.codicecaciotta.iltuoveterinario.models.Utente;
 import it.codicecaciotta.iltuoveterinario.models.Ruolo;
 import it.codicecaciotta.iltuoveterinario.models.ERuoli;
+import it.codicecaciotta.iltuoveterinario.models.Proprietario;
 import it.codicecaciotta.iltuoveterinario.payload.request.LoginRequest;
 import it.codicecaciotta.iltuoveterinario.payload.request.SignupRequest;
 import it.codicecaciotta.iltuoveterinario.payload.response.JwtResponse;
@@ -35,6 +36,8 @@ import it.codicecaciotta.iltuoveterinario.repositories.RuoloRepository;
 import it.codicecaciotta.iltuoveterinario.repositories.UtenteRepository;
 import it.codicecaciotta.iltuoveterinario.security.jwt.JwtUtils;
 import it.codicecaciotta.iltuoveterinario.security.services.UserDetailsImpl;
+import it.codicecaciotta.iltuoveterinario.services.ProprietarioService;
+import it.codicecaciotta.iltuoveterinario.dto.ProprietarioCreateDTO;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -49,17 +52,20 @@ public class AuthController {
   private final RuoloRepository roleRepository;
   private final PasswordEncoder encoder;
   private final JwtUtils jwtUtils;
+  private final ProprietarioService proprietarioService;
 
   public AuthController(AuthenticationManager authenticationManager,
                         UtenteRepository userRepository,
                         RuoloRepository roleRepository,
                         PasswordEncoder encoder,
-                        JwtUtils jwtUtils) {
+                        JwtUtils jwtUtils,
+                        ProprietarioService proprietarioService) {
     this.authenticationManager = authenticationManager;
     this.userRepository = userRepository;
     this.roleRepository = roleRepository;
     this.encoder = encoder;
     this.jwtUtils = jwtUtils;
+    this.proprietarioService = proprietarioService;
   }
 
   /**
@@ -125,6 +131,18 @@ public class AuthController {
         roles.stream().map(r -> r.getNome().name()).collect(Collectors.toList()));
 
     return ResponseEntity.ok(new MessageResponse("Utente registrato con successo!"));
+  }
+
+  @PostMapping("/create-proprietario")
+  public ResponseEntity<?> createProprietarioForUser(@Valid @RequestBody ProprietarioCreateDTO proprietarioCreateDTO) {
+    try {
+      Proprietario createdProprietario = proprietarioService.createProprietario(proprietarioCreateDTO);
+
+      return ResponseEntity.ok(createdProprietario);
+    } catch (Exception e) {
+      logger.error("Errore nella creazione del proprietario per l'utente: {}", e.getMessage());
+      return ResponseEntity.badRequest().body(new MessageResponse("Errore nella creazione del proprietario: " + e.getMessage()));
+    }
   }
 
   /**
