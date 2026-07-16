@@ -8,6 +8,7 @@ import SearchBox from '../../components/common/SearchBox';
 import FilterBar from '../../components/common/FilterBar';
 import ListPageTemplate from '../../components/ListPageTemplate/ListPageTemplate';
 import VaccinazioneEditModal from '../../components/VaccinazioneEditModal/VaccinazioneEditModal';
+import { GearMenu } from '../../components/ContextMenu/ContextMenu';
 
 import { useTableControls } from '../../hooks/useTableControls';
 import { usePaginatedFetch } from '../../hooks/usePaginatedFetch';
@@ -94,17 +95,14 @@ function VaccinazioniLista() {
       field: 'azioni',
       sortable: false,
       render: (item) => (
-        <button
-          type="button"
-          className="btn-icon-edit"
-          title="Modifica vaccinazione"
-          onClick={(e) => {
-            e.stopPropagation();
-            setEditingVaccinazione(item);
-          }}
-        >
-          ✏️ Modifica
-        </button>
+        <GearMenu
+          menuItems={[
+            {
+              label: 'Modifica',
+              onClick: () => setEditingVaccinazione(item)
+            }
+          ]}
+        />
       )
     }
   ];
