@@ -88,7 +88,7 @@ public class AuthController {
           userDetails.getEmail(), roles));
     } catch (AuthenticationException ex) {
       logger.warn("Authentication failed for user '{}'", loginRequest.getUsername());
-      return ResponseEntity.status(401).body(new MessageResponse("Errore: Username o password non validi"));
+      return ResponseEntity.status(401).body(new MessageResponse("Error: Invalid username or password"));
     }
   }
 
@@ -101,11 +101,11 @@ public class AuthController {
   @PostMapping("/signup")
   public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest signUpRequest) {
     if (userRepository.existsByUsername(signUpRequest.getUsername())) {
-      return ResponseEntity.badRequest().body(new MessageResponse("Errore: Username esistente!"));
+      return ResponseEntity.badRequest().body(new MessageResponse("Error: Username is already taken!"));
     }
 
     if (userRepository.existsByEmail(signUpRequest.getEmail())) {
-      return ResponseEntity.badRequest().body(new MessageResponse("Errore: Email già in uso!"));
+      return ResponseEntity.badRequest().body(new MessageResponse("Error: Email is already in use!"));
     }
 
     // Creazione del nuovo utente con password codificata
@@ -124,7 +124,7 @@ public class AuthController {
         user.getUsername(),
         roles.stream().map(r -> r.getNome().name()).collect(Collectors.toList()));
 
-    return ResponseEntity.ok(new MessageResponse("Utente registrato con successo!"));
+    return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
   }
 
   /**

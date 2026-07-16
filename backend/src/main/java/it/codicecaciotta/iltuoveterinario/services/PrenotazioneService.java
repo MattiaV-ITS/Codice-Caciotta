@@ -58,7 +58,7 @@ public class PrenotazioneService {
                     prenotazione.setProprietario(prenotazioneDetails.getProprietario());
                     return prenotazioneRepository.save(prenotazione);
                 })
-                .orElseThrow(() -> new RuntimeException("Prenotazione non trovata con id: " + prenotazioneId));
+                .orElseThrow(() -> new RuntimeException("Prenotazione not found with id: " + prenotazioneId));
     }
 
     @Transactional
