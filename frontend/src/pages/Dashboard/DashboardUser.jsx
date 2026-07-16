@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useApi } from '../../services/apiService';
 import { formatDate, formatTime } from '../../utils/dateUtils';
 import AnimaleCreate from '../Animali/AnimaleCreate';
+import ProprietarioRegistrationModal from '../../components/ProprietarioRegistrationModal';
 import './DashboardUser.css';
 
 // ==============================
@@ -55,7 +56,7 @@ const PlusIcon = () => (
 );
 
 function DashboardUser() {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const { get } = useApi();
   const navigate = useNavigate();
 
@@ -64,6 +65,31 @@ function DashboardUser() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showProprietarioModal, setShowProprietarioModal] = useState(false);
+  const [hasProprietario, setHasProprietario] = useState(false);
+
+  const checkProprietario = async () => {
+    if (!user?.id) return false;
+    
+    try {
+      const response = await get(`/api/auth/me`);
+      const data = await response.json();
+      
+      if (response.ok && data.proprietarioId) {
+        setHasProprietario(true);
+        // Update user context with proprietarioId
+        updateUser({
+          ...user,
+          proprietarioId: data.proprietarioId
+        });
+        return true;
+      }
+      return false;
+    } catch (err) {
+      console.error('Errore nel controllo del proprietario:', err);
+      return false;
+    }
+  };
 
   const loadData = async () => {
     if (!user?.id) return;
@@ -89,7 +115,11 @@ function DashboardUser() {
   };
 
   useEffect(() => {
-    loadData();
+    const initialize = async () => {
+      await checkProprietario();
+      await loadData();
+    };
+    initialize();
   }, [user]);
 
   const handleCreateSuccess = () => {
@@ -99,6 +129,15 @@ function DashboardUser() {
 
   const handlePrenotaVisita = () => {
     navigate('/prenotazioni/nuova');
+  };
+
+  const handleCreateProprietarioSuccess = () => {
+    setShowProprietarioModal(false);
+    checkProprietario(); // Re-check proprietario status
+  };
+
+  const handleCreateProprietarioSkip = () => {
+    setShowProprietarioModal(false);
   };
 
   const handleSchedaAnimale = (animaleId) => {
@@ -144,9 +183,16 @@ function DashboardUser() {
           </h1>
           <p className="dashboard-user-subtitle">Prenota la tua prossima visita</p>
         </div>
-        <button className="btn btn-primary" onClick={handlePrenotaVisita}>
-          <PlusIcon /> Prenota visita
-        </button>
+        <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+          {!hasProprietario && (
+            <button className="btn btn-secondary" onClick={() => setShowProprietarioModal(true)}>
+              <PlusIcon /> Crea Profilo Proprietario
+            </button>
+          )}
+          <button className="btn btn-primary" onClick={handlePrenotaVisita}>
+            <PlusIcon /> Prenota visita
+          </button>
+        </div>
       </div>
 
       {/* KPI CARDS */}
@@ -285,6 +331,15 @@ function DashboardUser() {
           onClose={() => setShowCreateModal(false)}
           onSuccess={handleCreateSuccess}
           proprietarioPrecompilatoId={user?.id}
+        />
+      )}
+
+      {/* MODALE CREAZIONE PROPRIETARIO */}
+      {showProprietarioModal && (
+        <ProprietarioRegistrationModal
+          onClose={() => setShowProprietarioModal(false)}
+          onSuccess={handleCreateProprietarioSuccess}
+          onSkip={handleCreateProprietarioSkip}
         />
       )}
     </div>

@@ -42,6 +42,7 @@ class AuthService {
         username: data.username,
         email: data.email,
         roles: data.roles,
+        proprietarioId: data.proprietarioId,
       },
     };
   }
@@ -58,6 +59,32 @@ class AuthService {
   getUser() {
     const userData = localStorage.getItem('userData');
     return userData ? JSON.parse(userData) : null;
+  }
+
+  async getCurrentUser() {
+    const response = await fetch(`${API_URL}/me`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${this.getToken()}`,
+      },
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to get current user');
+    }
+
+    return {
+      user: {
+        id: data.id,
+        username: data.username,
+        email: data.email,
+        roles: data.roles,
+        proprietarioId: data.proprietarioId,
+      },
+    };
   }
 
   isAuthenticated() {

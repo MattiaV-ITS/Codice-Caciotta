@@ -91,7 +91,7 @@ public class AuthController {
       logger.info("User '{}' authenticated successfully", userDetails.getUsername());
 
       return ResponseEntity.ok(new JwtResponse(jwt, userDetails.getId(), userDetails.getUsername(),
-          userDetails.getEmail(), roles));
+          userDetails.getEmail(), roles, null));
     } catch (AuthenticationException ex) {
       logger.warn("Authentication failed for user '{}'", loginRequest.getUsername());
       return ResponseEntity.status(401).body(new MessageResponse("Errore: Username o password non validi"));
@@ -136,12 +136,38 @@ public class AuthController {
   @PostMapping("/create-proprietario")
   public ResponseEntity<?> createProprietarioForUser(@Valid @RequestBody ProprietarioCreateDTO proprietarioCreateDTO) {
     try {
-      Proprietario createdProprietario = proprietarioService.createProprietario(proprietarioCreateDTO);
+      // Get current user from security context
+      UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+      Utente currentUser = userRepository.findById(userDetails.getId())
+          .orElseThrow(() -> new IllegalStateException("User not found"));
+
+      Proprietario createdProprietario = proprietarioService.createProprietarioForUser(proprietarioCreateDTO, currentUser);
 
       return ResponseEntity.ok(createdProprietario);
     } catch (Exception e) {
       logger.error("Errore nella creazione del proprietario per l'utente: {}", e.getMessage());
       return ResponseEntity.badRequest().body(new MessageResponse("Errore nella creazione del proprietario: " + e.getMessage()));
+    }
+  }
+
+  @GetMapping("/me")
+  public ResponseEntity<?> getCurrentUser() {
+    try {
+      UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+      Utente user = userRepository.findById(userDetails.getId())
+          .orElseThrow(() -> new IllegalStateException("User not found"));
+
+      return ResponseEntity.ok(new JwtResponse(
+          null, // No token needed
+          user.getId(),
+          user.getUsername(),
+          user.getEmail(),
+          userDetails.getAuthorities().stream().map(item -> item.getAuthority()).collect(Collectors.toList()),
+          user.getProprietario() != null ? user.getProprietario().getId() : null
+      ));
+    } catch (Exception e) {
+      logger.error("Errore nel recupero delle informazioni dell'utente: {}", e.getMessage());
+      return ResponseEntity.badRequest().body(new MessageResponse("Errore nel recupero delle informazioni dell'utente: " + e.getMessage()));
     }
   }
 
