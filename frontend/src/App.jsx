@@ -4,12 +4,15 @@ import Login from './components/Login';
 import Signup from './components/Signup';
 import { Dashboard } from './pages/Dashboard/Dashboard';
 import AnimaliLista from './pages/Animali/AnimaliLista';
-import AnimaleDettaglio from './pages/Animali/AnimaleDettaglio';
+
+import SchedaAnimale from './pages/Animali/SchedaAnimale';
 import ProprietariLista from './pages/Proprietari/ProprietariLista';
 import VaccinazioniLista from './pages/Vaccinazioni/VaccinazioniLista';
 import VisitePagina from './pages/Visite/VisitePagina';
+import AnimaleDettaglio from './pages/Animali/AnimaleDettaglio';
 
 import DashboardUser from './pages/Dashboard/DashboardUser';
+import AnimaleDettaglioUser from './pages/Animali/AnimaleDettaglioUser';
 
 import PrenotazioniCalendario from './pages/Prenotazioni/PrenotazioniCalendario';
 import PrenotazioniProgramma from './pages/Prenotazioni/PrenotazioniProgramma';
@@ -59,7 +62,7 @@ function App() {
         <Route path="/proprietari" element={<StaffRoute><ProprietariLista /></StaffRoute>} />
         <Route path="/vaccinazioni" element={<StaffRoute><VaccinazioniLista /></StaffRoute>} />
         <Route path="/dashboard/user" element={<ProtectedRoute><DashboardUser /></ProtectedRoute>} />
-        <Route path="/admin" element={<AdminRoute><AdminRoleManagement /></AdminRoute>} />
+        <Route path="/animali/user/:id" element={<ProtectedRoute><AnimaleDettaglioUser /></ProtectedRoute>} />        <Route path="/admin" element={<AdminRoute><AdminRoleManagement /></AdminRoute>} />
       </Route>
     </Routes>
   );
