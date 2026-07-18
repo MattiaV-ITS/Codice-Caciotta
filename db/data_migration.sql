@@ -307,7 +307,28 @@ VALUES
 );
 
 -- ============================================================
--- VISITE — lookup dinamico proprietario_id e animale_id
+-- PRESTAZIONI — creazione prestazioni basate sui tipi visita
+-- ============================================================
+
+INSERT INTO prestazioni (nome_prestazione, descrizione, categoria, durata_stimata, costo_base, aliquota_iva, stato, colore)
+VALUES
+('Controllo annuale', 'Visita di controllo annuale', 'Generale', 30, 45.00, 22, 'Disponibile', '#4299E1'),
+('Visita ortopedica', 'Visita specialistica ortopedica', 'Specialistica', 45, 85.00, 22, 'Disponibile', '#9F7AEA'),
+('Chirurgia', 'Intervento chirurgico', 'Chirurgica', 120, 220.00, 22, 'Disponibile', '#ED8936'),
+('Visita urgente', 'Visita per problemi urgenti', 'Emergenza', 45, 70.00, 22, 'Disponibile', '#F56565'),
+('Controllo peso', 'Controllo del peso e dieta', 'Generale', 20, 35.00, 22, 'Disponibile', '#48BB78'),
+('Vaccinazione', 'Somministrazione vaccini', 'Preventiva', 20, 35.00, 22, 'Disponibile', '#48BB78'),
+('Dermatologia', 'Visita specialistica dermatologica', 'Specialistica', 30, 65.00, 22, 'Disponibile', '#ED64A6'),
+('Ecografia', 'Esame ecografico', 'Diagnostica', 45, 95.00, 22, 'Disponibile', '#63B3ED'),
+('Visita neurologica', 'Visita specialistica neurologica', 'Specialistica', 45, 90.00, 22, 'Disponibile', '#2B6CB0'),
+('Controllo post-op', 'Controllo post-operatorio', 'Post-operatorio', 30, 50.00, 22, 'Disponibile', '#38B2AC'),
+('Malattia infettiva', 'Visita per malattie infettive', 'Specialistica', 45, 75.00, 22, 'Disponibile', '#EF4444'),
+('Controllo semestrale', 'Visita di controllo semestrale', 'Generale', 25, 40.00, 22, 'Disponibile', '#3182CE'),
+('Otorinolaringoiatria', 'Visita specialistica ORL', 'Specialistica', 30, 60.00, 22, 'Disponibile', '#805AD5'),
+('Prima visita', 'Prima visita per nuovo paziente', 'Generale', 45, 40.00, 22, 'Disponibile', '#2C7A7B');
+
+-- ============================================================
+-- VISITE — lookup dinamico proprietario_id e animale_id con prestazioni
 -- ============================================================
 
 INSERT INTO visite (data_ora_visita, data_ora_fine_visita, importo_totale, animale_id, prenotazione_id) VALUES
@@ -412,8 +433,246 @@ INSERT INTO visite (data_ora_visita, data_ora_fine_visita, importo_totale, anima
   WHERE a.nome='Zeus' AND p.nome='Francesco' AND p.cognome='Lombardi' LIMIT 1), NULL);
 
 -- ============================================================
--- DIARIO CLINICO — lookup dinamico proprietario_id e animale_id e scomposizione Visite
+-- VISITA_PRESTAZIONI — associazione prestazioni alle visite
 -- ============================================================
+
+-- Visita Briciola 10/01/2024 - Controllo annuale
+INSERT INTO visita_prestazioni (visita_id, prestazione_id)
+VALUES (
+    (SELECT v.id FROM visite v JOIN animali a ON v.animale_id=a.id JOIN proprietari p ON a.proprietario_id=p.id
+     WHERE a.nome='Briciola' AND p.nome='Marco' AND p.cognome='Rossi' AND v.data_ora_visita='2024-01-10T00:00:00' LIMIT 1),
+    (SELECT id FROM prestazioni WHERE nome_prestazione='Controllo annuale' LIMIT 1)
+);
+
+-- Visita Rex 12/01/2024 - Visita urgente
+INSERT INTO visita_prestazioni (visita_id, prestazione_id)
+VALUES (
+    (SELECT v.id FROM visite v JOIN animali a ON v.animale_id=a.id JOIN proprietari p ON a.proprietario_id=p.id
+     WHERE a.nome='Rex' AND p.nome='Francesca' AND p.cognome='Bianchi' AND v.data_ora_visita='2024-01-12T00:00:00' LIMIT 1),
+    (SELECT id FROM prestazioni WHERE nome_prestazione='Visita urgente' LIMIT 1)
+);
+
+-- Visita Fido 15/01/2024 - Controllo annuale + Vaccinazione
+INSERT INTO visita_prestazioni (visita_id, prestazione_id)
+VALUES (
+    (SELECT v.id FROM visite v JOIN animali a ON v.animale_id=a.id JOIN proprietari p ON a.proprietario_id=p.id
+     WHERE a.nome='Fido' AND p.nome='Giorgio' AND p.cognome='Ricci' AND v.data_ora_visita='2024-01-15T00:00:00' LIMIT 1),
+    (SELECT id FROM prestazioni WHERE nome_prestazione='Controllo annuale' LIMIT 1)
+),
+(
+    (SELECT v.id FROM visite v JOIN animali a ON v.animale_id=a.id JOIN proprietari p ON a.proprietario_id=p.id
+     WHERE a.nome='Fido' AND p.nome='Giorgio' AND p.cognome='Ricci' AND v.data_ora_visita='2024-01-15T00:00:00' LIMIT 1),
+    (SELECT id FROM prestazioni WHERE nome_prestazione='Vaccinazione' LIMIT 1)
+);
+
+-- Visita Luna 18/01/2024 - Chirurgia
+INSERT INTO visita_prestazioni (visita_id, prestazione_id)
+VALUES (
+    (SELECT v.id FROM visite v JOIN animali a ON v.animale_id=a.id JOIN proprietari p ON a.proprietario_id=p.id
+     WHERE a.nome='Luna' AND p.nome='Francesca' AND p.cognome='Bianchi' AND v.data_ora_visita='2024-01-18T00:00:00' LIMIT 1),
+    (SELECT id FROM prestazioni WHERE nome_prestazione='Chirurgia' LIMIT 1)
+);
+
+-- Visita Tigre 22/01/2024 - Visita urgente
+INSERT INTO visita_prestazioni (visita_id, prestazione_id)
+VALUES (
+    (SELECT v.id FROM visite v JOIN animali a ON v.animale_id=a.id JOIN proprietari p ON a.proprietario_id=p.id
+     WHERE a.nome='Tigre' AND p.nome='Roberto' AND p.cognome='Esposito' AND v.data_ora_visita='2024-01-22T00:00:00' LIMIT 1),
+    (SELECT id FROM prestazioni WHERE nome_prestazione='Visita urgente' LIMIT 1)
+);
+
+-- Visita Birillo 25/01/2024 - Controllo peso
+INSERT INTO visita_prestazioni (visita_id, prestazione_id)
+VALUES (
+    (SELECT v.id FROM visite v JOIN animali a ON v.animale_id=a.id JOIN proprietari p ON a.proprietario_id=p.id
+     WHERE a.nome='Birillo' AND p.nome='Paolo' AND p.cognome='Manzoni' AND v.data_ora_visita='2024-01-25T00:00:00' LIMIT 1),
+    (SELECT id FROM prestazioni WHERE nome_prestazione='Controllo peso' LIMIT 1)
+);
+
+-- Visita Zeus 29/01/2024 - Controllo annuale
+INSERT INTO visita_prestazioni (visita_id, prestazione_id)
+VALUES (
+    (SELECT v.id FROM visite v JOIN animali a ON v.animale_id=a.id JOIN proprietari p ON a.proprietario_id=p.id
+     WHERE a.nome='Zeus' AND p.nome='Francesco' AND p.cognome='Lombardi' AND v.data_ora_visita='2024-01-29T00:00:00' LIMIT 1),
+    (SELECT id FROM prestazioni WHERE nome_prestazione='Controllo annuale' LIMIT 1)
+);
+
+-- Visita Micio 02/02/2024 - Dermatologia
+INSERT INTO visita_prestazioni (visita_id, prestazione_id)
+VALUES (
+    (SELECT v.id FROM visite v JOIN animali a ON v.animale_id=a.id JOIN proprietari p ON a.proprietario_id=p.id
+     WHERE a.nome='Micio' AND p.nome='Anna' AND p.cognome='Ferrari' AND v.data_ora_visita='2024-02-02T00:00:00' LIMIT 1),
+    (SELECT id FROM prestazioni WHERE nome_prestazione='Dermatologia' LIMIT 1)
+);
+
+-- Visita Cioccolata 07/02/2024 - Ecografia + Malattia infettiva
+INSERT INTO visita_prestazioni (visita_id, prestazione_id)
+VALUES (
+    (SELECT v.id FROM visite v JOIN animali a ON v.animale_id=a.id JOIN proprietari p ON a.proprietario_id=p.id
+     WHERE a.nome='Cioccolata' AND p.nome='Elena' AND p.cognome='Galli' AND v.data_ora_visita='2024-02-07T00:00:00' LIMIT 1),
+    (SELECT id FROM prestazioni WHERE nome_prestazione='Ecografia' LIMIT 1)
+),
+(
+    (SELECT v.id FROM visite v JOIN animali a ON v.animale_id=a.id JOIN proprietari p ON a.proprietario_id=p.id
+     WHERE a.nome='Cioccolata' AND p.nome='Elena' AND p.cognome='Galli' AND v.data_ora_visita='2024-02-07T00:00:00' LIMIT 1),
+    (SELECT id FROM prestazioni WHERE nome_prestazione='Malattia infettiva' LIMIT 1)
+);
+
+-- Visita Artù 12/02/2024 - Visita urgente + Visita neurologica
+INSERT INTO visita_prestazioni (visita_id, prestazione_id)
+VALUES (
+    (SELECT v.id FROM visite v JOIN animali a ON v.animale_id=a.id JOIN proprietari p ON a.proprietario_id=p.id
+     WHERE a.nome='Artù' AND p.nome='Stefano' AND p.cognome='Marchetti' AND v.data_ora_visita='2024-02-12T00:00:00' LIMIT 1),
+    (SELECT id FROM prestazioni WHERE nome_prestazione='Visita urgente' LIMIT 1)
+),
+(
+    (SELECT v.id FROM visite v JOIN animali a ON v.animale_id=a.id JOIN proprietari p ON a.proprietario_id=p.id
+     WHERE a.nome='Artù' AND p.nome='Stefano' AND p.cognome='Marchetti' AND v.data_ora_visita='2024-02-12T00:00:00' LIMIT 1),
+    (SELECT id FROM prestazioni WHERE nome_prestazione='Visita neurologica' LIMIT 1)
+);
+
+-- Visita Pallina 15/02/2024 - Visita ortopedica + Visita neurologica
+INSERT INTO visita_prestazioni (visita_id, prestazione_id)
+VALUES (
+    (SELECT v.id FROM visite v JOIN animali a ON v.animale_id=a.id JOIN proprietari p ON a.proprietario_id=p.id
+     WHERE a.nome='Pallina' AND p.nome='Luigi' AND p.cognome='Colombo' AND v.data_ora_visita='2024-02-15T00:00:00' LIMIT 1),
+    (SELECT id FROM prestazioni WHERE nome_prestazione='Visita ortopedica' LIMIT 1)
+),
+(
+    (SELECT v.id FROM visite v JOIN animali a ON v.animale_id=a.id JOIN proprietari p ON a.proprietario_id=p.id
+     WHERE a.nome='Pallina' AND p.nome='Luigi' AND p.cognome='Colombo' AND v.data_ora_visita='2024-02-15T00:00:00' LIMIT 1),
+    (SELECT id FROM prestazioni WHERE nome_prestazione='Visita neurologica' LIMIT 1)
+);
+
+-- Visita Neve 19/02/2024 - Controllo semestrale
+INSERT INTO visita_prestazioni (visita_id, prestazione_id)
+VALUES (
+    (SELECT v.id FROM visite v JOIN animali a ON v.animale_id=a.id JOIN proprietari p ON a.proprietario_id=p.id
+     WHERE a.nome='Neve' AND p.nome='Maria' AND p.cognome='Conti' AND v.data_ora_visita='2024-02-19T00:00:00' LIMIT 1),
+    (SELECT id FROM prestazioni WHERE nome_prestazione='Controllo semestrale' LIMIT 1)
+);
+
+-- Visita Oscar 22/02/2024 - Controllo post-op
+INSERT INTO visita_prestazioni (visita_id, prestazione_id)
+VALUES (
+    (SELECT v.id FROM visite v JOIN animali a ON v.animale_id=a.id JOIN proprietari p ON a.proprietario_id=p.id
+     WHERE a.nome='Oscar' AND p.nome='Chiara' AND p.cognome='Ferretti' AND v.data_ora_visita='2024-02-22T00:00:00' LIMIT 1),
+    (SELECT id FROM prestazioni WHERE nome_prestazione='Controllo post-op' LIMIT 1)
+);
+
+-- Visita Stella 26/02/2024 - Otorinolaringoiatria + Malattia infettiva
+INSERT INTO visita_prestazioni (visita_id, prestazione_id)
+VALUES (
+    (SELECT v.id FROM visite v JOIN animali a ON v.animale_id=a.id JOIN proprietari p ON a.proprietario_id=p.id
+     WHERE a.nome='Stella' AND p.nome='Valentina' AND p.cognome='Caruso' AND v.data_ora_visita='2024-02-26T00:00:00' LIMIT 1),
+    (SELECT id FROM prestazioni WHERE nome_prestazione='Otorinolaringoiatria' LIMIT 1)
+),
+(
+    (SELECT v.id FROM visite v JOIN animali a ON v.animale_id=a.id JOIN proprietari p ON a.proprietario_id=p.id
+     WHERE a.nome='Stella' AND p.nome='Valentina' AND p.cognome='Caruso' AND v.data_ora_visita='2024-02-26T00:00:00' LIMIT 1),
+    (SELECT id FROM prestazioni WHERE nome_prestazione='Malattia infettiva' LIMIT 1)
+);
+
+-- Visita Briciola 01/03/2024 - Controllo annuale
+INSERT INTO visita_prestazioni (visita_id, prestazione_id)
+VALUES (
+    (SELECT v.id FROM visite v JOIN animali a ON v.animale_id=a.id JOIN proprietari p ON a.proprietario_id=p.id
+     WHERE a.nome='Briciola' AND p.nome='Marco' AND p.cognome='Rossi' AND v.data_ora_visita='2024-03-01T00:00:00' LIMIT 1),
+    (SELECT id FROM prestazioni WHERE nome_prestazione='Controllo annuale' LIMIT 1)
+);
+
+-- Visita Charlie 05/03/2024 - Visita ortopedica
+INSERT INTO visita_prestazioni (visita_id, prestazione_id)
+VALUES (
+    (SELECT v.id FROM visite v JOIN animali a ON v.animale_id=a.id JOIN proprietari p ON a.proprietario_id=p.id
+     WHERE a.nome='Charlie' AND p.nome='Elena' AND p.cognome='Galli' AND v.data_ora_visita='2024-03-05T00:00:00' LIMIT 1),
+    (SELECT id FROM prestazioni WHERE nome_prestazione='Visita ortopedica' LIMIT 1)
+);
+
+-- Visita Mochi 08/03/2024 - Controllo annuale
+INSERT INTO visita_prestazioni (visita_id, prestazione_id)
+VALUES (
+    (SELECT v.id FROM visite v JOIN animali a ON v.animale_id=a.id JOIN proprietari p ON a.proprietario_id=p.id
+     WHERE a.nome='Mochi' AND p.nome='Marco' AND p.cognome='Rossi' AND v.data_ora_visita='2024-03-08T00:00:00' LIMIT 1),
+    (SELECT id FROM prestazioni WHERE nome_prestazione='Controllo annuale' LIMIT 1)
+);
+
+-- Visita Lilly 12/03/2024 - Controllo semestrale + Vaccinazione
+INSERT INTO visita_prestazioni (visita_id, prestazione_id)
+VALUES (
+    (SELECT v.id FROM visite v JOIN animali a ON v.animale_id=a.id JOIN proprietari p ON a.proprietario_id=p.id
+     WHERE a.nome='Lilly' AND p.nome='Giorgio' AND p.cognome='Ricci' AND v.data_ora_visita='2024-03-12T00:00:00' LIMIT 1),
+    (SELECT id FROM prestazioni WHERE nome_prestazione='Controllo semestrale' LIMIT 1)
+),
+(
+    (SELECT v.id FROM visite v JOIN animali a ON v.animale_id=a.id JOIN proprietari p ON a.proprietario_id=p.id
+     WHERE a.nome='Lilly' AND p.nome='Giorgio' AND p.cognome='Ricci' AND v.data_ora_visita='2024-03-12T00:00:00' LIMIT 1),
+    (SELECT id FROM prestazioni WHERE nome_prestazione='Vaccinazione' LIMIT 1)
+);
+
+-- Visita Fido 15/03/2024 - Chirurgia
+INSERT INTO visita_prestazioni (visita_id, prestazione_id)
+VALUES (
+    (SELECT v.id FROM visite v JOIN animali a ON v.animale_id=a.id JOIN proprietari p ON a.proprietario_id=p.id
+     WHERE a.nome='Fido' AND p.nome='Giorgio' AND p.cognome='Ricci' AND v.data_ora_visita='2024-03-15T00:00:00' LIMIT 1),
+    (SELECT id FROM prestazioni WHERE nome_prestazione='Chirurgia' LIMIT 1)
+);
+
+-- Visita Mia 19/03/2024 - Controllo annuale + Vaccinazione
+INSERT INTO visita_prestazioni (visita_id, prestazione_id)
+VALUES (
+    (SELECT v.id FROM visite v JOIN animali a ON v.animale_id=a.id JOIN proprietari p ON a.proprietario_id=p.id
+     WHERE a.nome='Mia' AND p.nome='Giulia' AND p.cognome='Barbieri' AND v.data_ora_visita='2024-03-19T00:00:00' LIMIT 1),
+    (SELECT id FROM prestazioni WHERE nome_prestazione='Controllo annuale' LIMIT 1)
+),
+(
+    (SELECT v.id FROM visite v JOIN animali a ON v.animale_id=a.id JOIN proprietari p ON a.proprietario_id=p.id
+     WHERE a.nome='Mia' AND p.nome='Giulia' AND p.cognome='Barbieri' AND v.data_ora_visita='2024-03-19T00:00:00' LIMIT 1),
+    (SELECT id FROM prestazioni WHERE nome_prestazione='Vaccinazione' LIMIT 1)
+);
+
+-- Visita Rex 22/03/2024 - Controllo post-op
+INSERT INTO visita_prestazioni (visita_id, prestazione_id)
+VALUES (
+    (SELECT v.id FROM visite v JOIN animali a ON v.animale_id=a.id JOIN proprietari p ON a.proprietario_id=p.id
+     WHERE a.nome='Rex' AND p.nome='Francesca' AND p.cognome='Bianchi' AND v.data_ora_visita='2024-03-22T00:00:00' LIMIT 1),
+    (SELECT id FROM prestazioni WHERE nome_prestazione='Controllo post-op' LIMIT 1)
+);
+
+-- Visita Fiocco 26/03/2024 - Prima visita
+INSERT INTO visita_prestazioni (visita_id, prestazione_id)
+VALUES (
+    (SELECT v.id FROM visite v JOIN animali a ON v.animale_id=a.id JOIN proprietari p ON a.proprietario_id=p.id
+     WHERE a.nome='Fiocco' AND p.nome='Antonio' AND p.cognome='Moretti' AND v.data_ora_visita='2024-03-26T00:00:00' LIMIT 1),
+    (SELECT id FROM prestazioni WHERE nome_prestazione='Prima visita' LIMIT 1)
+);
+
+-- Visita Puffo 02/04/2024 - Prima visita
+INSERT INTO visita_prestazioni (visita_id, prestazione_id)
+VALUES (
+    (SELECT v.id FROM visite v JOIN animali a ON v.animale_id=a.id JOIN proprietari p ON a.proprietario_id=p.id
+     WHERE a.nome='Puffo' AND p.nome='Antonio' AND p.cognome='Moretti' AND v.data_ora_visita='2024-04-02T00:00:00' LIMIT 1),
+    (SELECT id FROM prestazioni WHERE nome_prestazione='Prima visita' LIMIT 1)
+);
+
+-- Visita Luna 09/04/2024 - Controllo post-op
+INSERT INTO visita_prestazioni (visita_id, prestazione_id)
+VALUES (
+    (SELECT v.id FROM visite v JOIN animali a ON v.animale_id=a.id JOIN proprietari p ON a.proprietario_id=p.id
+     WHERE a.nome='Luna' AND p.nome='Francesca' AND p.cognome='Bianchi' AND v.data_ora_visita='2024-04-09T00:00:00' LIMIT 1),
+    (SELECT id FROM prestazioni WHERE nome_prestazione='Controllo post-op' LIMIT 1)
+);
+
+-- Visita Zeus 16/04/2024 - Controllo annuale
+INSERT INTO visita_prestazioni (visita_id, prestazione_id)
+VALUES (
+    (SELECT v.id FROM visite v JOIN animali a ON v.animale_id=a.id JOIN proprietari p ON a.proprietario_id=p.id
+     WHERE a.nome='Zeus' AND p.nome='Francesco' AND p.cognome='Lombardi' AND v.data_ora_visita='2024-04-16T00:00:00' LIMIT 1),
+    (SELECT id FROM prestazioni WHERE nome_prestazione='Controllo annuale' LIMIT 1)
+);
+
+-- ============================================================
+-- DIARIO CLINICO — lookup dinamico proprietario_id e animale_id e scomposizione Visite
 
 INSERT INTO diario_clinico (sintomi, diagnosi, trattamento_terapia, note, note_private, visita_id) VALUES
 ('Controllo routine', NULL, 'Vaccinazione polivalente', NULL, NULL,

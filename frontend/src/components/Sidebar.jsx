@@ -68,6 +68,15 @@ function Sidebar({ isOpen, closeMenu }) {
             </NavLink>
 
             <NavLink
+              to="/prestazioni"
+              className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+              onClick={closeMenu}
+            >
+              <span className="nav-icon">🏥</span>
+              Prestazioni
+            </NavLink>
+
+            <NavLink
               to="/vaccinazioni"
               className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
               onClick={closeMenu}

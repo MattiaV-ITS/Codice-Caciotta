@@ -36,6 +36,7 @@ const ListaTable = ({
     );
   }
 
+
   if (data.length === 0) {
     return (
       <div className="empty-state">
@@ -53,15 +54,17 @@ const ListaTable = ({
       <table className="table-custom lista-table">
         <thead>
           <tr>
-            {columns.map((column) => (
-              <th 
-                key={column.field || column.header}
-                onClick={() => column.sortable && onSort(column.sortField || column.field || column.header)}
-                style={{ cursor: column.sortable ? 'pointer' : 'default', ...column.style }}
-              >
-                {column.header} {column.sortable && <span className="sort-indicator">{getSortIndicator(column.sortField || column.field || column.header)}</span>}
-              </th>
-            ))}
+            {columns.map((column) => {
+              return (
+                <th
+                  key={column.accessor || column.field || column.header}
+                  onClick={() => column.sortable && onSort && onSort(column.sortField || column.sortBy || column.accessor || column.field || column.header || '')}
+                  style={{ cursor: column.sortable ? 'pointer' : 'default', ...column.style }}
+                >
+                {column.Header || column.header} {column.sortable && getSortIndicator && <span className="sort-indicator">{getSortIndicator(column.sortField || column.sortBy || column.accessor || column.field || column.header || '')}</span>}
+                </th>
+              );
+            })}
           </tr>
         </thead>
         <tbody>
@@ -72,13 +75,30 @@ const ListaTable = ({
               style={{ cursor: onRowClick ? 'pointer' : 'default' }}
               className={onRowClick ? 'clickable-row' : ''}
             >
-              {columns.map((column) => (
-                <td key={`${column.field}-${index}`} style={column.style}>
-                  {column.render ? column.render(item) : (
-                    column.type === 'date' ? formatDate(item[column.field]) : item[column.field]
-                  )}
-                </td>
-              ))}
+              {columns.map((column) => {
+                const dataKey = column.accessor || column.field;
+                const cellValue = item[dataKey];
+
+                if (column.Cell) {
+                  try {
+                    return <td key={`${dataKey}-${index}`} style={column.style}>{column.Cell({ value: cellValue })}</td>;
+                  } catch (error) {
+                    console.error(`Error in Cell renderer for column ${column.Header || column.header}:`, error);
+                    return <td key={`${dataKey}-${index}`} style={column.style}>Error</td>;
+                  }
+                } else if (column.render) {
+                  try {
+                    return <td key={`${dataKey}-${index}`} style={column.style}>{column.render(item)}</td>;
+                  } catch (error) {
+                    console.error(`Error in render function for column ${column.Header || column.header}:`, error);
+                    return <td key={`${dataKey}-${index}`} style={column.style}>Error</td>;
+                  }
+                } else if (column.type === 'date') {
+                  return <td key={`${dataKey}-${index}`} style={column.style}>{formatDate(cellValue)}</td>;
+                } else {
+                  return <td key={`${dataKey}-${index}`} style={column.style}>{cellValue}</td>;
+                }
+              })}
             </tr>
           ))}
         </tbody>

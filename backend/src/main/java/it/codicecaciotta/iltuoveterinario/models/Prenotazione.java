@@ -22,10 +22,16 @@ public class Prenotazione {
     private LocalDateTime dataOraAppuntamento;
 
     @Column(nullable = false)
-    private String tipoVisita; // es. "Visita di controllo", "Vaccinazione", ecc.
+    private String tipoVisita; // TODO: collegare con la tabella Prestazioni
 
     @Column(nullable = true)
     private String note;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "prestazione_id", nullable = true)
+    @EqualsAndHashCode.Exclude
+    @ToString.Exclude
+    private Prestazione prestazione;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "animale_id", nullable = false)

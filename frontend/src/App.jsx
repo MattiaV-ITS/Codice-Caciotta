@@ -10,6 +10,8 @@ import ProprietariLista from './pages/Proprietari/ProprietariLista';
 import VaccinazioniLista from './pages/Vaccinazioni/VaccinazioniLista';
 import VisitePagina from './pages/Visite/VisitePagina';
 import AnimaleDettaglio from './pages/Animali/AnimaleDettaglio';
+import PrestazioniLista from './pages/Prestazioni/PrestazioniLista';
+import PrestazioneCreate from './pages/Prestazioni/PrestazioneCreate';
 
 import DashboardUser from './pages/Dashboard/DashboardUser';
 import AnimaleDettaglioUser from './pages/Animali/AnimaleDettaglioUser';
@@ -60,6 +62,8 @@ function App() {
         <Route path="/visite/:id" element={<StaffRoute><VisitePagina /></StaffRoute>} />
         <Route path="/visite/new" element={<StaffRoute><VisitePagina /></StaffRoute>} />
         <Route path="/proprietari" element={<StaffRoute><ProprietariLista /></StaffRoute>} />
+<Route path="/prestazioni" element={<StaffRoute><PrestazioniLista /></StaffRoute>} />
+<Route path="/prestazioni/create" element={<StaffRoute><PrestazioneCreate /></StaffRoute>} />
         <Route path="/vaccinazioni" element={<StaffRoute><VaccinazioniLista /></StaffRoute>} />
         <Route path="/dashboard/user" element={<ProtectedRoute><DashboardUser /></ProtectedRoute>} />
         <Route path="/animali/user/:id" element={<ProtectedRoute><AnimaleDettaglioUser /></ProtectedRoute>} />        <Route path="/admin" element={<AdminRoute><AdminRoleManagement /></AdminRoute>} />

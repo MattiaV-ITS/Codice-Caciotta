@@ -30,11 +30,14 @@ public class Prestazione {
     private BigDecimal costoBase;
 
     @Column(name = "aliquota_iva", nullable = false)
-    private Integer aliquotaIva = 22;
+    private Integer aliquotaIva = 22; // percentuale
 
     @Column(nullable = false)
-    private String stato = "Disponibile";
+    private String stato = "Disponibile"; //TODO: rendere boolean
 
     @Column(nullable = true)
     private String note;
+
+    @Column(nullable = true)
+    private String colore;
 }

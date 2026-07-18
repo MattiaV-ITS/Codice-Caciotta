@@ -6,24 +6,6 @@ import { useApi } from '../../services/apiService';
 import PrenotazioneCreateStaff from './PrenotazioneCreateStaff';
 import PrenotazioneContextMenu from '../../components/PrenotazioneContextMenu/PrenotazioneContextMenu';
 
-
-
-const MOTIVO_CLASS = {
-  'Visita di controllo': 'tipo-controllo',
-  'Vaccinazione': 'tipo-vaccinazione',
-  'Visita specialistica': 'tipo-specialistica',
-  "Visita d'urgenza": 'tipo-urgenza',
-  'Controllo post-operatorio': 'tipo-post-operatorio'
-};
-
-const MOTIVO_LEGENDA = [
-  { label: 'Controllo', color: '#3B82F6' },
-  { label: 'Vaccinazione', color: '#8B5CF6' },
-  { label: 'Specialistica', color: '#2A9D8F' },
-  { label: "Urgenza", color: '#EF4444' },
-  { label: 'Post-operatorio', color: '#F59E0B' }
-];
-
 const GIORNI = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
 const START_HOUR = 8;   // 08:00
 const END_HOUR = 20;    // 20:00
@@ -128,6 +110,9 @@ function PrenotazioniCalendario() {
   const [weekStart, setWeekStart] = useState(() => getMonday(new Date()));
   const [now, setNow] = useState(new Date());
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [prestazioni, setPrestazioni] = useState([]);
+  const [loadingPrestazioni, setLoadingPrestazioni] = useState(true);
+  const [showLegendPopup, setShowLegendPopup] = useState(false);
 
   const fetchPrenotazioni = async () => {
     try {
@@ -208,6 +193,32 @@ function PrenotazioniCalendario() {
     fetchPrenotazioni();
   }, [get]);
 
+  // Fetch prestazioni for color mapping
+  useEffect(() => {
+    const fetchPrestazioni = async () => {
+      try {
+        setLoadingPrestazioni(true);
+        const response = await get('/api/prestazioni');
+        if (response.ok) {
+          const data = await response.json();
+          // Handle both array and Spring Page response formats
+          const prestazioniArray = Array.isArray(data)
+            ? data
+            : (data.content && Array.isArray(data.content)
+                ? data.content
+                : []);
+          setPrestazioni(prestazioniArray);
+        }
+      } catch (error) {
+        console.error('Error fetching prestazioni:', error);
+      } finally {
+        setLoadingPrestazioni(false);
+      }
+    };
+
+    fetchPrestazioni();
+  }, [get]);
+
   useEffect(() => {
     const tick = setInterval(() => setNow(new Date()), 60000);
     return () => clearInterval(tick);
@@ -272,6 +283,48 @@ function PrenotazioniCalendario() {
     );
   };
 
+  // Helper function to get prestazione color
+  const getPrestazioneColor = (motivo) => {
+    if (!Array.isArray(prestazioni) || prestazioni.length === 0) {
+      // Fallback to old color scheme if prestazioni not loaded
+      const fallbackColors = {
+        'Visita di controllo': '#3B82F6',
+        'Vaccinazione': '#8B5CF6',
+        'Visita specialistica': '#2A9D8F',
+        "Visita d'urgenza": '#EF4444',
+        'Controllo post-operatorio': '#F59E0B'
+      };
+      return fallbackColors[motivo] || '#6B7280';
+    }
+
+    // Find prestazione by name match
+    const prestazione = prestazioni.find(p =>
+      p.nomePrestazione === motivo ||
+      p.nomePrestazione.includes(motivo) ||
+      motivo.includes(p.nomePrestazione)
+    );
+
+    return prestazione?.colore || '#6B7280';
+  };
+
+  // Generate legend from prestazioni
+  const getPrestazioneLegenda = () => {
+    if (!Array.isArray(prestazioni) || prestazioni.length === 0) {
+      return [
+        { label: 'Controllo', color: '#3B82F6' },
+        { label: 'Vaccinazione', color: '#8B5CF6' },
+        { label: 'Specialistica', color: '#2A9D8F' },
+        { label: "Urgenza", color: '#EF4444' },
+        { label: 'Post-operatorio', color: '#F59E0B' }
+      ];
+    }
+
+    return prestazioni.map(p => ({
+      label: p.nomePrestazione,
+      color: p.colore || '#6B7280'
+    })).slice(0, 5); // Show top 5 prestazioni
+  };
+
   const nowOffset = minutesFromGridStart(now);
   const showNowLine = nowOffset >= 0 && nowOffset <= SLOTS_COUNT * SLOT_MIN;
   const todayIndex = weekDays.findIndex((d) => isSameDay(d, now));
@@ -320,11 +373,19 @@ function PrenotazioniCalendario() {
         </div>
 
         <div className="cal-legend">
-          {MOTIVO_LEGENDA.map((m) => (
+          {getPrestazioneLegenda().map((m) => (
             <span className="cal-legend-item" key={m.label}>
               <span className="cal-legend-dot" style={{ background: m.color }}></span>{m.label}
             </span>
           ))}
+          {prestazioni.length > 5 && (
+            <button
+              className="cal-legend-more"
+              onClick={() => setShowLegendPopup(!showLegendPopup)}
+            >
+              +{prestazioni.length - 5} altre
+            </button>
+          )}
         </div>
       </div>
 
@@ -380,7 +441,7 @@ function PrenotazioniCalendario() {
                   const endDate = new Date(ev._startDate.getTime() + (ev.durataMinuti || 30) * 60000);
                   const timeLabel = `${ev._startDate.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}–${endDate.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}`;
 
-                  const motivoClass = MOTIVO_CLASS[ev.motivo] || 'tipo-altro';
+                  const prestazioneColor = getPrestazioneColor(ev.motivo);
                   const statoModifier = ev.statoPrenotazione === 'Annullata'
                     ? 'is-annullata'
                     : ev.statoPrenotazione === 'Attesa'
@@ -395,12 +456,14 @@ function PrenotazioniCalendario() {
                       onPrenotazioneUpdated={handlePrenotazioneUpdated}
                     >
                       <div
-                        className={`cal-event ${motivoClass} ${statoModifier}`}
+                        className={`cal-event ${statoModifier}`}
                         style={{
                           top,
                           height,
                           left: `calc(${leftPct}% + 2px)`,
-                          width: `calc(${widthPct}% - 4px)`
+                          width: `calc(${widthPct}% - 4px)`,
+                          backgroundColor: prestazioneColor,
+                          borderColor: prestazioneColor
                         }}
                         title={`${ev.animaleNome} (${ev.proprietarioNome || 'Proprietario sconosciuto'}) - ${ev.motivo} - ${ev.statoPrenotazione}`}
                       >
@@ -422,7 +485,7 @@ function PrenotazioniCalendario() {
         </div>
       </div>
       {showCreateModal && (
-        <PrenotazioneCreateStaff 
+        <PrenotazioneCreateStaff
           onClose={() => setShowCreateModal(false)}
           onSuccess={(newPrenotazione) => {
             setShowCreateModal(false);
@@ -430,6 +493,29 @@ function PrenotazioniCalendario() {
             fetchPrenotazioni();
           }}
         />
+      )}
+
+      {/* Legend Popup */}
+      {showLegendPopup && (
+        <div className="cal-legend-popup-overlay" onClick={() => setShowLegendPopup(false)}>
+          <div className="cal-legend-popup" onClick={e => e.stopPropagation()}>
+            <div className="cal-legend-popup-header">
+              <h3>Tutte le Prestazioni</h3>
+              <button className="cal-legend-popup-close" onClick={() => setShowLegendPopup(false)}>
+                ×
+              </button>
+            </div>
+            <div className="cal-legend-popup-content">
+              {prestazioni.map((p) => (
+                <div key={p.id} className="cal-legend-popup-item">
+                  <span className="cal-legend-popup-dot" style={{ backgroundColor: p.colore || '#6B7280' }}></span>
+                  <span className="cal-legend-popup-label">{p.nomePrestazione}</span>
+                  <span className="cal-legend-popup-cost">€{p.costoBase?.toFixed(2) || '0.00'}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

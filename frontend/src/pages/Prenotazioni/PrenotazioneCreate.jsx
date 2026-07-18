@@ -17,34 +17,6 @@ const MOCK_PRENOTAZIONI_ESISTENTI = [
 ];
 
 // ==============================
-// MOCK TIPI VISITA
-// ==============================
-const MOCK_TIPI_VISITA = [
-  { id: 1, nome: 'Visita di controllo' },
-  { id: 2, nome: 'Vaccinazione' },
-  { id: 3, nome: 'Visita d\'urgenza' },
-  { id: 4, nome: 'Chirurgia' },
-  { id: 5, nome: 'Visita specialistica' },
-  { id: 6, nome: 'Controllo post-operatorio' },
-  { id: 7, nome: 'Visita domiciliare' },
-  { id: 8, nome: 'Altro' },
-];
-
-// ==============================
-// TIPI VISITA SELECT (per il dropdown)
-// ==============================
-const TIPI_VISITA_SELECT = [
-  'Visita di controllo',
-  'Vaccinazione',
-  'Visita d\'urgenza',
-  'Chirurgia',
-  'Visita specialistica',
-  'Controllo post-operatorio',
-  'Visita domiciliare',
-  'Altro'
-];
-
-// ==============================
 // MOCK TUTTI GLI ANIMALI
 // ==============================
 const MOCK_TUTTI_ANIMALI = [
@@ -117,12 +89,16 @@ function PrenotazioneCreate({ onClose, onSuccess }) {
   const [loadingAnimali, setLoadingAnimali] = useState(true);
   const [prenotazioniEsistenti, setPrenotazioniEsistenti] = useState([]);
   const [loadingPrenotazioni, setLoadingPrenotazioni] = useState(true);
+  const [prestazioni, setPrestazioni] = useState([]);
+  const [loadingPrestazioni, setLoadingPrestazioni] = useState(true);
+  const [selectedPrestazione, setSelectedPrestazione] = useState(null);
 
   const [formData, setFormData] = useState({
     dataOraAppuntamento: '',
     tipoVisita: '',
     specificaTipoVisita: '',
     animaleId: '',
+    prestazioneId: '',
     note: ''
   });
 
@@ -132,7 +108,8 @@ function PrenotazioneCreate({ onClose, onSuccess }) {
       try {
         setLoadingAnimali(true);
         setLoadingPrenotazioni(true);
-        
+        setLoadingPrestazioni(true);
+
         // Fetch animali
         const animaliResponse = await get('/api/animali');
         if (animaliResponse.ok) {
@@ -141,22 +118,30 @@ function PrenotazioneCreate({ onClose, onSuccess }) {
           const transformedAnimali = transformAnimaliData(animaliData.content || animaliData);
           setAnimali(transformedAnimali);
         }
-        
+
         // Fetch existing prenotazioni for date/time conflict checking
         const prenotazioniResponse = await get('/api/prenotazioni');
         if (prenotazioniResponse.ok) {
           const prenotazioniData = await prenotazioniResponse.json();
           setPrenotazioniEsistenti(prenotazioniData);
         }
-        
+
+        // Fetch prestazioni for tipo visita selection
+        const prestazioniResponse = await get('/api/prestazioni/disponibili');
+        if (prestazioniResponse.ok) {
+          const prestazioniData = await prestazioniResponse.json();
+          setPrestazioni(prestazioniData);
+        }
+
       } catch (error) {
         console.error('Error fetching reference data:', error);
       } finally {
         setLoadingAnimali(false);
         setLoadingPrenotazioni(false);
+        setLoadingPrestazioni(false);
       }
     };
-    
+
     fetchReferenceData();
   }, [get]);
 
@@ -347,16 +332,8 @@ function PrenotazioneCreate({ onClose, onSuccess }) {
     switch (name) {
       case 'dataOraAppuntamento':
         return !value ? 'Seleziona data e ora.' : '';
-      case 'tipoVisita':
-        if (!value) return 'Seleziona un tipo di visita.';
-        // Se è "Altro", non mostrare errore qui (verrà validato sul campo specifica)
-        if (value === 'Altro') return '';
-        return '';
-      case 'specificaTipoVisita':
-        if (formData.tipoVisita === 'Altro' && !value.trim()) {
-          return 'Specifica il tipo di visita.';
-        }
-        return '';
+      case 'prestazioneId':
+        return !value ? 'Seleziona una prestazione.' : '';
       case 'animaleId':
         return !value ? 'Seleziona un animale.' : '';
       default:
@@ -366,16 +343,11 @@ function PrenotazioneCreate({ onClose, onSuccess }) {
 
   const validateForm = () => {
     const newErrors = {};
-    const fieldsToValidate = ['dataOraAppuntamento', 'tipoVisita', 'animaleId'];
+    const fieldsToValidate = ['dataOraAppuntamento', 'prestazioneId', 'animaleId'];
     fieldsToValidate.forEach(field => {
       const error = validateField(field, formData[field]);
       if (error) newErrors[field] = error;
     });
-
-    // Validazione specifica per "Altro"
-    if (formData.tipoVisita === 'Altro' && !formData.specificaTipoVisita.trim()) {
-      newErrors.specificaTipoVisita = 'Specifica il tipo di visita.';
-    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -800,40 +772,78 @@ function PrenotazioneCreate({ onClose, onSuccess }) {
           {hasError('dataOraAppuntamento') && <div className="form-error">{errors.dataOraAppuntamento}</div>}
         </div>
 
-        {/* Tipo Visita */}
+        {/* Prestazione */}
         <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-          <label className="form-label">Tipo Visita *</label>
-          <select
-            name="tipoVisita"
-            className={`form-control ${hasError('tipoVisita') ? 'is-invalid' : ''}`}
-            value={formData.tipoVisita}
-            onChange={handleChange}
-            onBlur={handleBlur}
-          >
-            <option value="">Seleziona tipo visita</option>
-            {TIPI_VISITA_SELECT.map((tipo, index) => (
-              <option key={index} value={tipo}>{tipo}</option>
-            ))}
-          </select>
-          {hasError('tipoVisita') && <div className="form-error">{errors.tipoVisita}</div>}
-        </div>
+          <label className="form-label">Prestazione *</label>
+          {loadingPrestazioni ? (
+            <div style={{ padding: '8px', textAlign: 'center' }}>
+              <div className="loading-spinner-custom" style={{ margin: '0 auto' }}></div>
+              <div style={{ fontSize: '13px', color: 'var(--gray-600)', marginTop: '4px' }}>
+                Caricamento prestazioni...
+              </div>
+            </div>
+          ) : prestazioni.length > 0 ? (
+            <div>
+              <select
+                name="prestazioneId"
+                className={`form-control ${hasError('prestazioneId') ? 'is-invalid' : ''}`}
+                value={formData.prestazioneId}
+                onChange={(e) => {
+                  handleChange(e);
+                  const selected = prestazioni.find(p => p.id === parseInt(e.target.value));
+                  setSelectedPrestazione(selected);
+                }}
+                onBlur={handleBlur}
+              >
+                <option value="">Seleziona una prestazione</option>
+                {prestazioni.map((prestazione) => (
+                  <option key={prestazione.id} value={prestazione.id}>
+                    {prestazione.nomePrestazione} - €{prestazione.costoBase.toFixed(2)}
+                  </option>
+                ))}
+              </select>
+              {hasError('prestazioneId') && <div className="form-error">{errors.prestazioneId}</div>}
 
-        {/* Specifica Tipo Visita (per Altro) */}
-        {showSpecificaTipo && (
-          <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-            <label className="form-label">Specifica tipo visita *</label>
-            <input
-              type="text"
-              name="specificaTipoVisita"
-              className={`form-control ${hasError('specificaTipoVisita') ? 'is-invalid' : ''}`}
-              value={formData.specificaTipoVisita}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              placeholder="Inserisci il tipo di visita..."
-            />
-            {hasError('specificaTipoVisita') && <div className="form-error">{errors.specificaTipoVisita}</div>}
-          </div>
-        )}
+              {selectedPrestazione && (
+                <div style={{
+                  marginTop: '8px',
+                  padding: '8px 12px',
+                  background: 'var(--gray-50)',
+                  borderRadius: 'var(--radius)',
+                  borderLeft: `4px solid ${selectedPrestazione.colore || '#4299E1'}`,
+                  fontSize: '13px'
+                }}>
+                  <div style={{ fontWeight: 600, color: 'var(--gray-900)', marginBottom: '4px' }}>
+                    {selectedPrestazione.nomePrestazione}
+                  </div>
+                  <div style={{ display: 'flex', gap: '16px', color: 'var(--gray-600)' }}>
+                    <span>🕒 {selectedPrestazione.durataStimata} min</span>
+                    <span>💰 €{selectedPrestazione.costoBase.toFixed(2)}</span>
+                    <span>📋 {selectedPrestazione.categoria}</span>
+                  </div>
+                  {selectedPrestazione.descrizione && (
+                    <div style={{ marginTop: '6px', fontSize: '12px', color: 'var(--gray-500)' }}>
+                      {selectedPrestazione.descrizione}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          ) : (
+            <div style={{
+              padding: '12px',
+              background: '#FEE2E2',
+              border: '1px solid #F87171',
+              borderRadius: 'var(--radius)',
+              color: '#991B1B',
+            }}>
+              <div style={{ fontWeight: 600, marginBottom: '4px' }}>⚠️ Nessuna prestazione disponibile</div>
+              <div style={{ fontSize: '13px' }}>
+                Contatta l'amministratore per creare delle prestazioni.
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* Animale */}
         <div className="form-group" style={{ gridColumn: '1 / -1' }}>

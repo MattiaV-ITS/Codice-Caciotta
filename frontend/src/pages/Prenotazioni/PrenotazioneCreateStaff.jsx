@@ -5,21 +5,6 @@ import { toISODatetimeFormat, toISODateFormat } from '../../utils/dateUtils';
 import { useApi } from '../../services/apiService';
 import FormModal from '../../components/FormModal/FormModal';
 
-// ==============================
-// TIPI VISITA SELECT (per il dropdown)
-// ==============================
-// TODO: Selezionare dinamicamente i tipi di visita dal backend se necessario
-const TIPI_VISITA_SELECT = [
-  'Visita di controllo',
-  'Vaccinazione',
-  'Visita d\'urgenza',
-  'Chirurgia',
-  'Visita specialistica',
-  'Controllo post-operatorio',
-  'Visita domiciliare',
-  'Altro'
-];
-
 function PrenotazioneCreateStaff({ onClose, onSuccess }) {
   const { user } = useAuth();
   const { get, post } = useApi();
@@ -36,6 +21,9 @@ function PrenotazioneCreateStaff({ onClose, onSuccess }) {
   const [proprietari, setProprietari] = useState([]);
   const [loadingProprietari, setLoadingProprietari] = useState(true);
   const [errorProprietari, setErrorProprietari] = useState(null);
+  const [prestazioni, setPrestazioni] = useState([]);
+  const [loadingPrestazioni, setLoadingPrestazioni] = useState(true);
+  const [errorPrestazioni, setErrorPrestazioni] = useState(null);
 
   const [formData, setFormData] = useState({
     dataOraAppuntamento: '',
@@ -50,19 +38,19 @@ function PrenotazioneCreateStaff({ onClose, onSuccess }) {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        
+
         // Note: We don't pre-fetch all animali anymore since we use server-side search
         // Initial animali state remains empty, data is fetched on-demand during search
-        
+
         // Fetch prenotazioni esistenti
         const prenotazioniResponse = await get('/api/prenotazioni');
         if (prenotazioniResponse.ok) {
           const prenotazioniData = await prenotazioniResponse.json();
           // Handle both array and Spring Page response formats
-          const prenotazioniArray = Array.isArray(prenotazioniData) 
-            ? prenotazioniData 
-            : (prenotazioniData.content && Array.isArray(prenotazioniData.content) 
-                ? prenotazioniData.content 
+          const prenotazioniArray = Array.isArray(prenotazioniData)
+            ? prenotazioniData
+            : (prenotazioniData.content && Array.isArray(prenotazioniData.content)
+                ? prenotazioniData.content
                 : []);
           setPrenotazioniEsistenti(prenotazioniArray);
         } else {
@@ -70,27 +58,47 @@ function PrenotazioneCreateStaff({ onClose, onSuccess }) {
           setErrorPrenotazioni(`Failed to load prenotazioni: ${prenotazioniResponse.status}`);
           setPrenotazioniEsistenti([]); // Ensure prenotazioni is always an array even on error
         }
-        
+
         // Note: We don't pre-fetch all proprietari anymore since we use server-side search
         // Initial proprietari state remains empty, data is fetched on-demand during search
-        
+
+        // Fetch prestazioni
+        const prestazioniResponse = await get('/api/prestazioni');
+        if (prestazioniResponse.ok) {
+          const prestazioniData = await prestazioniResponse.json();
+          // Handle both array and Spring Page response formats
+          const prestazioniArray = Array.isArray(prestazioniData)
+            ? prestazioniData
+            : (prestazioniData.content && Array.isArray(prestazioniData.content)
+                ? prestazioniData.content
+                : []);
+          setPrestazioni(prestazioniArray);
+        } else {
+          console.error('Failed to fetch prestazioni:', prestazioniResponse.status);
+          setErrorPrestazioni(`Failed to load prestazioni: ${prestazioniResponse.status}`);
+          setPrestazioni([]);
+        }
+
         // Set loading states to false when all requests are done
         setLoadingAnimali(false);
         setLoadingPrenotazioni(false);
         setLoadingProprietari(false);
-        
+        setLoadingPrestazioni(false);
+
       } catch (error) {
         console.error('Error fetching data:', error);
         setErrorAnimali('Network error while loading animali');
         setErrorPrenotazioni('Network error while loading prenotazioni');
         setErrorProprietari('Network error while loading proprietari');
+        setErrorPrestazioni('Network error while loading prestazioni');
         // Set loading states to false even if there's an error
         setLoadingAnimali(false);
         setLoadingPrenotazioni(false);
         setLoadingProprietari(false);
+        setLoadingPrestazioni(false);
       }
     };
-    
+
     fetchData();
   }, [get]);
 
@@ -402,6 +410,10 @@ function PrenotazioneCreateStaff({ onClose, onSuccess }) {
         if (!value) return 'Seleziona un tipo di visita.';
         // Se è "Altro", non mostrare errore qui (verrà validato sul campo specifica)
         if (value === 'Altro') return '';
+        // Check if the selected value is a valid prestazione
+        if (value !== 'Altro' && !prestazioni.some(p => p.nomePrestazione === value)) {
+          return 'Seleziona una prestazione valida.';
+        }
         return '';
       case 'specificaTipoVisita':
         if (formData.tipoVisita === 'Altro' && !value.trim()) {
@@ -876,19 +888,34 @@ function PrenotazioneCreateStaff({ onClose, onSuccess }) {
         {/* Tipo Visita */}
         <div className="form-group" style={{ gridColumn: '1 / -1' }}>
           <label className="form-label">Tipo Visita *</label>
-          <select
-            name="tipoVisita"
-            className={`form-control ${hasError('tipoVisita') ? 'is-invalid' : ''}`}
-            value={formData.tipoVisita}
-            onChange={handleChange}
-            onBlur={handleBlur}
-          >
-            <option value="">Seleziona tipo visita</option>
-            {TIPI_VISITA_SELECT.map((tipo, index) => (
-              <option key={index} value={tipo}>{tipo}</option>
-            ))}
-          </select>
-          {hasError('tipoVisita') && <div className="form-error">{errors.tipoVisita}</div>}
+          {loadingPrestazioni ? (
+            <div style={{ color: 'var(--gray-500)', fontSize: '14px', padding: '8px' }}>
+              Caricamento prestazioni...
+            </div>
+          ) : errorPrestazioni ? (
+            <div style={{ color: 'var(--danger)', fontSize: '14px', padding: '8px' }}>
+              {errorPrestazioni}
+            </div>
+          ) : (
+            <>
+              <select
+                name="tipoVisita"
+                className={`form-control ${hasError('tipoVisita') ? 'is-invalid' : ''}`}
+                value={formData.tipoVisita}
+                onChange={handleChange}
+                onBlur={handleBlur}
+              >
+                <option value="">Seleziona tipo visita</option>
+                {prestazioni.map((prestazione) => (
+                  <option key={prestazione.id} value={prestazione.nomePrestazione}>
+                    {prestazione.nomePrestazione} - €{prestazione.costoBase?.toFixed(2) || '0.00'}
+                  </option>
+                ))}
+                <option value="Altro">Altro (specifica)</option>
+              </select>
+              {hasError('tipoVisita') && <div className="form-error">{errors.tipoVisita}</div>}
+            </>
+          )}
         </div>
 
         {/* Specifica Tipo Visita (per Altro) */}

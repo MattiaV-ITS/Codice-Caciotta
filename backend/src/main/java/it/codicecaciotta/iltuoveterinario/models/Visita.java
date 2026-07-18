@@ -6,6 +6,7 @@ import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -44,6 +45,16 @@ public class Visita {
     @ToString.Exclude
     @JsonIgnore
     private DiarioClinico diarioClinico;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+        name = "visita_prestazioni",
+        joinColumns = @JoinColumn(name = "visita_id"),
+        inverseJoinColumns = @JoinColumn(name = "prestazione_id")
+    )
+    @EqualsAndHashCode.Exclude
+    @ToString.Exclude
+    private List<Prestazione> prestazioni;
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "prenotazione_id", nullable = true)
