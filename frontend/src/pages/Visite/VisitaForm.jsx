@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useApi } from '../../services/apiService';
 import { formatDate, getCurrentISODatetime, parseDate, toISODatetimeFormat, toISODateFormat } from '../../utils/dateUtils';
 import { validateRequired, validatePositiveNumber } from '../../utils/validationUtils';
+import FatturaSemplificataModal from '../../components/FatturaSemplificataModal';
 
 // Inline styles for edit mode banner
 const bannerStyles = `
@@ -95,7 +96,7 @@ const ConfirmModal = ({ isOpen, message, onConfirm, onCancel }) => {
 // ==============================
 // COMPONENTE PRINCIPALE
 // ==============================
-function VisitaForm({ visita, animale, onSave, onCancel, isSaving, initialEditMode = false }) {
+function VisitaForm({ visita, animale, proprietario, onSave, onCancel, isSaving, initialEditMode = false }) {
   const [formData, setFormData] = useState(() => prepareVisitaData(visita));
   const [defaultDataPrenotazione, setDefaultDataPrenotazione] = useState('');
   const [errors, setErrors] = useState({});
@@ -104,6 +105,8 @@ function VisitaForm({ visita, animale, onSave, onCancel, isSaving, initialEditMo
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [pendingSave, setPendingSave] = useState(false);
   const [editMode, setEditMode] = useState(initialEditMode);
+  const [showFatturaModal, setShowFatturaModal] = useState(false);
+  const [fatturaSuccess, setFatturaSuccess] = useState(false);
 
   // ----- Preparazione dati (modifica) -----
   function prepareVisitaData(visitaData) {
@@ -416,6 +419,21 @@ function VisitaForm({ visita, animale, onSave, onCancel, isSaving, initialEditMo
     .mr-2 {
       margin-right: var(--space-2);
     }
+    .visite-form-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: var(--space-2);
+    }
+    .visite-form-actions-left {
+      display: flex;
+      gap: var(--space-2);
+    }
+    .visite-form-actions-right {
+      display: flex;
+      gap: var(--space-2);
+    }
   `;
 
   return (
@@ -615,6 +633,18 @@ function VisitaForm({ visita, animale, onSave, onCancel, isSaving, initialEditMo
                   {getButtonText()}
                 </button>
               </div>
+              {formData.id && (
+                <div className="visite-form-actions-right">
+                  <button 
+                    type="button" 
+                    className="btn btn-success"
+                    onClick={() => setShowFatturaModal(true)}
+                    disabled={isSaving}
+                  >
+                    📄 Crea Fattura Semplificata
+                  </button>
+                </div>
+              )}
             </div>
 
           </form>
@@ -628,6 +658,21 @@ function VisitaForm({ visita, animale, onSave, onCancel, isSaving, initialEditMo
         onConfirm={handleConfirmModal}
         onCancel={handleCancelModal}
       />
+      
+      {/* Modale fattura semplificata */}
+      {showFatturaModal && (
+        <FatturaSemplificataModal
+          visitaId={formData.id}
+          proprietario={proprietario}
+          animale={animale}
+          onClose={() => {
+            setShowFatturaModal(false);
+            if (fatturaSuccess) {
+              window.location.reload(); // Ricarica per vedere la fattura creata
+            }
+          }}
+        />
+      )}
     </div>
   );
 }

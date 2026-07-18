@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useApi } from '../../services/apiService';
 import SchedaAnimale from '../Animali/SchedaAnimale';
 import VisitaForm from './VisitaForm';
+import FattureLista from '../../components/FattureLista';
 import { getCurrentISODatetime, toISODatetimeFormat, toISODateFormat, formatDate, formatDateShort, formatTime, parseDate } from '../../utils/dateUtils';
 
 // ==============================
@@ -275,6 +276,7 @@ function VisitePagina() {
       <VisitaForm
         visita={visita}
         animale={animale}
+        proprietario={animale?.proprietario}
         onSave={saveVisita}
         onCancel={() => navigate('/visite')}
         isSaving={isSaving}
@@ -345,7 +347,12 @@ function VisitePagina() {
           </div>
         </div>
 
-        {/* 2. BLOCCO "VISITE" */}
+        {/* 2. BLOCCO "FATTURE" */}
+        {visita.id && (
+          <FattureLista visitaId={visita.id} />
+        )}
+
+        {/* 3. BLOCCO "VISITE" */}
         <div className="visite-card visite-card-precedenti">
           <div className="visite-card-header">
             <h3>Visite</h3>
