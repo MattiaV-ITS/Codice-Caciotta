@@ -32,9 +32,6 @@ public class Prestazione {
     @Column(name = "aliquota_iva", nullable = false)
     private Integer aliquotaIva = 22;
 
-    @Column(name = "codice_prestazione", nullable = false, unique = true)
-    private String codicePrestazione;
-
     @Column(nullable = false)
     private String stato = "Disponibile";
 

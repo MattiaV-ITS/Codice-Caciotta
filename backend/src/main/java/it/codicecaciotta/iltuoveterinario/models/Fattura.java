@@ -26,7 +26,6 @@ public class Fattura {
     @Column(name = "tipo_fattura", nullable = false, length = 20)
     private String tipoFattura = "Semplificata"; //Solo "Semplificata" per ora
 
-    @Size(min = 16, max = 16)
     @Column(name = "codice_fiscale_cliente", length = 16, nullable = true)
     private String codiceFiscaleCliente;
 
@@ -49,7 +48,7 @@ public class Fattura {
     private String dettaglioServizi;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "proprietario_id", nullable = false)
+    @JoinColumn(name = "proprietario_id", nullable = true)
     @EqualsAndHashCode.Exclude
     @ToString.Exclude
     private Proprietario proprietario;

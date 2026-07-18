@@ -30,11 +30,6 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(normalizeToken(localStorage.getItem(TOKEN_KEY)));
   const [isLoading, setIsLoading] = useState(true);
-  
-  // Debug dello stato del token
-  useEffect(() => {
-    console.log('AuthContext token state:', token ? token.substring(0, 20) + '...' : 'null');
-  }, [token]);
 
   useEffect(() => {
     const storedUser = localStorage.getItem(USER_KEY);

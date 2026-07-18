@@ -6,6 +6,7 @@ import it.codicecaciotta.iltuoveterinario.dto.VisitaSchedaUpdateDTO;
 import it.codicecaciotta.iltuoveterinario.mappers.VisitaSchedaMapper;
 import it.codicecaciotta.iltuoveterinario.models.Visita;
 import it.codicecaciotta.iltuoveterinario.services.VisitaService;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 
 import org.springframework.http.ResponseEntity;
@@ -40,24 +41,35 @@ public class VisitaController {
     @PreAuthorize("hasAuthority('ROLE_STAFF') or hasAuthority('ROLE_ADMIN') or hasAuthority('ROLE_USER')")
     public ResponseEntity<List<VisitaSchedaDTO>> getVisiteByAnimaleId(@PathVariable Long animaleId) {
         if (animaleId == null) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body(null);
         }
-        List<VisitaSchedaDTO> visiteDTO = visitaService.getVisiteByAnimaleId(animaleId)
-                .stream()
-                .map(VisitaSchedaMapper::toSchedaDTO)
-                .collect(Collectors.toList());
-
-        return ResponseEntity.ok(visiteDTO);
+        try {
+            List<VisitaSchedaDTO> visiteDTO = visitaService.getVisiteByAnimaleId(animaleId)
+                    .stream()
+                    .map(VisitaSchedaMapper::toSchedaDTO)
+                    .collect(Collectors.toList());
+            return ResponseEntity.ok(visiteDTO);
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(null);
+        }
     }
 
     @GetMapping("/{visitaId}")
     @PreAuthorize("hasAuthority('ROLE_STAFF') or hasAuthority('ROLE_ADMIN') or hasAuthority('ROLE_USER')")
     public ResponseEntity<VisitaSchedaDTO> getVisitaById(@PathVariable Long visitaId) {
         if (visitaId == null) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body(null);
         }
-        VisitaSchedaDTO visitaDTO = VisitaSchedaMapper.toSchedaDTO(visitaService.getVisitaById(visitaId));
-        return ResponseEntity.ok(visitaDTO);
+        try {
+            VisitaSchedaDTO visitaDTO = VisitaSchedaMapper.toSchedaDTO(visitaService.getVisitaById(visitaId));
+            return ResponseEntity.ok(visitaDTO);
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(null);
+        }
     }
 
     @PostMapping("/animale/{animaleId}")
@@ -66,15 +78,20 @@ public class VisitaController {
             @PathVariable Long animaleId,
             @Valid @RequestBody VisitaSchedaCreateDTO visitaDTO) {
         if (animaleId == null) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body(null);
         }
-                Visita createdVisita = visitaService.createVisitaScheda(animaleId, visitaDTO);
-                URI location = ServletUriComponentsBuilder.fromCurrentRequest()
-                .path("/{id}")
-                .buildAndExpand(createdVisita.getId())
-                .toUri();
-
+        try {
+            Visita createdVisita = visitaService.createVisitaScheda(animaleId, visitaDTO);
+            URI location = ServletUriComponentsBuilder.fromCurrentRequest()
+                    .path("/{id}")
+                    .buildAndExpand(createdVisita.getId())
+                    .toUri();
             return ResponseEntity.created(location).body(VisitaSchedaMapper.toSchedaDTO(createdVisita));
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(null);
+        }
     }
 
     @PatchMapping("/{visitaId}")
@@ -83,10 +100,16 @@ public class VisitaController {
             @PathVariable Long visitaId,
             @Valid @RequestBody VisitaSchedaUpdateDTO visitaUpdateDTO) {
         if (visitaId == null) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body(null);
         }
-        Visita updatedVisita = visitaService.updateVisitaScheda(visitaId, visitaUpdateDTO);
-        return ResponseEntity.ok(VisitaSchedaMapper.toSchedaDTO(updatedVisita));
+        try {
+            Visita updatedVisita = visitaService.updateVisitaScheda(visitaId, visitaUpdateDTO);
+            return ResponseEntity.ok(VisitaSchedaMapper.toSchedaDTO(updatedVisita));
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(null);
+        }
     }
 
     @DeleteMapping("/{visitaId}")
@@ -95,7 +118,13 @@ public class VisitaController {
         if (visitaId == null) {
             return ResponseEntity.badRequest().build();
         }
-        visitaService.deleteVisita(visitaId);
-        return ResponseEntity.noContent().build();
+        try {
+            visitaService.deleteVisita(visitaId);
+            return ResponseEntity.noContent().build();
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(500).build();
+        }
     }
 }

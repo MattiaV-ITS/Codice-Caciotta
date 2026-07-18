@@ -97,6 +97,7 @@ const ConfirmModal = ({ isOpen, message, onConfirm, onCancel }) => {
 // COMPONENTE PRINCIPALE
 // ==============================
 function VisitaForm({ visita, animale, proprietario, onSave, onCancel, isSaving, initialEditMode = false }) {
+  const api = useApi();
   const [formData, setFormData] = useState(() => prepareVisitaData(visita));
   const [defaultDataPrenotazione, setDefaultDataPrenotazione] = useState('');
   const [errors, setErrors] = useState({});
@@ -107,6 +108,8 @@ function VisitaForm({ visita, animale, proprietario, onSave, onCancel, isSaving,
   const [editMode, setEditMode] = useState(initialEditMode);
   const [showFatturaModal, setShowFatturaModal] = useState(false);
   const [fatturaSuccess, setFatturaSuccess] = useState(false);
+  const [fatturaEsistente, setFatturaEsistente] = useState(false);
+  const [fatturaData, setFatturaData] = useState(null);
 
   // ----- Preparazione dati (modifica) -----
   function prepareVisitaData(visitaData) {
@@ -174,6 +177,39 @@ function VisitaForm({ visita, animale, proprietario, onSave, onCancel, isSaving,
       setDefaultDataPrenotazione('');
     }
   }, [visita]);
+
+  // Fetch fattura data for this visita
+  useEffect(() => {
+    const fetchFatturaData = async () => {
+      if (formData.id) {
+        try {
+          const response = await api.get(`/api/fatture/visita/${formData.id}`);
+          if (response.ok) {
+            const data = await response.json();
+            if (data && data.length > 0) {
+              setFatturaEsistente(true);
+              setFatturaData(data[0]); // Store the first (and only) fattura
+            } else {
+              setFatturaEsistente(false);
+              setFatturaData(null);
+            }
+          } else {
+            setFatturaEsistente(false);
+            setFatturaData(null);
+          }
+        } catch (error) {
+          console.error('Error fetching fattura data:', error);
+          setFatturaEsistente(false);
+          setFatturaData(null);
+        }
+      } else {
+        setFatturaEsistente(false);
+        setFatturaData(null);
+      }
+    };
+
+    fetchFatturaData();
+  }, [formData.id]);
 
   // ----- Calcolo durata -----
   const calcolaDurata = (inizio, fine) => {
@@ -436,10 +472,53 @@ function VisitaForm({ visita, animale, proprietario, onSave, onCancel, isSaving,
     }
   `;
 
+  const fatturaInfoStyles = `
+    .visite-fattura-info {
+      background-color: var(--gray-50);
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius-md);
+      padding: var(--space-3);
+      margin-bottom: var(--space-3);
+      font-size: var(--font-sm);
+    }
+    .visite-fattura-header {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      margin-bottom: var(--space-2);
+      color: var(--primary);
+      font-weight: 600;
+    }
+    .visite-fattura-icon {
+      font-size: var(--font-md);
+    }
+    .visite-fattura-details {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: var(--space-1) var(--space-3);
+      align-items: center;
+    }
+    .visite-fattura-row {
+      display: contents;
+    }
+    .visite-fattura-label {
+      color: var(--gray-600);
+      font-weight: 500;
+    }
+    .visite-fattura-value {
+      color: var(--gray-800);
+    }
+    .visite-fattura-value.fattura-importo {
+      font-weight: 600;
+      color: var(--primary);
+    }
+  `;
+
   return (
     <div className="visite-colonna-center">
       <style>{bannerStyles}</style>
       <style>{actionStyles}</style>
+      <style>{fatturaInfoStyles}</style>
       <div className="visite-card">
         <div className="visite-card-header">
           <div className="visite-header-left">
@@ -467,6 +546,32 @@ function VisitaForm({ visita, animale, proprietario, onSave, onCancel, isSaving,
                   <strong>Modalità Solo Lettura</strong>
                 </>
               )}
+            </div>
+          )}
+          {fatturaEsistente && fatturaData && (
+            <div className="visite-fattura-info">
+              <div className="visite-fattura-header">
+                <span className="visite-fattura-icon">📄</span>
+                <strong>Fattura Associata</strong>
+              </div>
+              <div className="visite-fattura-details">
+                <div className="visite-fattura-row">
+                  <span className="visite-fattura-label">Numero:</span>
+                  <span className="visite-fattura-value">{fatturaData.numeroFattura}</span>
+                </div>
+                <div className="visite-fattura-row">
+                  <span className="visite-fattura-label">Data:</span>
+                  <span className="visite-fattura-value">
+                    {fatturaData.dataEmissione ? new Date(fatturaData.dataEmissione).toLocaleDateString('it-IT') : 'N/D'}
+                  </span>
+                </div>
+                <div className="visite-fattura-row">
+                  <span className="visite-fattura-label">Importo:</span>
+                  <span className="visite-fattura-value fattura-importo">
+                    {fatturaData.importoTotale ? fatturaData.importoTotale.toFixed(2) + ' €' : 'N/D'}
+                  </span>
+                </div>
+              </div>
             </div>
           )}
           <form onSubmit={handleSubmit} className="visite-form">
@@ -635,14 +740,25 @@ function VisitaForm({ visita, animale, proprietario, onSave, onCancel, isSaving,
               </div>
               {formData.id && (
                 <div className="visite-form-actions-right">
-                  <button 
-                    type="button" 
-                    className="btn btn-success"
-                    onClick={() => setShowFatturaModal(true)}
-                    disabled={isSaving}
-                  >
-                    📄 Crea Fattura Semplificata
-                  </button>
+                  {fatturaEsistente ? (
+                    <button 
+                      type="button" 
+                      className="btn btn-secondary"
+                      disabled={true}
+                      title="Esiste già una fattura per questa visita"
+                    >
+                      📄 Fattura Esistente
+                    </button>
+                  ) : (
+                    <button 
+                      type="button" 
+                      className="btn btn-success"
+                      onClick={() => setShowFatturaModal(true)}
+                      disabled={isSaving}
+                    >
+                      📄 Crea Fattura Semplificata
+                    </button>
+                  )}
                 </div>
               )}
             </div>
@@ -670,6 +786,9 @@ function VisitaForm({ visita, animale, proprietario, onSave, onCancel, isSaving,
             if (fatturaSuccess) {
               window.location.reload(); // Ricarica per vedere la fattura creata
             }
+          }}
+          onSuccess={() => {
+            setFatturaSuccess(true);
           }}
         />
       )}

@@ -39,7 +39,7 @@ function VisitePagina() {
   const { id } = useParams();
   const navigate = useNavigate();
   const visitaId = parseInt(id);
-  const { get, post, patch } = useApi();
+  const api = useApi();
 
   const [visita, setVisita] = useState(null);
   const [animale, setAnimale] = useState(null);
@@ -65,19 +65,19 @@ function VisitePagina() {
       try {
         setIsLoading(true);
         setError(null);
-        
+
         if (visitaId) {
           // Fetch visita details
-          const visitaResponse = await get(`/api/visite/${visitaId}`);
+          const visitaResponse = await api.get(`/api/visite/${visitaId}`);
           if (!visitaResponse.ok) {
             throw new Error(`Failed to fetch visita: ${visitaResponse.status}`);
           }
           const visitaData = await visitaResponse.json();
-          
+
           // Fetch animal details using the visita data
           let animaleData;
           if (visitaData.animaleId) {
-            const animaleResponse = await get(`/api/animali/${visitaData.animaleId}`);
+            const animaleResponse = await api.get(`/api/animali/${visitaData.animaleId}`);
             if (!animaleResponse.ok) {
               throw new Error(`Failed to fetch animale: ${animaleResponse.status}`);
             }
@@ -85,11 +85,11 @@ function VisitePagina() {
           } else {
             throw new Error('Animal ID is missing from visita data');
           }
-          
+
           // Fetch previous visits for this animal
-          const visiteResponse = await get(`/api/visite/animale/${animaleData.id}`);
+          const visiteResponse = await api.get(`/api/visite/animale/${animaleData.id}`);
           const visiteData = await visiteResponse.json();
-          
+
           setVisita({
             id: visitaData.id,
             visitStart: visitaData.visitStart || visitaData.dataOraVisita,
@@ -104,17 +104,17 @@ function VisitePagina() {
             note: visitaData.note || '',
             notePrivate: visitaData.notePrivate || ''
           });
-          
+
           setAnimale(animaleData);
           setvisite(visiteData);
-          
+
         } else {
           // New visita - we need to know the animal ID from URL params or context
           // For now, let's assume it comes from URL params like /visite/new/:animaleId
           const animalId = parseInt(new URLSearchParams(window.location.search).get('animaleId'));
-          
+
           if (animalId && !isNaN(animalId)) {
-            const animaleResponse = await get(`/api/animali/${animalId}`);
+            const animaleResponse = await api.get(`/api/animali/${animalId}`);
             if (!animaleResponse.ok) {
               if (animaleResponse.status === 400) {
                 throw new Error('Invalid animal ID provided');
@@ -123,16 +123,16 @@ function VisitePagina() {
             }
             const animaleData = await animaleResponse.json();
             setAnimale(animaleData);
-            
+
             // Fetch previous visits for this animal
-            const visiteResponse = await get(`/api/visite/animale/${animalId}`);
+            const visiteResponse = await api.get(`/api/visite/animale/${animalId}`);
             const visiteData = await visiteResponse.json();
             setvisite(visiteData);
           }
-          
+
           // Set default values for new visita
           const nowStr = getCurrentISODatetime();
-          
+
           setVisita({
             id: null,
             visitStart: nowStr,
@@ -146,7 +146,7 @@ function VisitePagina() {
             notePrivate: ''
           });
         }
-        
+
       } catch (error) {
         console.error('Error fetching data:', error);
         setError(error.message || 'Failed to load visita data');
@@ -154,9 +154,9 @@ function VisitePagina() {
         setIsLoading(false);
       }
     };
-    
+
     fetchData();
-  }, [visitaId, get]);
+  }, [visitaId]);
 
   // ----- SALVATAGGIO (senza popup) -----
   const saveVisita = async (visitaData) => {
@@ -164,7 +164,7 @@ function VisitePagina() {
     try {
       if (visita.id) {
         // Aggiornamento visita esistente
-        const response = await patch(`/api/visite/${visita.id}`, visitaData);
+        const response = await api.patch(`/api/visite/${visita.id}`, visitaData);
         if (!response.ok) {
           throw new Error(`Errore durante l'aggiornamento: ${response.status}`);
         }
@@ -188,7 +188,7 @@ function VisitePagina() {
         
         // Force refresh of the visits list to ensure right panel updates
         if (animale?.id) {
-          const visiteResponse = await get(`/api/visite/animale/${animale.id}`);
+          const visiteResponse = await api.get(`/api/visite/animale/${animale.id}`);
           if (visiteResponse.ok) {
             const visiteData = await visiteResponse.json();
             setvisite(visiteData);
@@ -200,7 +200,7 @@ function VisitePagina() {
         if (!animalId) {
           throw new Error('ID animale mancante');
         }
-        const response = await post(`/api/visite/animale/${animalId}`, visitaData);
+        const response = await api.post(`/api/visite/animale/${animalId}`, visitaData);
         if (!response.ok) {
           throw new Error(`Errore durante la creazione: ${response.status}`);
         }

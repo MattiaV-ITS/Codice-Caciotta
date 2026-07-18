@@ -22,7 +22,6 @@ const FatturaSemplificataModal = ({ visitaId, proprietario, animale, onClose, on
         if (typeof proprietario === 'string' && animale?.id) {
           // Fetch animale data per proprietario ID
           try {
-            console.log('Fetching animale data to get proprietario ID');
             const response = await get(`/api/animali/${animale.id}`);
             
             if (response.ok) {
@@ -140,7 +139,16 @@ const FatturaSemplificataModal = ({ visitaId, proprietario, animale, onClose, on
       
     } catch (err) {
       console.error('Error creating fattura:', err);
-      setError(err.message || 'Errore durante la creazione della fattura semplificata');
+      let errorMessage = 'Errore durante la creazione della fattura semplificata';
+      
+      // Handle specific error cases
+      if (err.message && err.message.includes('Esiste già una fattura')) {
+        errorMessage = err.message; // Use the backend's descriptive message
+      } else if (err.response && err.response.data) {
+        errorMessage = err.response.data || errorMessage;
+      }
+      
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
