@@ -2,6 +2,7 @@ package it.codicecaciotta.iltuoveterinario.controllers;
 
 import java.util.List;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -94,7 +95,7 @@ public class AuthController {
           userDetails.getEmail(), roles, null));
     } catch (AuthenticationException ex) {
       logger.warn("Authentication failed for user '{}'", loginRequest.getUsername());
-      return ResponseEntity.status(401).body(new MessageResponse("Errore: Username o password non validi"));
+      return ResponseEntity.status(401).body(new MessageResponse("Error: Invalid username or password"));
     }
   }
 
@@ -107,11 +108,11 @@ public class AuthController {
   @PostMapping("/signup")
   public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest signUpRequest) {
     if (userRepository.existsByUsername(signUpRequest.getUsername())) {
-      return ResponseEntity.badRequest().body(new MessageResponse("Errore: Username esistente!"));
+      return ResponseEntity.badRequest().body(new MessageResponse("Error: Username is already taken!"));
     }
 
     if (userRepository.existsByEmail(signUpRequest.getEmail())) {
-      return ResponseEntity.badRequest().body(new MessageResponse("Errore: Email già in uso!"));
+      return ResponseEntity.badRequest().body(new MessageResponse("Error: Email is already in use!"));
     }
 
     // Creazione del nuovo utente con password codificata
@@ -130,7 +131,7 @@ public class AuthController {
         user.getUsername(),
         roles.stream().map(r -> r.getNome().name()).collect(Collectors.toList()));
 
-    return ResponseEntity.ok(new MessageResponse("Utente registrato con successo!"));
+    return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
   }
 
   @PostMapping("/create-proprietario")
@@ -138,7 +139,8 @@ public class AuthController {
     try {
       // Get current user from security context
       UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-      Utente currentUser = userRepository.findById(userDetails.getId())
+      Long userId = Objects.requireNonNull(userDetails.getId(), "Authenticated user ID must not be null");
+      Utente currentUser = userRepository.findById(userId)
           .orElseThrow(() -> new IllegalStateException("User not found"));
 
       Proprietario createdProprietario = proprietarioService.createProprietarioForUser(proprietarioCreateDTO, currentUser);
@@ -154,7 +156,8 @@ public class AuthController {
   public ResponseEntity<?> getCurrentUser() {
     try {
       UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-      Utente user = userRepository.findById(userDetails.getId())
+      Long userId = Objects.requireNonNull(userDetails.getId(), "Authenticated user ID must not be null");
+      Utente user = userRepository.findById(userId)
           .orElseThrow(() -> new IllegalStateException("User not found"));
 
       return ResponseEntity.ok(new JwtResponse(

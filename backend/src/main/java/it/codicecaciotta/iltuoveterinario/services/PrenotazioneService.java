@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -47,7 +48,8 @@ public class PrenotazioneService {
 
     @Transactional
     public Prenotazione updatePrenotazione(Long id, Prenotazione prenotazioneDetails) {
-        return prenotazioneRepository.findById(id)
+        Long prenotazioneId = Objects.requireNonNull(id, "Prenotazione id cannot be null");
+        return prenotazioneRepository.findById(prenotazioneId)
                 .map(prenotazione -> {
                     prenotazione.setDataOraAppuntamento(prenotazioneDetails.getDataOraAppuntamento());
                     prenotazione.setTipoVisita(prenotazioneDetails.getTipoVisita());
@@ -56,12 +58,13 @@ public class PrenotazioneService {
                     prenotazione.setProprietario(prenotazioneDetails.getProprietario());
                     return prenotazioneRepository.save(prenotazione);
                 })
-                .orElseThrow(() -> new RuntimeException("Prenotazione non trovata con id: " + id));
+                .orElseThrow(() -> new RuntimeException("Prenotazione not found with id: " + prenotazioneId));
     }
 
     @Transactional
     public void deletePrenotazione(Long id) {
-        prenotazioneRepository.deleteById(id);
+        Long prenotazioneId = Objects.requireNonNull(id, "Prenotazione id cannot be null");
+        prenotazioneRepository.deleteById(prenotazioneId);
     }
 
     @Transactional(readOnly = true)

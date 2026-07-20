@@ -36,7 +36,7 @@ public class VaccinazioneServiceImpl implements VaccinazioneService {
         Long animaleId = dto.getAnimaleId();
         Animale animale = animaleRepository.findById(Objects.requireNonNull(animaleId))
                 .orElseThrow(() ->
-                new NoSuchElementException("Animale non trovato con ID: " + animaleId));
+                new NoSuchElementException("Animale not found with ID: " + animaleId));
 
         Vaccinazione vaccinazione = new Vaccinazione();
         vaccinazione.setTipoVaccino(dto.getTipoVaccino());
@@ -56,7 +56,7 @@ public class VaccinazioneServiceImpl implements VaccinazioneService {
 
         Vaccinazione vaccinazione = vaccinazioneRepository.findById(id)
                 .orElseThrow(() ->
-                        new NoSuchElementException("Vaccinazione non trovata con ID: " + id));
+                        new NoSuchElementException("Vaccinazione not found with ID: " + id));
 
         if (dto.getTipoVaccino() != null)
             vaccinazione.setTipoVaccino(dto.getTipoVaccino());
@@ -81,7 +81,7 @@ public class VaccinazioneServiceImpl implements VaccinazioneService {
 
         Vaccinazione vaccinazione = vaccinazioneRepository.findById(id)
                 .orElseThrow(() ->
-                        new NoSuchElementException("Vaccinazione non trovata con ID: " + id));
+                        new NoSuchElementException("Vaccinazione not found with ID: " + id));
 
         if (vaccinazione.getAnimale() != null) {
             vaccinazione.getAnimale().removeVaccinazione(vaccinazione);
@@ -95,7 +95,7 @@ public class VaccinazioneServiceImpl implements VaccinazioneService {
 
         return vaccinazioneRepository.findById(id)
                 .orElseThrow(() ->
-                        new NoSuchElementException("Vaccinazione non trovata con ID: " + id));
+                        new NoSuchElementException("Vaccinazione not found with ID: " + id));
     }
 
     @Override
@@ -103,7 +103,7 @@ public class VaccinazioneServiceImpl implements VaccinazioneService {
 
         Animale animale = animaleRepository.findById(animaleId)
                 .orElseThrow(() ->
-                        new NoSuchElementException("Animale non trovato con ID: " + animaleId));
+                        new NoSuchElementException("Animale not found with ID: " + animaleId));
 
         return vaccinazioneRepository.findByAnimaleOrderByDataScadenzaAsc(animale);
     }
