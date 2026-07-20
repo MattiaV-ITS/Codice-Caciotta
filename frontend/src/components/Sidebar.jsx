@@ -1,107 +1,98 @@
-import { NavLink } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import { NavLink } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
-export default function Sidebar({ isOpen, closeMenu }) {
+function Sidebar({ isOpen, closeMenu }) {
   const { user } = useAuth();
 
+  const isStaff = user?.roles?.includes('ROLE_STAFF') || user?.roles?.includes('ROLE_ADMIN');
+
   return (
-    <>
-      {/* Overlay scuro */}
-      <div
-        className={`sidebar-overlay ${isOpen ? "open" : ""}`}
-        onClick={closeMenu}
-      />
+    <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
+      <nav className="sidebar-nav">
+        <div className="nav-label">Menu</div>
 
-      {/* Sidebar */}
-      <aside className={`sidebar ${isOpen ? "open" : ""}`}>
-        <nav className="sidebar-nav">
-          <div className="nav-label">Menu</div>
+        {/* Dashboard Utente - solo per USER */}
+        {user?.roles?.includes('ROLE_USER') && (
+          <NavLink
+            to="/dashboard/user"
+            className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+            end
+            onClick={closeMenu}
+          >
+            <span className="nav-icon">🏠</span>
+            Dashboard
+          </NavLink>
+        )}
 
+        {/* Dashboard Staff/Admin - per STAFF e ADMIN */}
+        {isStaff && (
           <NavLink
             to="/"
-            className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`}
+            className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
             end
             onClick={closeMenu}
           >
             <span className="nav-icon">📊</span>
             Dashboard
           </NavLink>
+        )}
 
-          <NavLink
-            to="/animali"
-            className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`}
-            onClick={closeMenu}
-          >
-            <span className="nav-icon">🐕</span>
-            Animali
-          </NavLink>
+        {/* Sezioni Staff/Admin */}
+        {isStaff && (
+          <>
+            <NavLink
+              to="/animali"
+              className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+              onClick={closeMenu}
+            >
+              <span className="nav-icon">🐕</span>
+              Animali
+            </NavLink>
 
-          <NavLink
-            to="/proprietari"
-            className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`}
-            onClick={closeMenu}
-          >
-            <span className="nav-icon">👥</span>
-            Proprietari
-          </NavLink>
+            <NavLink
+              to="/proprietari"
+              className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+              onClick={closeMenu}
+            >
+              <span className="nav-icon">👥</span>
+              Proprietari
+            </NavLink>
 
-          <NavLink
-            to="/vaccinazioni"
-            className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`}
-            onClick={closeMenu}
-          >
-            <span className="nav-icon">💉</span>
-            Vaccinazioni
-          </NavLink>
+            <NavLink
+              to="/prenotazioni"
+              className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+              onClick={closeMenu}
+            >
+              <span className="nav-icon">📅</span>
+              Prenotazioni
+            </NavLink>
 
-          <NavLink
-            to="/prenotazioni"
-            className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`}
-            onClick={closeMenu}
-          >
-            <span className="nav-icon">📅</span>
-            Prenotazioni
-          </NavLink>
+            <NavLink
+              to="/vaccinazioni"
+              className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+              onClick={closeMenu}
+            >
+              <span className="nav-icon">💉</span>
+              Vaccinazioni
+            </NavLink>
 
-          <div className="nav-divider" />
+            <div className="nav-divider" />
 
-          <div className="nav-label">Amministrazione</div>
+            <div className="nav-label">Amministrazione</div>
 
-          {/* <NavLink
-            to="/fatture"
-            className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`}
-            onClick={closeMenu}
-          >
-            <span className="nav-icon">📄</span>
-            Fatture
-          </NavLink>
-
-          <NavLink
-            to="/ricette"
-            className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`}
-            onClick={closeMenu}
-          >
-            <span className="nav-icon">💊</span>
-            Ricette
-          </NavLink> */}
-
-          {user?.roles?.includes("ROLE_ADMIN") && (
-            <>
-              <div className="nav-divider" />
-              <NavLink
-                to="/admin"
-                className={({ isActive }) =>
-                  `nav-item ${isActive ? "active" : ""}`
-                }
-                onClick={closeMenu}
-              >
-                <span className="nav-icon">⚙️</span>
-                Admin
-              </NavLink>
-            </>
-          )}
-        </nav>
-      </aside>
-    </>
+            <NavLink
+              to="/admin"
+              className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+              onClick={closeMenu}
+            >
+              <span className="nav-icon">⚙️</span>
+              Admin
+            </NavLink>
+          </>
+        )}
+      </nav>
+    </aside>
   );
 }
+
+export default Sidebar;

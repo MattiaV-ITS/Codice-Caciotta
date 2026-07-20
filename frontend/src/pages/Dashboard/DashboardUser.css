@@ -1,0 +1,407 @@
+/* ========================================
+   DASHBOARD USER
+   ======================================== */
+
+.dashboard-user {
+  padding: var(--space-4);
+}
+
+/* ========================================
+   HEADER
+   ======================================== */
+
+.dashboard-user-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+
+.dashboard-user-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--gray-900);
+  margin: 0;
+  letter-spacing: -0.3px;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.dashboard-user-title .dashboard-user-name {
+  color: var(--primary);
+}
+
+.dashboard-user-title .user-icon {
+  width: 28px;
+  height: 28px;
+  color: var(--gray-500);
+}
+
+.dashboard-user-subtitle {
+  font-size: 16px;
+  color: var(--gray-500);
+  margin: 4px 0 0;
+}
+
+/* ========================================
+   KPI CARDS (override per dashboard user)
+   ======================================== */
+
+.dashboard-user .kpi-grid {
+  margin-bottom: var(--space-6);
+}
+
+.dashboard-user .kpi-card {
+  cursor: default;
+  transition: all 0.2s ease;
+}
+
+.dashboard-user .kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.dashboard-user .kpi-card .kpi-label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--gray-500);
+  margin-bottom: var(--space-2);
+}
+
+.dashboard-user .kpi-card .kpi-label svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.dashboard-user .kpi-card .kpi-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--gray-900);
+  letter-spacing: -0.5px;
+  line-height: 1.2;
+}
+
+.dashboard-user .kpi-card .kpi-change {
+  font-size: 13px;
+  margin-top: var(--space-2);
+  color: var(--gray-500);
+}
+
+/* ========================================
+   PROSSIME VISITE - TABELLA
+   ======================================== */
+
+.dashboard-user .table-custom {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  font-family: var(--font-sans);
+}
+
+.dashboard-user .table-custom thead {
+  background: var(--gray-50);
+}
+
+.dashboard-user .table-custom thead th {
+  padding: 10px 14px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--gray-500);
+  border-bottom: 2px solid var(--gray-200);
+}
+
+.dashboard-user .table-custom tbody tr {
+  border-bottom: 1px solid var(--gray-100);
+  transition: background 0.15s ease;
+}
+
+.dashboard-user .table-custom tbody tr:hover {
+  background: var(--gray-50);
+}
+
+.dashboard-user .table-custom tbody tr:last-child {
+  border-bottom: none;
+}
+
+.dashboard-user .table-custom tbody td {
+  padding: 10px 14px;
+  vertical-align: middle;
+  color: var(--gray-700);
+}
+
+.dashboard-user .table-custom .cell-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* ========================================
+   SEZIONE ANIMALI (griglia compatta)
+   ======================================== */
+
+.animali-user-grid-compact {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: var(--space-3);
+}
+
+.animali-user-card-compact {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: var(--white);
+}
+
+.animali-user-card-compact:hover {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-2px);
+}
+
+.animali-user-card-compact:active {
+  transform: scale(0.98);
+}
+
+.animali-user-avatar-small {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 16px;
+  flex-shrink: 0;
+  transition: background 0.2s ease;
+}
+
+/* Avatar per tipo di animale (opzionale) */
+.animali-user-card-compact[data-specie="cane"] .animali-user-avatar-small {
+  background: #2196F3;
+}
+
+.animali-user-card-compact[data-specie="gatto"] .animali-user-avatar-small {
+  background: #E91E63;
+}
+
+.animali-user-card-compact[data-specie="altro"] .animali-user-avatar-small {
+  background: #9E9E9E;
+}
+
+.animali-user-card-info-compact {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.animali-user-card-info-compact .animali-user-card-nome {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--gray-900);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.animali-user-card-info-compact .animali-user-card-specie {
+  font-size: 12px;
+  color: var(--gray-500);
+  text-transform: capitalize;
+}
+
+/* ========================================
+   EMPTY STATE
+   ======================================== */
+
+.dashboard-user .empty-state {
+  text-align: center;
+  padding: var(--space-6) var(--space-4);
+  color: var(--gray-500);
+}
+
+.dashboard-user .empty-state .empty-icon {
+  font-size: 48px;
+  color: var(--gray-300);
+  margin-bottom: var(--space-3);
+}
+
+.dashboard-user .empty-state .empty-icon svg {
+  width: 48px;
+  height: 48px;
+  color: var(--gray-400);
+}
+
+.dashboard-user .empty-state .empty-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--gray-700);
+  margin-bottom: var(--space-2);
+}
+
+.dashboard-user .empty-state .empty-description {
+  font-size: 14px;
+  color: var(--gray-400);
+  max-width: 400px;
+  margin: 0 auto var(--space-3);
+}
+
+/* ========================================
+   BUTTON OVERRIDE
+   ======================================== */
+
+.dashboard-user .btn-add {
+  padding: 8px 20px;
+  background: var(--primary);
+  color: var(--white);
+  border: none;
+  border-radius: var(--radius);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: var(--font-sans);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dashboard-user .btn-add:hover {
+  background: var(--primary-dark);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+.dashboard-user .btn-add svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* ========================================
+   RESPONSIVE
+   ======================================== */
+
+@media (max-width: 1024px) {
+  .dashboard-user .kpi-grid {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-user-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .dashboard-user-title {
+    font-size: 24px;
+  }
+
+  .dashboard-user-title .user-icon {
+    width: 24px;
+    height: 24px;
+  }
+
+  .dashboard-user-subtitle {
+    font-size: 14px;
+  }
+
+  .dashboard-user .kpi-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-3);
+  }
+
+  .dashboard-user .kpi-card .kpi-value {
+    font-size: 24px;
+  }
+
+  .dashboard-user .kpi-card .kpi-label {
+    font-size: 13px;
+  }
+
+  .dashboard-user .table-custom thead th {
+    font-size: 11px;
+    padding: 8px 10px;
+  }
+
+  .dashboard-user .table-custom tbody td {
+    padding: 8px 10px;
+    font-size: 13px;
+  }
+
+  .animali-user-grid-compact {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-user {
+    padding: var(--space-3);
+  }
+
+  .dashboard-user .kpi-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-user .kpi-card .kpi-value {
+    font-size: 22px;
+  }
+
+  .dashboard-user .table-custom thead {
+    display: none;
+  }
+
+  .dashboard-user .table-custom tbody tr {
+    display: block;
+    padding: var(--space-3);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius);
+    margin-bottom: var(--space-3);
+  }
+
+  .dashboard-user .table-custom tbody td {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 0;
+    border: none;
+    font-size: 13px;
+  }
+
+  .dashboard-user .table-custom tbody td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: var(--gray-500);
+    font-size: 12px;
+  }
+
+  .animali-user-grid-compact {
+    grid-template-columns: 1fr;
+  }
+
+  .animali-user-card-compact {
+    padding: var(--space-2) var(--space-3);
+  }
+
+  .dashboard-user .empty-state {
+    padding: var(--space-4);
+  }
+}
