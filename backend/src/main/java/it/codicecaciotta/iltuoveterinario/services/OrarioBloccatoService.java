@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -41,7 +42,8 @@ public class OrarioBloccatoService {
      */
     @Transactional(readOnly = true)
     public List<OrarioBloccato> getOrariBloccatiByData(LocalDate data) {
-        return orarioBloccatoRepository.findByData(data);
+        LocalDate safeData = Objects.requireNonNull(data, "data must not be null");
+        return orarioBloccatoRepository.findByData(safeData);
     }
 
     /**
@@ -52,7 +54,9 @@ public class OrarioBloccatoService {
      */
     @Transactional(readOnly = true)
     public List<OrarioBloccato> getOrariBloccatiInRange(LocalDate startDate, LocalDate endDate) {
-        return orarioBloccatoRepository.findByDataBetween(startDate, endDate);
+        LocalDate safeStartDate = Objects.requireNonNull(startDate, "startDate must not be null");
+        LocalDate safeEndDate = Objects.requireNonNull(endDate, "endDate must not be null");
+        return orarioBloccatoRepository.findByDataBetween(safeStartDate, safeEndDate);
     }
 
     /**
@@ -69,16 +73,19 @@ public class OrarioBloccatoService {
     public OrarioBloccato createOrarioBloccato(LocalDate data, LocalTime oraInizio, LocalTime oraFine,
                                              String motivo, String creatoDa) {
         // Validate the time slot
-        validateTimeSlot(data, oraInizio, oraFine);
+        LocalDate safeData = Objects.requireNonNull(data, "data must not be null");
+        LocalTime safeOraInizio = Objects.requireNonNull(oraInizio, "oraInizio must not be null");
+        LocalTime safeOraFine = Objects.requireNonNull(oraFine, "oraFine must not be null");
+        validateTimeSlot(safeData, safeOraInizio, safeOraFine);
 
         // Check if this time slot overlaps with existing blocked slots
-        List<OrarioBloccato> overlapping = orarioBloccatoRepository.findOverlappingBlockedTimes(data, oraInizio, oraFine);
+        List<OrarioBloccato> overlapping = orarioBloccatoRepository.findOverlappingBlockedTimes(safeData, safeOraInizio, safeOraFine);
         if (!overlapping.isEmpty()) {
             throw new IllegalArgumentException("Esiste già un orario bloccato che si sovrappone a questo slot");
         }
 
         // Check if the studio is even open on this date
-        Optional<OrarioStudio> orarioStudio = getOrarioStudioForDate(data);
+        Optional<OrarioStudio> orarioStudio = getOrarioStudioForDate(safeData);
         if (orarioStudio.isPresent() && orarioStudio.get().getChiuso()) {
             throw new IllegalArgumentException("Lo studio è chiuso in questa data, non è necessario bloccare orari");
         }
@@ -88,21 +95,21 @@ public class OrarioBloccatoService {
             LocalTime apertura = orarioStudio.get().getOraApertura();
             LocalTime chiusura = orarioStudio.get().getOraChiusura();
 
-            if (oraInizio.isBefore(apertura) || oraFine.isAfter(chiusura)) {
+            if (safeOraInizio.isBefore(apertura) || safeOraFine.isAfter(chiusura)) {
                 throw new IllegalArgumentException("L'orario bloccato deve essere all'interno degli orari di apertura dello studio (" +
                         apertura + " - " + chiusura + ")");
             }
         }
 
         OrarioBloccato blockedTime = OrarioBloccato.builder()
-                .data(data)
-                .oraInizio(oraInizio)
-                .oraFine(oraFine)
+                .data(safeData)
+                .oraInizio(safeOraInizio)
+                .oraFine(safeOraFine)
                 .motivo(motivo)
                 .creatoDa(creatoDa)
                 .build();
 
-        return orarioBloccatoRepository.save(blockedTime);
+        return orarioBloccatoRepository.save(Objects.requireNonNull(blockedTime, "blockedTime must not be null"));
     }
 
     /**
@@ -116,7 +123,8 @@ public class OrarioBloccatoService {
      */
     @Transactional
     public OrarioBloccato updateOrarioBloccato(Long id, LocalTime oraInizio, LocalTime oraFine, String motivo) {
-        OrarioBloccato existing = orarioBloccatoRepository.findById(id)
+        Long safeId = Objects.requireNonNull(id, "id must not be null");
+        OrarioBloccato existing = orarioBloccatoRepository.findById(safeId)
                 .orElseThrow(() -> new IllegalArgumentException("Orario bloccato non trovato"));
 
         // Validate the time slot
@@ -124,8 +132,8 @@ public class OrarioBloccatoService {
 
         // Check for overlaps with other blocked slots (excluding itself)
         List<OrarioBloccato> overlapping = orarioBloccatoRepository.findOverlappingBlockedTimes(
-                existing.getData(), oraInizio, oraFine);
-        if (!overlapping.isEmpty() && !overlapping.stream().anyMatch(o -> o.getId().equals(id))) {
+            existing.getData(), oraInizio, oraFine);
+        if (!overlapping.isEmpty() && !overlapping.stream().anyMatch(o -> Objects.equals(o.getId(), safeId))) {
             throw new IllegalArgumentException("Esiste già un orario bloccato che si sovrappone a questo slot");
         }
 
@@ -143,24 +151,26 @@ public class OrarioBloccatoService {
      */
     @Transactional
     public void deleteOrarioBloccato(Long id) {
-        if (!orarioBloccatoRepository.existsById(id)) {
+        Long safeId = Objects.requireNonNull(id, "id must not be null");
+        if (!orarioBloccatoRepository.existsById(safeId)) {
             throw new IllegalArgumentException("Orario bloccato non trovato");
         }
-        orarioBloccatoRepository.deleteById(id);
+        orarioBloccatoRepository.deleteById(safeId);
     }
 
     /**
      * Get studio hours for a specific date (checks specific overrides first, then defaults)
      */
     private Optional<OrarioStudio> getOrarioStudioForDate(LocalDate data) {
+        LocalDate safeData = Objects.requireNonNull(data, "data must not be null");
         // First check for specific date override
-        Optional<OrarioStudio> specificOrario = orarioStudioRepository.findByDataSpecifica(data);
+        Optional<OrarioStudio> specificOrario = orarioStudioRepository.findByDataSpecifica(safeData);
         if (specificOrario.isPresent()) {
             return specificOrario;
         }
 
         // If no specific override, get default for day of week
-        EGiornoSettimana giornoSettimana = convertDayOfWeekToGiornoSettimana(data.getDayOfWeek());
+        EGiornoSettimana giornoSettimana = convertDayOfWeekToGiornoSettimana(safeData.getDayOfWeek());
         return orarioStudioRepository.findByGiornoSettimanaAndIsDefaultTrue(giornoSettimana);
     }
 

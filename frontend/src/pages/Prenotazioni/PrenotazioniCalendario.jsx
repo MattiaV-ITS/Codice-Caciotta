@@ -129,7 +129,7 @@ function PrenotazioniCalendario() {
     { value: 'DOMENICA', label: 'Domenica' }
   ];
 
-  const fetchPrenotazioni = async () => {
+  const fetchPrenotazioni = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -202,11 +202,11 @@ function PrenotazioniCalendario() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [get]);
 
   useEffect(() => {
     fetchPrenotazioni();
-  }, [get]);
+  }, [fetchPrenotazioni]);
 
   // Fetch prestazioni for color mapping
   useEffect(() => {

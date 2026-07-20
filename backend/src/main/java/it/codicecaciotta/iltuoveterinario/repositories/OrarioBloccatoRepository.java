@@ -3,13 +3,11 @@ package it.codicecaciotta.iltuoveterinario.repositories;
 import it.codicecaciotta.iltuoveterinario.models.OrarioBloccato;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
 
-@Repository
 public interface OrarioBloccatoRepository extends JpaRepository<OrarioBloccato, Long> {
 
     // Find blocked times by specific date

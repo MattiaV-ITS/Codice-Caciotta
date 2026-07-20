@@ -35,12 +35,14 @@ public class OrarioStudio {
     private LocalTime oraFinePausaPranzo;
 
     @Column(name = "chiuso")
+    @Builder.Default
     private Boolean chiuso = false;
 
     @Column(name = "data_specifica")
     private LocalDate dataSpecifica;
 
     @Column(name = "is_default")
+    @Builder.Default
     private Boolean isDefault = true;
 
     public String getGiornoSettimanaDisplay() {

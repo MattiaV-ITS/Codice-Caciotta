@@ -85,7 +85,7 @@ function PrenotazioniProgramma() {
   const todayRef = useRef(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
 
-  const fetchPrenotazioni = async () => {
+  const fetchPrenotazioni = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -156,11 +156,11 @@ function PrenotazioniProgramma() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [get]);
 
   useEffect(() => {
     fetchPrenotazioni();
-  }, [get]);
+  }, [fetchPrenotazioni]);
 
   useEffect(() => {
     const tick = setInterval(() => setNow(new Date()), 60000);

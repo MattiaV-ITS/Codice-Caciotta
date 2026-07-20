@@ -18,14 +18,7 @@ export function usePaginatedFetch(endpoint, { page, size, sortBy, sortDir, filte
       }
     });
     return filtered;
-  }, [
-    // Dipendenze individuali per la massima stabilità
-    filters?.search,
-    filters?.stato,
-    filters?.specie, 
-    filters?.citta,
-    filters?.animaleId // Aggiungi altri campi filtro potenziali
-  ]);
+  }, [filters]);
 
   useEffect(() => {
     let isMounted = true;

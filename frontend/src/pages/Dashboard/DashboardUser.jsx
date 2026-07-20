@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useApi } from '../../services/apiService';
@@ -68,7 +68,7 @@ function DashboardUser() {
   const [showProprietarioModal, setShowProprietarioModal] = useState(false);
   const [hasProprietario, setHasProprietario] = useState(false);
 
-  const checkProprietario = async () => {
+  const checkProprietario = useCallback(async () => {
     if (!user?.id) return false;
     
     try {
@@ -89,9 +89,9 @@ function DashboardUser() {
       console.error('Errore nel controllo del proprietario:', err);
       return false;
     }
-  };
+  }, [get, updateUser, user]);
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     if (!user?.id) return;
 
     setLoading(true);
@@ -112,7 +112,7 @@ function DashboardUser() {
       setError('Impossibile caricare i dati. Riprova più tardi.');
       setLoading(false);
     }
-  };
+  }, [get, user]);
 
   useEffect(() => {
     const initialize = async () => {
@@ -120,7 +120,7 @@ function DashboardUser() {
       await loadData();
     };
     initialize();
-  }, [user]);
+  }, [checkProprietario, loadData]);
 
   const handleCreateSuccess = () => {
     setShowCreateModal(false);

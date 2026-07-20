@@ -7,9 +7,11 @@ import it.codicecaciotta.iltuoveterinario.models.Visita;
 import it.codicecaciotta.iltuoveterinario.repositories.FatturaRepository;
 import it.codicecaciotta.iltuoveterinario.repositories.VisitaRepository;
 import org.springframework.http.ResponseEntity;
+import org.springframework.lang.Nullable;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Objects;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -33,8 +35,9 @@ public class FatturaController {
     // Crea una nuova fattura per una visita
     @PostMapping("/visita/{visitaId}")
     @Transactional
-    public ResponseEntity<FatturaDTO> createFatturaForVisita(@PathVariable Long visitaId, @RequestBody Fattura fattura) {
-        Optional<Visita> visitaOptional = visitaRepository.findById(visitaId);
+    public ResponseEntity<FatturaDTO> createFatturaForVisita(@PathVariable("visitaId") Long visitaId, @RequestBody Fattura fattura) {
+        Long safeVisitaId = Objects.requireNonNull(visitaId, "visitaId must not be null");
+        Optional<Visita> visitaOptional = visitaRepository.findById(safeVisitaId);
         if (visitaOptional.isEmpty()) {
             return ResponseEntity.badRequest().build();
         }
@@ -59,7 +62,7 @@ public class FatturaController {
         
         // Genera numero fattura unico se non fornito
         if (fattura.getNumeroFattura() == null || fattura.getNumeroFattura().isEmpty()) {
-            fattura.setNumeroFattura("FAT-" + visitaId + "-" + UUID.randomUUID().toString().substring(0, 8));
+            fattura.setNumeroFattura("FAT-" + safeVisitaId + "-" + UUID.randomUUID().toString().substring(0, 8));
         }
 
         // Imposta codice fiscale dal proprietario se non già impostato e proprietario esiste
@@ -132,8 +135,9 @@ public class FatturaController {
     // Ottieni fattura per ID
     @GetMapping("/{id}")
     @Transactional(readOnly = true)
-    public ResponseEntity<FatturaDTO> getFattura(@PathVariable Long id) {
-        Optional<Fattura> fattura = fatturaRepository.findById(id);
+    public ResponseEntity<FatturaDTO> getFattura(@PathVariable("id") Long id) {
+        Long safeId = Objects.requireNonNull(id, "id must not be null");
+        Optional<Fattura> fattura = fatturaRepository.findById(safeId);
         if (fattura.isPresent()) {
             Fattura f = fattura.get();
             // Force initialization of lazy-loaded relationships
@@ -163,8 +167,9 @@ public class FatturaController {
     // Ottieni fatture per visita
     @GetMapping("/visita/{visitaId}")
     @Transactional(readOnly = true)
-    public ResponseEntity<List<FatturaDTO>> getFattureByVisita(@PathVariable Long visitaId) {
-        List<Fattura> fatture = fatturaRepository.findByVisitaId(visitaId);
+    public ResponseEntity<List<FatturaDTO>> getFattureByVisita(@PathVariable("visitaId") Long visitaId) {
+        Long safeVisitaId = Objects.requireNonNull(visitaId, "visitaId must not be null");
+        List<Fattura> fatture = fatturaRepository.findByVisitaId(safeVisitaId);
         List<FatturaDTO> fattureDTO = new java.util.ArrayList<>();
         for (Fattura f : fatture) {
             if (f.getVisita() != null) f.getVisita().getId();
@@ -193,8 +198,9 @@ public class FatturaController {
     // Aggiorna una fattura
     @PutMapping("/{id}")
     @Transactional
-    public ResponseEntity<FatturaDTO> updateFattura(@PathVariable Long id, @RequestBody Fattura fatturaDetails) {
-        Optional<Fattura> fatturaOptional = fatturaRepository.findById(id);
+    public ResponseEntity<FatturaDTO> updateFattura(@PathVariable("id") Long id, @RequestBody Fattura fatturaDetails) {
+        Long safeId = Objects.requireNonNull(id, "id must not be null");
+        Optional<Fattura> fatturaOptional = fatturaRepository.findById(safeId);
         if (fatturaOptional.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
@@ -232,22 +238,22 @@ public class FatturaController {
     // Elimina una fattura
     @DeleteMapping("/{id}")
     @Transactional
-    public ResponseEntity<Void> deleteFattura(@PathVariable Long id) {
-        Optional<Fattura> fattura = fatturaRepository.findById(id);
-        if (fattura.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<Void> deleteFattura(@PathVariable("id") Long id) {
+        Long safeId = Objects.requireNonNull(id, "id must not be null");
+        Fattura fattura = fatturaRepository.findById(safeId)
+            .orElseThrow(() -> new IllegalStateException("Fattura not found"));
 
-        fatturaRepository.delete(fattura.get());
+        fatturaRepository.delete(Objects.requireNonNull(fattura, "Fattura not found"));
         return ResponseEntity.noContent().build();
     }
 
     // Crea fattura semplificata per una visita
     @PostMapping("/semplificata/visita/{visitaId}")
     @Transactional
-    public ResponseEntity<FatturaDTO> createFatturaSemplificata(@PathVariable Long visitaId, 
-                                                             @RequestBody(required = false) Fattura fatturaData) {
-        Optional<Visita> visitaOptional = visitaRepository.findById(visitaId);
+    public ResponseEntity<FatturaDTO> createFatturaSemplificata(@PathVariable("visitaId") Long visitaId, 
+                                                             @RequestBody(required = false) @Nullable Fattura fatturaData) {
+        Long safeVisitaId = Objects.requireNonNull(visitaId, "visitaId must not be null");
+        Optional<Visita> visitaOptional = visitaRepository.findById(safeVisitaId);
         if (visitaOptional.isEmpty()) {
             return ResponseEntity.badRequest().build();
         }
@@ -272,7 +278,7 @@ public class FatturaController {
         }
         
         // Genera un numero fattura unico per evitare conflitti
-        fattura.setNumeroFattura("FAT-" + visitaId + "-" + UUID.randomUUID().toString().substring(0, 8));
+        fattura.setNumeroFattura("FAT-" + safeVisitaId + "-" + UUID.randomUUID().toString().substring(0, 8));
         
         // Imposta dati dal request body se disponibili, altrimenti dal proprietario (se esiste)
         Proprietario proprietario = (visita.getAnimale() != null && visita.getAnimale().getProprietario() != null) ? visita.getAnimale().getProprietario() : null;
@@ -313,7 +319,7 @@ public class FatturaController {
 
         try {
             // Check if a fattura already exists for this visita
-            List<Fattura> existingFatture = fatturaRepository.findByVisitaId(visitaId);
+            List<Fattura> existingFatture = fatturaRepository.findByVisitaId(safeVisitaId);
             if (!existingFatture.isEmpty()) {
                 return ResponseEntity.badRequest().build();
             }

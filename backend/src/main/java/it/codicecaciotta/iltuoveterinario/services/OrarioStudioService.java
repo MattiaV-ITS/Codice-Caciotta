@@ -12,6 +12,7 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
@@ -194,7 +195,8 @@ public class OrarioStudioService {
      */
     @Transactional
     public void removeSpecificOrario(Long id) {
-        orarioStudioRepository.deleteById(id);
+        Long safeId = Objects.requireNonNull(id, "id must not be null");
+        orarioStudioRepository.deleteById(safeId);
     }
 
     /**
@@ -216,7 +218,7 @@ public class OrarioStudioService {
                     .isDefault(true)
                     .build();
 
-            orarioStudioRepository.save(orario);
+            orarioStudioRepository.save(Objects.requireNonNull(orario, "orario must not be null"));
         }
     }
 

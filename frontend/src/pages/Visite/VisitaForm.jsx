@@ -58,6 +58,56 @@ const LightningIcon = () => (
   </svg>
 );
 
+function getDefaultVisita() {
+  const nowStr = getCurrentISODatetime();
+
+  return {
+    id: null,
+    dataOraVisita: nowStr,
+    dataOraFine: nowStr,
+    tipoVisita: '',
+    altroTipoVisita: '',
+    sintomi: '',
+    diagnosi: '',
+    trattamentoTerapia: '',
+    note: '',
+    notePrivate: ''
+  };
+}
+
+function prepareVisitaData(visitaData) {
+  if (!visitaData) return getDefaultVisita();
+  
+  const converted = { ...visitaData };
+  const normalizedStart = toISODatetimeFormat(visitaData.dataOraVisita);
+  
+  if (normalizedStart) {
+    converted.dataOraVisita = normalizedStart;
+  }
+  
+  if (visitaData.dataOraFineVisita) {
+    converted.dataOraFine = toISODatetimeFormat(visitaData.dataOraFineVisita);
+  } else if (normalizedStart && visitaData.durata && visitaData.durata > 0) {
+    const start = parseDate(normalizedStart);
+    if (start && !isNaN(start.getTime())) {
+      const end = new Date(start.getTime() + visitaData.durata * 60 * 1000);
+      if (!isNaN(end.getTime())) {
+        converted.dataOraFine = formatLocalDateTime(end);
+      } else {
+        converted.dataOraFine = normalizedStart;
+      }
+    } else {
+      converted.dataOraFine = normalizedStart;
+    }
+  } else if (normalizedStart) {
+    converted.dataOraFine = normalizedStart;
+  } else {
+    converted.dataOraFine = '';
+  }
+  
+  return converted;
+}
+
 const formatLocalDateTime = (date) => {
   if (!date || isNaN(date.getTime())) return '';
 
@@ -111,62 +161,6 @@ function VisitaForm({ visita, animale, proprietario, onSave, onCancel, isSaving,
   const [fatturaEsistente, setFatturaEsistente] = useState(false);
   const [fatturaData, setFatturaData] = useState(null);
 
-  // ----- Preparazione dati (modifica) -----
-  function prepareVisitaData(visitaData) {
-    if (!visitaData) return getDefaultVisita();
-    
-    const converted = { ...visitaData };
-    const normalizedStart = toISODatetimeFormat(visitaData.dataOraVisita);
-    
-    if (normalizedStart) {
-      converted.dataOraVisita = normalizedStart;
-    }
-    
-    // Use dataOraFineVisita if available, otherwise calculate from durata for backward compatibility
-    if (visitaData.dataOraFineVisita) {
-      // Directly use the dataOraFineVisita if available
-      converted.dataOraFine = toISODatetimeFormat(visitaData.dataOraFineVisita);
-    } else if (normalizedStart && visitaData.durata && visitaData.durata > 0) {
-      // Fallback for backward compatibility: calculate from durata
-      const start = parseDate(normalizedStart);
-      if (start && !isNaN(start.getTime())) { // Validate the date is valid
-        const end = new Date(start.getTime() + visitaData.durata * 60 * 1000);
-        if (!isNaN(end.getTime())) { // Validate the end date is valid
-          converted.dataOraFine = formatLocalDateTime(end);
-        } else {
-          converted.dataOraFine = normalizedStart;
-        }
-      } else {
-        converted.dataOraFine = normalizedStart;
-      }
-    } else if (normalizedStart) {
-      // Se non c'è durata, fine = inizio (default)
-      converted.dataOraFine = normalizedStart;
-    } else {
-      converted.dataOraFine = '';
-    }
-    
-    return converted;
-  }
-
-  // ----- Valori di default per nuova visita -----
-  function getDefaultVisita() {
-    const nowStr = getCurrentISODatetime();
-
-    return {
-      id: null,
-      dataOraVisita: nowStr,   // inizio
-      dataOraFine: nowStr,     // fine = inizio (default)
-      tipoVisita: '',
-      altroTipoVisita: '',
-      sintomi: '',
-      diagnosi: '',
-      trattamentoTerapia: '',
-      note: '',
-      notePrivate: ''
-    };
-  }
-
   useEffect(() => {
     if (visita) {
       const prepared = prepareVisitaData(visita);
@@ -209,7 +203,7 @@ function VisitaForm({ visita, animale, proprietario, onSave, onCancel, isSaving,
     };
 
     fetchFatturaData();
-  }, [formData.id]);
+  }, [api, formData.id]);
 
   // ----- Calcolo durata -----
   const calcolaDurata = (inizio, fine) => {
