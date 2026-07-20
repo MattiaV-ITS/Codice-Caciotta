@@ -9,3 +9,5 @@ export { default as LockIcon } from './LockIcon';
 export { default as PrintIcon } from './PrintIcon';
 export { default as ShareIcon } from './ShareIcon';
 export { default as LightningIcon } from './LightningIcon';
+export { default as EditIcon } from './EditIcon';
+export { default as GearIcon } from './GearIcon';

@@ -2,8 +2,9 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApi } from '../../services/apiService';
 import { formatDate } from '../../utils/dateUtils';
+import EditIcon from '../../components/icons/EditIcon';
 
-function SchedaAnimale({ animale, onVisitaClick }) {
+function SchedaAnimale({ animale, onEditClick }) {
   const navigate = useNavigate();
   const { get } = useApi();
 
@@ -25,7 +26,9 @@ function SchedaAnimale({ animale, onVisitaClick }) {
             {animale.stato || 'Sconosciuto'}
           </span>
         </div>
+
         <div className="visite-card-body">
+          {/* ANAGRAFICA */}
           <div className="visite-detail-section">
             <span className="visite-section-title">Anagrafica</span>
             <div className="visite-detail-item">
@@ -56,6 +59,7 @@ function SchedaAnimale({ animale, onVisitaClick }) {
             </div>
           </div>
 
+          {/* ALLERGIE E PATOLOGIE */}
           <div className="visite-detail-section">
             <span className="visite-section-title" style={{ color: '#C62828', fontWeight: 700 }}>
               ⚠️ Allergie e Patologie
@@ -74,6 +78,7 @@ function SchedaAnimale({ animale, onVisitaClick }) {
             </div>
           </div>
 
+          {/* DATI CLINICI */}
           <div className="visite-detail-section">
             <span className="visite-section-title">Dati Clinici</span>
             <div className="visite-detail-item">
@@ -102,6 +107,7 @@ function SchedaAnimale({ animale, onVisitaClick }) {
             </div>
           </div>
 
+          {/* PROPRIETARIO */}
           <div className="visite-detail-section">
             <span className="visite-section-title">Proprietario</span>
             <div className="visite-detail-item">
@@ -114,6 +120,7 @@ function SchedaAnimale({ animale, onVisitaClick }) {
             </div>
           </div>
 
+          {/* NOTE GENERALI */}
           <div className="visite-detail-section">
             <span className="visite-section-title">Note Generali</span>
             <div className="visite-detail-item">
@@ -121,6 +128,53 @@ function SchedaAnimale({ animale, onVisitaClick }) {
               <span className="visite-detail-value">{animale.noteGenerali || '-'}</span>
             </div>
           </div>
+
+          {/* PULSANTE MODIFICA - posizionato in fondo */}
+          {onEditClick && (
+            <div 
+              className="visite-detail-section" 
+              style={{ 
+                marginTop: 'var(--space-4)', 
+                borderTop: '1px solid var(--gray-200)', 
+                paddingTop: 'var(--space-4)' 
+              }}
+            >
+              <button
+                type="button"
+                className="btn btn-outline btn-block"
+                onClick={() => onEditClick(animale)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  width: '100%',
+                  padding: '10px',
+                  borderRadius: 'var(--radius)',
+                  border: '1px solid var(--gray-300)',
+                  background: 'transparent',
+                  color: 'var(--gray-700)',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  fontSize: '14px',
+                  fontWeight: 500,
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'var(--primary-light)';
+                  e.currentTarget.style.borderColor = 'var(--primary)';
+                  e.currentTarget.style.color = 'var(--primary)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'transparent';
+                  e.currentTarget.style.borderColor = 'var(--gray-300)';
+                  e.currentTarget.style.color = 'var(--gray-700)';
+                }}
+              >
+                <EditIcon size={18} />
+                Modifica Animale
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
