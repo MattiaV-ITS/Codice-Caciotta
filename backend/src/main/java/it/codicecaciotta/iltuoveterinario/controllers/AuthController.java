@@ -2,6 +2,7 @@ package it.codicecaciotta.iltuoveterinario.controllers;
 
 import java.util.List;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -138,7 +139,8 @@ public class AuthController {
     try {
       // Get current user from security context
       UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-      Utente currentUser = userRepository.findById(userDetails.getId())
+      Long userId = Objects.requireNonNull(userDetails.getId(), "Authenticated user ID must not be null");
+      Utente currentUser = userRepository.findById(userId)
           .orElseThrow(() -> new IllegalStateException("User not found"));
 
       Proprietario createdProprietario = proprietarioService.createProprietarioForUser(proprietarioCreateDTO, currentUser);
@@ -154,7 +156,8 @@ public class AuthController {
   public ResponseEntity<?> getCurrentUser() {
     try {
       UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-      Utente user = userRepository.findById(userDetails.getId())
+      Long userId = Objects.requireNonNull(userDetails.getId(), "Authenticated user ID must not be null");
+      Utente user = userRepository.findById(userId)
           .orElseThrow(() -> new IllegalStateException("User not found"));
 
       return ResponseEntity.ok(new JwtResponse(
