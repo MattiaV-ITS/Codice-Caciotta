@@ -1,0 +1,445 @@
+/* Studio Hours Admin Page Styles */
+.studio-hours-container {
+  padding: var(--space-4);
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.studio-hours-container h2 {
+  color: var(--primary);
+  margin-bottom: var(--space-4);
+  font-size: 1.8rem;
+}
+
+.studio-hours-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-6);
+  margin-top: var(--space-4);
+}
+
+.message {
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-4);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.message.success {
+  background-color: var(--success-light);
+  color: var(--success-dark);
+  border: 1px solid var(--success);
+}
+
+.message.error {
+  background-color: var(--danger-light);
+  color: var(--danger-dark);
+  border: 1px solid var(--danger);
+}
+
+.message-close {
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  font-size: 1.2rem;
+  padding: 0 var(--space-2);
+  margin-left: var(--space-3);
+}
+
+/* Default Hours Section */
+.default-hours-section {
+  background: white;
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  box-shadow: var(--shadow-sm);
+}
+
+.default-hours-section h3 {
+  color: var(--gray-800);
+  margin-bottom: var(--space-4);
+  font-size: 1.3rem;
+  border-bottom: 2px solid var(--primary);
+  padding-bottom: var(--space-2);
+}
+
+.day-selector {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+.day-button {
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--gray-300);
+  background: white;
+  color: var(--gray-700);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: 500;
+}
+
+.day-button:hover {
+  background: var(--primary-light);
+  border-color: var(--primary);
+}
+
+.day-button.active {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+.hours-editor {
+  background: var(--gray-50);
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--gray-200);
+}
+
+.form-group {
+  margin-bottom: var(--space-3);
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: var(--space-2);
+  font-weight: 500;
+  color: var(--gray-700);
+}
+
+.day-name {
+  display: inline-block;
+  padding: var(--space-2) var(--space-3);
+  background: var(--primary-light);
+  color: var(--primary);
+  border-radius: var(--radius-md);
+  font-weight: 500;
+}
+
+.time-input {
+  padding: var(--space-2);
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius-md);
+  width: 100%;
+  max-width: 200px;
+  font-size: 1rem;
+}
+
+.time-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px var(--primary-light);
+}
+
+/* Toggle Switch */
+.toggle-switch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  vertical-align: middle;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+.slider {
+  position: relative;
+  cursor: pointer;
+  background-color: var(--gray-300);
+  transition: .4s;
+  border-radius: 34px;
+  width: 50px;
+  height: 24px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background-color: var(--primary);
+}
+
+input:checked + .slider:before {
+  transform: translateX(26px);
+}
+
+.toggle-label {
+  font-weight: 500;
+  color: var(--gray-700);
+  margin-left: var(--space-2);
+  line-height: 1;
+}
+
+/* Save Button */
+.save-button {
+  background: var(--primary);
+  color: white;
+  border: none;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+  margin-top: var(--space-3);
+}
+
+.save-button:hover {
+  background: var(--primary-dark);
+}
+
+.save-button:disabled {
+  background: var(--gray-400);
+  cursor: not-allowed;
+}
+
+/* Calendar Section */
+.calendar-section {
+  background: white;
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  box-shadow: var(--shadow-sm);
+}
+
+.calendar-section h3 {
+  color: var(--gray-800);
+  margin-bottom: var(--space-4);
+  font-size: 1.3rem;
+  border-bottom: 2px solid var(--primary);
+  padding-bottom: var(--space-2);
+}
+
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-4);
+}
+
+.calendar-header h4 {
+  margin: 0;
+  color: var(--primary);
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.nav-button, .today-button {
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--gray-300);
+  background: white;
+  color: var(--gray-700);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.nav-button:hover, .today-button:hover {
+  background: var(--primary-light);
+  border-color: var(--primary);
+}
+
+.today-button {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+.today-button:hover {
+  background: var(--primary-dark);
+}
+
+.calendar-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  font-weight: 600;
+  color: var(--gray-600);
+  margin-bottom: var(--space-2);
+  padding: 0 var(--space-1);
+}
+
+.weekday {
+  padding: var(--space-2) 0;
+  font-size: 0.9rem;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: var(--space-2);
+}
+
+.calendar-day {
+  aspect-ratio: 1;
+  padding: var(--space-2);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--gray-200);
+}
+
+.calendar-day:hover {
+  background: var(--primary-light);
+  transform: scale(1.02);
+}
+
+.calendar-day.empty {
+  background: transparent;
+  border: none;
+  cursor: default;
+}
+
+.calendar-day.today {
+  border: 2px solid var(--primary);
+  background: var(--primary-light);
+}
+
+.calendar-day.has-override {
+  border: 2px solid var(--warning);
+}
+
+.calendar-day.closed {
+  background: var(--danger-light);
+  color: var(--danger-dark);
+}
+
+.calendar-day.open {
+  background: var(--success-light);
+  color: var(--success-dark);
+}
+
+.day-number {
+  font-weight: 600;
+  font-size: 1.1rem;
+  margin-bottom: var(--space-1);
+}
+
+.override-badge {
+  position: absolute;
+  top: var(--space-1);
+  right: var(--space-1);
+  background: var(--warning);
+  color: white;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+}
+
+.day-hours {
+  font-size: 0.8rem;
+  margin-top: var(--space-1);
+  font-weight: 500;
+}
+
+.add-specific-button {
+  width: 100%;
+  padding: var(--space-3);
+  background: var(--success);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-weight: 500;
+  margin-top: var(--space-3);
+  transition: all 0.2s;
+}
+
+.add-specific-button:hover {
+  background: var(--success-dark);
+}
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  width: 100%;
+  max-width: 500px;
+  box-shadow: var(--shadow-lg);
+}
+
+.modal-content h3 {
+  color: var(--primary);
+  margin-bottom: var(--space-4);
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}
+
+.cancel-button {
+  padding: var(--space-2) var(--space-4);
+  background: var(--gray-300);
+  color: var(--gray-700);
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cancel-button:hover {
+  background: var(--gray-400);
+}
+
+.cancel-button:disabled {
+  background: var(--gray-200);
+  cursor: not-allowed;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .studio-hours-content {
+    grid-template-columns: 1fr;
+  }
+
+  .calendar-section {
+    margin-top: var(--space-6);
+  }
+}
+
+.loading-spinner {
+  text-align: center;
+  padding: var(--space-8);
+  color: var(--primary);
+  font-size: 1.2rem;
+}

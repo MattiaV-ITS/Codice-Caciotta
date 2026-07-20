@@ -22,6 +22,7 @@ import PrenotazioniLista from './pages/Prenotazioni/PrenotazioniLista';
 
 
 import AdminRoleManagement from "./components/AdminRoleManagement";
+import StudioHoursAdmin from "./pages/StudioHours/StudioHoursAdmin";
 import { useAuth } from './context/AuthContext';
 import './App.css';
 
@@ -66,7 +67,9 @@ function App() {
 <Route path="/prestazioni/create" element={<StaffRoute><PrestazioneCreate /></StaffRoute>} />
         <Route path="/vaccinazioni" element={<StaffRoute><VaccinazioniLista /></StaffRoute>} />
         <Route path="/dashboard/user" element={<ProtectedRoute><DashboardUser /></ProtectedRoute>} />
-        <Route path="/animali/user/:id" element={<ProtectedRoute><AnimaleDettaglioUser /></ProtectedRoute>} />        <Route path="/admin" element={<AdminRoute><AdminRoleManagement /></AdminRoute>} />
+        <Route path="/animali/user/:id" element={<ProtectedRoute><AnimaleDettaglioUser /></ProtectedRoute>} />
+        <Route path="/admin" element={<AdminRoute><AdminRoleManagement /></AdminRoute>} />
+        <Route path="/admin/orari" element={<AdminRoute><StudioHoursAdmin /></AdminRoute>} />
       </Route>
     </Routes>
   );

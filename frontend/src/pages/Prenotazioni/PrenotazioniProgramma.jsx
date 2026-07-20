@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+  import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './PrenotazioniProgramma.css';
 import { formatDate, formatTime, parseDate } from '../../utils/dateUtils';
@@ -13,7 +13,8 @@ const MOTIVO_CLASS = {
   'Vaccinazione': 'tipo-vaccinazione',
   'Visita specialistica': 'tipo-specialistica',
   "Visita d'urgenza": 'tipo-urgenza',
-  'Controllo post-operatorio': 'tipo-post-operatorio'
+  'Controllo post-operatorio': 'tipo-post-operatorio',
+  'Altro': 'tipo-altro'
 };
 
 const MOTIVO_LEGENDA = [
@@ -21,7 +22,8 @@ const MOTIVO_LEGENDA = [
   { label: 'Vaccinazione', color: '#8B5CF6' },
   { label: 'Specialistica', color: '#2A9D8F' },
   { label: 'Urgenza', color: '#EF4444' },
-  { label: 'Post-operatorio', color: '#F59E0B' }
+  { label: 'Post-operatorio', color: '#F59E0B' },
+  { label: 'Altro', color: '#6B7280' }
 ];
 
 const GIORNI_BREVI = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];

@@ -113,6 +113,21 @@ function PrenotazioniCalendario() {
   const [prestazioni, setPrestazioni] = useState([]);
   const [loadingPrestazioni, setLoadingPrestazioni] = useState(true);
   const [showLegendPopup, setShowLegendPopup] = useState(false);
+  const [studioHours, setStudioHours] = useState([]);
+  const [loadingStudioHours, setLoadingStudioHours] = useState(true);
+  const [blockedTimes, setBlockedTimes] = useState([]);
+  const [loadingBlockedTimes, setLoadingBlockedTimes] = useState(true);
+
+  // Days of week mapping for studio hours
+  const daysOfWeek = [
+    { value: 'LUNEDI', label: 'Lunedì' },
+    { value: 'MARTEDI', label: 'Martedì' },
+    { value: 'MERCOLEDI', label: 'Mercoledì' },
+    { value: 'GIOVEDI', label: 'Giovedì' },
+    { value: 'VENERDI', label: 'Venerdì' },
+    { value: 'SABATO', label: 'Sabato' },
+    { value: 'DOMENICA', label: 'Domenica' }
+  ];
 
   const fetchPrenotazioni = async () => {
     try {
@@ -219,6 +234,55 @@ function PrenotazioniCalendario() {
     fetchPrestazioni();
   }, [get]);
 
+  // Fetch studio hours for calendar display
+  useEffect(() => {
+    const fetchStudioHours = async () => {
+      try {
+        setLoadingStudioHours(true);
+        const response = await get('/api/admin/orari');
+        if (response.ok) {
+          const data = await response.json();
+          setStudioHours(data.defaultOrari || []);
+        }
+      } catch (error) {
+        console.error('Error fetching studio hours:', error);
+      } finally {
+        setLoadingStudioHours(false);
+      }
+    };
+
+    fetchStudioHours();
+  }, [get]);
+
+  // Fetch blocked times for calendar display
+  useEffect(() => {
+    const fetchBlockedTimes = async () => {
+      try {
+        setLoadingBlockedTimes(true);
+        // Try admin endpoint first, fall back to public endpoint if needed
+        const response = await get('/api/admin/orari/bloccati');
+        if (response.ok) {
+          const data = await response.json();
+          setBlockedTimes(data || []);
+        } else if (response.status === 403) {
+          // If admin access is forbidden, try public endpoint
+          const publicResponse = await get('/api/orari/bloccati');
+          if (publicResponse.ok) {
+            const publicData = await publicResponse.json();
+            setBlockedTimes(publicData || []);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching blocked times:', error);
+        setBlockedTimes([]);
+      } finally {
+        setLoadingBlockedTimes(false);
+      }
+    };
+
+    fetchBlockedTimes();
+  }, [get]);
+
   useEffect(() => {
     const tick = setInterval(() => setNow(new Date()), 60000);
     return () => clearInterval(tick);
@@ -229,15 +293,30 @@ function PrenotazioniCalendario() {
     [weekStart]
   );
 
-  const timeSlots = useMemo(
-    () => Array.from({ length: SLOTS_COUNT }, (_, i) => {
-      const totalMin = START_HOUR * 60 + i * SLOT_MIN;
-      const h = Math.floor(totalMin / 60);
-      const m = totalMin % 60;
-      return { index: i, label: `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`, isHour: m === 0 };
-    }),
-    []
-  );
+  // Calculate opening hours for each day of the week
+  const getDayOpeningHours = (dayIndex) => {
+    if (!Array.isArray(studioHours) || studioHours.length === 0) {
+      return null;
+    }
+
+    const day = weekDays[dayIndex];
+    const dayName = day.toLocaleDateString('it-IT', { weekday: 'long' });
+    const dayKey = daysOfWeek.find(d => d.label.toUpperCase() === dayName.toUpperCase())?.value;
+
+    if (dayKey) {
+      const dayHours = studioHours.find(h => h.giornoSettimana === dayKey);
+      if (dayHours && !dayHours.chiuso && dayHours.oraApertura && dayHours.oraChiusura) {
+        return {
+          start: dayHours.oraApertura,
+          end: dayHours.oraChiusura,
+          lunchStart: dayHours.oraInizioPausaPranzo,
+          lunchEnd: dayHours.oraFinePausaPranzo
+        };
+      }
+    }
+
+    return null;
+  };
 
   const eventsByDay = useMemo(() => {
     const map = weekDays.map(() => []);
@@ -257,7 +336,99 @@ function PrenotazioniCalendario() {
     return map.map((dayEvents) => layoutDayEvents(dayEvents));
   }, [prenotazioni, weekDays]);
 
-  const gridHeight = SLOTS_COUNT * SLOT_HEIGHT;
+  // Process blocked times for display
+  const blockedTimesByDay = useMemo(() => {
+    const map = weekDays.map(() => []);
+    blockedTimes.forEach((blocked) => {
+      try {
+        // Parse the blocked time date
+        const blockedDate = new Date(blocked.data);
+        const dayIdx = weekDays.findIndex((d) => isSameDay(d, blockedDate));
+        if (dayIdx === -1) return;
+
+        // Parse start and end times
+        const [startHour, startMin] = blocked.oraInizio.split(':').map(Number);
+        const [endHour, endMin] = blocked.oraFine.split(':').map(Number);
+
+        // Create date objects for start and end times
+        const startDate = new Date(blockedDate);
+        startDate.setHours(startHour, startMin, 0, 0);
+
+        const endDate = new Date(blockedDate);
+        endDate.setHours(endHour, endMin, 0, 0);
+
+        // Calculate position and size
+        const startOffset = minutesFromGridStart(startDate);
+        const endOffset = minutesFromGridStart(endDate);
+
+        if (startOffset >= 0 && endOffset > startOffset) {
+          map[dayIdx].push({
+            ...blocked,
+            _start: startOffset,
+            _end: endOffset,
+            _startDate: startDate,
+            _endDate: endDate
+          });
+        }
+      } catch (error) {
+        console.error('Error parsing blocked time:', blocked.id, error);
+        // Skip this blocked time if parsing fails
+      }
+    });
+    return map;
+  }, [blockedTimes, weekDays]);
+
+  // Calculate week's opening hours range
+  const calculateWeekOpeningHours = () => {
+    if (!Array.isArray(studioHours) || studioHours.length === 0) {
+      // Fallback to default hours if no studio hours data
+      return { startHour: 9, endHour: 18 };
+    }
+
+    let minStartHour = 24;
+    let maxEndHour = 0;
+
+    // Get opening hours for each day of the week
+    weekDays.forEach((day, index) => {
+      const dayName = day.toLocaleDateString('it-IT', { weekday: 'long' });
+      const dayKey = daysOfWeek.find(d => d.label.toUpperCase() === dayName.toUpperCase())?.value;
+
+      if (dayKey) {
+        const dayHours = studioHours.find(h => h.giornoSettimana === dayKey);
+        if (dayHours && !dayHours.chiuso && dayHours.oraApertura && dayHours.oraChiusura) {
+          const startHour = parseInt(dayHours.oraApertura.split(':')[0]);
+          const endHour = parseInt(dayHours.oraChiusura.split(':')[0]);
+
+          if (startHour < minStartHour) minStartHour = startHour;
+          if (endHour > maxEndHour) maxEndHour = endHour;
+        }
+      }
+    });
+
+    // If no open days found, use default hours
+    if (minStartHour === 24 || maxEndHour === 0) {
+      return { startHour: 9, endHour: 18 };
+    }
+
+    // Use exact min/max hours without buffer
+    return { startHour: minStartHour, endHour: maxEndHour };
+  };
+
+  // Calculate dynamic time range based on studio hours
+  const { startHour: dynamicStartHour, endHour: dynamicEndHour } = calculateWeekOpeningHours();
+  const DYNAMIC_SLOTS_COUNT = Math.max(1, ((dynamicEndHour - dynamicStartHour) * 60) / SLOT_MIN);
+  const gridHeight = DYNAMIC_SLOTS_COUNT * SLOT_HEIGHT;
+
+  // Generate dynamic time slots based on studio hours
+  const timeSlots = useMemo(
+    () => Array.from({ length: DYNAMIC_SLOTS_COUNT }, (_, i) => {
+      const totalMin = dynamicStartHour * 60 + i * SLOT_MIN;
+      const h = Math.floor(totalMin / 60);
+      const m = totalMin % 60;
+      return { index: i, label: `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`, isHour: m === 0 };
+    }),
+    [dynamicStartHour, DYNAMIC_SLOTS_COUNT]
+  );
 
   const goToPrevWeek = () => setWeekStart((d) => addDays(d, -7));
   const goToNextWeek = () => setWeekStart((d) => addDays(d, 7));
@@ -315,7 +486,8 @@ function PrenotazioniCalendario() {
         { label: 'Vaccinazione', color: '#8B5CF6' },
         { label: 'Specialistica', color: '#2A9D8F' },
         { label: "Urgenza", color: '#EF4444' },
-        { label: 'Post-operatorio', color: '#F59E0B' }
+        { label: 'Post-operatorio', color: '#F59E0B' },
+        { label: 'Altro', color: '#6B7280' }
       ];
     }
 
@@ -370,6 +542,18 @@ function PrenotazioniCalendario() {
           <button className="cal-today-btn" onClick={goToToday}>Oggi</button>
           <button className="cal-nav-btn" onClick={goToNextWeek} aria-label="Settimana successiva">›</button>
           <span className="cal-range-label">{formatRangeLabel(weekStart)}</span>
+
+          {/* Date input for quick navigation */}
+          <div className="cal-date-input">
+            <input
+              type="date"
+              value={weekStart.toISOString().split('T')[0]}
+              onChange={(e) => {
+                const selectedDate = new Date(e.target.value);
+                setWeekStart(getMonday(selectedDate));
+              }}
+            />
+          </div>
         </div>
 
         <div className="cal-legend">
@@ -416,21 +600,62 @@ function PrenotazioniCalendario() {
               )}
             </div>
 
-            {weekDays.map((d, dayIdx) => (
-              <div key={dayIdx} className={`cal-day-col ${isSameDay(d, now) ? 'is-today' : ''}`}>
-                {timeSlots.map((slot) => (
-                  <div
-                    key={slot.index}
-                    className={`cal-slot-line ${slot.isHour ? 'is-hour' : ''}`}
-                    style={{ height: SLOT_HEIGHT }}
-                  ></div>
-                ))}
+            {weekDays.map((d, dayIdx) => {
+              const dayHours = getDayOpeningHours(dayIdx);
+              return (
+                <div key={dayIdx} className={`cal-day-col ${isSameDay(d, now) ? 'is-today' : ''}`}>
+                  {timeSlots.map((slot) => (
+                    <div
+                      key={slot.index}
+                      className={`cal-slot-line ${slot.isHour ? 'is-hour' : ''}`}
+                      style={{ height: SLOT_HEIGHT }}
+                    ></div>
+                  ))}
 
-                {showNowLine && todayIndex === dayIdx && (
-                  <div className="cal-now-line" style={{ top: (nowOffset / SLOT_MIN) * SLOT_HEIGHT }}>
-                    <span className="cal-now-dot"></span>
-                  </div>
-                )}
+                  {showNowLine && todayIndex === dayIdx && (
+                    <div className="cal-now-line" style={{ top: (nowOffset / SLOT_MIN) * SLOT_HEIGHT }}>
+                      <span className="cal-now-dot"></span>
+                    </div>
+                  )}
+
+          {/* Closed hours background - grey out non-business hours */}
+          {dayHours && (
+            <>
+              {/* Closed hours before opening */}
+              {parseInt(dayHours.start.split(':')[0]) > dynamicStartHour && (
+                <div
+                  className="cal-closed-hours-bg"
+                  style={{
+                    top: '0',
+                    height: `${(parseInt(dayHours.start.split(':')[0]) - dynamicStartHour) * (60 / SLOT_MIN) * SLOT_HEIGHT}px`
+                  }}
+                ></div>
+              )}
+             {/* Closed hours after closing */}
+              {parseInt(dayHours.end.split(':')[0]) < dynamicEndHour && (
+                <div
+                  className="cal-closed-hours-bg"
+                  style={{
+                    top: `${(parseInt(dayHours.end.split(':')[0]) - dynamicStartHour) * (60 / SLOT_MIN) * SLOT_HEIGHT}px`,
+                    height: `${(dynamicEndHour - parseInt(dayHours.end.split(':')[0])) * (60 / SLOT_MIN) * SLOT_HEIGHT}px`
+                  }}
+                ></div>
+              )}
+
+              {/* Lunch break indicator */}
+              {dayHours.lunchStart && dayHours.lunchEnd && (
+                <div
+                  className="cal-lunch-break"
+                  style={{
+                    top: `${(parseInt(dayHours.lunchStart.split(':')[0]) - dynamicStartHour) * (60 / SLOT_MIN) * SLOT_HEIGHT}px`,
+                    height: `${(parseInt(dayHours.lunchEnd.split(':')[0]) - parseInt(dayHours.lunchStart.split(':')[0])) * (60 / SLOT_MIN) * SLOT_HEIGHT}px`
+                  }}
+                >
+                  <span className="cal-lunch-label">Pausa Pranzo</span>
+                </div>
+              )}
+            </>
+          )}
 
                 {eventsByDay[dayIdx].map((ev) => {
                   const top = (ev._start / SLOT_MIN) * SLOT_HEIGHT;
@@ -479,8 +704,36 @@ function PrenotazioniCalendario() {
                     </PrenotazioneContextMenu>
                   );
                 })}
+
+                {/* Render blocked time slots */}
+                {blockedTimesByDay[dayIdx].map((blocked) => {
+                  const top = (blocked._start / SLOT_MIN) * SLOT_HEIGHT;
+                  const height = Math.max(((blocked._end - blocked._start) / SLOT_MIN) * SLOT_HEIGHT - 2, 20);
+                  const timeLabel = `${blocked._startDate.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}–${blocked._endDate.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}`;
+
+                  return (
+                    <div
+                      key={`blocked-${blocked.id}`}
+                      className="cal-blocked-time"
+                      style={{
+                        top,
+                        height,
+                        left: '2px',
+                        width: 'calc(100% - 4px)'
+                      }}
+                      title={`Orario bloccato: ${blocked.motivo || 'Non specificato'} (${timeLabel})`}
+                    >
+                      <div className="cal-blocked-label">
+                        {blocked.motivo || 'Orario bloccato'}
+                      </div>
+                      <div className="cal-blocked-time-label">
+                        {timeLabel}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-            ))}
+            )})}
           </div>
         </div>
       </div>

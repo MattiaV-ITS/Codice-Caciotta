@@ -97,6 +97,15 @@ function Sidebar({ isOpen, closeMenu }) {
               <span className="nav-icon">⚙️</span>
               Admin
             </NavLink>
+
+            <NavLink
+              to="/admin/orari"
+              className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+              onClick={closeMenu}
+            >
+              <span className="nav-icon">🕐</span>
+              Orari Studio
+            </NavLink>
           </>
         )}
       </nav>
