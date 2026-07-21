@@ -13,3 +13,5 @@ export { default as SyringeIcon } from './SyringeIcon';
 export { default as HomeIcon } from './HomeIcon';
 export { default as ChartIcon } from './ChartIcon';
 export { default as DangerIcon } from './DangerIcon';
+export { default as EditIcon } from './EditIcon';
+export { default as GearIcon } from './GearIcon';

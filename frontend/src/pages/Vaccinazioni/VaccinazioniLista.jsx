@@ -7,6 +7,8 @@ import PaginationFooter from '../../components/common/PaginationFooter';
 import SearchBox from '../../components/common/SearchBox';
 import FilterBar from '../../components/common/FilterBar';
 import ListPageTemplate from '../../components/ListPageTemplate/ListPageTemplate';
+import VaccinazioneEditModal from '../../components/VaccinazioneEditModal/VaccinazioneEditModal';
+import { GearMenu } from '../../components/ContextMenu/ContextMenu';
 
 import { useTableControls } from '../../hooks/useTableControls';
 import { usePaginatedFetch } from '../../hooks/usePaginatedFetch';
@@ -21,6 +23,7 @@ function VaccinazioniLista() {
 
   const search = useSearchControls();
   const [statoFilter, setStatoFilter] = useState('');
+  const [editingVaccinazione, setEditingVaccinazione] = useState(null);
 
   // Memoizza i filtri per evitare ricalcoli inutili e garantire stabilità dei riferimenti
   const memoizedFilters = useMemo(() => ({
@@ -28,7 +31,7 @@ function VaccinazioniLista() {
     stato: statoFilter
   }), [search.appliedSearchTerm, statoFilter]);
 
-  const { data: vaccinazioni, loading, error, totalPages, totalCount } =
+  const { data: vaccinazioni, loading, error, totalPages, totalCount, refetch } =
     usePaginatedFetch('/api/vaccinazioni', {
       page: table.page,
       size: table.size,
@@ -86,6 +89,21 @@ function VaccinazioniLista() {
         const status = getStatusInfo(item.statoVaccinazione);
         return <span className={`badge-status ${status.className}`}>{status.label}</span>;
       }
+    },
+    {
+      header: 'AZIONI',
+      field: 'azioni',
+      sortable: false,
+      render: (item) => (
+        <GearMenu
+          menuItems={[
+            {
+              label: 'Modifica',
+              onClick: () => setEditingVaccinazione(item)
+            }
+          ]}
+        />
+      )
     }
   ];
 
@@ -149,23 +167,36 @@ function VaccinazioniLista() {
   if (error) return <ErrorMessage error={error} />;
 
   return (
-    <ListPageTemplate
-      title="Elenco Vaccinazioni"
-      subtitle="Gestisci le vaccinazioni degli animali"
-      data={vaccinazioni}
-      columns={customColumns}
-      loading={loading}
-      error={error}
-      tableControls={{ ...table, totalPages, totalCount }}
-      searchControls={search}
-      filterOptions={filterOptions}
-      activeFilter={statoFilter}
-      onFilterSelect={setStatoFilter}
-      emptyMessage={emptyMessage}
-      emptyIcon={emptyIcon}
-      showAddButton={false}
-      statsContent={statsContent}
-    />
+    <>
+      <ListPageTemplate
+        title="Elenco Vaccinazioni"
+        subtitle="Gestisci le vaccinazioni degli animali"
+        data={vaccinazioni}
+        columns={customColumns}
+        loading={loading}
+        error={error}
+        tableControls={{ ...table, totalPages, totalCount }}
+        searchControls={search}
+        filterOptions={filterOptions}
+        activeFilter={statoFilter}
+        onFilterSelect={setStatoFilter}
+        emptyMessage={emptyMessage}
+        emptyIcon={emptyIcon}
+        showAddButton={false}
+        statsContent={statsContent}
+      />
+
+      {editingVaccinazione && (
+        <VaccinazioneEditModal
+          vaccinazione={editingVaccinazione}
+          onClose={() => setEditingVaccinazione(null)}
+          onSuccess={() => {
+            setEditingVaccinazione(null);
+            refetch();
+          }}
+        />
+      )}
+    </>
   );
 }
 

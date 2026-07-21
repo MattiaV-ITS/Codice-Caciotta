@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useApi } from '../../services/apiService';
+import { useAuth } from '../../context/AuthContext';
 import SchedaAnimale from './SchedaAnimale';
+import AnimaleCreate from './AnimaleCreate';
 import { formatDateShort, formatTime } from '../../utils/dateUtils';
 
 function AnimaleDettaglio() {
@@ -9,11 +11,16 @@ function AnimaleDettaglio() {
   const navigate = useNavigate();
   const animaleId = parseInt(id);
   const { get } = useApi();
+  const { user } = useAuth();
 
   const [animale, setAnimale] = useState(null);
   const [visite, setVisite] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingAnimale, setEditingAnimale] = useState(null);
+
+  const isStaffOrAdmin = user?.roles?.some(r => r === 'ROLE_STAFF' || r === 'ROLE_ADMIN');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -21,7 +28,6 @@ function AnimaleDettaglio() {
         setIsLoading(true);
         setError(null);
         
-        // Fetch animal details
         const animaleResponse = await get(`/api/animali/${animaleId}`);
         if (!animaleResponse.ok) {
           throw new Error(`Failed to fetch animale: ${animaleResponse.status}`);
@@ -34,7 +40,6 @@ function AnimaleDettaglio() {
         
         setAnimale(animaleData);
         
-        // Fetch visits for this animal
         try {
           const visiteResponse = await get(`/api/visite/animale/${animaleId}`);
           if (visiteResponse.ok) {
@@ -60,6 +65,17 @@ function AnimaleDettaglio() {
     fetchData();
   }, [animaleId, get]);
 
+  const handleEditAnimale = (animaleData) => {
+    setEditingAnimale(animaleData);
+    setShowEditModal(true);
+  };
+
+  const handleEditSuccess = (updatedAnimale) => {
+    setAnimale(updatedAnimale);
+    setShowEditModal(false);
+    setEditingAnimale(null);
+  };
+
   const goToVisita = (visitaId) => {
     navigate(`/visite/${visitaId}`);
   };
@@ -67,8 +83,6 @@ function AnimaleDettaglio() {
   const goToNuovaVisita = () => {
     navigate(`/visite/new?animaleId=${animaleId}`);
   };
-
-
 
   if (isLoading) {
     return (
@@ -104,10 +118,11 @@ function AnimaleDettaglio() {
   return (
     <div className="visite-pagina">
 
-      {/* ==================== COLONNA SINISTRA - DATI ANIMALE ==================== */}
-      <SchedaAnimale animale={animale} />
+      <SchedaAnimale 
+        animale={animale} 
+        onEditClick={isStaffOrAdmin ? handleEditAnimale : undefined}
+      />
 
-      {/* ==================== COLONNA CENTRALE - SPAZIO VUOTO ==================== */}
       <div className="visite-colonna-center">
         <div className="visite-card">
           <div className="visite-card-header">
@@ -128,7 +143,6 @@ function AnimaleDettaglio() {
         </div>
       </div>
 
-      {/* ==================== COLONNA DESTRA - VISITE ==================== */}
       <div className="visite-colonna-destra">
         <div className="visite-card visite-card-precedenti">
           <div className="visite-card-header">
@@ -162,6 +176,14 @@ function AnimaleDettaglio() {
         </div>
       </div>
 
+      {showEditModal && editingAnimale && (
+        <AnimaleCreate
+          animale={editingAnimale}
+          isEditMode={true}
+          onClose={() => setShowEditModal(false)}
+          onSuccess={handleEditSuccess}
+        />
+      )}
     </div>
   );
 }
