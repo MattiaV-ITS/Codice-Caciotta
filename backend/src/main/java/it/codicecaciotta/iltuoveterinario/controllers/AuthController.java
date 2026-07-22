@@ -2,6 +2,7 @@ package it.codicecaciotta.iltuoveterinario.controllers;
 
 import java.util.List;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -27,6 +28,7 @@ import org.springframework.web.bind.annotation.RestController;
 import it.codicecaciotta.iltuoveterinario.models.Utente;
 import it.codicecaciotta.iltuoveterinario.models.Ruolo;
 import it.codicecaciotta.iltuoveterinario.models.ERuoli;
+import it.codicecaciotta.iltuoveterinario.models.Proprietario;
 import it.codicecaciotta.iltuoveterinario.payload.request.LoginRequest;
 import it.codicecaciotta.iltuoveterinario.payload.request.SignupRequest;
 import it.codicecaciotta.iltuoveterinario.payload.response.JwtResponse;
@@ -35,6 +37,8 @@ import it.codicecaciotta.iltuoveterinario.repositories.RuoloRepository;
 import it.codicecaciotta.iltuoveterinario.repositories.UtenteRepository;
 import it.codicecaciotta.iltuoveterinario.security.jwt.JwtUtils;
 import it.codicecaciotta.iltuoveterinario.security.services.UserDetailsImpl;
+import it.codicecaciotta.iltuoveterinario.services.ProprietarioService;
+import it.codicecaciotta.iltuoveterinario.dto.ProprietarioCreateDTO;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -49,17 +53,20 @@ public class AuthController {
   private final RuoloRepository roleRepository;
   private final PasswordEncoder encoder;
   private final JwtUtils jwtUtils;
+  private final ProprietarioService proprietarioService;
 
   public AuthController(AuthenticationManager authenticationManager,
                         UtenteRepository userRepository,
                         RuoloRepository roleRepository,
                         PasswordEncoder encoder,
-                        JwtUtils jwtUtils) {
+                        JwtUtils jwtUtils,
+                        ProprietarioService proprietarioService) {
     this.authenticationManager = authenticationManager;
     this.userRepository = userRepository;
     this.roleRepository = roleRepository;
     this.encoder = encoder;
     this.jwtUtils = jwtUtils;
+    this.proprietarioService = proprietarioService;
   }
 
   /**
@@ -85,10 +92,10 @@ public class AuthController {
       logger.info("User '{}' authenticated successfully", userDetails.getUsername());
 
       return ResponseEntity.ok(new JwtResponse(jwt, userDetails.getId(), userDetails.getUsername(),
-          userDetails.getEmail(), roles));
+          userDetails.getEmail(), roles, null));
     } catch (AuthenticationException ex) {
       logger.warn("Authentication failed for user '{}'", loginRequest.getUsername());
-      return ResponseEntity.status(401).body(new MessageResponse("Errore: Username o password non validi"));
+      return ResponseEntity.status(401).body(new MessageResponse("Error: Invalid username or password"));
     }
   }
 
@@ -101,11 +108,11 @@ public class AuthController {
   @PostMapping("/signup")
   public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest signUpRequest) {
     if (userRepository.existsByUsername(signUpRequest.getUsername())) {
-      return ResponseEntity.badRequest().body(new MessageResponse("Errore: Username esistente!"));
+      return ResponseEntity.badRequest().body(new MessageResponse("Error: Username is already taken!"));
     }
 
     if (userRepository.existsByEmail(signUpRequest.getEmail())) {
-      return ResponseEntity.badRequest().body(new MessageResponse("Errore: Email già in uso!"));
+      return ResponseEntity.badRequest().body(new MessageResponse("Error: Email is already in use!"));
     }
 
     // Creazione del nuovo utente con password codificata
@@ -124,7 +131,47 @@ public class AuthController {
         user.getUsername(),
         roles.stream().map(r -> r.getNome().name()).collect(Collectors.toList()));
 
-    return ResponseEntity.ok(new MessageResponse("Utente registrato con successo!"));
+    return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
+  }
+
+  @PostMapping("/create-proprietario")
+  public ResponseEntity<?> createProprietarioForUser(@Valid @RequestBody ProprietarioCreateDTO proprietarioCreateDTO) {
+    try {
+      // Get current user from security context
+      UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+      Long userId = Objects.requireNonNull(userDetails.getId(), "Authenticated user ID must not be null");
+      Utente currentUser = userRepository.findById(userId)
+          .orElseThrow(() -> new IllegalStateException("User not found"));
+
+      Proprietario createdProprietario = proprietarioService.createProprietarioForUser(proprietarioCreateDTO, currentUser);
+
+      return ResponseEntity.ok(createdProprietario);
+    } catch (Exception e) {
+      logger.error("Errore nella creazione del proprietario per l'utente: {}", e.getMessage());
+      return ResponseEntity.badRequest().body(new MessageResponse("Errore nella creazione del proprietario: " + e.getMessage()));
+    }
+  }
+
+  @GetMapping("/me")
+  public ResponseEntity<?> getCurrentUser() {
+    try {
+      UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+      Long userId = Objects.requireNonNull(userDetails.getId(), "Authenticated user ID must not be null");
+      Utente user = userRepository.findById(userId)
+          .orElseThrow(() -> new IllegalStateException("User not found"));
+
+      return ResponseEntity.ok(new JwtResponse(
+          null, // No token needed
+          user.getId(),
+          user.getUsername(),
+          user.getEmail(),
+          userDetails.getAuthorities().stream().map(item -> item.getAuthority()).collect(Collectors.toList()),
+          user.getProprietario() != null ? user.getProprietario().getId() : null
+      ));
+    } catch (Exception e) {
+      logger.error("Errore nel recupero delle informazioni dell'utente: {}", e.getMessage());
+      return ResponseEntity.badRequest().body(new MessageResponse("Errore nel recupero delle informazioni dell'utente: " + e.getMessage()));
+    }
   }
 
   /**

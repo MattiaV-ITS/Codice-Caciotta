@@ -3,18 +3,43 @@ import FormModal from '../../components/FormModal/FormModal';
 import { validateRequired, validateEmail, validatePhone, validateMicrochip, validatePositiveNumber, capitalizeFirstLetter } from '../../utils/validationUtils';
 
 function AnimaleCreate({ onClose, onSuccess, animale, isEditMode = false }) {
+  const ALTRO_SESSO_VALUE = 'ALTRO_SCONOSCIUTO';
+  const ALTRO_TAGLIA_VALUE = 'ALTRO_SCONOSCIUTA';
+  const SPECIE_BASE_VALUES = ['cane', 'gatto', 'altro'];
+
+  const normalizeSpecieForForm = (rawSpecie) => {
+    const value = (rawSpecie || '').trim();
+    if (!value) {
+      return { specie: '', specificaSpecie: '' };
+    }
+
+    const isBaseSpecie = SPECIE_BASE_VALUES.includes(value.toLowerCase());
+    if (isBaseSpecie) {
+      return {
+        specie: capitalizeFirstLetter(value),
+        specificaSpecie: ''
+      };
+    }
+
+    return {
+      specie: 'Altro',
+      specificaSpecie: value
+    };
+  };
+
   const [formData, setFormData] = useState(() => {
     if (isEditMode && animale) {
+      const normalizedSpecie = normalizeSpecieForForm(animale.specie);
       return {
         nome: animale.nome || '',
-        specie: animale.specie || '',
-        specificaSpecie: animale.specificaSpecie || '',
+        specie: normalizedSpecie.specie,
+        specificaSpecie: animale.specificaSpecie || normalizedSpecie.specificaSpecie,
         razza: animale.razza || '',
         dataNascita: animale.dataNascita ? (typeof animale.dataNascita === 'string' ? animale.dataNascita.split('T')[0] : animale.dataNascita) : '',
-        sesso: animale.sesso || '',
+        sesso: animale.sesso ?? ALTRO_SESSO_VALUE,
         peso: animale.peso ? String(animale.peso) : '',
         microchip: animale.microchip || '',
-        taglia: animale.taglia || null,
+        taglia: animale.taglia ?? ALTRO_TAGLIA_VALUE,
         coloreMantello: animale.coloreMantello || '',
         sterilizzato: animale.sterilizzato || false,
         gruppoSanguigno: animale.gruppoSanguigno || '',
@@ -36,7 +61,7 @@ function AnimaleCreate({ onClose, onSuccess, animale, isEditMode = false }) {
       sesso: '',
       peso: '',
       microchip: '',
-      taglia: null, // Default: Altro/Sconosciuta
+      taglia: ALTRO_TAGLIA_VALUE, // Default: Altro/Sconosciuta
       coloreMantello: '',
       sterilizzato: false,
       gruppoSanguigno: '',
@@ -96,13 +121,13 @@ function AnimaleCreate({ onClose, onSuccess, animale, isEditMode = false }) {
   const sessoOptions = [
     { value: 'M', label: 'Maschio' },
     { value: 'F', label: 'Femmina' },
-    { value: null, label: 'Altro/Sconosciuto' }
+    { value: ALTRO_SESSO_VALUE, label: 'Altro/Sconosciuto' }
   ];
   const tagliaOptions = [
     { value: 'PICCOLA', label: 'Piccola' },
     { value: 'MEDIA', label: 'Media' },
     { value: 'GRANDE', label: 'Grande' },
-    { value: null, label: 'Altro/Sconosciuta' }
+    { value: ALTRO_TAGLIA_VALUE, label: 'Altro/Sconosciuta' }
   ];
   const statoOptions = [
     { value: 'SANO', label: 'Sano' },
@@ -183,13 +208,38 @@ function AnimaleCreate({ onClose, onSuccess, animale, isEditMode = false }) {
   }, []);
 
   // Validazione campo singolo
+  const isAltroSpecie = (value) => (value || '').toLowerCase() === 'altro';
+
+  const suggestTagliaFromPeso = (pesoValue) => {
+    const peso = parseFloat(pesoValue);
+    if (Number.isNaN(peso) || peso <= 0) {
+      return '';
+    }
+    if (peso <= 10) {
+      return 'PICCOLA';
+    }
+    if (peso <= 25) {
+      return 'MEDIA';
+    }
+    return 'GRANDE';
+  };
+
+  const tagliaSuggestionMap = {
+    PICCOLA: 'Piccola',
+    MEDIA: 'Media',
+    GRANDE: 'Grande'
+  };
+
+  const suggestedTaglia = suggestTagliaFromPeso(formData.peso);
+  const suggestedTagliaLabel = tagliaSuggestionMap[suggestedTaglia] || '';
+
   const validateField = (name, value) => {
     switch (name) {
       case 'nome':
         return validateRequired(value, 'Il nome');
       case 'specie':
         if (!value) return 'La specie è obbligatoria.';
-        if (value === 'altro' && !formData.specificaSpecie.trim()) {
+        if (isAltroSpecie(value) && !formData.specificaSpecie.trim()) {
           return 'Specifica il tipo di animale.';
         }
         return '';
@@ -215,7 +265,7 @@ function AnimaleCreate({ onClose, onSuccess, animale, isEditMode = false }) {
       if (error) newErrors[field] = error;
     });
 
-    if (formData.specie === 'altro' && !formData.specificaSpecie.trim()) {
+    if (isAltroSpecie(formData.specie) && !formData.specificaSpecie.trim()) {
       newErrors.specie = 'Specifica il tipo di animale.';
     }
 
@@ -231,8 +281,13 @@ function AnimaleCreate({ onClose, onSuccess, animale, isEditMode = false }) {
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     const newValue = type === 'checkbox' ? checked : value;
-    
-    setFormData(prev => ({ ...prev, [name]: newValue }));
+
+    setFormData(prev => {
+      if (name === 'specie' && !isAltroSpecie(newValue)) {
+        return { ...prev, specie: newValue, specificaSpecie: '' };
+      }
+      return { ...prev, [name]: newValue };
+    });
 
     if (touched[name]) {
       const error = validateField(name, newValue);
@@ -260,10 +315,15 @@ function AnimaleCreate({ onClose, onSuccess, animale, isEditMode = false }) {
       setIsLoading(true);
       try {
         const token = localStorage.getItem('jwtToken');
+        const specificaSpecieTrimmed = formData.specificaSpecie?.trim() || '';
+        const specieToSave = isAltroSpecie(formData.specie)
+          ? specificaSpecieTrimmed
+          : formData.specie;
+
         const payload = {
           ...formData,
-          specie: formData.specie ? capitalizeFirstLetter(formData.specie) : formData.specie,
-          specificaSpecie: formData.specificaSpecie ? capitalizeFirstLetter(formData.specificaSpecie) : formData.specificaSpecie,
+          specie: specieToSave ? capitalizeFirstLetter(specieToSave) : specieToSave,
+          specificaSpecie: specificaSpecieTrimmed ? capitalizeFirstLetter(specificaSpecieTrimmed) : '',
           peso: parseFloat(formData.peso),
           sesso: formData.sesso === 'ALTRO_SCONOSCIUTO' ? null : formData.sesso,
           taglia: formData.taglia === 'ALTRO_SCONOSCIUTA' ? null : formData.taglia,
@@ -319,7 +379,7 @@ function AnimaleCreate({ onClose, onSuccess, animale, isEditMode = false }) {
     setErrors(prev => ({ ...prev, proprietarioId: '' }));
   };
 
-  const showSpecificaSpecie = formData.specie === 'altro';
+  const showSpecificaSpecie = isAltroSpecie(formData.specie);
 
   return (
     <FormModal
@@ -498,6 +558,11 @@ function AnimaleCreate({ onClose, onSuccess, animale, isEditMode = false }) {
                     </label>
                   ))}
                 </div>
+                {suggestedTagliaLabel && (
+                  <div style={{ marginTop: '6px', fontSize: '13px', color: 'var(--gray-500)' }}>
+                    Suggerimento in base al peso: {suggestedTagliaLabel}
+                  </div>
+                )}
               </div>
 
               {/* Colore Mantello */}

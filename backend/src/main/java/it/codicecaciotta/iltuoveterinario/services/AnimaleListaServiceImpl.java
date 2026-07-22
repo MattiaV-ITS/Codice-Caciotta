@@ -21,7 +21,7 @@ public class AnimaleListaServiceImpl implements AnimaleListaService {
     @Override
     public Page<AnimaleListaDTO> getAllAnimali(Pageable pageable) {
         if (pageable == null) {
-            throw new IllegalArgumentException("Pageable non può essere null");
+            throw new IllegalArgumentException("Pageable parameter cannot be null");
         }
         return animaleRepository.findAll(pageable)
                 .map(AnimaleListaMapper::toListaDTO);

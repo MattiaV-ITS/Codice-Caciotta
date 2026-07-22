@@ -32,7 +32,7 @@ public class AuthEntryPointJwt implements AuthenticationEntryPoint {
     ApiError apiError = new ApiError(
         HttpServletResponse.SC_UNAUTHORIZED,
         "UNAUTHORIZED",
-        "Autenticazione richiesta: " + authException.getMessage()
+        "Authentication required: " + authException.getMessage()
     );
     
     ObjectMapper objectMapper = new ObjectMapper();

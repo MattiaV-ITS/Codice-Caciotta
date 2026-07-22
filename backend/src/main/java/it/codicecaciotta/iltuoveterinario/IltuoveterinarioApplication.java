@@ -32,9 +32,9 @@ public class IltuoveterinarioApplication {
 		return args -> {
 			try {
 				String result = jdbcTemplate.queryForObject("SELECT version()", String.class);
-				System.out.println("Connesso a PostgreSQL, versione: " + result);
+				System.out.println("Connected to PostgreSQL, version: " + result);
 			} catch (Exception e) {
-				System.err.println("Connessione fallita a PostgreSQL; errore: " + e.getMessage());
+				System.err.println("PostgreSQL connection failed; error: " + e.getMessage());
 			}
 		};
 	}

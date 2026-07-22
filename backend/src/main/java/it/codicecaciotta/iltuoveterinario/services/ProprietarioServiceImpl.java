@@ -3,7 +3,9 @@ package it.codicecaciotta.iltuoveterinario.services;
 import it.codicecaciotta.iltuoveterinario.dto.ProprietarioCreateDTO;
 import it.codicecaciotta.iltuoveterinario.dto.ProprietarioUpdateDTO;
 import it.codicecaciotta.iltuoveterinario.models.Proprietario;
+import it.codicecaciotta.iltuoveterinario.models.Utente;
 import it.codicecaciotta.iltuoveterinario.repositories.ProprietarioRepository;
+import it.codicecaciotta.iltuoveterinario.repositories.UtenteRepository;
 import jakarta.persistence.EntityNotFoundException;
 import java.util.Objects;
 
@@ -15,9 +17,11 @@ import org.springframework.transaction.annotation.Transactional;
 public class ProprietarioServiceImpl implements ProprietarioService {
 
     private final ProprietarioRepository proprietarioRepository;
+    private final UtenteRepository utenteRepository;
 
-    public ProprietarioServiceImpl(ProprietarioRepository proprietarioRepository) {
+    public ProprietarioServiceImpl(ProprietarioRepository proprietarioRepository, UtenteRepository utenteRepository) {
         this.proprietarioRepository = proprietarioRepository;
+        this.utenteRepository = utenteRepository;
     }
 
     @Override
@@ -37,6 +41,31 @@ public class ProprietarioServiceImpl implements ProprietarioService {
 
         // Save
         return proprietarioRepository.save(Objects.requireNonNull(proprietario));
+    }
+
+    @Override
+    @Transactional
+    public Proprietario createProprietarioForUser(ProprietarioCreateDTO proprietarioCreateDTO, Utente utente) {
+        // Create proprietario
+        Proprietario proprietario = new Proprietario();
+        proprietario.setCodiceFiscale(proprietarioCreateDTO.getCodiceFiscale());
+        proprietario.setNome(proprietarioCreateDTO.getNome());
+        proprietario.setCognome(proprietarioCreateDTO.getCognome());
+        proprietario.setEmail(proprietarioCreateDTO.getEmail());
+        proprietario.setTelefono(proprietarioCreateDTO.getTelefono());
+        proprietario.setIndirizzo(proprietarioCreateDTO.getIndirizzo());
+        proprietario.setCitta(proprietarioCreateDTO.getCitta());
+        proprietario.setDataRegistrazione(proprietarioCreateDTO.getDataRegistrazione());
+        proprietario.setStato(proprietarioCreateDTO.getStato());
+
+        // Save proprietario first
+        Proprietario savedProprietario = proprietarioRepository.save(Objects.requireNonNull(proprietario));
+
+        // Associate proprietario with user
+        utente.setProprietario(savedProprietario);
+        utenteRepository.save(utente);
+
+        return savedProprietario;
     }
 
     @Override
