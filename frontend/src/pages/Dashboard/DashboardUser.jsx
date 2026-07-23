@@ -147,7 +147,8 @@ function DashboardUser() {
         <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
           {!hasProprietario && (
             <button className="btn btn-secondary" onClick={() => setShowProprietarioModal(true)}>
-              <PlusIcon /> Crea Profilo Proprietario
+                <PlusIcon width="16" height="16" stroke="currentColor" />
+                Crea Profilo Proprietario
             </button>
           )}
           <button className="btn btn-primary" onClick={handlePrenotaVisita}>
