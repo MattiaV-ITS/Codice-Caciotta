@@ -1,4 +1,8 @@
-/* Studio Hours Admin Page Styles */
+/* ========================================
+   STUDIO HOURS ADMIN PAGE
+   Stile uniformato con App.css
+   ======================================== */
+
 .studio-hours-container {
   padding: var(--space-4);
   max-width: 1400px;
@@ -9,8 +13,11 @@
   color: var(--primary);
   margin-bottom: var(--space-4);
   font-size: 1.8rem;
+  font-weight: 700;
+  letter-spacing: -0.3px;
 }
 
+/* Layout a due colonne */
 .studio-hours-content {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -18,6 +25,7 @@
   margin-top: var(--space-4);
 }
 
+/* Messaggi di feedback */
 .message {
   padding: var(--space-3) var(--space-4);
   border-radius: var(--radius-md);
@@ -25,18 +33,19 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  font-size: 14px;
 }
 
 .message.success {
-  background-color: var(--success-light);
-  color: var(--success-dark);
-  border: 1px solid var(--success);
+  background-color: var(--success-light, #D1FAE5);
+  color: var(--success-dark, #065F46);
+  border: 1px solid var(--success, #10B981);
 }
 
 .message.error {
-  background-color: var(--danger-light);
-  color: var(--danger-dark);
-  border: 1px solid var(--danger);
+  background-color: var(--danger-light, #FEE2E2);
+  color: var(--danger-dark, #991B1B);
+  border: 1px solid var(--danger, #EF4444);
 }
 
 .message-close {
@@ -47,24 +56,71 @@
   font-size: 1.2rem;
   padding: 0 var(--space-2);
   margin-left: var(--space-3);
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+.message-close:hover {
+  opacity: 1;
 }
 
-/* Default Hours Section */
-.default-hours-section {
+/* ========================================
+   SEZIONE ORARI PREDEFINITI
+   ======================================== */
+.default-hours-section,
+.calendar-section {
   background: white;
   border-radius: var(--radius-lg);
   padding: var(--space-4);
   box-shadow: var(--shadow-sm);
+  border: 1px solid var(--gray-200);
 }
 
-.default-hours-section h3 {
+.default-hours-section h3,
+.calendar-section h3 {
   color: var(--gray-800);
   margin-bottom: var(--space-4);
   font-size: 1.3rem;
+  font-weight: 600;
   border-bottom: 2px solid var(--primary);
   padding-bottom: var(--space-2);
 }
 
+/* Bottoni azione globali */
+.all-days-actions {
+  display: flex;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+  flex-wrap: wrap;
+}
+
+/* Stile unificato per bottoni secondari/outline */
+.btn-secondary,
+.update-all-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 18px;
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--gray-700);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  text-decoration: none;
+  line-height: 1.4;
+}
+.btn-secondary:hover,
+.update-all-button:hover {
+  background: var(--gray-50);
+  border-color: var(--gray-400);
+  color: var(--gray-800);
+}
+
+/* Selettori giorno (pillole) */
 .day-selector {
   display: flex;
   flex-wrap: wrap;
@@ -73,27 +129,30 @@
 }
 
 .day-button {
-  padding: var(--space-2) var(--space-3);
+  padding: 6px 16px;
   border: 1px solid var(--gray-300);
   background: white;
   color: var(--gray-700);
-  border-radius: var(--radius-md);
+  border-radius: 20px; /* pill shape */
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
   font-weight: 500;
+  font-size: 13px;
+  font-family: inherit;
 }
-
 .day-button:hover {
-  background: var(--primary-light);
+  background: var(--gray-50);
   border-color: var(--primary);
+  color: var(--primary);
 }
-
 .day-button.active {
   background: var(--primary);
   color: white;
   border-color: var(--primary);
+  box-shadow: 0 2px 4px rgba(42, 157, 143, 0.2);
 }
 
+/* Editor orari */
 .hours-editor {
   background: var(--gray-50);
   padding: var(--space-4);
@@ -101,15 +160,16 @@
   border: 1px solid var(--gray-200);
 }
 
+/* Form generico */
 .form-group {
   margin-bottom: var(--space-3);
 }
-
 .form-group label {
   display: block;
   margin-bottom: var(--space-2);
   font-weight: 500;
   color: var(--gray-700);
+  font-size: 14px;
 }
 
 .day-name {
@@ -119,24 +179,29 @@
   color: var(--primary);
   border-radius: var(--radius-md);
   font-weight: 500;
+  font-size: 14px;
 }
 
+/* Input time (stile form-control) */
 .time-input {
-  padding: var(--space-2);
-  border: 1px solid var(--gray-300);
-  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius);
   width: 100%;
   max-width: 200px;
-  font-size: 1rem;
+  font-size: 14px;
+  font-family: inherit;
+  color: var(--gray-800);
+  background: white;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
-
 .time-input:focus {
   outline: none;
   border-color: var(--primary);
-  box-shadow: 0 0 0 2px var(--primary-light);
+  box-shadow: 0 0 0 3px rgba(42, 157, 143, 0.15);
 }
 
-/* Toggle Switch */
+/* Toggle Switch (invariato ma con colori coerenti) */
 .toggle-switch {
   position: relative;
   display: inline-flex;
@@ -144,24 +209,21 @@
   gap: var(--space-3);
   vertical-align: middle;
 }
-
 .toggle-switch input {
   opacity: 0;
   width: 0;
   height: 0;
   position: absolute;
 }
-
 .slider {
   position: relative;
   cursor: pointer;
-  background-color: var(--gray-300);
+  background-color: var(--gray-500);
   transition: .4s;
   border-radius: 34px;
   width: 50px;
   height: 24px;
 }
-
 .slider:before {
   position: absolute;
   content: "";
@@ -173,15 +235,12 @@
   transition: .4s;
   border-radius: 50%;
 }
-
 input:checked + .slider {
   background-color: var(--primary);
 }
-
 input:checked + .slider:before {
   transform: translateX(26px);
 }
-
 .toggle-label {
   font-weight: 500;
   color: var(--gray-700);
@@ -189,51 +248,43 @@ input:checked + .slider:before {
   line-height: 1;
 }
 
-/* Save Button */
+/* Pulsante Salva (primario) */
 .save-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 20px;
   background: var(--primary);
   color: white;
   border: none;
-  padding: var(--space-3) var(--space-4);
-  border-radius: var(--radius-md);
-  cursor: pointer;
+  border-radius: var(--radius);
+  font-size: 14px;
   font-weight: 500;
-  transition: all 0.2s;
+  cursor: pointer;
+  transition: all 0.2s ease;
   margin-top: var(--space-3);
+  font-family: inherit;
 }
-
 .save-button:hover {
   background: var(--primary-dark);
+  box-shadow: var(--shadow-md);
 }
-
 .save-button:disabled {
   background: var(--gray-400);
   cursor: not-allowed;
+  box-shadow: none;
 }
 
-/* Calendar Section */
-.calendar-section {
-  background: white;
-  border-radius: var(--radius-lg);
-  padding: var(--space-4);
-  box-shadow: var(--shadow-sm);
-}
-
-.calendar-section h3 {
-  color: var(--gray-800);
-  margin-bottom: var(--space-4);
-  font-size: 1.3rem;
-  border-bottom: 2px solid var(--primary);
-  padding-bottom: var(--space-2);
-}
-
+/* ========================================
+   SEZIONE CALENDARIO
+   ======================================== */
 .calendar-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: var(--space-4);
 }
-
 .calendar-header h4 {
   margin: 0;
   color: var(--primary);
@@ -241,31 +292,51 @@ input:checked + .slider:before {
   font-weight: 600;
 }
 
-.nav-button, .today-button {
-  padding: var(--space-2) var(--space-3);
+/* Pulsanti navigazione */
+.nav-button {
+  padding: 8px 12px;
   border: 1px solid var(--gray-300);
   background: white;
   color: var(--gray-700);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
+  font-size: 18px;
+  line-height: 1;
 }
-
-.nav-button:hover, .today-button:hover {
-  background: var(--primary-light);
+.nav-button:hover {
+  background: var(--gray-50);
   border-color: var(--primary);
+  color: var(--primary);
 }
 
 .today-button {
+  padding: 8px 16px;
+  border: 1px solid var(--primary);
   background: var(--primary);
   color: white;
-  border-color: var(--primary);
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  font-family: inherit;
 }
-
 .today-button:hover {
   background: var(--primary-dark);
 }
 
+.form-group-inline {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+.form-group-inline > label:first-child {
+  margin-bottom: 0;
+  min-width: 70px; /* larghezza minima per allineare le etichette */
+}
+
+/* Griglia del calendario */
 .calendar-weekdays {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
@@ -275,7 +346,6 @@ input:checked + .slider:before {
   margin-bottom: var(--space-2);
   padding: 0 var(--space-1);
 }
-
 .weekday {
   padding: var(--space-2) 0;
   font-size: 0.9rem;
@@ -290,42 +360,55 @@ input:checked + .slider:before {
 .calendar-day {
   aspect-ratio: 1;
   padding: var(--space-2);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
   position: relative;
   overflow: hidden;
   border: 1px solid var(--gray-200);
+  background: white;
 }
-
 .calendar-day:hover {
-  background: var(--primary-light);
+  background: var(--gray-50);
+  border-color: var(--primary);
   transform: scale(1.02);
 }
-
 .calendar-day.empty {
   background: transparent;
   border: none;
   cursor: default;
+}
+.calendar-day.empty:hover {
+  transform: none;
 }
 
 .calendar-day.today {
   border: 2px solid var(--primary);
   background: var(--primary-light);
 }
-
 .calendar-day.has-override {
-  border: 2px solid var(--warning);
+  border: 2px solid var(--warning, #F59E0B);
 }
-
 .calendar-day.closed {
-  background: var(--danger-light);
-  color: var(--danger-dark);
+  background: var(--danger-light, #FEE2E2);
+  color: var(--danger-dark, #991B1B);
+  border-color: var(--danger-light, #FEE2E2);
+}
+.calendar-day.open {
+  background: var(--success-light, #D1FAE5);
+  color: var(--success-dark, #065F46);
+  border-color: var(--success-light, #D1FAE5);
 }
 
-.calendar-day.open {
-  background: var(--success-light);
-  color: var(--success-dark);
+/* Giorni senza alcun orario (né default né eccezione) */
+.calendar-day.no-hours {
+  background: white;
+  color: var(--gray-700);
+  border-color: var(--gray-200);
+}
+.calendar-day.no-hours:hover {
+  background: var(--gray-50);
+  border-color: var(--primary);
 }
 
 .day-number {
@@ -338,7 +421,7 @@ input:checked + .slider:before {
   position: absolute;
   top: var(--space-1);
   right: var(--space-1);
-  background: var(--warning);
+  background: var(--warning, #F59E0B);
   color: white;
   border-radius: 50%;
   width: 18px;
@@ -346,7 +429,9 @@ input:checked + .slider:before {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.8rem;
+  font-size: 0.7rem;
+  font-weight: bold;
+  line-height: 1;
 }
 
 .day-hours {
@@ -355,24 +440,29 @@ input:checked + .slider:before {
   font-weight: 500;
 }
 
+/* Pulsante Aggiungi Eccezione (success) */
 .add-specific-button {
   width: 100%;
-  padding: var(--space-3);
-  background: var(--success);
+  padding: 10px 20px;
+  background: var(--primary);
   color: white;
   border: none;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius);
   cursor: pointer;
   font-weight: 500;
   margin-top: var(--space-3);
-  transition: all 0.2s;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  font-size: 14px;
 }
-
 .add-specific-button:hover {
-  background: var(--success-dark);
+  background: var(--primary-dark);
+  box-shadow: var(--shadow-md);
 }
 
-/* Modal Styles */
+/* ========================================
+   MODALI
+   ======================================== */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -380,24 +470,38 @@ input:checked + .slider:before {
   right: 0;
   bottom: 0;
   background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 1000;
+  animation: fadeIn 0.2s ease;
 }
 
 .modal-content {
   background: white;
-  padding: var(--space-4);
+  padding: var(--space-5);
   border-radius: var(--radius-lg);
   width: 100%;
   max-width: 500px;
   box-shadow: var(--shadow-lg);
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(30px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .modal-content h3 {
   color: var(--primary);
   margin-bottom: var(--space-4);
+  font-size: 1.3rem;
+  font-weight: 600;
 }
 
 .modal-actions {
@@ -408,35 +512,55 @@ input:checked + .slider:before {
 }
 
 .cancel-button {
-  padding: var(--space-2) var(--space-4);
-  background: var(--gray-300);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 18px;
+  background: var(--gray-200);
   color: var(--gray-700);
   border: none;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius);
   cursor: pointer;
-  transition: all 0.2s;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  font-family: inherit;
 }
-
 .cancel-button:hover {
-  background: var(--gray-400);
+  background: var(--gray-300);
 }
-
 .cancel-button:disabled {
-  background: var(--gray-200);
+  opacity: 0.6;
   cursor: not-allowed;
 }
 
-/* Responsive Design */
+/* Checkbox esclusioni (come in App.css) */
+.exclusion-checkboxes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  cursor: pointer;
+  font-weight: 400;
+  font-size: 14px;
+}
+
+/* ========================================
+   RESPONSIVE
+   ======================================== */
 @media (max-width: 768px) {
   .studio-hours-content {
     grid-template-columns: 1fr;
   }
-
   .calendar-section {
     margin-top: var(--space-6);
   }
 }
 
+/* Loading */
 .loading-spinner {
   text-align: center;
   padding: var(--space-8);

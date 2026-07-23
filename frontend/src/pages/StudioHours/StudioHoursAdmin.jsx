@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import './StudioHoursAdmin.css';
 import OrarioBloccatoCreateModal from '../../components/OrarioBloccatoCreateModal';
@@ -17,74 +17,74 @@ const StudioHoursAdmin = () => {
     data: '',
     oraApertura: '09:00',
     oraChiusura: '18:00',
+    oraInizioPausaPranzo: '13:00',
+    oraFinePausaPranzo: '14:00',
     chiuso: false
   });
   const [currentMonth, setCurrentMonth] = useState(new Date());
-    const [editingSpecificId, setEditingSpecificId] = useState(null);
-    const [showAllDaysModal, setShowAllDaysModal] = useState(false);
-    const [allDaysData, setAllDaysData] = useState({
-      oraApertura: '09:00',
-      oraChiusura: '18:00',
-      oraInizioPausaPranzo: '13:00',
-      oraFinePausaPranzo: '14:00',
-      chiuso: false,
-      giorniEsclusi: []
-    });
+  const [editingSpecificId, setEditingSpecificId] = useState(null);
+  const [showAllDaysModal, setShowAllDaysModal] = useState(false);
+  const [allDaysData, setAllDaysData] = useState({
+    oraApertura: '09:00',
+    oraChiusura: '18:00',
+    oraInizioPausaPranzo: '13:00',
+    oraFinePausaPranzo: '14:00',
+    chiuso: false,
+    giorniEsclusi: []
+  });
 
-    // Days of week for display
-    const daysOfWeek = [
-      { value: 'LUNEDI', label: 'Lunedì' },
-      { value: 'MARTEDI', label: 'Martedì' },
-      { value: 'MERCOLEDI', label: 'Mercoledì' },
-      { value: 'GIOVEDI', label: 'Giovedì' },
-      { value: 'VENERDI', label: 'Venerdì' },
-      { value: 'SABATO', label: 'Sabato' },
-      { value: 'DOMENICA', label: 'Domenica' }
-    ];
+  const daysOfWeek = [
+    { value: 'LUNEDI', label: 'Lunedì' },
+    { value: 'MARTEDI', label: 'Martedì' },
+    { value: 'MERCOLEDI', label: 'Mercoledì' },
+    { value: 'GIOVEDI', label: 'Giovedì' },
+    { value: 'VENERDI', label: 'Venerdì' },
+    { value: 'SABATO', label: 'Sabato' },
+    { value: 'DOMENICA', label: 'Domenica' }
+  ];
 
-  // Fetch studio hours data
-  useEffect(() => {
-    const fetchStudioHours = async () => {
-      setLoading(true);
-      try {
-        const response = await fetch('/api/admin/orari', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
+  const showMessage = useCallback((type, text) => {
+    setMessage({ type, text });
+    setTimeout(() => setMessage(null), 5000);
+  }, []);
 
-        if (!response.ok) {
-          throw new Error('Failed to fetch studio hours');
+  const fetchStudioHours = useCallback(async () => {
+    if (!token) return;
+    try {
+      const response = await fetch('/api/admin/orari', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         }
-
-        const data = await response.json();
-        setDefaultHours(data.defaultOrari || []);
-        setSpecificHours(data.specificOrari || []);
-      } catch (error) {
-        setMessage({ type: 'error', text: error.message });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (token) {
-      fetchStudioHours();
+      });
+      if (!response.ok) throw new Error('Errore nel recupero degli orari');
+      const data = await response.json();
+      setDefaultHours(data.defaultOrari || []);
+      setSpecificHours(data.specificOrari || []);
+    } catch (error) {
+      showMessage('error', error.message);
     }
-  }, [token]);
+  }, [token, showMessage]);
 
-  // Get current hours for selected day
+  useEffect(() => {
+    if (token) {
+      setLoading(true);
+      fetchStudioHours().finally(() => setLoading(false));
+    }
+  }, [token, fetchStudioHours]);
+
   const getCurrentDayHours = () => {
     return defaultHours.find(h => h.giornoSettimana === selectedDay) || {
       oraApertura: '09:00',
       oraChiusura: '18:00',
+      oraInizioPausaPranzo: null,
+      oraFinePausaPranzo: null,
       chiuso: false
     };
   };
 
   const currentDayHours = getCurrentDayHours();
 
-  // Handle default hours update
   const handleDefaultHoursUpdate = async () => {
     setSaving(true);
     try {
@@ -103,51 +103,28 @@ const StudioHoursAdmin = () => {
           chiuso: currentDayHours.chiuso
         })
       });
-
-      if (!response.ok) {
-        throw new Error('Failed to update default hours');
-      }
-
-      // Refresh data
-      const data = await response.json();
-      setMessage({ type: 'success', text: data.message || 'Orari predefiniti aggiornati con successo' });
-
-      // Refresh the list
-      const refreshResponse = await fetch('/api/admin/orari', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-      const refreshData = await refreshResponse.json();
-      setDefaultHours(refreshData.defaultOrari || []);
-
+      if (!response.ok) throw new Error('Salvataggio orari predefiniti fallito');
+      await fetchStudioHours();
+      showMessage('success', 'Orari predefiniti aggiornati');
     } catch (error) {
-      setMessage({ type: 'error', text: error.message });
+      showMessage('error', error.message);
     } finally {
       setSaving(false);
     }
   };
 
-  // Handle time change for default hours
   const handleTimeChange = (field, value) => {
     setDefaultHours(prev => prev.map(h =>
-      h.giornoSettimana === selectedDay
-        ? { ...h, [field]: value }
-        : h
+      h.giornoSettimana === selectedDay ? { ...h, [field]: value } : h
     ));
   };
 
-  // Handle closed toggle for default hours
   const handleClosedToggle = () => {
     setDefaultHours(prev => prev.map(h =>
-      h.giornoSettimana === selectedDay
-        ? { ...h, chiuso: !h.chiuso }
-        : h
+      h.giornoSettimana === selectedDay ? { ...h, chiuso: !h.chiuso } : h
     ));
   };
 
-  // Handle update all days
   const handleAllDaysUpdate = async () => {
     setSaving(true);
     try {
@@ -159,34 +136,17 @@ const StudioHoursAdmin = () => {
         },
         body: JSON.stringify(allDaysData)
       });
-
-      if (!response.ok) {
-        throw new Error('Failed to update all default hours');
-      }
-
-      // Refresh data
-      const data = await response.json();
-      setMessage({ type: 'success', text: data.message || 'Tutti gli orari predefiniti aggiornati con successo' });
-
-      // Refresh the list
-      const refreshResponse = await fetch('/api/admin/orari', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-      const refreshData = await refreshResponse.json();
-      setDefaultHours(refreshData.defaultOrari || []);
+      if (!response.ok) throw new Error('Salvataggio globale fallito');
+      await fetchStudioHours();
       setShowAllDaysModal(false);
-
+      showMessage('success', 'Orari di tutti i giorni aggiornati');
     } catch (error) {
-      setMessage({ type: 'error', text: error.message });
+      showMessage('error', error.message);
     } finally {
       setSaving(false);
     }
   };
 
-  // Handle specific date modal
   const openSpecificDateModal = (date = null, existing = null) => {
     if (existing) {
       setEditingSpecificId(existing.id);
@@ -212,17 +172,9 @@ const StudioHoursAdmin = () => {
     setShowSpecificDateModal(true);
   };
 
-  // Handle specific date save
   const handleSpecificDateSave = async () => {
     setSaving(true);
     try {
-      const url = editingSpecificId
-        ? `/api/admin/orari/specific/${editingSpecificId}`
-        : '/api/admin/orari/specific';
-
-      const method = editingSpecificId ? 'PUT' : 'POST';
-
-      // For now, we'll remove existing and add new since we don't have PUT endpoint
       if (editingSpecificId) {
         await fetch(`/api/admin/orari/specific/${editingSpecificId}`, {
           method: 'DELETE',
@@ -232,7 +184,6 @@ const StudioHoursAdmin = () => {
           }
         });
       }
-
       const response = await fetch('/api/admin/orari/specific/with-lunch', {
         method: 'POST',
         headers: {
@@ -248,37 +199,19 @@ const StudioHoursAdmin = () => {
           chiuso: specificDateData.chiuso
         })
       });
-
-      if (!response.ok) {
-        throw new Error('Failed to save specific date hours');
-      }
-
-      // Refresh data
-      const refreshResponse = await fetch('/api/admin/orari', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-      const refreshData = await refreshResponse.json();
-      setSpecificHours(refreshData.specificOrari || []);
-
-      setMessage({ type: 'success', text: 'Eccezione data specifica salvata con successo' });
+      if (!response.ok) throw new Error('Salvataggio eccezione fallito');
+      await fetchStudioHours();
       setShowSpecificDateModal(false);
-
+      showMessage('success', 'Eccezione salvata');
     } catch (error) {
-      setMessage({ type: 'error', text: error.message });
+      showMessage('error', error.message);
     } finally {
       setSaving(false);
     }
   };
 
-  // Handle specific date delete
   const handleSpecificDateDelete = async (id) => {
-    if (!window.confirm('Sei sicuro di voler rimuovere questa eccezione?')) {
-      return;
-    }
-
+    if (!window.confirm('Rimuovere questa eccezione?')) return;
     setSaving(true);
     try {
       const response = await fetch(`/api/admin/orari/specific/${id}`, {
@@ -288,106 +221,68 @@ const StudioHoursAdmin = () => {
           'Content-Type': 'application/json'
         }
       });
-
-      if (!response.ok) {
-        throw new Error('Failed to delete specific date hours');
-      }
-
-      // Refresh data
-      const refreshResponse = await fetch('/api/admin/orari', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-      const refreshData = await refreshResponse.json();
-      setSpecificHours(refreshData.specificOrari || []);
-
-      setMessage({ type: 'success', text: 'Eccezione data specifica rimossa con successo' });
-
+      if (!response.ok) throw new Error('Eliminazione fallita');
+      await fetchStudioHours();
+      showMessage('success', 'Eccezione rimossa');
     } catch (error) {
-      setMessage({ type: 'error', text: error.message });
+      showMessage('error', error.message);
     } finally {
       setSaving(false);
     }
   };
 
-  // Calendar navigation
-  const goToPreviousMonth = () => {
-    setCurrentMonth(prev => {
-      const newDate = new Date(prev);
-      newDate.setMonth(newDate.getMonth() - 1);
-      return newDate;
-    });
-  };
+  const goToPreviousMonth = () => setCurrentMonth(prev => new Date(prev.getFullYear(), prev.getMonth() - 1));
+  const goToNextMonth = () => setCurrentMonth(prev => new Date(prev.getFullYear(), prev.getMonth() + 1));
+  const goToToday = () => setCurrentMonth(new Date());
 
-  const goToNextMonth = () => {
-    setCurrentMonth(prev => {
-      const newDate = new Date(prev);
-      newDate.setMonth(newDate.getMonth() + 1);
-      return newDate;
-    });
-  };
-
-  const goToToday = () => {
-    setCurrentMonth(new Date());
-  };
-
-  // Generate calendar days
   const generateCalendarDays = () => {
     const year = currentMonth.getFullYear();
     const month = currentMonth.getMonth();
-    const firstDay = new Date(year, month, 1).getDay();
+    const firstDayOfWeek = new Date(year, month, 1).getDay();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const todayStr = new Date().toISOString().split('T')[0];
 
     const days = [];
-    const today = new Date();
-    const todayStr = today.toISOString().split('T')[0];
-
-    // Add empty cells for days before the first day of month
-    for (let i = 0; i < firstDay; i++) {
+    for (let i = 0; i < firstDayOfWeek; i++) {
       days.push(null);
     }
 
-    // Add days of the month
     for (let i = 1; i <= daysInMonth; i++) {
       const date = new Date(year, month, i);
       const dateStr = date.toISOString().split('T')[0];
       const dayName = date.toLocaleDateString('it-IT', { weekday: 'long' });
-
-      // Find specific override for this date
       const specificOverride = specificHours.find(h => h.dataSpecifica === dateStr);
-
-      // Find default hours for this day of week
-      const defaultDay = daysOfWeek.find(d => d.label.toUpperCase() === dayName.toUpperCase());
+      const defaultDay = daysOfWeek.find(d => d.label.toLowerCase() === dayName.toLowerCase());
       const defaultOverride = defaultHours.find(h => h.giornoSettimana === defaultDay?.value);
+
+      // Verifica se esiste un orario (override o default non chiuso/null)
+      const hasHours = !!(specificOverride || (defaultOverride && !defaultOverride.chiuso));
 
       days.push({
         date: i,
         dateStr,
         isToday: dateStr === todayStr,
         hasOverride: !!specificOverride,
-        isClosed: specificOverride ? specificOverride.chiuso : defaultOverride?.chiuso,
+        isClosed: specificOverride ? specificOverride.chiuso : (defaultOverride?.chiuso || false),
+        hasHours, // true se c'è un orario disponibile (override o default non chiuso)
         hours: specificOverride
-          ? `${specificOverride.oraApertura || 'Chiuso'} - ${specificOverride.oraChiusura || ''}`
+          ? (specificOverride.chiuso ? 'Chiuso' : `${specificOverride.oraApertura} - ${specificOverride.oraChiusura}`)
           : defaultOverride
-            ? `${defaultOverride.oraApertura} - ${defaultOverride.oraChiusura}`
-            : 'Non impostato'
+            ? (defaultOverride.chiuso ? 'Chiuso' : `${defaultOverride.oraApertura} - ${defaultOverride.oraChiusura}`)
+            : '—'
       });
     }
-
     return days;
   };
 
   const calendarDays = generateCalendarDays();
   const monthNames = ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno', 'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
   const currentMonthName = monthNames[currentMonth.getMonth()];
-  const currentYear = currentMonth.getFullYear();
 
   if (loading) {
     return (
       <div className="studio-hours-container">
-        <div className="loading-spinner">Caricamento...</div>
+        <div className="loading-spinner">Caricamento orari studio...</div>
       </div>
     );
   }
@@ -409,16 +304,10 @@ const StudioHoursAdmin = () => {
           <h3>Orari Predefiniti Settimanali</h3>
 
           <div className="all-days-actions">
-            <button
-              onClick={() => setShowAllDaysModal(true)}
-              className="update-all-button"
-            >
+            <button onClick={() => setShowAllDaysModal(true)} className="update-all-button">
               📅 Imposta Tutti i Giorni
             </button>
-            <button
-              onClick={() => setShowBlockedSpotModal(true)}
-              className="btn-secondary"
-            >
+            <button onClick={() => setShowBlockedSpotModal(true)} className="btn-secondary">
               + Crea Orario Bloccato
             </button>
           </div>
@@ -441,7 +330,7 @@ const StudioHoursAdmin = () => {
               <span className="day-name">{daysOfWeek.find(d => d.value === selectedDay)?.label}</span>
             </div>
 
-            <div className="form-group">
+            <div className="form-group form-group-inline">
               <label>Stato:</label>
               <label className="toggle-switch">
                 <input
@@ -516,7 +405,7 @@ const StudioHoursAdmin = () => {
 
           <div className="calendar-header">
             <button onClick={goToPreviousMonth} className="nav-button">‹</button>
-            <h4>{currentMonthName} {currentYear}</h4>
+            <h4>{currentMonthName} {currentMonth.getFullYear()}</h4>
             <button onClick={goToNextMonth} className="nav-button">›</button>
             <button onClick={goToToday} className="today-button">Oggi</button>
           </div>
@@ -531,24 +420,25 @@ const StudioHoursAdmin = () => {
             {calendarDays.map((day, index) => (
               <div
                 key={index}
-                className={`calendar-day ${day ? '' : 'empty'} ${day?.isToday ? 'today' : ''} ${day?.hasOverride ? 'has-override' : ''} ${day?.isClosed ? 'closed' : 'open'}`}
+                className={`calendar-day ${day ? '' : 'empty'} ${day?.isToday ? 'today' : ''} ${
+                  day?.hasOverride ? 'has-override' : ''
+                } ${
+                  day && !day.hasHours ? 'no-hours' : (day?.isClosed ? 'closed' : 'open')
+                }`}
                 onClick={() => day && openSpecificDateModal(day.dateStr)}
               >
-                {day ? (
+                {day && (
                   <>
                     <div className="day-number">{day.date}</div>
                     {day.hasOverride && <div className="override-badge">⭐</div>}
                     <div className="day-hours">{day.hours}</div>
                   </>
-                ) : null}
+                )}
               </div>
             ))}
           </div>
 
-          <button
-            onClick={() => openSpecificDateModal()}
-            className="add-specific-button"
-          >
+          <button onClick={() => openSpecificDateModal()} className="add-specific-button">
             + Aggiungi Eccezione
           </button>
         </div>
@@ -761,26 +651,6 @@ const StudioHoursAdmin = () => {
           onClose={() => setShowBlockedSpotModal(false)}
           onSuccess={() => {
             setShowBlockedSpotModal(false);
-            // Refresh the data to show the new blocked spot
-            const fetchStudioHours = async () => {
-              try {
-                const response = await fetch('/api/admin/orari', {
-                  headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                  }
-                });
-
-                if (response.ok) {
-                  const data = await response.json();
-                  setDefaultHours(data.defaultOrari || []);
-                  setSpecificHours(data.specificOrari || []);
-                }
-              } catch (error) {
-                console.error('Error refreshing studio hours:', error);
-              }
-            };
-
             fetchStudioHours();
           }}
           selectedDate={currentMonth.toISOString().split('T')[0]}
