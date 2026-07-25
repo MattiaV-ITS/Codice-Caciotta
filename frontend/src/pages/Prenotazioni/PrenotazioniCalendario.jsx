@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './PrenotazioniCalendario.css';
 import { formatDate, formatTime, parseDate } from '../../utils/dateUtils';
@@ -133,16 +133,16 @@ function PrenotazioniCalendario() {
     try {
       setLoading(true);
       setError(null);
-      
+
       // Fetch prenotazioni from backend
       const response = await get('/api/prenotazioni');
       if (!response.ok) {
         throw new Error(`Failed to fetch prenotazioni: ${response.status}`);
       }
-      
+
       const data = await response.json();
       console.log('Raw prenotazioni data from backend:', data);
-      
+
       // Transform backend data to match frontend format
       const transformedData = data.map(p => {
         // Ensure date format is correct for frontend
@@ -157,18 +157,18 @@ function PrenotazioniCalendario() {
           // Convert Date object to ISO string
           dataOraAppuntamento = dataOraAppuntamento.toISOString();
         }
-        
+
         // Handle animal name - prefer animaleNome from DTO, fallback to animal object
         let animaleNome = 'Sconosciuto';
         let specie = 'Sconosciuto';
-        
+
         if (p.animaleNome) {
           animaleNome = p.animaleNome;
         } else if (p.animale && p.animale.nome) {
           animaleNome = p.animale.nome;
           specie = p.animale.specie || 'Sconosciuto';
         }
-        
+
         // Handle proprietario name
         let proprietarioNome = 'Sconosciuto';
         if (p.proprietarioNome) {
@@ -176,7 +176,7 @@ function PrenotazioniCalendario() {
         } else if (p.proprietario && p.proprietario.nome) {
           proprietarioNome = `${p.proprietario.nome || ''} ${p.proprietario.cognome || ''}`.trim() || 'Sconosciuto';
         }
-        
+
         return {
           id: p.id,
           dataOraAppuntamento: dataOraAppuntamento,
@@ -190,10 +190,10 @@ function PrenotazioniCalendario() {
           durataMinuti: 30 // Default duration
         };
       });
-      
+
       console.log('Transformed prenotazioni data:', transformedData);
       setPrenotazioni(transformedData);
-      
+
     } catch (err) {
       console.error('Error fetching prenotazioni:', err);
       setError(err.message);
@@ -202,7 +202,7 @@ function PrenotazioniCalendario() {
     } finally {
       setLoading(false);
     }
-  }, [get]);
+  }, []);
 
   useEffect(() => {
     fetchPrenotazioni();

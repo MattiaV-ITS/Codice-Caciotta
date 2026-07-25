@@ -156,7 +156,7 @@ function VisitePagina() {
     };
 
     fetchData();
-  }, [visitaId, api]);
+  }, [visitaId]);
 
   // ----- SALVATAGGIO (senza popup) -----
   const saveVisita = async (visitaData) => {
