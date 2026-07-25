@@ -8,6 +8,8 @@ export function usePaginatedFetch(endpoint, { page, size, sortBy, sortDir, filte
   const [error, setError] = useState(null);
   const [totalPages, setTotalPages] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
+  const [refreshIndex, setRefreshIndex] = useState(0);
+  const refetch = () => setRefreshIndex(prev => prev + 1);
 
   // Crea filtri memoizzati con riferimento stabile quando il contenuto non cambia
   const memoizedFilters = useMemo(() => {
@@ -58,7 +60,7 @@ export function usePaginatedFetch(endpoint, { page, size, sortBy, sortDir, filte
     return () => {
       isMounted = false;
     };
-  }, [endpoint, page, size, sortBy, sortDir, memoizedFilters]);
+  }, [endpoint, page, size, sortBy, sortDir, memoizedFilters, get, refreshIndex]);
 
-  return { data, loading, error, totalPages, totalCount };
+  return { data, loading, error, totalPages, totalCount, refetch };
 }

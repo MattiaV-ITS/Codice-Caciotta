@@ -1,5 +1,15 @@
+import './Sidebar.css';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import {
+  HomeIcon,
+  ChartIcon,
+  UserIcon,
+  PawIcon,
+  CalendarIcon,
+  SyringeIcon,
+  LockIcon
+} from '../components/icons';
 
 function Sidebar({ isOpen, closeMenu }) {
   const { user } = useAuth();
@@ -19,7 +29,9 @@ function Sidebar({ isOpen, closeMenu }) {
             end
             onClick={closeMenu}
           >
-            <span className="nav-icon">🏠</span>
+            <span className="nav-icon">
+              <HomeIcon width="20" height="20" strokeWidth="2" />
+            </span>
             Dashboard
           </NavLink>
         )}
@@ -32,7 +44,9 @@ function Sidebar({ isOpen, closeMenu }) {
             end
             onClick={closeMenu}
           >
-            <span className="nav-icon">📊</span>
+            <span className="nav-icon">
+              <ChartIcon width="20" height="20" strokeWidth="2" />
+            </span>
             Dashboard
           </NavLink>
         )}
@@ -45,7 +59,9 @@ function Sidebar({ isOpen, closeMenu }) {
               className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
               onClick={closeMenu}
             >
-              <span className="nav-icon">🐕</span>
+              <span className="nav-icon">
+                <PawIcon width="20" height="20" />
+              </span>
               Animali
             </NavLink>
 
@@ -54,7 +70,9 @@ function Sidebar({ isOpen, closeMenu }) {
               className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
               onClick={closeMenu}
             >
-              <span className="nav-icon">👥</span>
+              <span className="nav-icon">
+                <UserIcon width="20" height="20" strokeWidth="2" />
+              </span>
               Proprietari
             </NavLink>
 
@@ -63,7 +81,9 @@ function Sidebar({ isOpen, closeMenu }) {
               className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
               onClick={closeMenu}
             >
-              <span className="nav-icon">📅</span>
+              <span className="nav-icon">
+                <CalendarIcon width="20" height="20" strokeWidth="2" />
+              </span>
               Prenotazioni
             </NavLink>
 
@@ -81,7 +101,9 @@ function Sidebar({ isOpen, closeMenu }) {
               className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
               onClick={closeMenu}
             >
-              <span className="nav-icon">💉</span>
+              <span className="nav-icon">
+                <SyringeIcon width="20" height="20" />
+              </span>
               Vaccinazioni
             </NavLink>
 
@@ -94,7 +116,9 @@ function Sidebar({ isOpen, closeMenu }) {
               className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
               onClick={closeMenu}
             >
-              <span className="nav-icon">⚙️</span>
+              <span className="nav-icon">
+                <LockIcon width="20" height="20" strokeWidth="2" />
+              </span>
               Admin
             </NavLink>
 

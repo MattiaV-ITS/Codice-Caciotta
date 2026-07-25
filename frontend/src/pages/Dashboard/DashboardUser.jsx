@@ -6,54 +6,14 @@ import { formatDate, formatTime } from '../../utils/dateUtils';
 import AnimaleCreate from '../Animali/AnimaleCreate';
 import ProprietarioRegistrationModal from '../../components/ProprietarioRegistrationModal';
 import './DashboardUser.css';
+import { 
+  UserIcon, 
+  PawIcon, 
+  CalendarIcon, 
+  ListIcon, 
+  PlusIcon 
+} from '../../components/icons';
 
-// ==============================
-// SVG ICONS
-// ==============================
-const UserIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-    <circle cx="12" cy="7" r="4" />
-  </svg>
-);
-
-const PawIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M8 5.5C8 4.5 8.8 3.5 10 3.5C11.2 3.5 12 4.5 12 5.5C12 6.5 11.2 7.5 10 7.5C8.8 7.5 8 6.5 8 5.5Z" />
-    <path d="M15 5.5C15 4.5 15.8 3.5 17 3.5C18.2 3.5 19 4.5 19 5.5C19 6.5 18.2 7.5 17 7.5C15.8 7.5 15 6.5 15 5.5Z" />
-    <path d="M5 10C5 9 5.8 8 7 8C8.2 8 9 9 9 10C9 11 8.2 12 7 12C5.8 12 5 11 5 10Z" />
-    <path d="M15 10C15 9 15.8 8 17 8C18.2 8 19 9 19 10C19 11 18.2 12 17 12C15.8 12 15 11 15 10Z" />
-    <path d="M21 10C21 9 21.8 8 23 8C24.2 8 25 9 25 10C25 11 24.2 12 23 12C21.8 12 21 11 21 10Z" />
-    <ellipse cx="15" cy="16" rx="7" ry="5.5" />
-  </svg>
-);
-
-const CalendarIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-    <line x1="16" y1="2" x2="16" y2="6" />
-    <line x1="8" y1="2" x2="8" y2="6" />
-    <line x1="3" y1="10" x2="21" y2="10" />
-  </svg>
-);
-
-const ListIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <line x1="8" y1="6" x2="21" y2="6" />
-    <line x1="8" y1="12" x2="21" y2="12" />
-    <line x1="8" y1="18" x2="21" y2="18" />
-    <line x1="3" y1="6" x2="3.01" y2="6" />
-    <line x1="3" y1="12" x2="3.01" y2="12" />
-    <line x1="3" y1="18" x2="3.01" y2="18" />
-  </svg>
-);
-
-const PlusIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <line x1="12" y1="5" x2="12" y2="19" />
-    <line x1="5" y1="12" x2="19" y2="12" />
-  </svg>
-);
 
 function DashboardUser() {
   const { user, updateUser } = useAuth();
@@ -141,7 +101,7 @@ function DashboardUser() {
   };
 
   const handleSchedaAnimale = (animaleId) => {
-    navigate(`/animali/user/${animaleId}`); // ← ROUTE PER UTENTI
+    navigate(`/animali/user/${animaleId}`);
   };
 
   const prossimaVisita = prenotazioni.length > 0 ? prenotazioni[0] : null;
@@ -178,19 +138,22 @@ function DashboardUser() {
       <div className="dashboard-user-header">
         <div>
           <h1 className="dashboard-user-title">
-            <UserIcon className="user-icon" />
+            <UserIcon className="user-icon" width="28" height="28" stroke="var(--gray-500)" />
             Bentornato, <span className="dashboard-user-name">{user?.username || 'Utente'}</span>
           </h1>
           <p className="dashboard-user-subtitle">Prenota la tua prossima visita</p>
         </div>
+
         <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
           {!hasProprietario && (
             <button className="btn btn-secondary" onClick={() => setShowProprietarioModal(true)}>
-              <PlusIcon /> Crea Profilo Proprietario
+                <PlusIcon width="16" height="16" stroke="currentColor" />
+                Crea Profilo Proprietario
             </button>
           )}
           <button className="btn btn-primary" onClick={handlePrenotaVisita}>
-            <PlusIcon /> Prenota visita
+          <PlusIcon width="16" height="16" stroke="currentColor" />
+          Prenota visita
           </button>
         </div>
       </div>
@@ -198,13 +161,19 @@ function DashboardUser() {
       {/* KPI CARDS */}
       <div className="kpi-grid">
         <div className="kpi-card border-primary">
-          <div className="kpi-label"><PawIcon /> I tuoi animali</div>
+          <div className="kpi-label">
+            <PawIcon width="20" height="20" fill="var(--gray-500)" />
+            I tuoi animali
+          </div>
           <div className="kpi-value">{animali.length}</div>
           <div className="kpi-change">{animali.length > 0 ? 'Registrati' : 'Nessuno ancora'}</div>
         </div>
 
         <div className="kpi-card border-success">
-          <div className="kpi-label"><CalendarIcon /> Prossima visita</div>
+          <div className="kpi-label">
+            <CalendarIcon width="20" height="20" stroke="var(--gray-500)" />
+            Prossima visita
+          </div>
           <div className="kpi-value">
             {prossimaVisita ? (
               <span style={{ fontSize: '20px', fontWeight: '600' }}>
@@ -222,13 +191,19 @@ function DashboardUser() {
         </div>
 
         <div className="kpi-card border-warning">
-          <div className="kpi-label"><ListIcon /> Prenotazioni attive</div>
+          <div className="kpi-label">
+            <ListIcon width="20" height="20" stroke="var(--gray-500)" />
+            Prenotazioni attive
+          </div>
           <div className="kpi-value">{prenotazioniAttive}</div>
           <div className="kpi-change">{prenotazioniAttive > 0 ? 'In attesa' : 'Nessuna'}</div>
         </div>
 
         <div className="kpi-card border-danger">
-          <div className="kpi-label"><ListIcon /> Totale prenotazioni</div>
+          <div className="kpi-label">
+            <ListIcon width="20" height="20" stroke="var(--gray-500)" />
+            Totale prenotazioni
+          </div>
           <div className="kpi-value">{prenotazioni.length}</div>
           <div className="kpi-change">{prenotazioni.length > 0 ? 'Registrate' : 'Nessuna'}</div>
         </div>
@@ -243,7 +218,9 @@ function DashboardUser() {
         <div className="card-body">
           {prenotazioni.length === 0 ? (
             <div className="empty-state">
-              <div className="empty-icon"><CalendarIcon /></div>
+              <div className="empty-icon">
+                <CalendarIcon width="48" height="48" stroke="var(--gray-400)" opacity="0.5" />
+              </div>
               <div className="empty-title">Nessuna visita programmata</div>
               <p className="empty-description">Non hai visite in programma. Prenota ora il tuo appuntamento.</p>
               <button className="btn btn-primary mt-3" onClick={handlePrenotaVisita}>Prenota ora</button>
@@ -289,17 +266,21 @@ function DashboardUser() {
         <div className="card-header">
           <h3>I tuoi animali</h3>
           <button className="btn btn-primary btn-sm" onClick={() => setShowCreateModal(true)}>
-            <PlusIcon /> Aggiungi animale
+            <PlusIcon width="16" height="16" stroke="currentColor" />
+            Aggiungi animale
           </button>
         </div>
         <div className="card-body">
           {animali.length === 0 ? (
             <div className="empty-state">
-              <div className="empty-icon"><PawIcon /></div>
+              <div className="empty-icon">
+                <PawIcon width="48" height="48" fill="var(--gray-400)" opacity="0.5" />
+              </div>
               <div className="empty-title">Nessun animale registrato</div>
               <p className="empty-description">Aggiungi il tuo primo animale per iniziare.</p>
               <button className="btn btn-primary mt-3" onClick={() => setShowCreateModal(true)}>
-                <PlusIcon /> Aggiungi animale
+                <PlusIcon width="16" height="16" stroke="currentColor" />
+                Aggiungi animale
               </button>
             </div>
           ) : (
