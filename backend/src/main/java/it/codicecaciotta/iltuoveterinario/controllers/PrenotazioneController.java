@@ -1,6 +1,7 @@
 package it.codicecaciotta.iltuoveterinario.controllers;
 
 import it.codicecaciotta.iltuoveterinario.dto.PrenotazioneCreateDTO;
+import it.codicecaciotta.iltuoveterinario.dto.PrenotazioneUpdateDTO;
 import it.codicecaciotta.iltuoveterinario.dto.PrenotazioneDTO;
 import it.codicecaciotta.iltuoveterinario.mappers.PrenotazioneMapper;
 import it.codicecaciotta.iltuoveterinario.models.Prenotazione;
@@ -87,8 +88,9 @@ public class PrenotazioneController {
     @PutMapping("/{id}")
     public ResponseEntity<?> updatePrenotazione(
             @PathVariable Long id, 
-            @RequestBody Prenotazione prenotazioneDetails) {
+            @RequestBody PrenotazioneUpdateDTO prenotazioneDTO) {
         try {
+            Prenotazione prenotazioneDetails = PrenotazioneMapper.toEntity(prenotazioneDTO, animaleRepository, proprietarioRepository);
             Prenotazione updatedPrenotazione = prenotazioneService.updatePrenotazione(id, prenotazioneDetails);
             // Return DTO instead of entity to avoid LazyInitializationException
             PrenotazioneDTO resultDTO = PrenotazioneMapper.toDTO(updatedPrenotazione);

@@ -4,17 +4,6 @@ import { useApi } from '../../services/apiService';
 import FormModal from '../FormModal/FormModal';
 import './PrenotazioneEditModal.css';
 
-const TIPI_VISITA_SELECT = [
-  'Visita di controllo',
-  'Vaccinazione',
-  'Visita d\'urgenza',
-  'Chirurgia',
-  'Visita specialistica',
-  'Controllo post-operatorio',
-  'Visita domiciliare',
-  'Altro'
-];
-
 const PrenotazioneEditModal = ({ 
   prenotazione, 
   onClose, 
@@ -24,6 +13,9 @@ const PrenotazioneEditModal = ({
   const { get, put } = useApi();
   const [animali, setAnimali] = useState([]);
   const [loadingAnimali, setLoadingAnimali] = useState(true);
+  const [prestazioni, setPrestazioni] = useState([]);
+  const [loadingPrestazioni, setLoadingPrestazioni] = useState(true);
+  const [errorPrestazioni, setErrorPrestazioni] = useState(null);
   const [formData, setFormData] = useState({
     dataOraAppuntamento: '',
     tipoVisita: '',
@@ -53,6 +45,32 @@ const PrenotazioneEditModal = ({
     };
     
     fetchAnimali();
+  }, [get]);
+
+  // Fetch prestazioni for dynamic visit type options
+  useEffect(() => {
+    const fetchPrestazioni = async () => {
+      try {
+        setLoadingPrestazioni(true);
+        const response = await get('/api/prestazioni');
+        if (response.ok) {
+          const data = await response.json();
+          const prestazioniArray = Array.isArray(data)
+            ? data
+            : (data.content && Array.isArray(data.content)
+                ? data.content
+                : []);
+          setPrestazioni(prestazioniArray);
+        }
+      } catch (error) {
+        console.error('Error fetching prestazioni:', error);
+        setErrorPrestazioni('Errore nel caricamento delle prestazioni');
+      } finally {
+        setLoadingPrestazioni(false);
+      }
+    };
+
+    fetchPrestazioni();
   }, [get]);
 
   // Initialize form with prenotazione data
@@ -106,10 +124,14 @@ const PrenotazioneEditModal = ({
     setIsSubmitting(true);
     
     try {
+      // Include all required fields for backend deserialization (using DTO format)
       const payload = {
         dataOraAppuntamento: formData.dataOraAppuntamento,
         tipoVisita: formData.tipoVisita === 'Altro' ? formData.specificaTipoVisita : formData.tipoVisita,
-        note: formData.note
+        note: formData.note,
+        // Use IDs instead of entity objects for proper DTO deserialization
+        animaleId: prenotazione.animaleId || (prenotazione.animale?.id),
+        proprietarioId: prenotazione.proprietarioId || (prenotazione.proprietario?.id)
       };
 
       const response = await put(`/api/prenotazioni/${prenotazione.id}`, payload);
@@ -119,7 +141,17 @@ const PrenotazioneEditModal = ({
       }
 
       const updatedPrenotazione = await response.json();
-      onSuccess(updatedPrenotazione);
+      // Merge the returned DTO with frontend display fields
+      const enhancedPrenotazione = {
+        ...updatedPrenotazione,
+        animale: prenotazione.animale,
+        proprietarioNome: prenotazione.proprietarioNome,
+        animaleNome: prenotazione.animaleNome,
+        specie: prenotazione.specie,
+        // Ensure motivo matches for color mapping
+        motivo: updatedPrenotazione.tipoVisita
+      };
+      onSuccess(enhancedPrenotazione);
       onClose();
       
     } catch (error) {
@@ -161,19 +193,32 @@ const PrenotazioneEditModal = ({
 
         <div className="form-group">
           <label htmlFor="tipoVisita">Tipo di Visita</label>
-          <select
-            id="tipoVisita"
-            name="tipoVisita"
-            value={formData.tipoVisita}
-            onChange={handleChange}
-            className={hasError('tipoVisita') ? 'error' : ''}
-            required
-          >
-            <option value="">Seleziona tipo di visita</option>
-            {TIPI_VISITA_SELECT.map((tipo) => (
-              <option key={tipo} value={tipo}>{tipo}</option>
-            ))}
-          </select>
+          {loadingPrestazioni ? (
+            <div style={{ color: 'var(--gray-500)', fontSize: '14px', padding: '8px' }}>
+              Caricamento prestazioni...
+            </div>
+          ) : errorPrestazioni ? (
+            <div style={{ color: 'var(--danger)', fontSize: '14px', padding: '8px' }}>
+              {errorPrestazioni}
+            </div>
+          ) : (
+            <select
+              id="tipoVisita"
+              name="tipoVisita"
+              value={formData.tipoVisita}
+              onChange={handleChange}
+              className={hasError('tipoVisita') ? 'error' : ''}
+              required
+            >
+              <option value="">Seleziona tipo di visita</option>
+              {prestazioni.map((prestazione) => (
+                <option key={prestazione.id} value={prestazione.nomePrestazione}>
+                  {prestazione.nomePrestazione} - €{prestazione.costoBase?.toFixed(2) || '0.00'}
+                </option>
+              ))}
+              <option value="Altro">Altro (specifica)</option>
+            </select>
+          )}
           {hasError('tipoVisita') && (
             <span className="error-message">{errors.tipoVisita}</span>
           )}

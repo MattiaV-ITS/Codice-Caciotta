@@ -101,10 +101,21 @@ public class AnimaleController {
             @RequestParam(defaultValue = "id") String sortBy,
             @RequestParam(defaultValue = "asc") String sortDir,
             @RequestParam(required = false) String search,
-            @RequestParam(required = false) String specie) {
+            @RequestParam(required = false) String specie,
+            @RequestParam(required = false) Long proprietarioId) {
 
         Pageable pageable = paginationAndSortingUtils.buildPageRequest(
                 page, size, sortBy, sortDir, ALLOWED_SORT_FIELDS);
+
+        // Combined search by proprietario and search term
+        if (proprietarioId != null && search != null && !search.trim().isEmpty()) {
+            return animaleListaService.searchAnimaliByProprietario(proprietarioId, search.trim(), pageable);
+        }
+
+        // Filter by proprietario only
+        if (proprietarioId != null) {
+            return animaleListaService.getAnimaliByProprietarioId(proprietarioId, pageable);
+        }
 
         if (search != null && !search.trim().isEmpty()) {
             return animaleListaService.searchAnimaliComprehensive(search.trim(), pageable);

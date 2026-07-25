@@ -1,9 +1,10 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { ContextMenu } from '../ContextMenu/ContextMenu';
 import { useApi } from '../../services/apiService';
-import PrenotazioneEditModal from '../PrenotazioneEditModal/PrenotazioneEditModal';
+
+const PrenotazioneEditModal = lazy(() => import('../PrenotazioneEditModal/PrenotazioneEditModal'));
 
 // Icons for menu items
 const VisitIcon = () => (
@@ -140,11 +141,13 @@ const PrenotazioneContextMenu = ({ children, prenotazione, onPrenotazioneUpdated
     <ContextMenu menuItems={menuItems} onClose={() => setIsLoading(false)}>
       {children}
       {showEditModal && prenotazione && (
-        <PrenotazioneEditModal
-          prenotazione={prenotazione}
-          onClose={() => setShowEditModal(false)}
-          onSuccess={handleEditSuccess}
-        />
+        <Suspense fallback={<div>Caricamento...</div>}>
+          <PrenotazioneEditModal
+            prenotazione={prenotazione}
+            onClose={() => setShowEditModal(false)}
+            onSuccess={handleEditSuccess}
+          />
+        </Suspense>
       )}
     </ContextMenu>
   );

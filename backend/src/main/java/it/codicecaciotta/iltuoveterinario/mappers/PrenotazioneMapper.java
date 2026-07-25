@@ -2,6 +2,7 @@ package it.codicecaciotta.iltuoveterinario.mappers;
 
 import it.codicecaciotta.iltuoveterinario.dto.PrenotazioneDTO;
 import it.codicecaciotta.iltuoveterinario.dto.PrenotazioneCreateDTO;
+import it.codicecaciotta.iltuoveterinario.dto.PrenotazioneUpdateDTO;
 import it.codicecaciotta.iltuoveterinario.models.Prenotazione;
 import it.codicecaciotta.iltuoveterinario.models.Animale;
 import it.codicecaciotta.iltuoveterinario.models.Proprietario;
@@ -70,6 +71,43 @@ public class PrenotazioneMapper {
         // Fetch and set Proprietario entity
         if (dto.getProprietarioId() != null) {
             Long proprietarioId = Objects.requireNonNull(dto.getProprietarioId(), "proprietarioId cannot be null");
+            Proprietario proprietario = proprietarioRepository.findById(proprietarioId)
+                    .orElseThrow(() -> new RuntimeException("Proprietario not found with id: " + proprietarioId));
+            prenotazione.setProprietario(proprietario);
+        } else {
+            throw new RuntimeException("proprietarioId cannot be null");
+        }
+
+        return prenotazione;
+    }
+
+    public static Prenotazione toEntity(PrenotazioneUpdateDTO dto, AnimaleRepository animaleRepository, ProprietarioRepository proprietarioRepository) {
+        if (dto == null)
+            return null;
+
+        // Validate repositories
+        if (animaleRepository == null || proprietarioRepository == null) {
+            throw new IllegalArgumentException("Repositories cannot be null");
+        }
+
+        Prenotazione prenotazione = new Prenotazione();
+        prenotazione.setDataOraAppuntamento(dto.getDataOraAppuntamento());
+        prenotazione.setTipoVisita(dto.getTipoVisita());
+        prenotazione.setNote(dto.getNote());
+        
+        // Fetch and set Animale entity
+        if (dto.getAnimaleId() != null) {
+            Long animaleId = java.util.Objects.requireNonNull(dto.getAnimaleId(), "animaleId cannot be null");
+            Animale animale = animaleRepository.findById(animaleId)
+                    .orElseThrow(() -> new RuntimeException("Animale not found with id: " + animaleId));
+            prenotazione.setAnimale(animale);
+        } else {
+            throw new RuntimeException("animaleId cannot be null");
+        }
+        
+        // Fetch and set Proprietario entity
+        if (dto.getProprietarioId() != null) {
+            Long proprietarioId = java.util.Objects.requireNonNull(dto.getProprietarioId(), "proprietarioId cannot be null");
             Proprietario proprietario = proprietarioRepository.findById(proprietarioId)
                     .orElseThrow(() -> new RuntimeException("Proprietario not found with id: " + proprietarioId));
             prenotazione.setProprietario(proprietario);

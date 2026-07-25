@@ -1,28 +1,54 @@
-import React, { useEffect, useMemo, useState, useCallback } from 'react';
+import React, { useEffect, useMemo, useState, useCallback, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './PrenotazioniCalendario.css';
 import { formatDate, formatTime, parseDate } from '../../utils/dateUtils';
 import { useApi } from '../../services/apiService';
 import PrenotazioneCreateStaff from './PrenotazioneCreateStaff';
-import PrenotazioneContextMenu from '../../components/PrenotazioneContextMenu/PrenotazioneContextMenu';
+const PrenotazioneContextMenu = lazy(() => import('../../components/PrenotazioneContextMenu/PrenotazioneContextMenu'));
+import {
+  getPrestazioneClass,
+  getPrestazioneColor,
+  getPrestazioneDuration,
+  getPrestazioneLegenda,
+  FALLBACK_COLOR
+} from './prenotazioniUtils';
 
 const GIORNI = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
-const START_HOUR = 8;   // 08:00
-const END_HOUR = 20;    // 20:00
 const SLOT_MIN = 30;    // blocchi da 30 minuti
 const SLOT_HEIGHT = 48; // px per blocco da 30 minuti
-const SLOTS_COUNT = ((END_HOUR - START_HOUR) * 60) / SLOT_MIN;
 
 // ==============================
 // HELPER DATE
 // ==============================
 function getMonday(date) {
-  const d = new Date(date);
-  const day = d.getDay(); // 0 = Domenica
+  // Handle both string dates and Date objects
+  let d;
+  if (typeof date === 'string' && date.includes('-')) {
+    // Parse YYYY-MM-DD format as local date
+    const parts = date.split('-');
+    const year = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10) - 1; // Months are 0-indexed
+    const day = parseInt(parts[2], 10);
+    // Create local date at midnight
+    d = new Date(year, month, day, 0, 0, 0, 0);
+  } else {
+    d = new Date(date);
+  }
+  
+  // Get day of week in local timezone (0 = Sunday, 1 = Monday, etc.)
+  const day = d.getDay();
+  
+  // Calculate days to subtract to get to Monday
+  // If Sunday (0), go back 6 days
+  // If Monday (1), stay on same day (0 days back)
+  // If Tuesday (2), go back 1 day, etc.
   const diff = day === 0 ? -6 : 1 - day;
-  d.setDate(d.getDate() + diff);
-  d.setHours(0, 0, 0, 0);
-  return d;
+  
+  const result = new Date(d);
+  result.setDate(d.getDate() + diff);
+  result.setHours(0, 0, 0, 0);
+  
+  return result;
 }
 
 function addDays(date, n) {
@@ -51,11 +77,6 @@ function formatRangeLabel(weekStart) {
   return `${startStr} - ${endStr}`;
 }
 
-// Offset in minuti dall'inizio della griglia (START_HOUR:00)
-function minutesFromGridStart(date) {
-  return (date.getHours() * 60 + date.getMinutes()) - START_HOUR * 60;
-}
-
 // Calcola la disposizione degli eventi di un giorno, gestendo le sovrapposizioni
 // affiancando gli eventi che si sovrappongono in orario (come Google Calendar).
 function layoutDayEvents(events) {
@@ -78,7 +99,7 @@ function layoutDayEvents(events) {
 
   const laidOut = [];
   clusters.forEach((cluster) => {
-    const columns = []; // ogni colonna tiene l'orario di fine dell'ultimo evento inserito
+    const columns = [];
     cluster.forEach((ev) => {
       let colIndex = columns.findIndex((endTime) => ev._start >= endTime);
       if (colIndex === -1) {
@@ -148,17 +169,13 @@ function PrenotazioniCalendario() {
         // Ensure date format is correct for frontend
         let dataOraAppuntamento = p.dataOraAppuntamento;
         if (typeof dataOraAppuntamento === 'string') {
-          // If it's already a string, ensure it's in the right format
           if (!dataOraAppuntamento.includes('T')) {
-            // Convert from date-only to datetime format
             dataOraAppuntamento = `${dataOraAppuntamento}T00:00:00`;
           }
         } else if (dataOraAppuntamento instanceof Date) {
-          // Convert Date object to ISO string
           dataOraAppuntamento = dataOraAppuntamento.toISOString();
         }
 
-        // Handle animal name - prefer animaleNome from DTO, fallback to animal object
         let animaleNome = 'Sconosciuto';
         let specie = 'Sconosciuto';
 
@@ -169,7 +186,6 @@ function PrenotazioniCalendario() {
           specie = p.animale.specie || 'Sconosciuto';
         }
 
-        // Handle proprietario name
         let proprietarioNome = 'Sconosciuto';
         if (p.proprietarioNome) {
           proprietarioNome = `${p.proprietarioNome || ''} ${p.proprietarioCognome || ''}`.trim() || 'Sconosciuto';
@@ -181,13 +197,13 @@ function PrenotazioniCalendario() {
           id: p.id,
           dataOraAppuntamento: dataOraAppuntamento,
           motivo: p.tipoVisita,
-          statoPrenotazione: 'Confermata', // Default status
-          priorita: 'Media', // Default priority
+          statoPrenotazione: 'Confermata',
+          priorita: 'Media',
           note: p.note || '',
           animaleNome: animaleNome,
           specie: specie,
           proprietarioNome: proprietarioNome,
-          durataMinuti: 30 // Default duration
+          durataMinuti: 30 // Will be overridden in eventsByDay with real prestazione duration
         };
       });
 
@@ -197,12 +213,11 @@ function PrenotazioniCalendario() {
     } catch (err) {
       console.error('Error fetching prenotazioni:', err);
       setError(err.message);
-      // Show empty array on error
       setPrenotazioni([]);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [get]);
 
   useEffect(() => {
     fetchPrenotazioni();
@@ -216,7 +231,6 @@ function PrenotazioniCalendario() {
         const response = await get('/api/prestazioni');
         if (response.ok) {
           const data = await response.json();
-          // Handle both array and Spring Page response formats
           const prestazioniArray = Array.isArray(data)
             ? data
             : (data.content && Array.isArray(data.content)
@@ -259,13 +273,11 @@ function PrenotazioniCalendario() {
     const fetchBlockedTimes = async () => {
       try {
         setLoadingBlockedTimes(true);
-        // Try admin endpoint first, fall back to public endpoint if needed
         const response = await get('/api/admin/orari/bloccati');
         if (response.ok) {
           const data = await response.json();
           setBlockedTimes(data || []);
         } else if (response.status === 403) {
-          // If admin access is forbidden, try public endpoint
           const publicResponse = await get('/api/orari/bloccati');
           if (publicResponse.ok) {
             const publicData = await publicResponse.json();
@@ -293,7 +305,55 @@ function PrenotazioniCalendario() {
     [weekStart]
   );
 
-  // Calculate opening hours for each day of the week
+  // Calculate week's opening hours range FIRST
+  const calculateWeekOpeningHours = () => {
+    if (!Array.isArray(studioHours) || studioHours.length === 0) {
+      return { startHour: 10, endHour: 18 };
+    }
+
+    let minStartHour = 24;
+    let maxEndHour = 0;
+
+    weekDays.forEach((day, index) => {
+      const dayName = day.toLocaleDateString('it-IT', { weekday: 'long' });
+      const dayKey = daysOfWeek.find(d => d.label.toUpperCase() === dayName.toUpperCase())?.value;
+
+      if (dayKey) {
+        const dayHours = studioHours.find(h => h.giornoSettimana === dayKey);
+        if (dayHours && !dayHours.chiuso && dayHours.oraApertura && dayHours.oraChiusura) {
+          const startHour = parseInt(dayHours.oraApertura.split(':')[0]);
+          const endHour = parseInt(dayHours.oraChiusura.split(':')[0]);
+
+          if (startHour < minStartHour) minStartHour = startHour;
+          if (endHour > maxEndHour) maxEndHour = endHour;
+        }
+      }
+    });
+
+    if (minStartHour === 24 || maxEndHour === 0) {
+      return { startHour: 10, endHour: 18 };
+    }
+
+    // Start the calendar at 9:30 (30 minutes before opening) and end at 18:30 (30 minutes after closing)
+    const calendarStartHour = 9.5; // 9:30
+    const calendarEndHour = 18.5; // 18:30
+    return { startHour: calendarStartHour, endHour: calendarEndHour };
+  };
+
+  const { startHour: dynamicStartHour, endHour: dynamicEndHour } = calculateWeekOpeningHours();
+  const DYNAMIC_SLOTS_COUNT = Math.max(1, ((dynamicEndHour - dynamicStartHour) * 60) / SLOT_MIN);
+  const gridHeight = DYNAMIC_SLOTS_COUNT * SLOT_HEIGHT;
+
+  // Extended hours are the same as dynamic hours in this case
+  const extendedStartHour = dynamicStartHour;
+  const extendedEndHour = dynamicEndHour;
+  const EXTENDED_SLOTS_COUNT = Math.max(1, ((extendedEndHour - extendedStartHour) * 60) / SLOT_MIN);
+  const extendedGridHeight = EXTENDED_SLOTS_COUNT * SLOT_HEIGHT;
+
+  function minutesFromExtendedGridStart(date) {
+    return (date.getHours() * 60 + date.getMinutes()) - extendedStartHour * 60;
+  }
+
   const getDayOpeningHours = (dayIndex) => {
     if (!Array.isArray(studioHours) || studioHours.length === 0) {
       return null;
@@ -322,44 +382,46 @@ function PrenotazioniCalendario() {
     const map = weekDays.map(() => []);
     prenotazioni.forEach((p) => {
       try {
-        const start = parseDate(p.dataOraAppuntamento) || new Date();
+        let start;
+        if (typeof p.dataOraAppuntamento === 'string' && p.dataOraAppuntamento.includes('T')) {
+          start = new Date(p.dataOraAppuntamento);
+        } else {
+          start = parseDate(p.dataOraAppuntamento) || new Date();
+        }
+
         const dayIdx = weekDays.findIndex((d) => isSameDay(d, start));
         if (dayIdx === -1) return;
-        const startMin = Math.max(0, minutesFromGridStart(start));
-        const endMin = Math.min(SLOTS_COUNT * SLOT_MIN, startMin + (p.durataMinuti || 30));
-        map[dayIdx].push({ ...p, _start: startMin, _end: endMin, _startDate: start });
+        const startMin = Math.max(0, minutesFromExtendedGridStart(start));
+        // Use real prestazione duration instead of hardcoded 30
+        const realDuration = getPrestazioneDuration(p.motivo, prestazioni);
+        const endMin = startMin + realDuration;
+        map[dayIdx].push({ ...p, _start: startMin, _end: endMin, _startDate: start, durataMinuti: realDuration });
       } catch (error) {
         console.error('Error parsing date for prenotazione:', p.id, error);
-        // Skip this prenotazione if date parsing fails
       }
     });
     return map.map((dayEvents) => layoutDayEvents(dayEvents));
-  }, [prenotazioni, weekDays]);
+  }, [prenotazioni, weekDays, extendedStartHour, prestazioni]);
 
-  // Process blocked times for display
   const blockedTimesByDay = useMemo(() => {
     const map = weekDays.map(() => []);
     blockedTimes.forEach((blocked) => {
       try {
-        // Parse the blocked time date
         const blockedDate = new Date(blocked.data);
         const dayIdx = weekDays.findIndex((d) => isSameDay(d, blockedDate));
         if (dayIdx === -1) return;
 
-        // Parse start and end times
         const [startHour, startMin] = blocked.oraInizio.split(':').map(Number);
         const [endHour, endMin] = blocked.oraFine.split(':').map(Number);
 
-        // Create date objects for start and end times
         const startDate = new Date(blockedDate);
         startDate.setHours(startHour, startMin, 0, 0);
 
         const endDate = new Date(blockedDate);
         endDate.setHours(endHour, endMin, 0, 0);
 
-        // Calculate position and size
-        const startOffset = minutesFromGridStart(startDate);
-        const endOffset = minutesFromGridStart(endDate);
+        const startOffset = minutesFromExtendedGridStart(startDate);
+        const endOffset = minutesFromExtendedGridStart(endDate);
 
         if (startOffset >= 0 && endOffset > startOffset) {
           map[dayIdx].push({
@@ -372,62 +434,26 @@ function PrenotazioniCalendario() {
         }
       } catch (error) {
         console.error('Error parsing blocked time:', blocked.id, error);
-        // Skip this blocked time if parsing fails
       }
     });
     return map;
-  }, [blockedTimes, weekDays]);
+  }, [blockedTimes, weekDays, extendedStartHour]);
 
-  // Calculate week's opening hours range
-  const calculateWeekOpeningHours = () => {
-    if (!Array.isArray(studioHours) || studioHours.length === 0) {
-      // Fallback to default hours if no studio hours data
-      return { startHour: 9, endHour: 18 };
-    }
-
-    let minStartHour = 24;
-    let maxEndHour = 0;
-
-    // Get opening hours for each day of the week
-    weekDays.forEach((day, index) => {
-      const dayName = day.toLocaleDateString('it-IT', { weekday: 'long' });
-      const dayKey = daysOfWeek.find(d => d.label.toUpperCase() === dayName.toUpperCase())?.value;
-
-      if (dayKey) {
-        const dayHours = studioHours.find(h => h.giornoSettimana === dayKey);
-        if (dayHours && !dayHours.chiuso && dayHours.oraApertura && dayHours.oraChiusura) {
-          const startHour = parseInt(dayHours.oraApertura.split(':')[0]);
-          const endHour = parseInt(dayHours.oraChiusura.split(':')[0]);
-
-          if (startHour < minStartHour) minStartHour = startHour;
-          if (endHour > maxEndHour) maxEndHour = endHour;
-        }
-      }
-    });
-
-    // If no open days found, use default hours
-    if (minStartHour === 24 || maxEndHour === 0) {
-      return { startHour: 9, endHour: 18 };
-    }
-
-    // Use exact min/max hours without buffer
-    return { startHour: minStartHour, endHour: maxEndHour };
-  };
-
-  // Calculate dynamic time range based on studio hours
-  const { startHour: dynamicStartHour, endHour: dynamicEndHour } = calculateWeekOpeningHours();
-  const DYNAMIC_SLOTS_COUNT = Math.max(1, ((dynamicEndHour - dynamicStartHour) * 60) / SLOT_MIN);
-  const gridHeight = DYNAMIC_SLOTS_COUNT * SLOT_HEIGHT;
-
-  // Generate dynamic time slots based on studio hours
   const timeSlots = useMemo(
-    () => Array.from({ length: DYNAMIC_SLOTS_COUNT }, (_, i) => {
-      const totalMin = dynamicStartHour * 60 + i * SLOT_MIN;
+    () => Array.from({ length: EXTENDED_SLOTS_COUNT }, (_, i) => {
+      const totalMin = extendedStartHour * 60 + i * SLOT_MIN;
       const h = Math.floor(totalMin / 60);
       const m = totalMin % 60;
-      return { index: i, label: `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`, isHour: m === 0 };
+      // Show only full hour labels, excluding those on boundary lines (9:30 and 18:30)
+      const showHourLabel = m === 0 && `${h}:${String(m).padStart(2, '0')}` !== '9:30' && `${h}:${String(m).padStart(2, '0')}` !== '18:30';
+      return {
+        index: i,
+        label: `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`,
+        isHour: m === 0,
+        showLabel: showHourLabel
+      };
     }),
-    [dynamicStartHour, DYNAMIC_SLOTS_COUNT]
+    [extendedStartHour, EXTENDED_SLOTS_COUNT]
   );
 
   const goToPrevWeek = () => setWeekStart((d) => addDays(d, -7));
@@ -435,12 +461,10 @@ function PrenotazioniCalendario() {
   const goToToday = () => setWeekStart(getMonday(new Date()));
 
   const handlePrenotazioneDeleted = (deletedId) => {
-    // Remove the deleted prenotazione from the list
     setPrenotazioni(prev => prev.filter(p => p.id !== deletedId));
   };
 
   const handlePrenotazioneUpdated = (updatedPrenotazione) => {
-    // Update the prenotazione in the list
     setPrenotazioni(prev => 
       prev.map(p => p.id === updatedPrenotazione.id ? {
         ...p,
@@ -454,51 +478,8 @@ function PrenotazioniCalendario() {
     );
   };
 
-  // Helper function to get prestazione color
-  const getPrestazioneColor = (motivo) => {
-    if (!Array.isArray(prestazioni) || prestazioni.length === 0) {
-      // Fallback to old color scheme if prestazioni not loaded
-      const fallbackColors = {
-        'Visita di controllo': '#3B82F6',
-        'Vaccinazione': '#8B5CF6',
-        'Visita specialistica': '#2A9D8F',
-        "Visita d'urgenza": '#EF4444',
-        'Controllo post-operatorio': '#F59E0B'
-      };
-      return fallbackColors[motivo] || '#6B7280';
-    }
-
-    // Find prestazione by name match
-    const prestazione = prestazioni.find(p =>
-      p.nomePrestazione === motivo ||
-      p.nomePrestazione.includes(motivo) ||
-      motivo.includes(p.nomePrestazione)
-    );
-
-    return prestazione?.colore || '#6B7280';
-  };
-
-  // Generate legend from prestazioni
-  const getPrestazioneLegenda = () => {
-    if (!Array.isArray(prestazioni) || prestazioni.length === 0) {
-      return [
-        { label: 'Controllo', color: '#3B82F6' },
-        { label: 'Vaccinazione', color: '#8B5CF6' },
-        { label: 'Specialistica', color: '#2A9D8F' },
-        { label: "Urgenza", color: '#EF4444' },
-        { label: 'Post-operatorio', color: '#F59E0B' },
-        { label: 'Altro', color: '#6B7280' }
-      ];
-    }
-
-    return prestazioni.map(p => ({
-      label: p.nomePrestazione,
-      color: p.colore || '#6B7280'
-    })).slice(0, 5); // Show top 5 prestazioni
-  };
-
-  const nowOffset = minutesFromGridStart(now);
-  const showNowLine = nowOffset >= 0 && nowOffset <= SLOTS_COUNT * SLOT_MIN;
+  const nowOffset = minutesFromExtendedGridStart(now);
+  const showNowLine = nowOffset >= 0 && nowOffset <= EXTENDED_SLOTS_COUNT * SLOT_MIN;
   const todayIndex = weekDays.findIndex((d) => isSameDay(d, now));
 
   if (loading) {
@@ -543,21 +524,45 @@ function PrenotazioniCalendario() {
           <button className="cal-nav-btn" onClick={goToNextWeek} aria-label="Settimana successiva">›</button>
           <span className="cal-range-label">{formatRangeLabel(weekStart)}</span>
 
-          {/* Date input for quick navigation */}
           <div className="cal-date-input">
             <input
               type="date"
               value={weekStart.toISOString().split('T')[0]}
               onChange={(e) => {
-                const selectedDate = new Date(e.target.value);
-                setWeekStart(getMonday(selectedDate));
+                try {
+                  if (!e.target.value) {
+                    // Handle empty/cleared date - keep current week
+                    return;
+                  }
+                  
+                  // Parse date correctly handling timezone
+                  // Date input value is in YYYY-MM-DD format (local timezone)
+                  const parts = e.target.value.split('-');
+                  const year = parseInt(parts[0], 10);
+                  const month = parseInt(parts[1], 10) - 1; // Months are 0-indexed
+                  const day = parseInt(parts[2], 10);
+                  
+                  // Create date in local timezone at midnight
+                  const selectedDate = new Date(year, month, day, 0, 0, 0, 0);
+                  
+                  // Check if date is valid
+                  if (isNaN(selectedDate.getTime())) {
+                    console.error('Invalid date selected');
+                    return;
+                  }
+                  
+                  setWeekStart(getMonday(selectedDate));
+                } catch (error) {
+                  console.error('Error handling date selection:', error);
+                  // Keep current week if any error occurs
+                }
               }}
             />
           </div>
         </div>
 
         <div className="cal-legend">
-          {getPrestazioneLegenda().map((m) => (
+          {getPrestazioneLegenda(prestazioni).map((m) => (
             <span className="cal-legend-item" key={m.label}>
               <span className="cal-legend-dot" style={{ background: m.color }}></span>{m.label}
             </span>
@@ -585,11 +590,11 @@ function PrenotazioniCalendario() {
             ))}
           </div>
 
-          <div className="cal-body" style={{ height: gridHeight + 50 }}>
+          <div className="cal-body" style={{ height: extendedGridHeight }}>
             <div className="cal-gutter-col">
               {timeSlots.map((slot) => (
                 <div key={slot.index} className="cal-gutter-slot" style={{ height: SLOT_HEIGHT }}>
-                  {slot.isHour && <span className="cal-gutter-slot-label">{slot.label}</span>}
+                  {slot.showLabel && <span className="cal-gutter-slot-label">{slot.label}</span>}
                 </div>
               ))}
 
@@ -618,137 +623,141 @@ function PrenotazioniCalendario() {
                     </div>
                   )}
 
-          {/* Closed hours background - grey out non-business hours */}
-          {dayHours && (
-            <>
-              {/* Closed hours before opening */}
-              {parseInt(dayHours.start.split(':')[0]) > dynamicStartHour && (
-                <div
-                  className="cal-closed-hours-bg"
-                  style={{
-                    top: '0',
-                    height: `${(parseInt(dayHours.start.split(':')[0]) - dynamicStartHour) * (60 / SLOT_MIN) * SLOT_HEIGHT}px`
-                  }}
-                ></div>
-              )}
-             {/* Closed hours after closing */}
-              {parseInt(dayHours.end.split(':')[0]) < dynamicEndHour && (
-                <div
-                  className="cal-closed-hours-bg"
-                  style={{
-                    top: `${(parseInt(dayHours.end.split(':')[0]) - dynamicStartHour) * (60 / SLOT_MIN) * SLOT_HEIGHT}px`,
-                    height: `${(dynamicEndHour - parseInt(dayHours.end.split(':')[0])) * (60 / SLOT_MIN) * SLOT_HEIGHT}px`
-                  }}
-                ></div>
-              )}
+                  {dayHours && (
+                    <>
+                      {parseInt(dayHours.start.split(':')[0]) > extendedStartHour && (
+                        <div
+                          className="cal-closed-hours-bg"
+                          style={{
+                            top: '0',
+                            height: `${(parseInt(dayHours.start.split(':')[0]) - extendedStartHour) * (60 / SLOT_MIN) * SLOT_HEIGHT}px`
+                          }}
+                        ></div>
+                      )}
+                      {parseInt(dayHours.end.split(':')[0]) < extendedEndHour && (
+                        <div
+                          className="cal-closed-hours-bg"
+                          style={{
+                            top: `${(parseInt(dayHours.end.split(':')[0]) - extendedStartHour) * (60 / SLOT_MIN) * SLOT_HEIGHT}px`,
+                            height: `${(extendedEndHour - parseInt(dayHours.end.split(':')[0])) * (60 / SLOT_MIN) * SLOT_HEIGHT}px`
+                          }}
+                        ></div>
+                      )}
 
-              {/* Lunch break indicator */}
-              {dayHours.lunchStart && dayHours.lunchEnd && (
-                <div
-                  className="cal-lunch-break"
-                  style={{
-                    top: `${(parseInt(dayHours.lunchStart.split(':')[0]) - dynamicStartHour) * (60 / SLOT_MIN) * SLOT_HEIGHT}px`,
-                    height: `${(parseInt(dayHours.lunchEnd.split(':')[0]) - parseInt(dayHours.lunchStart.split(':')[0])) * (60 / SLOT_MIN) * SLOT_HEIGHT}px`
-                  }}
-                >
-                  <span className="cal-lunch-label">Pausa Pranzo</span>
-                </div>
-              )}
-            </>
-          )}
+                      {dayHours.lunchStart && dayHours.lunchEnd && (
+                        <div
+                          className="cal-lunch-break"
+                          style={{
+                            top: `${(parseInt(dayHours.lunchStart.split(':')[0]) - extendedStartHour) * (60 / SLOT_MIN) * SLOT_HEIGHT}px`,
+                            height: `${(parseInt(dayHours.lunchEnd.split(':')[0]) - parseInt(dayHours.lunchStart.split(':')[0])) * (60 / SLOT_MIN) * SLOT_HEIGHT}px`
+                          }}
+                        >
+                          <span className="cal-lunch-label">Pausa Pranzo</span>
+                        </div>
+                      )}
+                    </>
+                  )}
 
-                {eventsByDay[dayIdx].map((ev) => {
-                  const top = (ev._start / SLOT_MIN) * SLOT_HEIGHT;
-                  const height = Math.max(((ev._end - ev._start) / SLOT_MIN) * SLOT_HEIGHT - 2, 20);
-                  const widthPct = 100 / ev._totalCols;
-                  const leftPct = ev._col * widthPct;
-                  const isCompact = height < 40;
-                  const endDate = new Date(ev._startDate.getTime() + (ev.durataMinuti || 30) * 60000);
-                  const timeLabel = `${ev._startDate.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}–${endDate.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}`;
+                  {eventsByDay[dayIdx].map((ev) => {
+                    const top = (ev._start / SLOT_MIN) * SLOT_HEIGHT;
+                    const height = Math.max(((ev._end - ev._start) / SLOT_MIN) * SLOT_HEIGHT - 2, 20);
+                    const widthPct = 100 / ev._totalCols;
+                    const leftPct = ev._col * widthPct;
+                    const isCompact = height < 40;
+                    const endDate = new Date(ev._startDate.getTime() + ev.durataMinuti * 60000);
+                    const timeLabel = `${ev._startDate.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}–${endDate.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}`;
 
-                  const prestazioneColor = getPrestazioneColor(ev.motivo);
-                  const statoModifier = ev.statoPrenotazione === 'Annullata'
-                    ? 'is-annullata'
-                    : ev.statoPrenotazione === 'Attesa'
-                      ? 'is-attesa'
-                      : '';
+                    const prestazioneColor = getPrestazioneColor(ev.motivo, prestazioni);
+                    const prestazioneClass = getPrestazioneClass(ev.motivo, prestazioni);
+                    const statoModifier = ev.statoPrenotazione === 'Annullata'
+                      ? 'is-annullata'
+                      : ev.statoPrenotazione === 'Attesa'
+                        ? 'is-attesa'
+                        : '';
 
-                  return (
-                    <PrenotazioneContextMenu
-                      key={ev.id}
-                      prenotazione={ev}
-                      onPrenotazioneDeleted={handlePrenotazioneDeleted}
-                      onPrenotazioneUpdated={handlePrenotazioneUpdated}
-                    >
+                    // Calcola i colori per lo stile inline dal DB
+                    // Usa il colore della prestazione per il bordo, una versione con opacità per lo sfondo
+                    const eventBgColor = prestazioneColor ? `${prestazioneColor}22` : undefined; // ~13% opacity
+                    const eventBorderColor = prestazioneColor || undefined;
+                    const eventTextColor = prestazioneColor !== FALLBACK_COLOR && prestazioneColor ? prestazioneColor : undefined;
+
+                    return (
+                      <Suspense key={ev.id} fallback={<div className="cal-event" style={{ top, height, left: `calc(${leftPct}% + 2px)`, width: `calc(${widthPct}% - 4px)` }} />}>
+                        <PrenotazioneContextMenu
+                          prenotazione={ev}
+                          onPrenotazioneDeleted={handlePrenotazioneDeleted}
+                          onPrenotazioneUpdated={handlePrenotazioneUpdated}
+                        >
+                          <div
+                            className={`cal-event ${prestazioneClass} ${statoModifier}`}
+                            style={{
+                              top,
+                              height,
+                              left: `calc(${leftPct}% + 2px)`,
+                              width: `calc(${widthPct}% - 4px)`,
+                              ...(eventBgColor ? { background: eventBgColor } : {}),
+                              ...(eventBorderColor ? { borderLeftColor: eventBorderColor } : {}),
+                              ...(eventTextColor ? { color: eventTextColor } : {})
+                            }}
+                            title={`${ev.animaleNome} (${ev.proprietarioNome || 'Proprietario sconosciuto'}) - ${ev.motivo} - ${ev.statoPrenotazione}`}
+                          >
+                            {!isCompact && <div className="cal-event-time">{timeLabel}</div>}
+                            <div className="cal-event-title">
+                              {ev.animaleNome}
+                            </div>
+                            <div className="cal-event-owner">{ev.proprietarioNome || 'Proprietario sconosciuto'}</div>
+                            {!isCompact && height >= 56 && (
+                              <div className="cal-event-motivo">{ev.motivo}</div>
+                            )}
+                          </div>
+                        </PrenotazioneContextMenu>
+                      </Suspense>
+                    );
+                  })}
+
+                  {blockedTimesByDay[dayIdx].map((blocked) => {
+                    const top = (blocked._start / SLOT_MIN) * SLOT_HEIGHT;
+                    const height = Math.max(((blocked._end - blocked._start) / SLOT_MIN) * SLOT_HEIGHT - 2, 20);
+                    const timeLabel = `${blocked._startDate.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}–${blocked._endDate.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}`;
+
+                    return (
                       <div
-                        className={`cal-event ${statoModifier}`}
+                        key={`blocked-${blocked.id}`}
+                        className="cal-blocked-time"
                         style={{
                           top,
                           height,
-                          left: `calc(${leftPct}% + 2px)`,
-                          width: `calc(${widthPct}% - 4px)`,
-                          backgroundColor: prestazioneColor,
-                          borderColor: prestazioneColor
+                          left: '2px',
+                          width: 'calc(100% - 4px)'
                         }}
-                        title={`${ev.animaleNome} (${ev.proprietarioNome || 'Proprietario sconosciuto'}) - ${ev.motivo} - ${ev.statoPrenotazione}`}
+                        title={`Orario bloccato: ${blocked.motivo || 'Non specificato'} (${timeLabel})`}
                       >
-                        {!isCompact && <div className="cal-event-time">{timeLabel}</div>}
-                        <div className="cal-event-title">
-                          {ev.animaleNome}
+                        <div className="cal-blocked-label">
+                          {blocked.motivo || 'Orario bloccato'}
                         </div>
-                        <div className="cal-event-owner">{ev.proprietarioNome || 'Proprietario sconosciuto'}</div>
-                        {!isCompact && height >= 56 && (
-                          <div className="cal-event-motivo">{ev.motivo}</div>
-                        )}
+                        <div className="cal-blocked-time-label">
+                          {timeLabel}
+                        </div>
                       </div>
-                    </PrenotazioneContextMenu>
-                  );
-                })}
-
-                {/* Render blocked time slots */}
-                {blockedTimesByDay[dayIdx].map((blocked) => {
-                  const top = (blocked._start / SLOT_MIN) * SLOT_HEIGHT;
-                  const height = Math.max(((blocked._end - blocked._start) / SLOT_MIN) * SLOT_HEIGHT - 2, 20);
-                  const timeLabel = `${blocked._startDate.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}–${blocked._endDate.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}`;
-
-                  return (
-                    <div
-                      key={`blocked-${blocked.id}`}
-                      className="cal-blocked-time"
-                      style={{
-                        top,
-                        height,
-                        left: '2px',
-                        width: 'calc(100% - 4px)'
-                      }}
-                      title={`Orario bloccato: ${blocked.motivo || 'Non specificato'} (${timeLabel})`}
-                    >
-                      <div className="cal-blocked-label">
-                        {blocked.motivo || 'Orario bloccato'}
-                      </div>
-                      <div className="cal-blocked-time-label">
-                        {timeLabel}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )})}
+                    );
+                  })}
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
+
       {showCreateModal && (
         <PrenotazioneCreateStaff
           onClose={() => setShowCreateModal(false)}
           onSuccess={(newPrenotazione) => {
             setShowCreateModal(false);
-            // Refresh the list after successful creation
             fetchPrenotazioni();
           }}
         />
       )}
 
-      {/* Legend Popup */}
       {showLegendPopup && (
         <div className="cal-legend-popup-overlay" onClick={() => setShowLegendPopup(false)}>
           <div className="cal-legend-popup" onClick={e => e.stopPropagation()}>

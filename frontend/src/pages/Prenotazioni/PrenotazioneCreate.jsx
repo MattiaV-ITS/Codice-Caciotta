@@ -208,6 +208,22 @@ function PrenotazioneCreate({ onClose, onSuccess }) {
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
 
+  const [selectedPrestazioneDuration, setSelectedPrestazioneDuration] = useState(30);
+
+  // Update selectedPrestazioneDuration when prestazioneId changes
+  useEffect(() => {
+    if (formData.prestazioneId) {
+      const selected = prestazioni.find(p => p.id === parseInt(formData.prestazioneId));
+      if (selected && selected.durataStimata && selected.durataStimata > 0) {
+        setSelectedPrestazioneDuration(selected.durataStimata);
+      } else {
+        setSelectedPrestazioneDuration(30);
+      }
+    } else {
+      setSelectedPrestazioneDuration(30);
+    }
+  }, [formData.prestazioneId, prestazioni]);
+
   useEffect(() => {
     if (selectedDate) {
       const allHours = [];
@@ -217,14 +233,29 @@ function PrenotazioneCreate({ onClose, onSuccess }) {
           allHours.push(hourStr);
         }
       }
-      const occupiedHours = Array.isArray(prenotazioniEsistenti)
-        ? prenotazioniEsistenti.filter(p => p.dataOraAppuntamento?.startsWith(selectedDate))
-          .map(p => p.dataOraAppuntamento.substring(11, 16))
-        : [];
-      const available = allHours.filter(h => !occupiedHours.includes(h));
+      
+      const available = allHours.filter(h => {
+        const [startHour, startMin] = h.split(':').map(Number);
+        const startMinutes = startHour * 60 + startMin;
+        const endMinutes = startMinutes + selectedPrestazioneDuration;
+        
+        // Ensure the entire prestazione fits within the available booking window (8-19)
+        if (endMinutes > 19 * 60) {
+          return false;
+        }
+        
+        // Check if already booked
+        const occupiedHours = Array.isArray(prenotazioniEsistenti)
+          ? prenotazioniEsistenti.filter(p => p.dataOraAppuntamento?.startsWith(selectedDate))
+            .map(p => p.dataOraAppuntamento.substring(11, 16))
+          : [];
+        
+        return !occupiedHours.includes(h);
+      });
+      
       setAvailableHours(available);
     }
-  }, [selectedDate, prenotazioniEsistenti]);
+  }, [selectedDate, prenotazioniEsistenti, selectedPrestazioneDuration]);
 
   // ============================================================
   // HANDLER GENERICI
@@ -819,7 +850,6 @@ function PrenotazioneCreate({ onClose, onSuccess }) {
                   <div style={{ display: 'flex', gap: '16px', color: 'var(--gray-600)' }}>
                     <span>🕒 {selectedPrestazione.durataStimata} min</span>
                     <span>💰 €{selectedPrestazione.costoBase.toFixed(2)}</span>
-                    <span>📋 {selectedPrestazione.categoria}</span>
                   </div>
                   {selectedPrestazione.descrizione && (
                     <div style={{ marginTop: '6px', fontSize: '12px', color: 'var(--gray-500)' }}>

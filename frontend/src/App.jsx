@@ -18,7 +18,6 @@ import AnimaleDettaglioUser from './pages/Animali/AnimaleDettaglioUser';
 
 import PrenotazioniCalendario from './pages/Prenotazioni/PrenotazioniCalendario';
 import PrenotazioniProgramma from './pages/Prenotazioni/PrenotazioniProgramma';
-import PrenotazioniLista from './pages/Prenotazioni/PrenotazioniLista';
 
 
 import AdminRoleManagement from "./components/AdminRoleManagement";
@@ -53,7 +52,7 @@ function App() {
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
-      <Route path="/prenotazioni" element={<StaffRoute><PrenotazioniLista /></StaffRoute>} />
+      <Route path="/prenotazioni" element={<StaffRoute><PrenotazioniProgramma /></StaffRoute>} />
       <Route path="/prenotazioni/calendario" element={<StaffRoute><PrenotazioniCalendario /></StaffRoute>} />
       <Route path="/prenotazioni/programma" element={<StaffRoute><PrenotazioniProgramma /></StaffRoute>} />
       <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>

@@ -13,4 +13,10 @@ public interface AnimaleListaService {
     
     // Metodo di ricerca completa
     public Page<AnimaleListaDTO> searchAnimaliComprehensive(String searchTerm, Pageable pageable);
+    
+    // Metodo per ottenere animali di un proprietario specifico
+    public Page<AnimaleListaDTO> getAnimaliByProprietarioId(Long proprietarioId, Pageable pageable);
+    
+    // Metodo di ricerca combinata per nome e proprietario
+    public Page<AnimaleListaDTO> searchAnimaliByProprietario(Long proprietarioId, String searchTerm, Pageable pageable);
 }

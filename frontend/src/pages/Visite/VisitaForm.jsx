@@ -160,6 +160,9 @@ function VisitaForm({ visita, animale, proprietario, onSave, onCancel, isSaving,
   const [fatturaSuccess, setFatturaSuccess] = useState(false);
   const [fatturaEsistente, setFatturaEsistente] = useState(false);
   const [fatturaData, setFatturaData] = useState(null);
+  const [prestazioni, setPrestazioni] = useState([]);
+  const [loadingPrestazioni, setLoadingPrestazioni] = useState(true);
+  const [errorPrestazioni, setErrorPrestazioni] = useState(null);
 
   useEffect(() => {
     if (visita) {
@@ -171,6 +174,32 @@ function VisitaForm({ visita, animale, proprietario, onSave, onCancel, isSaving,
       setDefaultDataPrenotazione('');
     }
   }, [visita]);
+
+  // Fetch prestazioni for dynamic visit type options
+  useEffect(() => {
+    const fetchPrestazioni = async () => {
+      try {
+        setLoadingPrestazioni(true);
+        const response = await api.get('/api/prestazioni');
+        if (response.ok) {
+          const data = await response.json();
+          const prestazioniArray = Array.isArray(data)
+            ? data
+            : (data.content && Array.isArray(data.content)
+                ? data.content
+                : []);
+          setPrestazioni(prestazioniArray);
+        }
+      } catch (error) {
+        console.error('Error fetching prestazioni:', error);
+        setErrorPrestazioni('Errore nel caricamento delle prestazioni');
+      } finally {
+        setLoadingPrestazioni(false);
+      }
+    };
+
+    fetchPrestazioni();
+  }, [api]);
 
   // Fetch fattura data for this visita
   useEffect(() => {
@@ -300,7 +329,7 @@ function VisitaForm({ visita, animale, proprietario, onSave, onCancel, isSaving,
     });
   };
 
-  const setOraCorrenteFine = () => {
+  const setCurrentTimeEnd = () => {
     const nowStr = getCurrentISODatetime();
     setFormData(prev => {
       const updated = { ...prev, dataOraFine: nowStr };
@@ -637,7 +666,7 @@ function VisitaForm({ visita, animale, proprietario, onSave, onCancel, isSaving,
                 <button
                   type="button"
                   className="btn btn-sm btn-secondary"
-                  onClick={setOraCorrenteFine}
+                  onClick={setCurrentTimeEnd}
                   disabled={!editMode && formData.id}
                 >
                   ⏱ Ora
@@ -654,23 +683,35 @@ function VisitaForm({ visita, animale, proprietario, onSave, onCancel, isSaving,
             {/* ===== TIPO VISITA ===== */}
             <div className="visite-form-group" style={{ marginTop: 'var(--space-3)' }}>
               <label className="visite-form-label">Tipo Visita</label>
-              <select
-                name="tipoVisita"
-                className={`visite-form-control ${hasError('tipoVisita') ? 'is-invalid' : ''}`}
-                value={formData.tipoVisita || ''}
-                onChange={handleChange}
-                onBlur={() => setTouched(prev => ({ ...prev, tipoVisita: true }))}
-                disabled={!editMode && formData.id}
-              >
-                <option value="">Seleziona tipo</option>
-                <option value="Visita di controllo">Visita di controllo</option>
-                <option value="Vaccinazione">Vaccinazione</option>
-                <option value="Visita d'urgenza">Visita d'urgenza</option>
-                <option value="Chirurgia">Chirurgia</option>
-                <option value="Visita specialistica">Visita specialistica</option>
-                <option value="Altro">Altro</option>
-              </select>
-              {hasError('tipoVisita') && <div className="form-error">{errors.tipoVisita}</div>}
+              {loadingPrestazioni ? (
+                <div style={{ color: 'var(--gray-500)', fontSize: '14px', padding: '8px' }}>
+                  Caricamento prestazioni...
+                </div>
+              ) : errorPrestazioni ? (
+                <div style={{ color: 'var(--danger)', fontSize: '14px', padding: '8px' }}>
+                  {errorPrestazioni}
+                </div>
+              ) : (
+                <>
+                  <select
+                    name="tipoVisita"
+                    className={`visite-form-control ${hasError('tipoVisita') ? 'is-invalid' : ''}`}
+                    value={formData.tipoVisita || ''}
+                    onChange={handleChange}
+                    onBlur={() => setTouched(prev => ({ ...prev, tipoVisita: true }))}
+                    disabled={!editMode && formData.id}
+                  >
+                    <option value="">Seleziona tipo</option>
+                    {prestazioni.map((prestazione) => (
+                      <option key={prestazione.id} value={prestazione.nomePrestazione}>
+                        {prestazione.nomePrestazione} - €{prestazione.costoBase?.toFixed(2) || '0.00'}
+                      </option>
+                    ))}
+                    <option value="Altro">Altro (specifica)</option>
+                  </select>
+                  {hasError('tipoVisita') && <div className="form-error">{errors.tipoVisita}</div>}
+                </>
+              )}
             </div>
 
             {showAltroTipo && (

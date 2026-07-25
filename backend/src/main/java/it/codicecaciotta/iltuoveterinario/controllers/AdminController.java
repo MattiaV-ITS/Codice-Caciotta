@@ -29,6 +29,7 @@ import it.codicecaciotta.iltuoveterinario.repositories.UtenteRepository;
 import it.codicecaciotta.iltuoveterinario.services.OrarioBloccatoService;
 import it.codicecaciotta.iltuoveterinario.services.OrarioStudioService;
 
+//TODO: Muovere gestione orari in un controller separato
 @RestController
 @RequestMapping("/api/admin")
 public class AdminController {
