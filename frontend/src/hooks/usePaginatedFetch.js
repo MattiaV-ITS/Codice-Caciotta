@@ -22,7 +22,7 @@ export function usePaginatedFetch(endpoint, { page, size, sortBy, sortDir, filte
 
   useEffect(() => {
     let isMounted = true;
-    
+
     const fetchData = async () => {
       setLoading(true);
       setError(null);
@@ -38,7 +38,7 @@ export function usePaginatedFetch(endpoint, { page, size, sortBy, sortDir, filte
 
         const response = await get(`${endpoint}?${params.toString()}`);
         const json = await response.json();
-        
+
         if (isMounted) {
           setData(json.content || []);
           setTotalPages(json.page?.totalPages || 0);
@@ -58,7 +58,7 @@ export function usePaginatedFetch(endpoint, { page, size, sortBy, sortDir, filte
     return () => {
       isMounted = false;
     };
-  }, [endpoint, page, size, sortBy, sortDir, memoizedFilters, get]);
+  }, [endpoint, page, size, sortBy, sortDir, memoizedFilters]);
 
   return { data, loading, error, totalPages, totalCount };
 }

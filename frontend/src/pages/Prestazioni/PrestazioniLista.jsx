@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApi } from '../../services/apiService';
 import ListaTable from '../../components/ListaTable/ListaTable';
@@ -26,10 +26,14 @@ function PrestazioniLista() {
     handleSearchChange, handleSearchSubmit, handleSearchClear
   } = useSearchControls(['nomePrestazione', 'categoria', 'descrizione']);
 
+  const memoizedFilters = useMemo(() => ({
+    search: searchTerm
+  }), [searchTerm]);
+
   // Fetch prestazioni data
   const { data, loading, error, totalElements, totalPages } = usePaginatedFetch(
     '/api/prestazioni',
-    { page, size, sortBy, sortDir, filters: { search: searchTerm } }
+    { page, size, sortBy, sortDir, filters: memoizedFilters }
   );
 
   const handleCreatePrestazione = () => {
