@@ -62,7 +62,7 @@
 .cal-range-label {
   font-size: 15px;
   font-weight: 700;
-  color: var(--gray-900);
+  color: var(--text-dark); /* Dark text for better contrast on grey backgrounds */
   margin-left: var(--space-2);
   text-transform: capitalize;
 }
@@ -199,7 +199,7 @@
 .cal-legend-popup-header h3 {
   font-size: 16px;
   font-weight: 700;
-  color: var(--gray-900);
+  color: var(--text-dark); /* Improved text contrast for better readability */
   margin: 0;
 }
 
@@ -428,13 +428,37 @@
   border-left: 4px solid var(--gray-400);
   background: var(--gray-100);
   border-radius: var(--radius);
-  padding: 10px 12px;
+  padding: 26px 12px 6px 12px;
   overflow: hidden;
   cursor: pointer;
   box-shadow: var(--shadow-sm);
   transition: box-shadow 0.15s ease, transform 0.1s ease;
-  z-index: 3;
+  z-index: 5;
   width: calc(100% - 4px);
+  display: flex;
+  flex-direction: column;
+}
+
+.cal-event-content {
+  position: relative;
+  z-index: 1;
+}
+
+.cal-event-text-overlay {
+  position: absolute;
+  top: -20px;
+  left: 0;
+  right: 0;
+  background: var(--white);
+  color: var(--text-dark); /* Improved text contrast for better readability */
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  text-align: center;
+  z-index: 10;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--gray-200);
 }
 
 .cal-event:hover {

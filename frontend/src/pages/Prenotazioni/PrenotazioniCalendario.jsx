@@ -334,9 +334,9 @@ function PrenotazioniCalendario() {
       return { startHour: 10, endHour: 18 };
     }
 
-    // Start the calendar at 9:30 (30 minutes before opening) and end at 18:30 (30 minutes after closing)
-    const calendarStartHour = 9.5; // 9:30
-    const calendarEndHour = 18.5; // 18:30
+    // Start the calendar 30 minutes before the earliest opening and 30 minutes after the latest closing
+    const calendarStartHour = minStartHour - 0.5;
+    const calendarEndHour = maxEndHour + 0.5;
     return { startHour: calendarStartHour, endHour: calendarEndHour };
   };
 
@@ -365,8 +365,9 @@ function PrenotazioniCalendario() {
 
     if (dayKey) {
       const dayHours = studioHours.find(h => h.giornoSettimana === dayKey);
-      if (dayHours && !dayHours.chiuso && dayHours.oraApertura && dayHours.oraChiusura) {
+      if (dayHours) {
         return {
+          chiuso: dayHours.chiuso,
           start: dayHours.oraApertura,
           end: dayHours.oraChiusura,
           lunchStart: dayHours.oraInizioPausaPranzo,
@@ -625,6 +626,7 @@ function PrenotazioniCalendario() {
 
                   {dayHours && (
                     <>
+                      {/* Background for hours before opening */}
                       {parseInt(dayHours.start.split(':')[0]) > extendedStartHour && (
                         <div
                           className="cal-closed-hours-bg"
@@ -634,12 +636,25 @@ function PrenotazioniCalendario() {
                           }}
                         ></div>
                       )}
+                      
+                      {/* Background for hours after closing */}
                       {parseInt(dayHours.end.split(':')[0]) < extendedEndHour && (
                         <div
                           className="cal-closed-hours-bg"
                           style={{
                             top: `${(parseInt(dayHours.end.split(':')[0]) - extendedStartHour) * (60 / SLOT_MIN) * SLOT_HEIGHT}px`,
                             height: `${(extendedEndHour - parseInt(dayHours.end.split(':')[0])) * (60 / SLOT_MIN) * SLOT_HEIGHT}px`
+                          }}
+                        ></div>
+                      )}
+
+                      {/* Background for full days when studio is closed */}
+                      {dayHours.chiuso && (
+                        <div
+                          className="cal-closed-hours-bg"
+                          style={{
+                            top: '0',
+                            height: `${extendedGridHeight}px`
                           }}
                         ></div>
                       )}
@@ -676,8 +691,8 @@ function PrenotazioniCalendario() {
                         : '';
 
                     // Calcola i colori per lo stile inline dal DB
-                    // Usa il colore della prestazione per il bordo, una versione con opacità per lo sfondo
-                    const eventBgColor = prestazioneColor ? `${prestazioneColor}22` : undefined; // ~13% opacity
+                    // Usa il colore della prestazione per il bordo, una versione
+                    const eventBgColor = prestazioneColor ? `${prestazioneColor}aa` : undefined;
                     const eventBorderColor = prestazioneColor || undefined;
                     const eventTextColor = prestazioneColor !== FALLBACK_COLOR && prestazioneColor ? prestazioneColor : undefined;
 
@@ -701,14 +716,19 @@ function PrenotazioniCalendario() {
                             }}
                             title={`${ev.animaleNome} (${ev.proprietarioNome || 'Proprietario sconosciuto'}) - ${ev.motivo} - ${ev.statoPrenotazione}`}
                           >
-                            {!isCompact && <div className="cal-event-time">{timeLabel}</div>}
-                            <div className="cal-event-title">
-                              {ev.animaleNome}
+                            <div className="cal-event-text-overlay">
+                              {ev.animaleNome} - {ev.proprietarioNome || 'Proprietario sconosciuto'}
                             </div>
-                            <div className="cal-event-owner">{ev.proprietarioNome || 'Proprietario sconosciuto'}</div>
-                            {!isCompact && height >= 56 && (
-                              <div className="cal-event-motivo">{ev.motivo}</div>
-                            )}
+                            <div className="cal-event-content">
+                              {!isCompact && <div className="cal-event-time">{timeLabel}</div>}
+                              <div className="cal-event-title">
+                                {ev.animaleNome}
+                              </div>
+                              <div className="cal-event-owner">{ev.proprietarioNome || 'Proprietario sconosciuto'}</div>
+                              {!isCompact && height >= 56 && (
+                                <div className="cal-event-motivo">{ev.motivo}</div>
+                              )}
+                            </div>
                           </div>
                         </PrenotazioneContextMenu>
                       </Suspense>
