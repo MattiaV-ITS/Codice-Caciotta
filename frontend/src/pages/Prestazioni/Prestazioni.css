@@ -22,3 +22,12 @@
   margin-left: 8px;
   border: 1px solid var(--gray-200);
 }
+
+.lista-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+}

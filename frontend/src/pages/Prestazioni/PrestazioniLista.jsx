@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApi } from '../../services/apiService';
-import ListaTable from '../../components/ListaTable/ListaTable';
+import ListPageTemplate from '../../components/ListPageTemplate/ListPageTemplate';
 import { useTableControls } from '../../hooks/useTableControls';
 import { useSearchControls } from '../../hooks/useSearchControls';
 import { usePaginatedFetch } from '../../hooks/usePaginatedFetch';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import ErrorMessage from '../../components/common/ErrorMessage';
+import { PlusIcon, ServicesIcon } from '../../components/icons';
 
 function PrestazioniLista() {
   const { get } = useApi();
@@ -14,162 +15,120 @@ function PrestazioniLista() {
   const [stats, setStats] = useState(null);
   const [statsLoading, setStatsLoading] = useState(true);
   const [statsError, setStatsError] = useState(null);
-  const [allPrestazioni, setAllPrestazioni] = useState([]);
 
-  // Table controls
-  const {
-    page, size, sortBy, sortDir,
-    setPage, handleSizeChange, handleSort
-  } = useTableControls({
+  const table = useTableControls({
     defaultSortBy: 'nomePrestazione',
     defaultSortDir: 'asc',
     defaultPageSize: 10
   });
 
-  // Search controls
-  const {
-    searchTerm, searchFields,
-    handleSearchChange, handleSearchSubmit, handleSearchClear
-  } = useSearchControls(['nomePrestazione', 'descrizione']);
+  // Inizializzazione corretta della ricerca con i campi
+  const search = useSearchControls(['nomePrestazione', 'descrizione']);
 
   const memoizedFilters = useMemo(() => ({
-    search: searchTerm
-  }), [searchTerm]);
+    search: search.appliedSearchTerm
+  }), [search.appliedSearchTerm]);
 
-  // Fetch prestazioni data
-  const { data, loading, error, totalElements, totalPages } = usePaginatedFetch(
+  const { data, loading, error, totalPages, totalCount, refetch } = usePaginatedFetch(
     '/api/prestazioni',
-    { page, size, sortBy, sortDir, filters: memoizedFilters }
+    {
+      page: table.page,
+      size: table.size,
+      sortBy: table.sortBy,
+      sortDir: table.sortDir,
+      filters: memoizedFilters
+    }
   );
 
-  // Fetch all prestazioni for stats calculation
+  // Statistiche con fallback a 0 in caso di errore o dati mancanti
   useEffect(() => {
-    const fetchAllPrestazioni = async () => {
+    const fetchStats = async () => {
       try {
         setStatsLoading(true);
         setStatsError(null);
-
-        // Fetch all prestazioni without pagination for stats
-        const response = await get('/api/prestazioni?size=1000');
-        if (response.ok) {
-          const result = await response.json();
-          const prestazioniData = Array.isArray(result) ? result : (result.content || []);
-          setAllPrestazioni(prestazioniData);
-
-          // Calculate stats
-          const totalCount = prestazioniData.length;
-          const activeCount = prestazioniData.filter(p => p.stato === 'ATTIVO').length;
-          const inactiveCount = prestazioniData.filter(p => p.stato === 'DISABILITATO').length;
-
-          // Calculate average cost and duration
-          const validCosts = prestazioniData
-            .map(p => {
-              if (typeof p.costoBase === 'string') return parseFloat(p.costoBase);
-              if (typeof p.costoBase === 'object') return parseFloat(p.costoBase?.amount || p.costoBase?.value || 0);
-              return p.costoBase || 0;
-            })
-            .filter(c => !isNaN(c));
-
-          const validDurations = prestazioniData
-            .map(p => p.durataStimata || 0)
-            .filter(d => !isNaN(d));
-
-          const averageCost = validCosts.length > 0 ? validCosts.reduce((sum, c) => sum + c, 0) / validCosts.length : 0;
-          const averageDuration = validDurations.length > 0 ? validDurations.reduce((sum, d) => sum + d, 0) / validDurations.length : 0;
-
-          setStats({
-            totalCount,
-            activeCount,
-            inactiveCount,
-            averageCost: averageCost.toFixed(2),
-            averageDuration: Math.round(averageDuration)
-          });
-        } else {
-          throw new Error('Failed to fetch prestazioni for stats');
-        }
+        const response = await get('/api/stats/prestazioni'); // Assicurati che l'endpoint esista
+        if (!response.ok) throw new Error('Errore nel caricamento statistiche');
+        const data = await response.json();
+        // Imposta i valori, con fallback a 0 se undefined/null
+        setStats({
+          totalCount: data?.totalCount ?? 0,
+          activeCount: data?.activeCount ?? 0,
+          inactiveCount: data?.inactiveCount ?? 0,
+          averageCost: data?.averageCost != null ? Number(data.averageCost).toFixed(2) : '0.00',
+          averageDuration: data?.averageDuration != null ? Math.round(Number(data.averageDuration)) : 0
+        });
       } catch (err) {
-        console.error('Error fetching prestazioni stats:', err);
         setStatsError(err);
+        // In caso di errore, fornisce comunque valori a zero per non lasciare vuoto
+        setStats({
+          totalCount: 0,
+          activeCount: 0,
+          inactiveCount: 0,
+          averageCost: '0.00',
+          averageDuration: 0
+        });
       } finally {
         setStatsLoading(false);
       }
     };
-
-    fetchAllPrestazioni();
+    fetchStats();
   }, [get]);
 
-  const handleCreatePrestazione = () => {
-    navigate('/prestazioni/create');
-  };
-
-  const handleEditPrestazione = (prestazioneId) => {
-    navigate(`/prestazioni/edit/${prestazioneId}`);
-  };
+  const handleCreatePrestazione = () => navigate('/prestazioni/create');
+  const handleEditPrestazione = (prestazione) => navigate(`/prestazioni/edit/${prestazione.id}`);
 
   const columns = [
     {
-      Header: 'Nome Prestazione',
-      accessor: 'nomePrestazione',
+      header: 'NOME PRESTAZIONE',
+      field: 'nomePrestazione',
+      sortable: true
+    },
+    { header: 'DESCRIZIONE', field: 'descrizione', sortable: false },
+    {
+      header: 'DURATA',
+      field: 'durataStimata',
       sortable: true,
-      width: '25%'
+      render: (item) => `${item.durataStimata} min`
     },
     {
-      Header: 'Descrizione',
-      accessor: 'descrizione',
-      sortable: false,
-      width: '30%'
-    },
-    {
-      Header: 'Durata (min)',
-      accessor: 'durataStimata',
+      header: 'COSTO',
+      field: 'costoBase',
       sortable: true,
-      width: '10%',
-      Cell: ({ value }) => value + ' min'
-    },
-    {
-      Header: 'Costo Base',
-      accessor: 'costoBase',
-      sortable: true,
-      width: '10%',
-      Cell: ({ value }) => {
-        const numericValue = typeof value === 'string' ? parseFloat(value) : typeof value === 'object' ? parseFloat(value.amount || value.value) : value;
-        return '€' + (isNaN(numericValue) ? '0.00' : numericValue.toFixed(2));
+      render: (item) => {
+        const val = typeof item.costoBase === 'string' ? parseFloat(item.costoBase) : item.costoBase || 0;
+        return `€${val.toFixed(2)}`;
       }
     },
     {
-      Header: 'Stato',
-      accessor: 'stato',
+      header: 'STATO',
+      field: 'stato',
       sortable: true,
-      width: '10%'
+      render: (item) => {
+        const status = item.stato === 'ATTIVO'
+          ? { label: 'Attivo', className: 'badge-attivo' }
+          : { label: 'Disabilitato', className: 'badge-inattivo' };
+        return <span className={`badge-status ${status.className}`}>{status.label}</span>;
+      }
     },
     {
-      Header: 'Colore',
-      accessor: 'colore',
+      header: 'COLORE',
+      field: 'colore',
       sortable: false,
-      width: '10%',
-      Cell: ({ value }) => (
+      render: (item) => (
         <div style={{
-          width: '20px',
-          height: '20px',
-          backgroundColor: value || '#ccc',
-          borderRadius: '50%',
-          border: '1px solid #ddd'
+          width: '20px', height: '20px',
+          backgroundColor: item.colore || '#ccc',
+          borderRadius: '50%', border: '1px solid #ddd'
         }} />
       )
     }
   ];
 
-  // Stats content for display
+  // Contenuto statistiche: ora gestisce sia il caricamento, l'errore, e il caso di dati nulli mostrando zero
   const statsContent = (
     <div className="stats-grid" style={{ marginBottom: 'var(--space-5)' }}>
       {statsLoading ? (
-        <div className="stats-loading">
-          <LoadingSpinner size="small" />
-        </div>
-      ) : statsError ? (
-        <div className="stats-error">
-          <ErrorMessage error={statsError} />
-        </div>
+        <LoadingSpinner size="small" />
       ) : stats ? (
         <>
           <div className="stat-card">
@@ -177,87 +136,77 @@ function PrestazioniLista() {
             <div className="stat-label">Totale Prestazioni</div>
           </div>
           <div className="stat-card">
-            <div className="stat-number stat-success">
-              {stats.activeCount}
-            </div>
+            <div className="stat-number stat-success">{stats.activeCount}</div>
             <div className="stat-label">Attive</div>
           </div>
           <div className="stat-card">
-            <div className="stat-number stat-gray">
-              {stats.inactiveCount}
-            </div>
+            <div className="stat-number stat-gray">{stats.inactiveCount}</div>
             <div className="stat-label">Disabilitate</div>
           </div>
           <div className="stat-card">
-            <div className="stat-number stat-info">
-              €{stats.averageCost}
-            </div>
+            <div className="stat-number stat-info">€{stats.averageCost}</div>
             <div className="stat-label">Costo Medio</div>
           </div>
           <div className="stat-card">
-            <div className="stat-number stat-info">
-              {stats.averageDuration} min
-            </div>
+            <div className="stat-number stat-info">{stats.averageDuration} min</div>
             <div className="stat-label">Durata Media</div>
           </div>
         </>
-      ) : null}
+      ) : (
+        // Fallback se stats è null (ad esempio errore non gestito) – mostra zeri
+        <>
+          <div className="stat-card">
+            <div className="stat-number stat-primary">0</div>
+            <div className="stat-label">Totale Prestazioni</div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-number stat-success">0</div>
+            <div className="stat-label">Attive</div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-number stat-gray">0</div>
+            <div className="stat-label">Disabilitate</div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-number stat-info">€0.00</div>
+            <div className="stat-label">Costo Medio</div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-number stat-info">0 min</div>
+            <div className="stat-label">Durata Media</div>
+          </div>
+        </>
+      )}
     </div>
   );
 
+  const emptyIcon = (
+    <ServicesIcon width={48} height={48} style={{ color: 'var(--gray-400)', opacity: 0.5 }} />
+  );
+
   return (
-    <div className="lista-page">
-      <div className="lista-header">
-        <h2>Gestione Prestazioni</h2>
-        <div className="lista-actions">
-          <button
-            onClick={handleCreatePrestazione}
-            className="btn btn-primary"
-          >
-            + Nuova Prestazione
-          </button>
-        </div>
-      </div>
-
-      {statsContent}
-
-      <div className="lista-controls">
-        <div className="search-control">
-          <input
-            type="text"
-            placeholder="Cerca prestazioni..."
-            value={searchTerm}
-            onChange={handleSearchChange}
-            className="form-control search-input"
-          />
-          <button onClick={handleSearchSubmit} className="btn btn-secondary">
-            <i className="fas fa-search" />
-          </button>
-          {searchTerm && (
-            <button onClick={handleSearchClear} className="btn btn-text">
-              <i className="fas fa-times" />
-            </button>
-          )}
-        </div>
-      </div>
-
-      <div className="lista-content">
-        <ListaTable
-          columns={columns}
-          data={data}
-          loading={loading}
-          error={error}
-          page={page}
-          totalPages={totalPages}
-          totalElements={totalElements}
-          onPageChange={setPage}
-          onSizeChange={handleSizeChange}
-          onSortChange={handleSort}
-          onRowClick={handleEditPrestazione}
-          emptyMessage="Nessuna prestazione trovata"
-        />
-      </div>
-    </div>
+    <ListPageTemplate
+      title="Gestione Prestazioni"
+      subtitle="Gestisci le prestazioni e i relativi costi"
+      data={data}
+      columns={columns}
+      loading={loading}
+      error={error}
+      tableControls={{ ...table, totalPages, totalCount }}
+      searchControls={search}
+      searchPlaceholder="Cerca prestazioni..."
+      emptyMessage={
+        search.appliedSearchTerm
+          ? 'Prova a modificare la ricerca.'
+          : 'Inizia aggiungendo la prima prestazione.'
+      }
+      emptyIcon={emptyIcon}
+      showAddButton={true}
+      onAddClick={handleCreatePrestazione}
+      addIcon={<PlusIcon width={16} height={16} stroke="currentColor" />}
+      onRowClick={handleEditPrestazione}
+      statsContent={statsContent}
+    />
   );
 }
 
