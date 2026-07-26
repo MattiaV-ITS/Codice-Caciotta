@@ -73,6 +73,10 @@ const PrenotazioneEditModal = ({
     fetchPrestazioni();
   }, [get]);
 
+  const availablePrestazioni = Array.isArray(prestazioni)
+    ? prestazioni.filter(p => p.stato === 'Disponibile' || p.stato === 'ATTIVO')
+    : [];
+
   // Initialize form with prenotazione data
   useEffect(() => {
     if (prenotazione) {
@@ -252,11 +256,19 @@ const PrenotazioneEditModal = ({
               required
             >
               <option value="">Seleziona tipo di visita</option>
-              {prestazioni.map((prestazione) => (
-                <option key={prestazione.id} value={prestazione.nomePrestazione}>
-                  {prestazione.nomePrestazione} - €{prestazione.costoBase?.toFixed(2) || '0.00'}
-                </option>
-              ))}
+              {prestazioni.map((prestazione) => {
+                const isAvailable = availablePrestazioni.some(p => p.id === prestazione.id);
+                return (
+                  <option 
+                    key={prestazione.id} 
+                    value={prestazione.nomePrestazione}
+                    disabled={!isAvailable}
+                  >
+                    {prestazione.nomePrestazione} - €{prestazione.costoBase?.toFixed(2) || '0.00'}
+                    {!isAvailable ? ' (Non disponibile)' : ''}
+                  </option>
+                );
+              })}
               <option value="Altro">Altro (specifica)</option>
             </select>
           )}

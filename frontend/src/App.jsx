@@ -74,6 +74,7 @@ function App() {
         <Route path="/proprietari" element={<StaffRoute><ProprietariLista /></StaffRoute>} />
         <Route path="/prestazioni" element={<StaffRoute><PrestazioniLista /></StaffRoute>} />
         <Route path="/prestazioni/create" element={<StaffRoute><PrestazioneCreate /></StaffRoute>} />
+        <Route path="/prestazioni/edit/:id" element={<StaffRoute><PrestazioneCreate /></StaffRoute>} />
         <Route path="/vaccinazioni" element={<StaffRoute><VaccinazioniLista /></StaffRoute>} />
         <Route path="/dashboard/user" element={<ProtectedRoute><DashboardUser /></ProtectedRoute>} />
         <Route path="/animali/user/:id" element={<ProtectedRoute><AnimaleDettaglioUser /></ProtectedRoute>} />

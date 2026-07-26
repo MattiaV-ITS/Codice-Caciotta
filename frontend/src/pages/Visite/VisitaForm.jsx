@@ -146,6 +146,10 @@ function VisitaForm({ visita, animale, proprietario, onSave, onCancel, isSaving,
   const [visitaId, setVisitaId] = useState(null);
   const [togglingPagamento, setTogglingPagamento] = useState(false);
 
+  const availablePrestazioni = Array.isArray(prestazioni)
+    ? prestazioni.filter(p => p.stato === 'Disponibile' || p.stato === 'ATTIVO')
+    : [];
+
   useEffect(() => {
     if (visita) {
       const prepared = prepareVisitaData(visita);
@@ -749,11 +753,19 @@ function VisitaForm({ visita, animale, proprietario, onSave, onCancel, isSaving,
                     disabled={!editMode && formData.id}
                   >
                     <option value="">Seleziona tipo</option>
-                    {prestazioni.map((prestazione) => (
-                      <option key={prestazione.id} value={prestazione.nomePrestazione}>
-                        {prestazione.nomePrestazione} - €{prestazione.costoBase?.toFixed(2) || '0.00'}
-                      </option>
-                    ))}
+                    {prestazioni.map((prestazione) => {
+                      const isAvailable = availablePrestazioni.some(p => p.id === prestazione.id);
+                      return (
+                        <option 
+                          key={prestazione.id} 
+                          value={prestazione.nomePrestazione}
+                          disabled={!isAvailable}
+                        >
+                          {prestazione.nomePrestazione} - €{prestazione.costoBase?.toFixed(2) || '0.00'}
+                          {!isAvailable ? ' (Non disponibile)' : ''}
+                        </option>
+                      );
+                    })}
                     <option value="Altro">Altro (specifica)</option>
                   </select>
                   {hasError('tipoVisita') && <div className="form-error">{errors.tipoVisita}</div>}

@@ -73,25 +73,27 @@ function ListPageTemplate({
           active={activeFilter}
           onSelect={(v) => {
             onFilterSelect(v);
-            searchControls.clearSearch();
+            if (searchControls) searchControls.clearSearch();
             tableControls.setPage(0);
           }}
         />
       )}
 
       <div className="toolbar-actions">
-        <SearchBox
-          searchTerm={searchControls.searchTerm}
-          setSearchTerm={searchControls.setSearchTerm}
-          searchable={filterOptions?.searchable || "nome, cognome, o altri campi"}
-          onEnter={() => {
-            searchControls.applySearch();
-            tableControls.setPage(0);
-          }}
-        />
+        {searchControls && (
+          <SearchBox
+            searchTerm={searchControls.searchTerm}
+            setSearchTerm={searchControls.setSearchTerm}
+            searchable={filterOptions?.searchable || "nome, cognome, o altri campi"}
+            onEnter={() => {
+              searchControls.applySearch();
+              tableControls.setPage(0);
+            }}
+          />
+        )}
 
         <button className="btn-clear-filters" onClick={() => {
-          searchControls.clearSearch();
+          if (searchControls) searchControls.clearSearch();
           if (onFilterSelect) onFilterSelect('');
           tableControls.setPage(0);
         }}>

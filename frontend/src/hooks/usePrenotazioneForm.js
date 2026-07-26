@@ -18,6 +18,11 @@ export function usePrenotazioneForm({ onClose, onSuccess }) {
   const [blockedTimes, setBlockedTimes] = useState([]);
   const [loadingBlockedTimes, setLoadingBlockedTimes] = useState(true);
 
+  // Solo prestazioni disponibili per nuove prenotazioni
+  const availablePrestazioni = Array.isArray(prestazioni)
+    ? prestazioni.filter(p => p.stato === 'Disponibile' || p.stato === 'ATTIVO')
+    : [];
+
   // Form state
   const [formData, setFormData] = useState({
     dataOraAppuntamento: '',
@@ -48,7 +53,7 @@ export function usePrenotazioneForm({ onClose, onSuccess }) {
           setPrenotazioniEsistenti(Array.isArray(data) ? data : (data.content || []));
         }
 
-        // Fetch prestazioni
+        // Fetch prestazioni (tutte per mantenere storico prenotazioni esistenti)
         const prestazioniResponse = await get('/api/prestazioni');
         if (prestazioniResponse.ok) {
           const data = await prestazioniResponse.json();
@@ -239,14 +244,14 @@ export function usePrenotazioneForm({ onClose, onSuccess }) {
   // ============================================================
   const updateSelectedPrestazioneDuration = useCallback((tipoVisita) => {
     if (tipoVisita && tipoVisita !== 'Altro') {
-      const selected = prestazioni.find(p => p.nomePrestazione === tipoVisita);
+      const selected = availablePrestazioni.find(p => p.nomePrestazione === tipoVisita);
       if (selected && selected.durataStimata && selected.durataStimata > 0) {
         setSelectedPrestazioneDuration(selected.durataStimata);
         return;
       }
     }
     setSelectedPrestazioneDuration(30);
-  }, [prestazioni]);
+  }, [availablePrestazioni]);
 
   const handleDateChange = (e) => {
     const date = e.target.value;
@@ -293,8 +298,8 @@ export function usePrenotazioneForm({ onClose, onSuccess }) {
       case 'tipoVisita':
         if (!value) return 'Seleziona un tipo di visita.';
         if (value === 'Altro') return '';
-        if (value !== 'Altro' && !prestazioni.some(p => p.nomePrestazione === value)) {
-          return 'Seleziona una prestazione valida.';
+        if (value !== 'Altro' && !availablePrestazioni.some(p => p.nomePrestazione === value)) {
+          return 'Seleziona una prestazione disponibile.';
         }
         return '';
       case 'specificaTipoVisita':
@@ -374,7 +379,7 @@ export function usePrenotazioneForm({ onClose, onSuccess }) {
 
   return {
     // Reference data
-    prestazioni, loadingPrestazioni, errorPrestazioni,
+    prestazioni, loadingPrestazioni, errorPrestazioni, availablePrestazioni,
     // Form state
     formData, setFormData,
     errors, touched, hasError,

@@ -1,11 +1,14 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useApi } from '../../services/apiService';
 import FormModal from '../../components/FormModal/FormModal';
+import LoadingSpinner from '../../components/common/LoadingSpinner';
 
 function PrestazioneCreate() {
-  const { post } = useApi();
+  const { post, put, get } = useApi();
   const navigate = useNavigate();
+  const { id } = useParams();
+  const isEditMode = Boolean(id);
 
   const [formData, setFormData] = useState({
     nomePrestazione: '',
@@ -20,6 +23,39 @@ function PrestazioneCreate() {
 
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
+  const [loading, setLoading] = useState(isEditMode);
+  const [loadError, setLoadError] = useState(null);
+
+  // Carica i dati esistenti in modalità modifica
+  useEffect(() => {
+    if (!isEditMode) return;
+
+    const fetchPrestazione = async () => {
+      try {
+        setLoading(true);
+        const response = await get(`/api/prestazioni/${id}`);
+        if (!response.ok) throw new Error('Errore nel caricamento della prestazione');
+        const data = await response.json();
+        setFormData({
+          nomePrestazione: data.nomePrestazione || '',
+          descrizione: data.descrizione || '',
+          durataStimata: data.durataStimata || 30,
+          costoBase: data.costoBase || 45.00,
+          aliquotaIva: data.aliquotaIva || 22,
+          stato: data.stato || 'Disponibile',
+          colore: data.colore || '#4299E1',
+          note: data.note || ''
+        });
+      } catch (err) {
+        console.error('Failed to load prestazione:', err);
+        setLoadError(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPrestazione();
+  }, [id, isEditMode, get]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -77,30 +113,37 @@ function PrestazioneCreate() {
 
     if (validateForm()) {
       try {
-        const response = await post('/api/prestazioni', {
+        const payload = {
           ...formData,
           costoBase: parseFloat(formData.costoBase),
           durataStimata: parseInt(formData.durataStimata),
           aliquotaIva: parseInt(formData.aliquotaIva)
-        });
+        };
+
+        const response = isEditMode
+          ? await put(`/api/prestazioni/${id}`, payload)
+          : await post('/api/prestazioni', payload);
 
         if (response.ok) {
           navigate('/prestazioni');
         } else {
           const errorData = await response.json();
-          console.error('Error creating prestazione:', errorData);
+          console.error(`Error ${isEditMode ? 'updating' : 'creating'} prestazione:`, errorData);
         }
       } catch (error) {
-        console.error('Error creating prestazione:', error);
+        console.error(`Error ${isEditMode ? 'updating' : 'creating'} prestazione:`, error);
       }
     }
   };
+
+  if (loading) return <LoadingSpinner label="Caricamento prestazione..." />;
+  if (loadError) return <div className="error-message">Errore nel caricamento della prestazione.</div>;
 
   const hasError = (field) => touched[field] && errors[field];
 
   return (
     <FormModal
-      title="Nuova Prestazione"
+      title={isEditMode ? 'Modifica Prestazione' : 'Nuova Prestazione'}
       onClose={() => navigate('/prestazioni')}
       onSubmit={handleSubmit}
       size="lg"

@@ -10,7 +10,7 @@ function PrenotazioneCreateUser({ onClose, onSuccess }) {
 
   // Use shared hook
   const {
-    prestazioni, loadingPrestazioni, errorPrestazioni,
+    prestazioni, loadingPrestazioni, errorPrestazioni, availablePrestazioni,
     formData, setFormData,
     errors, hasError,
     isSubmitting, submitError,
@@ -132,11 +132,19 @@ function PrenotazioneCreateUser({ onClose, onSuccess }) {
                 onBlur={handleBlur}
               >
                 <option value="">Seleziona tipo visita</option>
-                {prestazioni.map((prestazione) => (
-                  <option key={prestazione.id} value={prestazione.nomePrestazione}>
-                    {prestazione.nomePrestazione} - €{prestazione.costoBase?.toFixed(2) || '0.00'}
-                  </option>
-                ))}
+                {prestazioni.map((prestazione) => {
+                  const isAvailable = availablePrestazioni.some(p => p.id === prestazione.id);
+                  return (
+                    <option 
+                      key={prestazione.id} 
+                      value={prestazione.nomePrestazione}
+                      disabled={!isAvailable}
+                    >
+                      {prestazione.nomePrestazione} - €{prestazione.costoBase?.toFixed(2) || '0.00'}
+                      {!isAvailable ? ' (Non disponibile)' : ''}
+                    </option>
+                  );
+                })}
                 <option value="Altro">Altro (specifica)</option>
               </select>
               {hasError('tipoVisita') && <div className="form-error">{errors.tipoVisita}</div>}

@@ -3,6 +3,7 @@ package it.codicecaciotta.iltuoveterinario.services;
 import it.codicecaciotta.iltuoveterinario.dto.AnimaleStatsDTO;
 import it.codicecaciotta.iltuoveterinario.dto.DashboardStatsDTO;
 import it.codicecaciotta.iltuoveterinario.dto.FatturaStatsDTO;
+import it.codicecaciotta.iltuoveterinario.dto.PrestazioneStatsDTO;
 import it.codicecaciotta.iltuoveterinario.dto.ProprietarioStatsDTO;
 import it.codicecaciotta.iltuoveterinario.dto.VaccinazioneStatsDTO;
 
@@ -37,4 +38,10 @@ public interface StatsService {
      * @return DashboardStatsDTO with today's visits, totals, and unpaid invoices
      */
     DashboardStatsDTO getDashboardStats();
+
+    /**
+     * Get prestazioni statistics
+     * @return PrestazioneStatsDTO with counts and averages
+     */
+    PrestazioneStatsDTO getPrestazioneStats();
 }
