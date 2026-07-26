@@ -128,29 +128,34 @@ const Menu = ({
       role="menu"
       aria-label="Menu"
     >
-      {menuItems.map((item, index) => (
-        <div
-          key={index}
-          className="context-menu-item"
-          tabIndex={0}
-          role="menuitem"
-          onClick={(e) => {
-            e.stopPropagation();
-            item.onClick?.();
-            onClose();
-          }}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
+      {menuItems.map((item, index) => {
+        if (item.divider) {
+          return <div key={index} className="context-menu-divider" />;
+        }
+        return (
+          <div
+            key={index}
+            className={`context-menu-item${item.className ? ` ${item.className}` : ''}`}
+            tabIndex={0}
+            role="menuitem"
+            onClick={(e) => {
+              e.stopPropagation();
               item.onClick?.();
               onClose();
-            }
-          }}
-        >
-          {item.icon && <span className="context-menu-icon">{item.icon}</span>}
-          <span>{item.label}</span>
-        </div>
-      ))}
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                item.onClick?.();
+                onClose();
+              }
+            }}
+          >
+            {item.icon && <span className="context-menu-icon">{item.icon}</span>}
+            <span>{item.label}</span>
+          </div>
+        );
+      })}
     </div>,
     document.body
   );

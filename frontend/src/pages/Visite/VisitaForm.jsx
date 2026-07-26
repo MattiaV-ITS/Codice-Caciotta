@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useApi } from '../../services/apiService';
 import { formatDate, getCurrentISODatetime, parseDate, toISODatetimeFormat, toISODateFormat } from '../../utils/dateUtils';
@@ -143,25 +143,29 @@ function VisitaForm({ visita, animale, proprietario, onSave, onCancel, isSaving,
   const [prestazioni, setPrestazioni] = useState([]);
   const [loadingPrestazioni, setLoadingPrestazioni] = useState(true);
   const [errorPrestazioni, setErrorPrestazioni] = useState(null);
+  const [visitaId, setVisitaId] = useState(null);
 
   useEffect(() => {
     if (visita) {
       const prepared = prepareVisitaData(visita);
       setFormData(prepared);
       setDefaultDataPrenotazione(prepared.dataOraVisita || '');
+      setVisitaId(visita.id || null);
     } else {
       setFormData(getDefaultVisita());
       setDefaultDataPrenotazione('');
+      setVisitaId(null);
     }
   }, [visita]);
 
   // Fetch prestazioni for dynamic visit type options
   useEffect(() => {
+    let cancelled = false;
     const fetchPrestazioni = async () => {
       try {
         setLoadingPrestazioni(true);
         const response = await api.get('/api/prestazioni');
-        if (response.ok) {
+        if (!cancelled && response.ok) {
           const data = await response.json();
           const prestazioniArray = Array.isArray(data)
             ? data
@@ -171,39 +175,49 @@ function VisitaForm({ visita, animale, proprietario, onSave, onCancel, isSaving,
           setPrestazioni(prestazioniArray);
         }
       } catch (error) {
-        console.error('Error fetching prestazioni:', error);
-        setErrorPrestazioni('Errore nel caricamento delle prestazioni');
+        if (!cancelled) {
+          console.error('Error fetching prestazioni:', error);
+          setErrorPrestazioni('Errore nel caricamento delle prestazioni');
+        }
       } finally {
-        setLoadingPrestazioni(false);
+        if (!cancelled) {
+          setLoadingPrestazioni(false);
+        }
       }
     };
 
     fetchPrestazioni();
-  }, [api]);
+    return () => { cancelled = true; };
+  }, []); // 🔥 Fix: api rimosso dalle dipendenze (stabile, non cambia mai dopo il primo mount) — e aggiunto cleanup con cancelled flag
 
   // Fetch fattura data for this visita
   useEffect(() => {
+    let cancelled = false;
     const fetchFatturaData = async () => {
-      if (formData.id) {
+      if (visitaId) {
         try {
-          const response = await api.get(`/api/fatture/visita/${formData.id}`);
-          if (response.ok) {
-            const data = await response.json();
-            if (data && data.length > 0) {
-              setFatturaEsistente(true);
-              setFatturaData(data[0]); // Store the first (and only) fattura
+          const response = await api.get(`/api/fatture/visita/${visitaId}`);
+          if (!cancelled) {
+            if (response.ok) {
+              const data = await response.json();
+              if (data && data.length > 0) {
+                setFatturaEsistente(true);
+                setFatturaData(data[0]);
+              } else {
+                setFatturaEsistente(false);
+                setFatturaData(null);
+              }
             } else {
               setFatturaEsistente(false);
               setFatturaData(null);
             }
-          } else {
+          }
+        } catch (error) {
+          if (!cancelled) {
+            console.error('Error fetching fattura data:', error);
             setFatturaEsistente(false);
             setFatturaData(null);
           }
-        } catch (error) {
-          console.error('Error fetching fattura data:', error);
-          setFatturaEsistente(false);
-          setFatturaData(null);
         }
       } else {
         setFatturaEsistente(false);
@@ -212,7 +226,8 @@ function VisitaForm({ visita, animale, proprietario, onSave, onCancel, isSaving,
     };
 
     fetchFatturaData();
-  }, [api, formData.id]);
+    return () => { cancelled = true; };
+  }, [visitaId]); // 🔥 Fix: api rimosso dalle dipendenze per evitare loop (api.get è stabile, memoizzato con useCallback in apiService.js)
 
   // ----- Calcolo durata -----
   const calcolaDurata = (inizio, fine) => {
@@ -298,7 +313,7 @@ function VisitaForm({ visita, animale, proprietario, onSave, onCancel, isSaving,
   };
 
   // Pulsanti "Ora"
-  const setOraCorrenteInizio = () => {
+  const setOraCorrenteInizio = useCallback(() => {
     const nowStr = getCurrentISODatetime();
     setFormData(prev => {
       const updated = { ...prev, dataOraVisita: nowStr };
@@ -307,9 +322,9 @@ function VisitaForm({ visita, animale, proprietario, onSave, onCancel, isSaving,
       }
       return updated;
     });
-  };
+  }, []);
 
-  const setCurrentTimeEnd = () => {
+  const setCurrentTimeEnd = useCallback(() => {
     const nowStr = getCurrentISODatetime();
     setFormData(prev => {
       const updated = { ...prev, dataOraFine: nowStr };
@@ -318,7 +333,7 @@ function VisitaForm({ visita, animale, proprietario, onSave, onCancel, isSaving,
       }
       return updated;
     });
-  };
+  }, []);
 
   // Validazione
   const validateField = (name, value) => {
@@ -377,7 +392,6 @@ function VisitaForm({ visita, animale, proprietario, onSave, onCancel, isSaving,
         dataOraVisita: toISODatetimeFormat(finalStart),
         dataOraFineVisita: toISODatetimeFormat(finalEnd),
         tipoVisita: formData.tipoVisita === 'Altro' ? formData.altroTipoVisita : formData.tipoVisita,
-        importoTotale: 0.00,
         prenotazioneId: null,
         sintomi: formData.sintomi,
         diagnosi: formData.diagnosi,

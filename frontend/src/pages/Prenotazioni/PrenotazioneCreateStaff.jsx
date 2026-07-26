@@ -342,7 +342,7 @@ function PrenotazioneCreateStaff({ onClose, onSuccess }) {
         return true;
       }
 
-      // Check if time is during lunch break
+      // Check if time is during lunch break (only if lunch break is configured)
       if (dayHours.oraInizioPausaPranzo && dayHours.oraFinePausaPranzo) {
         const [lunchStartHour, lunchStartMin] = dayHours.oraInizioPausaPranzo.split(':').map(Number);
         const [lunchEndHour, lunchEndMin] = dayHours.oraFinePausaPranzo.split(':').map(Number);

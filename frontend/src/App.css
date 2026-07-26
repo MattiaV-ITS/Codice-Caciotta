@@ -753,6 +753,11 @@ body {
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap: var(--space-4);
   margin-bottom: var(--space-5);
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius);
+  padding: var(--space-4);
+  box-shadow: var(--shadow-sm);
 }
 
 .stat-card {
@@ -788,6 +793,32 @@ body {
   color: var(--gray-500);
   font-weight: 500;
   margin-top: 2px;
+}
+
+/* Stats loading and error states */
+
+/* Box for stats-grid to appear as a container */
+.stats-box {
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius);
+  padding: var(--space-4);
+  box-shadow: var(--shadow-sm);
+}
+.stats-loading, .stats-error {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: var(--space-4);
+  background: var(--white);
+  border-radius: var(--radius);
+  border: 1px solid var(--gray-200);
+}
+
+.stats-error {
+  color: var(--danger);
+  font-weight: 500;
 }
 
 /* ========================================

@@ -1,6 +1,5 @@
 package it.codicecaciotta.iltuoveterinario.dto;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import lombok.Data;
 
@@ -16,8 +15,6 @@ public class VisitaSchedaUpdateDTO {
     private LocalDateTime dataOraFineVisita;
 
     private String tipoVisita;
-
-    private BigDecimal importoTotale;
 
     // Dati clinici (per DiarioClinico)
     private String sintomi;

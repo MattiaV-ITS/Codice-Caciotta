@@ -6,13 +6,14 @@ import it.codicecaciotta.iltuoveterinario.models.Animale;
 import it.codicecaciotta.iltuoveterinario.models.DiarioClinico;
 import it.codicecaciotta.iltuoveterinario.models.Visita;
 import it.codicecaciotta.iltuoveterinario.repositories.AnimaleRepository;
-import java.math.BigDecimal;
 import it.codicecaciotta.iltuoveterinario.repositories.VisitaRepository;
 import jakarta.persistence.EntityNotFoundException;
 
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import jakarta.persistence.EntityManager;
 
 import java.util.List;
 import java.util.Objects;
@@ -23,12 +24,14 @@ public class VisitaServiceImpl implements VisitaService {
     private final VisitaRepository visitaRepository;
     private final AnimaleRepository animaleRepository;
     private final DiarioClinicoService diarioClinicoService;
+    private final EntityManager entityManager;
 
     public VisitaServiceImpl(VisitaRepository visitaRepository, AnimaleRepository animaleRepository,
-            DiarioClinicoService diarioClinicoService) {
+            DiarioClinicoService diarioClinicoService, EntityManager entityManager) {
         this.visitaRepository = visitaRepository;
         this.animaleRepository = animaleRepository;
         this.diarioClinicoService = diarioClinicoService;
+        this.entityManager = entityManager;
     }
 
     @Override
@@ -39,7 +42,6 @@ public class VisitaServiceImpl implements VisitaService {
         visita.setDataOraVisita(dto.getDataOraVisita());
         visita.setTipoVisita(dto.getTipoVisita());
         visita.setDataOraFineVisita(dto.getDataOraFineVisita());
-        visita.setImportoTotale(dto.getImportoTotale() != null ? dto.getImportoTotale() : BigDecimal.ZERO);
 
         Animale animale = animaleRepository.findById(animaleId)
                 .orElseThrow(() -> new EntityNotFoundException(
@@ -80,9 +82,6 @@ public class VisitaServiceImpl implements VisitaService {
         }
         if (dto.getTipoVisita() != null) {
             visita.setTipoVisita(dto.getTipoVisita());
-        }
-        if (dto.getImportoTotale() != null) {
-            visita.setImportoTotale(dto.getImportoTotale());
         }
         
         Visita savedVisita = visitaRepository.save(Objects.requireNonNull(visita));
@@ -130,13 +129,33 @@ public class VisitaServiceImpl implements VisitaService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Visita getVisitaById(@NonNull Long visitaId) {
-        return visitaRepository.findById(visitaId)
+        Visita visita = visitaRepository.findById(visitaId)
                 .orElseThrow(() -> new EntityNotFoundException("Visita not found with id: " + visitaId));
+        // Inizializza le prestazioni lazy per il mapper
+        if (visita.getPrestazioni() != null) {
+            visita.getPrestazioni().size();
+        }
+        // Inizializza anche la prenotazione lazy
+        if (visita.getPrenotazione() != null) {
+            visita.getPrenotazione().getTipoVisita();
+        }
+        return visita;
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Visita> getVisiteByAnimaleId(@NonNull Long animaleId) {
-        return visitaRepository.findByAnimaleId(animaleId);
+        List<Visita> visite = visitaRepository.findByAnimaleId(animaleId);
+        for (Visita visita : visite) {
+            if (visita.getPrestazioni() != null) {
+                visita.getPrestazioni().size();
+            }
+            if (visita.getPrenotazione() != null) {
+                visita.getPrenotazione().getTipoVisita();
+            }
+        }
+        return visite;
     }
 }

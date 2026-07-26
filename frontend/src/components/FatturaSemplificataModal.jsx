@@ -8,11 +8,50 @@ const FatturaSemplificataModal = ({ visitaId, proprietario, animale, onClose, on
     indirizzoCliente: '',
     cittaCliente: '',
     dettaglioServizi: '',
-    importoTotale: ''
+    importoTotale: '0.00'
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
+
+  // Calcola importo totale dalle prestazioni della visita
+  useEffect(() => {
+    const fetchImportoFromPrestazioni = async () => {
+      if (!visitaId) return;
+      try {
+        const response = await get(`/api/visite/${visitaId}`);
+        if (response.ok) {
+          const visitaData = await response.json();
+          const prestazioniResponse = await get('/api/prestazioni');
+          if (prestazioniResponse.ok) {
+            const prestazioniData = await prestazioniResponse.json();
+            const prestazioniArray = Array.isArray(prestazioniData)
+              ? prestazioniData
+              : (prestazioniData.content && Array.isArray(prestazioniData.content)
+                  ? prestazioniData.content
+                  : []);
+            
+            // Find the prestazione matching the tipoVisita
+            if (visitaData.tipoVisita) {
+              const matchingPrestazione = prestazioniArray.find(
+                p => p.nomePrestazione === visitaData.tipoVisita
+              );
+              if (matchingPrestazione && matchingPrestazione.costoBase) {
+                const costo = typeof matchingPrestazione.costoBase === 'string'
+                  ? parseFloat(matchingPrestazione.costoBase)
+                  : matchingPrestazione.costoBase;
+                setFormData(prev => ({ ...prev, importoTotale: costo.toFixed(2) }));
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching importo from prestazioni:', error);
+      }
+    };
+
+    fetchImportoFromPrestazioni();
+  }, [visitaId, get]);
 
   // Imposta valori predefiniti basati sulla visita e proprietario
   useEffect(() => {
@@ -102,6 +141,11 @@ const FatturaSemplificataModal = ({ visitaId, proprietario, animale, onClose, on
       setError('Dettaglio servizi è obbligatorio');
       return false;
     }
+
+    if (!formData.importoTotale || parseFloat(formData.importoTotale) < 0) {
+      setError('Importo totale non valido');
+      return false;
+    }
     
     setError(null);
     return true;
@@ -122,7 +166,8 @@ const FatturaSemplificataModal = ({ visitaId, proprietario, animale, onClose, on
         codiceFiscaleCliente: formData.codiceFiscaleOPartitaIva.trim(),
         indirizzoCliente: formData.indirizzoCliente.trim(),
         cittaCliente: formData.cittaCliente.trim(),
-        dettaglioServizi: formData.dettaglioServizi.trim()
+        dettaglioServizi: formData.dettaglioServizi.trim(),
+        importoTotale: parseFloat(formData.importoTotale)
       });
       
       if (!response.ok) {
@@ -215,6 +260,26 @@ const FatturaSemplificataModal = ({ visitaId, proprietario, animale, onClose, on
               />
               <small className="form-hint">
                 Specificare il dettaglio dei servizi invece della quantità e qualità
+              </small>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="importoTotale">Importo Totale (€) *</label>
+              <input
+                type="number"
+                id="importoTotale"
+                name="importoTotale"
+                className="form-control"
+                value={formData.importoTotale}
+                onChange={handleChange}
+                placeholder="0.00"
+                step="0.01"
+                min="0"
+                required
+                disabled={isLoading}
+              />
+              <small className="form-hint">
+                Importo precompilato dal costo della prestazione. Modificabile se necessario.
               </small>
             </div>
 

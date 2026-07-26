@@ -10,7 +10,6 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import java.math.BigDecimal;
 import java.time.Duration;
 
 @Entity
@@ -27,9 +26,6 @@ public class Visita {
 
     @Column(name = "data_ora_fine_visita", nullable = true) // puo essere null se non ancora terminata
     private LocalDateTime dataOraFineVisita;
-
-    @Column(name = "importo_totale", nullable = false, precision = 10, scale = 2)
-    private BigDecimal importoTotale;
 
     @Column(name = "tipo_visita", nullable = true)
     private String tipoVisita;

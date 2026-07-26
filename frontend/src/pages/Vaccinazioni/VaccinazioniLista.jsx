@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 
 import ListaTable from '../../components/ListaTable/ListaTable';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
@@ -14,6 +14,7 @@ import { SyringeIcon } from '../../components/icons';
 import { useTableControls } from '../../hooks/useTableControls';
 import { usePaginatedFetch } from '../../hooks/usePaginatedFetch';
 import { useSearchControls } from '../../hooks/useSearchControls';
+import { useApi } from '../../services/apiService';
 
 function VaccinazioniLista() {
   const table = useTableControls({
@@ -25,6 +26,10 @@ function VaccinazioniLista() {
   const search = useSearchControls();
   const [statoFilter, setStatoFilter] = useState('');
   const [editingVaccinazione, setEditingVaccinazione] = useState(null);
+  const [stats, setStats] = useState(null);
+  const [statsLoading, setStatsLoading] = useState(true);
+  const [statsError, setStatsError] = useState(null);
+  const { get } = useApi();
 
   // Memoizza i filtri per evitare ricalcoli inutili e garantire stabilità dei riferimenti
   const memoizedFilters = useMemo(() => ({
@@ -110,30 +115,64 @@ function VaccinazioniLista() {
 
   const statsContent = (
     <>
-      <div className="stat-card">
-        <div className="stat-number stat-primary">{vaccinazioni.length}</div>
-        <div className="stat-label">Totale Vaccinazioni</div>
-      </div>
-      <div className="stat-card">
-        <div className="stat-number stat-success">
-          {vaccinazioni.filter(v => v.statoVaccinazione === 'VALIDO').length}
+      {statsLoading ? (
+        <div className="stats-loading">
+          <LoadingSpinner size="small" />
         </div>
-        <div className="stat-label">Valide</div>
-      </div>
-      <div className="stat-card">
-        <div className="stat-number stat-warning">
-          {vaccinazioni.filter(v => v.statoVaccinazione === 'PROSSIMO').length}
+      ) : statsError ? (
+        <div className="stats-error">
+          <ErrorMessage error={statsError} />
         </div>
-        <div className="stat-label">In Scadenza</div>
-      </div>
-      <div className="stat-card">
-        <div className="stat-number stat-danger">
-          {vaccinazioni.filter(v => v.statoVaccinazione === 'SCADUTO').length}
-        </div>
-        <div className="stat-label">Scadute</div>
-      </div>
+      ) : stats ? (
+        <>
+          <div className="stat-card">
+            <div className="stat-number stat-primary">{stats.totalCount}</div>
+            <div className="stat-label">Totale Vaccinazioni</div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-number stat-success">
+              {stats.valideCount}
+            </div>
+            <div className="stat-label">Valide</div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-number stat-warning">
+              {stats.prossimeCount}
+            </div>
+            <div className="stat-label">In Scadenza</div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-number stat-danger">
+              {stats.scaduteCount}
+            </div>
+            <div className="stat-label">Scadute</div>
+          </div>
+        </>
+      ) : null}
     </>
   );
+
+  // Fetch stats from backend
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        setStatsLoading(true);
+        console.log('Fetching vaccination stats...');
+        const response = await get('/api/stats/vaccinazioni');
+        const data = await response.json();
+        console.log('Vaccination stats received:', data);
+        setStats(data);
+        setStatsError(null);
+      } catch (err) {
+        console.error('Failed to fetch vaccination stats:', err);
+        setStatsError(err);
+      } finally {
+        setStatsLoading(false);
+      }
+    };
+
+    fetchStats();
+  }, [get]);
 
 const emptyIcon = (
   <SyringeIcon
