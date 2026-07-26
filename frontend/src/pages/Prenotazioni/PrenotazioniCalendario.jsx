@@ -34,20 +34,20 @@ function getMonday(date) {
   } else {
     d = new Date(date);
   }
-  
+
   // Get day of week in local timezone (0 = Sunday, 1 = Monday, etc.)
   const day = d.getDay();
-  
+
   // Calculate days to subtract to get to Monday
   // If Sunday (0), go back 6 days
   // If Monday (1), stay on same day (0 days back)
   // If Tuesday (2), go back 1 day, etc.
   const diff = day === 0 ? -6 : 1 - day;
-  
+
   const result = new Date(d);
   result.setDate(d.getDate() + diff);
   result.setHours(0, 0, 0, 0);
-  
+
   return result;
 }
 
@@ -193,16 +193,23 @@ function PrenotazioniCalendario() {
           proprietarioNome = `${p.proprietario.nome || ''} ${p.proprietario.cognome || ''}`.trim() || 'Sconosciuto';
         }
 
+        // FIXED: Preserve all ID and object fields for edit modal
         return {
           id: p.id,
           dataOraAppuntamento: dataOraAppuntamento,
+          tipoVisita: p.tipoVisita,
           motivo: p.tipoVisita,
           statoPrenotazione: 'Confermata',
           priorita: 'Media',
           note: p.note || '',
+          animaleId: p.animaleId,
           animaleNome: animaleNome,
           specie: specie,
+          proprietarioId: p.proprietarioId,
           proprietarioNome: proprietarioNome,
+          proprietarioCognome: p.proprietarioCognome || '',
+          animale: p.animale,
+          proprietario: p.proprietario,
           durataMinuti: 30 // Will be overridden in eventsByDay with real prestazione duration
         };
       });
@@ -234,8 +241,8 @@ function PrenotazioniCalendario() {
           const prestazioniArray = Array.isArray(data)
             ? data
             : (data.content && Array.isArray(data.content)
-                ? data.content
-                : []);
+              ? data.content
+              : []);
           setPrestazioni(prestazioniArray);
         }
       } catch (error) {
@@ -466,15 +473,20 @@ function PrenotazioniCalendario() {
   };
 
   const handlePrenotazioneUpdated = (updatedPrenotazione) => {
-    setPrenotazioni(prev => 
+    setPrenotazioni(prev =>
       prev.map(p => p.id === updatedPrenotazione.id ? {
         ...p,
         dataOraAppuntamento: updatedPrenotazione.dataOraAppuntamento,
+        tipoVisita: updatedPrenotazione.tipoVisita,
         motivo: updatedPrenotazione.tipoVisita,
         note: updatedPrenotazione.note,
+        animaleId: updatedPrenotazione.animaleId,
         animaleNome: updatedPrenotazione.animale?.nome || p.animaleNome,
         specie: updatedPrenotazione.animale?.specie || p.specie,
-        proprietarioNome: updatedPrenotazione.proprietarioNome || p.proprietarioNome
+        proprietarioId: updatedPrenotazione.proprietarioId,
+        proprietarioNome: updatedPrenotazione.proprietarioNome || p.proprietarioNome,
+        animale: updatedPrenotazione.animale || p.animale,
+        proprietario: updatedPrenotazione.proprietario || p.proprietario
       } : p)
     );
   };
@@ -535,23 +547,23 @@ function PrenotazioniCalendario() {
                     // Handle empty/cleared date - keep current week
                     return;
                   }
-                  
+
                   // Parse date correctly handling timezone
                   // Date input value is in YYYY-MM-DD format (local timezone)
                   const parts = e.target.value.split('-');
                   const year = parseInt(parts[0], 10);
                   const month = parseInt(parts[1], 10) - 1; // Months are 0-indexed
                   const day = parseInt(parts[2], 10);
-                  
+
                   // Create date in local timezone at midnight
                   const selectedDate = new Date(year, month, day, 0, 0, 0, 0);
-                  
+
                   // Check if date is valid
                   if (isNaN(selectedDate.getTime())) {
                     console.error('Invalid date selected');
                     return;
                   }
-                  
+
                   setWeekStart(getMonday(selectedDate));
                 } catch (error) {
                   console.error('Error handling date selection:', error);
@@ -636,7 +648,7 @@ function PrenotazioniCalendario() {
                           }}
                         ></div>
                       )}
-                      
+
                       {/* Background for hours after closing */}
                       {parseInt(dayHours.end.split(':')[0]) < extendedEndHour && (
                         <div
@@ -690,12 +702,6 @@ function PrenotazioniCalendario() {
                         ? 'is-attesa'
                         : '';
 
-                    // Calcola i colori per lo stile inline dal DB
-                    // Usa il colore della prestazione per il bordo, una versione
-                    const eventBgColor = prestazioneColor ? `${prestazioneColor}aa` : undefined;
-                    const eventBorderColor = prestazioneColor || undefined;
-                    const eventTextColor = prestazioneColor !== FALLBACK_COLOR && prestazioneColor ? prestazioneColor : undefined;
-
                     return (
                       <Suspense key={ev.id} fallback={<div className="cal-event" style={{ top, height, left: `calc(${leftPct}% + 2px)`, width: `calc(${widthPct}% - 4px)` }} />}>
                         <PrenotazioneContextMenu
@@ -703,33 +709,48 @@ function PrenotazioniCalendario() {
                           onPrenotazioneDeleted={handlePrenotazioneDeleted}
                           onPrenotazioneUpdated={handlePrenotazioneUpdated}
                         >
-                          <div
-                            className={`cal-event ${prestazioneClass} ${statoModifier}`}
-                            style={{
-                              top,
-                              height,
-                              left: `calc(${leftPct}% + 2px)`,
-                              width: `calc(${widthPct}% - 4px)`,
-                              ...(eventBgColor ? { background: eventBgColor } : {}),
-                              ...(eventBorderColor ? { borderLeftColor: eventBorderColor } : {}),
-                              ...(eventTextColor ? { color: eventTextColor } : {})
-                            }}
-                            title={`${ev.animaleNome} (${ev.proprietarioNome || 'Proprietario sconosciuto'}) - ${ev.motivo} - ${ev.statoPrenotazione}`}
-                          >
-                            <div className="cal-event-text-overlay">
-                              {ev.animaleNome} - {ev.proprietarioNome || 'Proprietario sconosciuto'}
-                            </div>
-                            <div className="cal-event-content">
-                              {!isCompact && <div className="cal-event-time">{timeLabel}</div>}
-                              <div className="cal-event-title">
-                                {ev.animaleNome}
+                          <>
+                            {/* Full opacity background layer to block hours/lines - use page background color */}
+                            <div
+                              className={`cal-event-bg ${prestazioneClass} ${statoModifier}`}
+                              style={{
+                                top,
+                                height,
+                                left: `calc(${leftPct}% + 2px)`,
+                                width: `calc(${widthPct}% - 4px)`,
+                                background: 'var(--white)',
+                                borderLeftColor: prestazioneColor || undefined
+                              }}
+                            ></div>
+
+                            {/* Semi-transparent overlay with content - exactly like PrenotazioniProgramma */}
+                            <div
+                              className={`cal-event ${prestazioneClass} ${statoModifier}`}
+                              style={{
+                                top,
+                                height,
+                                left: `calc(${leftPct}% + 2px)`,
+                                width: `calc(${widthPct}% - 4px)`,
+                                ...(prestazioneColor && prestazioneColor !== FALLBACK_COLOR
+                                  ? {
+                                      background: `${prestazioneColor}22`,
+                                      borderLeftColor: prestazioneColor,
+                                      color: prestazioneColor
+                                    }
+                                  : {})
+                              }}
+                              title={`${timeLabel} - ${ev.proprietarioNome || 'Proprietario sconosciuto'} - ${ev.animaleNome} - ${ev.motivo}`}
+                            >
+                              <div className="cal-event-content">
+                                {!isCompact && <div className="cal-event-time">{timeLabel}</div>}
+                                <div className="cal-event-title">{ev.animaleNome}</div>
+                                <div className="cal-event-owner">{ev.proprietarioNome || 'Proprietario sconosciuto'}</div>
+                                {!isCompact && height >= 56 && (
+                                  <div className="cal-event-motivo">{ev.motivo}</div>
+                                )}
                               </div>
-                              <div className="cal-event-owner">{ev.proprietarioNome || 'Proprietario sconosciuto'}</div>
-                              {!isCompact && height >= 56 && (
-                                <div className="cal-event-motivo">{ev.motivo}</div>
-                              )}
                             </div>
-                          </div>
+                          </>
                         </PrenotazioneContextMenu>
                       </Suspense>
                     );

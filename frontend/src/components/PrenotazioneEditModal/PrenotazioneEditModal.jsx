@@ -76,14 +76,39 @@ const PrenotazioneEditModal = ({
   // Initialize form with prenotazione data
   useEffect(() => {
     if (prenotazione) {
+      console.log('Initializing form with prenotazione:', prenotazione);
+      console.log('Prenotazione animaleId:', prenotazione.animaleId);
+      console.log('Prenotazione animale:', prenotazione.animale);
+      console.log('Prenotazione proprietarioId:', prenotazione.proprietarioId);
+      console.log('Prenotazione proprietario:', prenotazione.proprietario);
       setFormData({
         dataOraAppuntamento: prenotazione.dataOraAppuntamento || '',
-        tipoVisita: prenotazione.motivo || prenotazione.tipoVisita || '',
+        tipoVisita: prenotazione.tipoVisita || '',
         specificaTipoVisita: prenotazione.tipoVisita === 'Altro' ? prenotazione.specificaTipoVisita || '' : '',
+        animaleId: prenotazione.animaleId || (prenotazione.animale?.id) || '',
         note: prenotazione.note || ''
       });
     }
   }, [prenotazione]);
+
+  // After prestazioni are loaded, check if we need to update the tipoVisita to match available options
+  useEffect(() => {
+    if (prenotazione && prestazioni.length > 0 && formData.tipoVisita) {
+      // Check if the current tipoVisita exists in prestazioni
+      const tipoVisitaExists = prestazioni.some(p => p.nomePrestazione === formData.tipoVisita);
+
+      // If the current tipoVisita is not found in prestazioni, try to find a matching one from prenotazione
+      if (!tipoVisitaExists && prenotazione.tipoVisita) {
+        const matchingPrestazione = prestazioni.find(p => p.nomePrestazione === prenotazione.tipoVisita);
+        if (matchingPrestazione) {
+          setFormData(prev => ({
+            ...prev,
+            tipoVisita: matchingPrestazione.nomePrestazione
+          }));
+        }
+      }
+    }
+  }, [prenotazione, prestazioni, formData.tipoVisita]);
 
   const validate = () => {
     const newErrors = {};
@@ -118,26 +143,42 @@ const PrenotazioneEditModal = ({
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validate()) return;
-    
+
     setIsSubmitting(true);
-    
+
     try {
+      // Extract IDs with multiple fallback approaches
+      const animaleId = prenotazione?.animaleId || prenotazione?.animale?.id || formData.animaleId;
+      const proprietarioId = prenotazione?.proprietarioId || prenotazione?.proprietario?.id;
+
+      console.log('Submit data - prenotazione:', prenotazione);
+      console.log('Extract animaleId:', animaleId, '| proprietarioId:', proprietarioId);
+
+      if (!animaleId) {
+        throw new Error('Animal ID is missing from prenotazione data');
+      }
+      if (!proprietarioId) {
+        throw new Error('Proprietario ID is missing from prenotazione data');
+      }
+      
       // Include all required fields for backend deserialization (using DTO format)
       const payload = {
         dataOraAppuntamento: formData.dataOraAppuntamento,
         tipoVisita: formData.tipoVisita === 'Altro' ? formData.specificaTipoVisita : formData.tipoVisita,
         note: formData.note,
-        // Use IDs instead of entity objects for proper DTO deserialization
-        animaleId: prenotazione.animaleId || (prenotazione.animale?.id),
-        proprietarioId: prenotazione.proprietarioId || (prenotazione.proprietario?.id)
+        animaleId: animaleId,
+        proprietarioId: proprietarioId
       };
 
+      console.log('Final payload being sent:', payload);
+      
       const response = await put(`/api/prenotazioni/${prenotazione.id}`, payload);
       
       if (!response.ok) {
-        throw new Error(`Failed to update prenotazione: ${response.status}`);
+        const errorData = await response.json().catch(() => ({ message: `HTTP ${response.status}` }));
+        throw new Error(`Failed to update prenotazione: ${errorData.message || response.status}`);
       }
 
       const updatedPrenotazione = await response.json();
@@ -156,7 +197,7 @@ const PrenotazioneEditModal = ({
       
     } catch (error) {
       console.error('Error updating prenotazione:', error);
-      alert(`Errore durante l\'aggiornamento della prenotazione: ${error.message}`);
+      alert(`Errore durante l'aggiornamento della prenotazione: ${error.message}`);
     } finally {
       setIsSubmitting(false);
     }

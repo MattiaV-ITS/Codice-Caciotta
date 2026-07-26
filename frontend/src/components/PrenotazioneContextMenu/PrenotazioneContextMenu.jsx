@@ -98,14 +98,21 @@ const PrenotazioneContextMenu = ({ children, prenotazione, onPrenotazioneUpdated
       const response = await deleteRequest(`/api/prenotazioni/${prenotazione.id}`);
       
       if (!response.ok) {
-        throw new Error(`Failed to delete prenotazione: ${response.status}`);
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData.message || `Failed to delete prenotazione: ${response.status}`;
+        throw new Error(errorMessage);
       }
 
       onPrenotazioneDeleted?.(prenotazione.id);
       console.log('Prenotazione deleted successfully');
     } catch (error) {
       console.error('Error deleting prenotazione:', error);
-      alert(`Errore durante l'eliminazione della prenotazione: ${error.message}`);
+      // Check if the error is about having an associated visita
+      if (error.message && error.message.includes('Cannot delete prenotazione that has an associated visita')) {
+        alert('Impossibile eliminare la prenotazione: esiste già una visita associata. Per eliminare la prenotazione, è necessario eliminare prima la visita.');
+      } else {
+        alert(`Errore durante l'eliminazione della prenotazione: ${error.message}`);
+      }
     } finally {
       setIsLoading(false);
     }

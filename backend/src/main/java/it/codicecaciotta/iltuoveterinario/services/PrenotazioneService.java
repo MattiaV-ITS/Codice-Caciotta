@@ -10,6 +10,8 @@ import it.codicecaciotta.iltuoveterinario.repositories.PrestazioneRepository;
 import it.codicecaciotta.iltuoveterinario.repositories.VisitaRepository;
 import it.codicecaciotta.iltuoveterinario.services.OrarioBloccatoService;
 import it.codicecaciotta.iltuoveterinario.services.OrarioStudioService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +26,8 @@ import java.util.Optional;
 
 @Service
 public class PrenotazioneService {
+
+    private static final Logger logger = LoggerFactory.getLogger(PrenotazioneService.class);
 
     private final PrenotazioneRepository prenotazioneRepository;
 
@@ -78,9 +82,12 @@ public class PrenotazioneService {
         LocalDate appointmentDate = appointmentTime.toLocalDate();
         LocalTime appointmentTimeOfDay = appointmentTime.toLocalTime();
 
+        logger.debug("Validating appointment: date={}, time={}", appointmentDate, appointmentTimeOfDay);
+
         // Check if studio is closed on this day
         var studioHours = orarioStudioService.getOrarioForDate(appointmentDate);
         if (studioHours.isEmpty() || Boolean.TRUE.equals(studioHours.get().getChiuso())) {
+            logger.error("Studio is closed on {}", appointmentDate.getDayOfWeek());
             throw new IllegalArgumentException("Studio is closed on " + appointmentDate.getDayOfWeek());
         }
 
@@ -92,6 +99,7 @@ public class PrenotazioneService {
 
         if (appointmentTimeOfDay.isBefore(openingTime) || appointmentTimeOfDay.isAfter(closingTime) ||
             appointmentTimeOfDay.equals(closingTime)) {
+            logger.error("Appointment outside hours: {} not in [{}, {}]", appointmentTimeOfDay, openingTime, closingTime);
             throw new IllegalArgumentException("Appointment time is outside studio opening hours. " +
                 "Studio is open from " + openingTime + " to " + closingTime);
         }
@@ -103,6 +111,7 @@ public class PrenotazioneService {
 
             if ((appointmentTimeOfDay.isAfter(lunchStart) || appointmentTimeOfDay.equals(lunchStart)) &&
                 appointmentTimeOfDay.isBefore(lunchEnd)) {
+                logger.error("Appointment during lunch: {} in [{}, {}]", appointmentTimeOfDay, lunchStart, lunchEnd);
                 throw new IllegalArgumentException("Appointment time is during lunch break. " +
                     "Lunch break is from " + lunchStart + " to " + lunchEnd);
             }
@@ -116,11 +125,13 @@ public class PrenotazioneService {
 
             if ((appointmentTimeOfDay.isAfter(blockedStart) || appointmentTimeOfDay.equals(blockedStart)) &&
                 appointmentTimeOfDay.isBefore(blockedEnd)) {
+                logger.error("Appointment in blocked time: {} in [{}, {}]", appointmentTimeOfDay, blockedStart, blockedEnd);
                 throw new IllegalArgumentException("Appointment time is blocked. " +
                     "Blocked time: " + blockedStart + " to " + blockedEnd +
                     (blockedTime.getMotivo() != null ? " (" + blockedTime.getMotivo() + ")" : ""));
             }
         }
+        logger.debug("Appointment validation passed");
     }
 
     private void checkForDoubleBooking(Prenotazione prenotazione) {
@@ -128,6 +139,11 @@ public class PrenotazioneService {
         if (appointmentTime == null) {
             throw new IllegalArgumentException("Appointment time cannot be null");
         }
+
+        logger.debug("Checking double booking for prenotazione: id={}, animal={}, proprietario={}", 
+            prenotazione.getId(), 
+            prenotazione.getAnimale() != null ? prenotazione.getAnimale().getId() : "null",
+            prenotazione.getProprietario() != null ? prenotazione.getProprietario().getId() : "null");
 
         // Get the duration of the appointment based on the prestazione
         int appointmentDuration = getAppointmentDuration(prenotazione);
@@ -148,6 +164,8 @@ public class PrenotazioneService {
 
                 // Check for time overlap
                 if (appointmentTime.isBefore(existingEndTime) && appointmentEndTime.isAfter(existingTime)) {
+                    logger.error("Double booking detected for animal: {} has appointment from {} to {}", 
+                        prenotazione.getAnimale().getNome(), existingTime, existingEndTime);
                     throw new IllegalArgumentException("Double booking detected. " +
                         "Animal " + prenotazione.getAnimale().getNome() +
                         " already has an appointment from " + existingTime + " to " + existingEndTime);
@@ -170,12 +188,15 @@ public class PrenotazioneService {
 
                 // Check for time overlap
                 if (appointmentTime.isBefore(existingEndTime) && appointmentEndTime.isAfter(existingTime)) {
+                    logger.error("Double booking detected for proprietario: {} has appointment from {} to {}", 
+                        prenotazione.getProprietario().getNome(), existingTime, existingEndTime);
                     throw new IllegalArgumentException("Double booking detected. " +
                         "Proprietario " + prenotazione.getProprietario().getNome() + " " + prenotazione.getProprietario().getCognome() +
                         " already has an appointment from " + existingTime + " to " + existingEndTime);
                 }
             }
         }
+        logger.debug("Double booking check passed");
     }
 
     private int getAppointmentDuration(Prenotazione prenotazione) {
@@ -193,13 +214,23 @@ public class PrenotazioneService {
     @Transactional
     public Prenotazione updatePrenotazione(Long id, Prenotazione prenotazioneDetails) {
         Long prenotazioneId = Objects.requireNonNull(id, "Prenotazione id cannot be null");
+        logger.info("Starting update of prenotazione {}", prenotazioneId);
         return prenotazioneRepository.findById(prenotazioneId)
                 .map(prenotazione -> {
+                    logger.debug("Found prenotazione {}, updating fields", prenotazioneId);
                     prenotazione.setDataOraAppuntamento(prenotazioneDetails.getDataOraAppuntamento());
                     prenotazione.setTipoVisita(prenotazioneDetails.getTipoVisita());
                     prenotazione.setNote(prenotazioneDetails.getNote());
                     prenotazione.setAnimale(prenotazioneDetails.getAnimale());
                     prenotazione.setProprietario(prenotazioneDetails.getProprietario());
+                    
+                    logger.debug("Validating updated prenotazione");
+                    validateAppointmentTime(prenotazione);
+                    
+                    logger.debug("Checking for double bookings");
+                    checkForDoubleBooking(prenotazione);
+                    
+                    logger.info("Saving updated prenotazione {}", prenotazioneId);
                     return prenotazioneRepository.save(prenotazione);
                 })
                 .orElseThrow(() -> new RuntimeException("Prenotazione not found with id: " + prenotazioneId));
@@ -208,7 +239,28 @@ public class PrenotazioneService {
     @Transactional
     public void deletePrenotazione(Long id) {
         Long prenotazioneId = Objects.requireNonNull(id, "Prenotazione id cannot be null");
-        prenotazioneRepository.deleteById(prenotazioneId);
+        logger.info("Attempting to delete prenotazione with ID: {}", prenotazioneId);
+
+        // Check if the prenotazione exists and has an associated visita
+        Optional<Prenotazione> prenotazioneOptional = prenotazioneRepository.findByIdWithRelationships(prenotazioneId);
+        if (prenotazioneOptional.isPresent()) {
+            Prenotazione prenotazione = prenotazioneOptional.get();
+
+            // Check if there's an associated visita - if so, prevent deletion
+            if (prenotazione.getVisita() != null) {
+                Visita visita = prenotazione.getVisita();
+                logger.warn("Cannot delete prenotazione with ID {} - it has an associated visita with ID: {}", prenotazioneId, visita.getId());
+                throw new IllegalStateException("Cannot delete prenotazione that has an associated visita. Please delete the visita first.");
+            }
+
+            // If no visita exists, proceed with deletion
+            logger.info("No associated visita found, proceeding with deletion of prenotazione with ID: {}", prenotazioneId);
+            prenotazioneRepository.deleteById(prenotazioneId);
+            logger.info("Successfully deleted prenotazione with ID: {}", prenotazioneId);
+        } else {
+            logger.warn("Attempted to delete non-existent prenotazione with ID: {}", prenotazioneId);
+            throw new RuntimeException("Prenotazione not found with id: " + prenotazioneId);
+        }
     }
 
     @Transactional(readOnly = true)
