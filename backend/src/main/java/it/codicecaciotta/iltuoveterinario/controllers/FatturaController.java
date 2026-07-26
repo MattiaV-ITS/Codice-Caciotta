@@ -52,9 +52,12 @@ public class FatturaController {
         fattura.setVisita(visita);
         fattura.setProprietario(visita.getAnimale().getProprietario());
 
-        // Calcola importo totale se non specificato (per fatture semplificate)
-        if (fattura.getImportoTotale() == null && visita.getImportoTotale() != null) {
-            fattura.setImportoTotale(visita.getImportoTotale());
+        // Calcola importo totale dalle prestazioni se non specificato
+        if (fattura.getImportoTotale() == null && visita.getPrestazioni() != null && !visita.getPrestazioni().isEmpty()) {
+            BigDecimal importoFromPrestazioni = visita.getPrestazioni().stream()
+                .map(p -> p.getCostoBase() != null ? p.getCostoBase() : BigDecimal.ZERO)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+            fattura.setImportoTotale(importoFromPrestazioni);
         }
 
         // Ora solo fatture semplificate - imposta tipo fisso
@@ -270,9 +273,12 @@ public class FatturaController {
             fattura.setProprietario(null);
         }
         fattura.setTipoFattura("Semplificata");
-        // Use visita importo totale if available, otherwise set a default value
-        if (visita.getImportoTotale() != null) {
-            fattura.setImportoTotale(visita.getImportoTotale());
+        // Calcola importo dalle prestazioni se disponibili, altrimenti default
+        if (visita.getPrestazioni() != null && !visita.getPrestazioni().isEmpty()) {
+            BigDecimal importoFromPrestazioni = visita.getPrestazioni().stream()
+                .map(p -> p.getCostoBase() != null ? p.getCostoBase() : BigDecimal.ZERO)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+            fattura.setImportoTotale(importoFromPrestazioni);
         } else {
             fattura.setImportoTotale(new BigDecimal("0.00")); // Default value
         }

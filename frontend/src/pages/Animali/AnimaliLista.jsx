@@ -29,7 +29,7 @@ function AnimaliLista() {
   const [stats, setStats] = useState(null);
   const [statsLoading, setStatsLoading] = useState(true);
   const [statsError, setStatsError] = useState(null);
-  const { get } = useApi();
+  const { get, patch } = useApi();
 
   // Memoizza i filtri per evitare ricalcoli inutili e garantire stabilità dei riferimenti
   const memoizedFilters = useMemo(() => ({
@@ -113,11 +113,29 @@ function AnimaliLista() {
       render: (item) => (
         <GearMenu
           menuItems={[
-            {
-              label: 'Modifica',
-              onClick: () => handleEditAnimale(item)
-            }
-          ]}
+              {
+                label: 'Modifica',
+                onClick: () => handleEditAnimale(item)
+              },
+              { divider: true },
+              {
+                label: 'Imposta come Sano',
+                onClick: () => handleStatusChange(item.id, 'SANO')
+              },
+              {
+                label: 'Imposta come Malato',
+                onClick: () => handleStatusChange(item.id, 'MALATO')
+              },
+              {
+                label: 'Imposta come In Cura',
+                onClick: () => handleStatusChange(item.id, 'IN_CURA')
+              },
+              {
+                label: 'Imposta come Deceduto',
+                className: 'danger',
+                onClick: () => handleStatusChange(item.id, 'DECEDUTO')
+              }
+            ]}
         />
       )
     }
@@ -244,6 +262,19 @@ function AnimaliLista() {
         setShowEditModal(true);
       }
     );
+  };
+
+  const handleStatusChange = async (id, newStatus) => {
+    try {
+      const response = await patch(`/api/animali/${id}`, { stato: newStatus });
+      if (!response.ok) {
+        throw new Error(`Errore nell'aggiornamento dello stato: ${response.status}`);
+      }
+      // Refresh the list
+      table.setPage(0);
+    } catch (err) {
+      console.error('Failed to update animale status:', err);
+    }
   };
 
   const additionalContent = (

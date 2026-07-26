@@ -323,7 +323,6 @@ public class PrenotazioneService {
                     visita.setTipoVisita(prenotazione.getTipoVisita());
                     visita.setAnimale(prenotazione.getAnimale());
                     visita.setPrenotazione(prenotazione);
-                    visita.setImportoTotale(java.math.BigDecimal.ZERO);
                     visita.setDurata(30); // Default duration
 
                     Visita savedVisita = visitaRepository.save(visita);

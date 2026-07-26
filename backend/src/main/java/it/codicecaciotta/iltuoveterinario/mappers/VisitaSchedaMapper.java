@@ -19,7 +19,17 @@ public class VisitaSchedaMapper {
                 ? visita.getDataOraFineVisita().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))
                 : null);
         dto.setDurata(visita.getDurata());
-        dto.setTipoVisita(visita.getTipoVisita() != null ? visita.getTipoVisita() : (visita.getPrenotazione() != null ? visita.getPrenotazione().getTipoVisita() : null));
+        // Deriva il tipoVisita: prima dal campo diretto, poi dalla prenotazione, poi dalle prestazioni collegate
+        String tipoVisita = visita.getTipoVisita();
+        if (tipoVisita == null && visita.getPrenotazione() != null) {
+            tipoVisita = visita.getPrenotazione().getTipoVisita();
+        }
+        if (tipoVisita == null && visita.getPrestazioni() != null && !visita.getPrestazioni().isEmpty()) {
+            tipoVisita = visita.getPrestazioni().stream()
+                .map(p -> p.getNomePrestazione())
+                .collect(java.util.stream.Collectors.joining(", "));
+        }
+        dto.setTipoVisita(tipoVisita);
         DiarioClinico diario = visita.getDiarioClinico();
         if (diario != null) {
             dto.setSintomi(diario.getSintomi());

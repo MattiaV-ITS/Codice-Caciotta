@@ -26,7 +26,7 @@ function ProprietariLista() {
   const [stats, setStats] = useState(null);
   const [statsLoading, setStatsLoading] = useState(true);
   const [statsError, setStatsError] = useState(null);
-  const { get } = useApi();
+  const { get, patch } = useApi();
 
   // Memoizza i filtri per evitare ricalcoli inutili e garantire stabilità dei riferimenti
   const memoizedFilters = useMemo(() => ({
@@ -95,11 +95,20 @@ function ProprietariLista() {
       render: (item) => (
         <GearMenu
           menuItems={[
-            {
-              label: 'Modifica',
-              onClick: () => handleEditProprietario(item)
-            }
-          ]}
+              {
+                label: 'Modifica',
+                onClick: () => handleEditProprietario(item)
+              },
+              { divider: true },
+              {
+                label: 'Imposta come Attivo',
+                onClick: () => handleStatusChange(item.id, true)
+              },
+              {
+                label: 'Imposta come Inattivo',
+                onClick: () => handleStatusChange(item.id, false)
+              }
+            ]}
         />
       )
     }
@@ -191,6 +200,19 @@ function ProprietariLista() {
         setShowEditModal(true);
       }
     );
+  };
+
+  const handleStatusChange = async (id, newStatus) => {
+    try {
+      const response = await patch(`/api/proprietari/${id}`, { stato: newStatus });
+      if (!response.ok) {
+        throw new Error(`Errore nell'aggiornamento dello stato: ${response.status}`);
+      }
+      // Refresh the list
+      table.setPage(0);
+    } catch (err) {
+      console.error('Failed to update proprietario status:', err);
+    }
   };
 
   const additionalContent = (
