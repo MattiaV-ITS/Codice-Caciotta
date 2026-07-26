@@ -330,8 +330,8 @@ const StudioHoursAdmin = () => {
               <span className="day-name">{daysOfWeek.find(d => d.value === selectedDay)?.label}</span>
             </div>
 
-            <div className="form-group form-group-inline">
-              <label>Stato:</label>
+            <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <label style={{ marginBottom: 0 }}>Stato:</label>
               <label className="toggle-switch">
                 <input
                   type="checkbox"
