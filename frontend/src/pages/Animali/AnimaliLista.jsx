@@ -1,7 +1,7 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import AnimaleCreate from './AnimaleCreate';
 import ListPageTemplate from '../../components/ListPageTemplate/ListPageTemplate';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { GearMenu } from '../../components/ContextMenu/ContextMenu';
 import { loadFullAnimaleData } from '../../utils/dataLoader';
 
@@ -9,6 +9,9 @@ import { useTableControls } from '../../hooks/useTableControls';
 import { usePaginatedFetch } from '../../hooks/usePaginatedFetch';
 import { useSearchControls } from '../../hooks/useSearchControls';
 import { getIconLetter } from "../../utils";
+import { useApi } from '../../services/apiService';
+import LoadingSpinner from '../../components/common/LoadingSpinner';
+import ErrorMessage from '../../components/common/ErrorMessage';
 
 
 function AnimaliLista() {
@@ -23,6 +26,10 @@ function AnimaliLista() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingAnimale, setEditingAnimale] = useState(null);
+  const [stats, setStats] = useState(null);
+  const [statsLoading, setStatsLoading] = useState(true);
+  const [statsError, setStatsError] = useState(null);
+  const { get } = useApi();
 
   // Memoizza i filtri per evitare ricalcoli inutili e garantire stabilità dei riferimenti
   const memoizedFilters = useMemo(() => ({
@@ -134,8 +141,87 @@ function AnimaliLista() {
       </svg>
   );
 
-  const emptyMessage = search.appliedSearchTerm || specieFilter 
-    ? 'Prova a modificare i filtri.' 
+  // Fetch stats from backend
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        setStatsLoading(true);
+        console.log('Fetching animal stats...');
+        const response = await get('/api/stats/animali');
+        const data = await response.json();
+        console.log('Animal stats received:', data);
+        setStats(data || {});
+        setStatsError(null);
+      } catch (err) {
+        console.error('Failed to fetch animal stats:', err);
+        setStatsError(err);
+      } finally {
+        setStatsLoading(false);
+      }
+    };
+
+    fetchStats();
+  }, [get]);
+
+  const statsContent = (
+    <>
+      {statsLoading ? (
+        <div className="stats-loading">
+          <LoadingSpinner size="small" />
+        </div>
+      ) : statsError ? (
+        <div className="stats-error">
+          <ErrorMessage error={statsError} />
+        </div>
+      ) : stats ? (
+        <>
+          <div className="stat-card">
+            <div className="stat-number stat-primary">{stats?.totalCount ?? 0}</div>
+            <div className="stat-label">Totale Animali</div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-number stat-info">
+              {stats.caneCount}
+            </div>
+            <div className="stat-label">Cani</div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-number stat-info">
+              {stats.gattoCount}
+            </div>
+            <div className="stat-label">Gatti</div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-number stat-info">
+              {stats.altroCount}
+            </div>
+            <div className="stat-label">Altri</div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-number stat-success">
+              {stats.sanoCount}
+            </div>
+            <div className="stat-label">Sani</div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-number stat-warning">
+              {stats.malatoCount}
+            </div>
+            <div className="stat-label">Malati</div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-number stat-danger">
+              {stats.decedutoCount}
+            </div>
+            <div className="stat-label">Deceduti</div>
+          </div>
+        </>
+      ) : null}
+    </>
+  );
+
+  const emptyMessage = search.appliedSearchTerm || specieFilter
+    ? 'Prova a modificare i filtri.'
     : 'Inizia aggiungendo primo animale.';
 
   const navigate = useNavigate();
@@ -210,6 +296,7 @@ function AnimaliLista() {
       onAddClick={() => setShowCreateModal(true)}
       additionalContent={additionalContent}
       onRowClick={handleRowClick}
+      statsContent={statsContent}
     />
   );
 }

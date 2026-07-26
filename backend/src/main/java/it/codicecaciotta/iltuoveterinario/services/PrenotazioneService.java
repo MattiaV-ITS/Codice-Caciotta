@@ -104,7 +104,7 @@ public class PrenotazioneService {
                 "Studio is open from " + openingTime + " to " + closingTime);
         }
 
-        // Check if appointment is during lunch break
+        // Check if appointment is during lunch break (only if lunch break is configured)
         if (orarioStudio.getOraInizioPausaPranzo() != null && orarioStudio.getOraFinePausaPranzo() != null) {
             LocalTime lunchStart = orarioStudio.getOraInizioPausaPranzo();
             LocalTime lunchEnd = orarioStudio.getOraFinePausaPranzo();
@@ -134,20 +134,47 @@ public class PrenotazioneService {
         logger.debug("Appointment validation passed");
     }
 
-    private void checkForDoubleBooking(Prenotazione prenotazione) {
+    void checkForDoubleBooking(Prenotazione prenotazione) {
         LocalDateTime appointmentTime = prenotazione.getDataOraAppuntamento();
         if (appointmentTime == null) {
             throw new IllegalArgumentException("Appointment time cannot be null");
         }
 
-        logger.debug("Checking double booking for prenotazione: id={}, animal={}, proprietario={}", 
-            prenotazione.getId(), 
+        logger.debug("Checking double booking for prenotazione: id={}, animal={}, proprietario={}",
+            prenotazione.getId(),
             prenotazione.getAnimale() != null ? prenotazione.getAnimale().getId() : "null",
             prenotazione.getProprietario() != null ? prenotazione.getProprietario().getId() : "null");
 
         // Get the duration of the appointment based on the prestazione
         int appointmentDuration = getAppointmentDuration(prenotazione);
         LocalDateTime appointmentEndTime = appointmentTime.plusMinutes(appointmentDuration);
+
+        // Check for any overlapping appointments in the system (regardless of animal or proprietario)
+        List<Prenotazione> allAppointments = prenotazioneRepository.findByDataOraAppuntamentoBetween(
+            appointmentTime.minusMinutes(appointmentDuration), // Start checking from before our appointment starts
+            appointmentEndTime.plusMinutes(appointmentDuration) // End checking after our appointment ends
+        );
+
+        for (Prenotazione existing : allAppointments) {
+            if (existing.getId() != null && existing.getId().equals(prenotazione.getId())) {
+                continue; // Skip the same appointment if updating
+            }
+
+            LocalDateTime existingTime = existing.getDataOraAppuntamento();
+            if (existingTime != null) {
+                int existingDuration = getAppointmentDuration(existing);
+                LocalDateTime existingEndTime = existingTime.plusMinutes(existingDuration);
+
+                // Check for time overlap
+                if (appointmentTime.isBefore(existingEndTime) && appointmentEndTime.isAfter(existingTime)) {
+                    logger.error("Time slot conflict detected: existing appointment from {} to {} overlaps with new appointment from {} to {}",
+                        existingTime, existingEndTime, appointmentTime, appointmentEndTime);
+                    throw new IllegalArgumentException("Time slot conflict detected. " +
+                        "There is already an appointment from " + existingTime + " to " + existingEndTime +
+                        " that overlaps with the requested time slot.");
+                }
+            }
+        }
 
         // Check if the same animal already has an appointment at the same time
         List<Prenotazione> existingAppointments = prenotazioneRepository.findByAnimaleId(prenotazione.getAnimale().getId());
@@ -164,7 +191,7 @@ public class PrenotazioneService {
 
                 // Check for time overlap
                 if (appointmentTime.isBefore(existingEndTime) && appointmentEndTime.isAfter(existingTime)) {
-                    logger.error("Double booking detected for animal: {} has appointment from {} to {}", 
+                    logger.error("Double booking detected for animal: {} has appointment from {} to {}",
                         prenotazione.getAnimale().getNome(), existingTime, existingEndTime);
                     throw new IllegalArgumentException("Double booking detected. " +
                         "Animal " + prenotazione.getAnimale().getNome() +
@@ -188,7 +215,7 @@ public class PrenotazioneService {
 
                 // Check for time overlap
                 if (appointmentTime.isBefore(existingEndTime) && appointmentEndTime.isAfter(existingTime)) {
-                    logger.error("Double booking detected for proprietario: {} has appointment from {} to {}", 
+                    logger.error("Double booking detected for proprietario: {} has appointment from {} to {}",
                         prenotazione.getProprietario().getNome(), existingTime, existingEndTime);
                     throw new IllegalArgumentException("Double booking detected. " +
                         "Proprietario " + prenotazione.getProprietario().getNome() + " " + prenotazione.getProprietario().getCognome() +

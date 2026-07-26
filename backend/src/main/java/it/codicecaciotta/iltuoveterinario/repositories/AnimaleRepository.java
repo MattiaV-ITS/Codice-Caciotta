@@ -38,4 +38,26 @@ public interface AnimaleRepository extends JpaRepository<Animale, Long> {
            "LOWER(a.specie) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
            "LOWER(a.razza) LIKE LOWER(CONCAT('%', :searchTerm, '%')))")
     Page<Animale> searchByProprietario(@Param("proprietarioId") Long proprietarioId, @Param("searchTerm") String searchTerm, Pageable pageable);
+
+    // Stats methods
+    @Query("SELECT COUNT(a) FROM Animale a WHERE LOWER(a.specie) = LOWER('cane')")
+    long countBySpecieCane();
+
+    @Query("SELECT COUNT(a) FROM Animale a WHERE LOWER(a.specie) = LOWER('gatto')")
+    long countBySpecieGatto();
+
+    @Query("SELECT COUNT(a) FROM Animale a WHERE LOWER(a.specie) NOT IN ('cane', 'gatto')")
+    long countBySpecieAltro();
+
+    @Query("SELECT COUNT(a) FROM Animale a WHERE a.stato = 'SANO'")
+    long countByStatoSano();
+
+    @Query("SELECT COUNT(a) FROM Animale a WHERE a.stato = 'MALATO'")
+    long countByStatoMalato();
+
+    @Query("SELECT COUNT(a) FROM Animale a WHERE a.stato = 'IN_CURA'")
+    long countByStatoInCura();
+
+    @Query("SELECT COUNT(a) FROM Animale a WHERE a.stato = 'DECEDUTO'")
+    long countByStatoDeceduto();
 }

@@ -28,10 +28,10 @@ public class OrarioStudio {
     @Column(name = "ora_chiusura")
     private LocalTime oraChiusura;
 
-    @Column(name = "ora_inizio_pausa_pranzo")
+    @Column(name = "ora_inizio_pausa_pranzo", nullable = true)
     private LocalTime oraInizioPausaPranzo;
 
-    @Column(name = "ora_fine_pausa_pranzo")
+    @Column(name = "ora_fine_pausa_pranzo", nullable = true)
     private LocalTime oraFinePausaPranzo;
 
     @Column(name = "chiuso")

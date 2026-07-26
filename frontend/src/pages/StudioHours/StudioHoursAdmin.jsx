@@ -41,6 +41,7 @@ const StudioHoursAdmin = () => {
     oraInizioPausaPranzo: '13:00',
     oraFinePausaPranzo: '14:00',
     chiuso: false,
+    haPausaPranzo: true,
     giorniEsclusi: []
   });
 
@@ -121,8 +122,13 @@ const StudioHoursAdmin = () => {
     setSaving(true);
     const dayData = defaultHours.find(h => h.giornoSettimana === selectedDay);
     if (!dayData) return; // should never happen
+
     try {
-      const response = await fetch('/api/admin/orari/default/with-lunch', {
+      // Determine which endpoint to use based on whether lunch break is configured
+      const hasLunchBreak = dayData.oraInizioPausaPranzo !== null && dayData.oraFinePausaPranzo !== null;
+      const endpoint = hasLunchBreak ? '/api/admin/orari/default/with-lunch' : '/api/admin/orari/default';
+
+      const response = await fetch(endpoint, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -137,6 +143,7 @@ const StudioHoursAdmin = () => {
           chiuso: dayData.chiuso
         })
       });
+
       if (!response.ok) throw new Error('Salvataggio orari predefiniti fallito');
       await fetchStudioHours();
       showMessage('success', 'Orari predefiniti aggiornati');
@@ -400,25 +407,55 @@ const StudioHoursAdmin = () => {
                   />
                 </div>
 
-                <div className="form-group">
-                  <label>Ora Inizio Pausa Pranzo:</label>
-                  <input
-                    type="time"
-                    value={currentDayHours.oraInizioPausaPranzo || '13:00'}
-                    onChange={(e) => handleTimeChange('oraInizioPausaPranzo', e.target.value)}
-                    className="time-input"
-                  />
+                <div className="form-group form-group-inline">
+                  <label>Pausa Pranzo:</label>
+                  <label className="toggle-switch">
+                    <input
+                      type="checkbox"
+                      checked={currentDayHours.oraInizioPausaPranzo !== null && currentDayHours.oraFinePausaPranzo !== null}
+                      onChange={(e) => {
+                        const hasLunchBreak = e.target.checked;
+                        if (hasLunchBreak) {
+                          // Enable lunch break with default values
+                          updateSelectedDay('oraInizioPausaPranzo', '13:00');
+                          updateSelectedDay('oraFinePausaPranzo', '14:00');
+                        } else {
+                          // Disable lunch break
+                          updateSelectedDay('oraInizioPausaPranzo', null);
+                          updateSelectedDay('oraFinePausaPranzo', null);
+                        }
+                      }}
+                    />
+                    <span className="slider"></span>
+                    <span className="toggle-label">
+                      {currentDayHours.oraInizioPausaPranzo !== null ? 'Attiva' : 'Disattiva'}
+                    </span>
+                  </label>
                 </div>
 
-                <div className="form-group">
-                  <label>Ora Fine Pausa Pranzo:</label>
-                  <input
-                    type="time"
-                    value={currentDayHours.oraFinePausaPranzo || '14:00'}
-                    onChange={(e) => handleTimeChange('oraFinePausaPranzo', e.target.value)}
-                    className="time-input"
-                  />
-                </div>
+                {currentDayHours.oraInizioPausaPranzo !== null && (
+                  <>
+                    <div className="form-group">
+                      <label>Ora Inizio Pausa Pranzo:</label>
+                      <input
+                        type="time"
+                        value={currentDayHours.oraInizioPausaPranzo || '13:00'}
+                        onChange={(e) => handleTimeChange('oraInizioPausaPranzo', e.target.value)}
+                        className="time-input"
+                      />
+                    </div>
+
+                    <div className="form-group">
+                      <label>Ora Fine Pausa Pranzo:</label>
+                      <input
+                        type="time"
+                        value={currentDayHours.oraFinePausaPranzo || '14:00'}
+                        onChange={(e) => handleTimeChange('oraFinePausaPranzo', e.target.value)}
+                        className="time-input"
+                      />
+                    </div>
+                  </>
+                )}
               </>
             )}
 

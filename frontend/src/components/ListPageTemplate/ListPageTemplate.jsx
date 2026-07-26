@@ -57,7 +57,7 @@ function ListPageTemplate({
       </div>
 
       {statsContent && (
-        <div className="stats-grid">
+        <div className="stats-grid stats-box">
           {statsContent}
         </div>
       )}
