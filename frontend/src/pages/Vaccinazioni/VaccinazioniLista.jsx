@@ -29,6 +29,7 @@ function VaccinazioniLista() {
   const [stats, setStats] = useState(null);
   const [statsLoading, setStatsLoading] = useState(true);
   const [statsError, setStatsError] = useState(null);
+  const [statsRefreshIndex, setStatsRefreshIndex] = useState(0);
   const { get } = useApi();
 
   // Memoizza i filtri per evitare ricalcoli inutili e garantire stabilità dei riferimenti
@@ -172,7 +173,7 @@ function VaccinazioniLista() {
     };
 
     fetchStats();
-  }, [get]);
+  }, [get, statsRefreshIndex]);
 
 const emptyIcon = (
   <SyringeIcon
@@ -216,6 +217,7 @@ const emptyIcon = (
           onClose={() => setEditingVaccinazione(null)}
           onSuccess={() => {
             setEditingVaccinazione(null);
+            setStatsRefreshIndex(prev => prev + 1);
             refetch();
           }}
         />

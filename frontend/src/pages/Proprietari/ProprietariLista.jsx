@@ -26,6 +26,7 @@ function ProprietariLista() {
   const [stats, setStats] = useState(null);
   const [statsLoading, setStatsLoading] = useState(true);
   const [statsError, setStatsError] = useState(null);
+  const [statsRefreshIndex, setStatsRefreshIndex] = useState(0);
   const { get, patch } = useApi();
 
   // Memoizza i filtri per evitare ricalcoli inutili e garantire stabilità dei riferimenti
@@ -134,7 +135,7 @@ function ProprietariLista() {
     };
 
     fetchStats();
-  }, [get]);
+  }, [get, statsRefreshIndex]);
 
   const statsContent = (
     <>
@@ -208,7 +209,8 @@ function ProprietariLista() {
       if (!response.ok) {
         throw new Error(`Errore nell'aggiornamento dello stato: ${response.status}`);
       }
-      // Refresh the list
+      // Refresh the list and stats
+      setStatsRefreshIndex(prev => prev + 1);
       table.setPage(0);
     } catch (err) {
       console.error('Failed to update proprietario status:', err);
@@ -221,8 +223,8 @@ function ProprietariLista() {
         <ProprietarioCreate
           onClose={() => setShowCreateModal(false)}
           onSuccess={(newProprietario) => {
-            // Ricarica i dati dopo la creazione
-            // Questo triggererà un nuovo fetch dei dati
+            // Ricarica i dati e le statistiche dopo la creazione
+            setStatsRefreshIndex(prev => prev + 1);
             table.setPage(0);
             search.clearSearch();
             setStatoFiltro('');
@@ -233,7 +235,8 @@ function ProprietariLista() {
         <ProprietarioCreate
           onClose={() => setShowEditModal(false)}
           onSuccess={(updatedProprietario) => {
-            // Ricarica i dati dopo l'aggiornamento
+            // Ricarica i dati e le statistiche dopo l'aggiornamento
+            setStatsRefreshIndex(prev => prev + 1);
             table.setPage(0);
             search.clearSearch();
             setStatoFiltro('');

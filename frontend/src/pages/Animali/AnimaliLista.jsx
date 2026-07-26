@@ -30,6 +30,7 @@ function AnimaliLista() {
   const [stats, setStats] = useState(null);
   const [statsLoading, setStatsLoading] = useState(true);
   const [statsError, setStatsError] = useState(null);
+  const [statsRefreshIndex, setStatsRefreshIndex] = useState(0);
   const { get, patch } = useApi();
 
   // Memoizza i filtri per evitare ricalcoli inutili e garantire stabilità dei riferimenti
@@ -166,7 +167,7 @@ function AnimaliLista() {
     };
 
     fetchStats();
-  }, [get]);
+  }, [get, statsRefreshIndex]);
 
   const statsContent = (
     <>
@@ -257,7 +258,8 @@ function AnimaliLista() {
       if (!response.ok) {
         throw new Error(`Errore nell'aggiornamento dello stato: ${response.status}`);
       }
-      // Refresh the list
+      // Refresh the list and stats
+      setStatsRefreshIndex(prev => prev + 1);
       table.setPage(0);
     } catch (err) {
       console.error('Failed to update animale status:', err);
@@ -270,7 +272,8 @@ function AnimaliLista() {
         <AnimaleCreate
           onClose={() => setShowCreateModal(false)}
           onSuccess={(newAnimale) => {
-            // Refresh the list after successful creation
+            // Refresh the list and stats after successful creation
+            setStatsRefreshIndex(prev => prev + 1);
             search.clearSearch();
             setSpecieFilter('');
             table.setPage(0);
@@ -282,7 +285,8 @@ function AnimaliLista() {
         <AnimaleCreate
           onClose={() => setShowEditModal(false)}
           onSuccess={(updatedAnimale) => {
-            // Refresh the list after successful update
+            // Refresh the list and stats after successful update
+            setStatsRefreshIndex(prev => prev + 1);
             search.clearSearch();
             setSpecieFilter('');
             table.setPage(0);

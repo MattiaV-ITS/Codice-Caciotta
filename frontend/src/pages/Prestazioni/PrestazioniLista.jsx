@@ -15,6 +15,7 @@ function PrestazioniLista() {
   const [stats, setStats] = useState(null);
   const [statsLoading, setStatsLoading] = useState(true);
   const [statsError, setStatsError] = useState(null);
+  const [statsRefreshIndex, setStatsRefreshIndex] = useState(0);
 
   const table = useTableControls({
     defaultSortBy: 'nomePrestazione',
@@ -64,7 +65,7 @@ function PrestazioniLista() {
       }
     };
     fetchStats();
-  }, [get]);
+  }, [get, statsRefreshIndex]);
 
   const handleCreatePrestazione = () => navigate('/prestazioni/create');
   const handleEditPrestazione = (prestazione) => navigate(`/prestazioni/edit/${prestazione.id}`);
@@ -78,6 +79,7 @@ function PrestazioniLista() {
     try {
       const response = await put(`/api/prestazioni/${prestazione.id}`, { ...prestazione, stato: nuovoStato });
       if (!response.ok) throw new Error(`Errore: ${response.status}`);
+      setStatsRefreshIndex(prev => prev + 1);
       refetch();
     } catch (err) {
       console.error('Failed to update stato:', err);
@@ -99,6 +101,7 @@ function PrestazioniLista() {
       if (!response.ok) {
         throw new Error(`Errore nell'eliminazione: ${response.status}`);
       }
+      setStatsRefreshIndex(prev => prev + 1);
       refetch();
     } catch (err) {
       console.error('Failed to delete prestazione:', err);
