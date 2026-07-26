@@ -102,10 +102,6 @@ function PrestazioniLista() {
     navigate('/prestazioni/create');
   };
 
-  const handleEditPrestazione = (prestazioneId) => {
-    navigate(`/prestazioni/edit/${prestazioneId}`);
-  };
-
   const columns = [
     {
       Header: 'Nome Prestazione',
@@ -253,7 +249,6 @@ function PrestazioniLista() {
           onPageChange={setPage}
           onSizeChange={handleSizeChange}
           onSortChange={handleSort}
-          onRowClick={handleEditPrestazione}
           emptyMessage="Nessuna prestazione trovata"
         />
       </div>
