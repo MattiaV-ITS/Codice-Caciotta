@@ -10,7 +10,8 @@ import {
   UserIcon, 
   PawIcon, 
   CalendarIcon, 
-  ListIcon, 
+  CalendarIcon2, 
+  ChartIcon, 
   PlusIcon 
 } from '../../components/icons';
 
@@ -138,7 +139,6 @@ function DashboardUser() {
       <div className="dashboard-user-header">
         <div>
           <h1 className="dashboard-user-title">
-            <UserIcon className="user-icon" width="28" height="28" stroke="var(--gray-500)" />
             Bentornato, <span className="dashboard-user-name">{user?.username || 'Utente'}</span>
           </h1>
           <p className="dashboard-user-subtitle">Prenota la tua prossima visita</p>
@@ -171,7 +171,7 @@ function DashboardUser() {
 
         <div className="kpi-card border-success">
           <div className="kpi-label">
-            <CalendarIcon width="20" height="20" stroke="var(--gray-500)" />
+            <CalendarIcon2 width="20" height="20" fill="var(--gray-500)" />
             Prossima visita
           </div>
           <div className="kpi-value">
@@ -192,7 +192,7 @@ function DashboardUser() {
 
         <div className="kpi-card border-warning">
           <div className="kpi-label">
-            <ListIcon width="20" height="20" stroke="var(--gray-500)" />
+            <CalendarIcon width="20" height="20" stroke="var(--gray-500)" />
             Prenotazioni attive
           </div>
           <div className="kpi-value">{prenotazioniAttive}</div>
@@ -201,7 +201,7 @@ function DashboardUser() {
 
         <div className="kpi-card border-danger">
           <div className="kpi-label">
-            <ListIcon width="20" height="20" stroke="var(--gray-500)" />
+            <ChartIcon width="20" height="20" stroke="var(--gray-500)" />
             Totale prenotazioni
           </div>
           <div className="kpi-value">{prenotazioni.length}</div>
@@ -213,7 +213,7 @@ function DashboardUser() {
       <div className="card">
         <div className="card-header">
           <h3>Prossime visite</h3>
-          <button className="btn btn-secondary btn-sm" onClick={handlePrenotaVisita}>Prenota</button>
+          <button className="btn btn-primary btn-sm" onClick={handlePrenotaVisita}>Prenota</button>
         </div>
         <div className="card-body">
           {prenotazioni.length === 0 ? (
@@ -267,7 +267,7 @@ function DashboardUser() {
           <h3>I tuoi animali</h3>
           <button className="btn btn-primary btn-sm" onClick={() => setShowCreateModal(true)}>
             <PlusIcon width="16" height="16" stroke="currentColor" />
-            Aggiungi animale
+            Aggiungi
           </button>
         </div>
         <div className="card-body">

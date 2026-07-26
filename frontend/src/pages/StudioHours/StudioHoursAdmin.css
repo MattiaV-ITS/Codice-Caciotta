@@ -201,6 +201,9 @@
   box-shadow: 0 0 0 3px rgba(42, 157, 143, 0.15);
 }
 
+/* ========================================
+   TOGGLE SWITCH (corretto e ben visibile)
+   ======================================== */
 .toggle-switch {
   position: relative;
   display: inline-flex;
@@ -222,12 +225,13 @@
   position: relative;
   display: inline-block;
   cursor: pointer;
-  background-color: var(--gray-500);
-  transition: .4s;
+  background-color: #9ca3af; /* grigio medio, sempre visibile */
+  border: 1px solid #6b7280;
+  transition: background-color 0.4s, border-color 0.4s;
   border-radius: 34px;
   width: 50px;
   height: 24px;
-  flex-shrink: 0;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.12);
 }
 
 .slider:before {
@@ -238,12 +242,13 @@
   left: 3px;
   bottom: 3px;
   background-color: white;
-  transition: .4s;
+  transition: transform 0.4s;
   border-radius: 50%;
 }
 
 input:checked + .slider {
   background-color: var(--primary);
+  border-color: var(--primary);
 }
 input:checked + .slider:before {
   transform: translateX(26px);
@@ -254,6 +259,19 @@ input:checked + .slider:before {
   color: var(--gray-700);
   line-height: 1;
   margin-left: 0;
+}
+
+/* Allineamento orizzontale per il toggle "Stato" */
+.form-group-inline {
+  display: flex !important;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+.form-group-inline > label:first-child {
+  display: inline-block;
+  margin-bottom: 0 !important;
+  min-width: 70px;
 }
 
 /* Pulsante Salva (primario) */
@@ -331,17 +349,6 @@ input:checked + .slider:before {
 }
 .today-button:hover {
   background: var(--primary-dark);
-}
-
-.form-group-inline {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  flex-wrap: wrap;
-}
-.form-group-inline > label:first-child {
-  margin-bottom: 0;
-  min-width: 70px; /* larghezza minima per allineare le etichette */
 }
 
 /* Griglia del calendario */
@@ -448,8 +455,12 @@ input:checked + .slider:before {
   font-weight: 500;
 }
 
-/* Pulsante Aggiungi Eccezione (success) */
+/* Pulsante Aggiungi Eccezione (colore primario) */
 .add-specific-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   width: 100%;
   padding: 10px 20px;
   background: var(--primary);

@@ -5,32 +5,7 @@ import SchedaAnimale from '../Animali/SchedaAnimale';
 import VisitaForm from './VisitaForm';
 import FattureLista from '../../components/FattureLista';
 import { getCurrentISODatetime, toISODatetimeFormat, toISODateFormat, formatDate, formatDateShort, formatTime, parseDate } from '../../utils/dateUtils';
-
-// ==============================
-// ICONE SVG
-// ==============================
-const PlusIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="12" cy="12" r="10" stroke="var(--primary)" strokeWidth="2"/>
-    <path d="M12 8V16M8 12H16" stroke="var(--primary)" strokeWidth="2" strokeLinecap="round"/>
-  </svg>
-);
-
-const ShareIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="18" cy="5" r="3" stroke="var(--gray-600)" strokeWidth="2"/>
-    <circle cx="6" cy="12" r="3" stroke="var(--gray-600)" strokeWidth="2"/>
-    <circle cx="18" cy="19" r="3" stroke="var(--gray-600)" strokeWidth="2"/>
-    <path d="M8.59 13.51L15.42 17.49" stroke="var(--gray-600)" strokeWidth="2"/>
-    <path d="M15.41 6.51L8.59 10.49" stroke="var(--gray-600)" strokeWidth="2"/>
-  </svg>
-);
-
-const LightningIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M13 2L4 14H12L11 22L20 10H12L13 2Z" stroke="var(--primary)" strokeWidth="2" strokeLinejoin="round"/>
-  </svg>
-);
+import { PlusIcon } from '../../components/icons'; // ✅ icona condivisa
 
 // ==============================
 // COMPONENTE
@@ -399,9 +374,10 @@ function VisitePagina() {
             <button
               className="btn btn-primary btn-sm"
               onClick={() => navigate(`/visite/new?animaleId=${animale.id}`)}
-              style={{ width: '100%' }}
+              style={{ width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
             >
-              <PlusIcon /> Nuova Visita
+              <PlusIcon width={16} height={16} stroke="currentColor" />
+              Nuova Visita
             </button>
           </div>
         </div>

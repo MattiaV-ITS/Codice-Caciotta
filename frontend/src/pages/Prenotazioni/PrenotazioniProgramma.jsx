@@ -13,6 +13,7 @@ import {
   getPrestazioneLegenda,
   FALLBACK_COLOR
 } from './prenotazioniUtils';
+import { PlusIcon } from '../../components/icons'; // ✅ Aggiunto
 
 const GIORNI_BREVI = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
 
@@ -286,7 +287,10 @@ function PrenotazioniProgramma() {
           <button className="btn-clear-filters" onClick={() => navigate('/prenotazioni/calendario')}>
             Vista Calendario
           </button>
-          <button className="btn-add" onClick={() => setShowCreateModal(true)}>+ Nuova Prenotazione</button>
+          <button className="btn-add" onClick={() => setShowCreateModal(true)}>
+            <PlusIcon width={16} height={16} stroke="currentColor" />
+            Nuova Prenotazione
+          </button>
         </div>
       </div>
 
@@ -302,8 +306,10 @@ function PrenotazioniProgramma() {
               <button
                 className="cal-legend-more"
                 onClick={() => setShowLegendPopup(!showLegendPopup)}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
               >
-                +{prestazioni.length - 5} altre
+                <PlusIcon width={12} height={12} stroke="currentColor" />
+                {prestazioni.length - 5} altre
               </button>
             )}
           </div>
@@ -398,7 +404,9 @@ function PrenotazioniProgramma() {
         })}
       </div>
 
-      <button className="prog-fab" onClick={() => setShowCreateModal(true)} aria-label="Nuova prenotazione">+</button>
+      <button className="prog-fab" onClick={() => setShowCreateModal(true)} aria-label="Nuova prenotazione">
+        <PlusIcon width={24} height={24} stroke="currentColor" />
+      </button>
       {showCreateModal && (
         <PrenotazioneCreateStaff 
           onClose={() => setShowCreateModal(false)}

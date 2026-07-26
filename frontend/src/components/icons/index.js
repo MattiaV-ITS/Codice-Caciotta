@@ -15,3 +15,7 @@ export { default as ChartIcon } from './ChartIcon';
 export { default as DangerIcon } from './DangerIcon';
 export { default as EditIcon } from './EditIcon';
 export { default as GearIcon } from './GearIcon';
+export { default as ServicesIcon } from './ServicesIcon';
+export { default as ClockIcon } from './ClockIcon';
+export {default as CalendarIcon2} from './CalendarIcon2';
+export {default as InvoiceIcon} from './InvoiceIcon';

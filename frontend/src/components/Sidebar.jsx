@@ -8,7 +8,9 @@ import {
   PawIcon,
   CalendarIcon,
   SyringeIcon,
-  LockIcon
+  LockIcon,
+  ServicesIcon,
+  ClockIcon
 } from '../components/icons';
 
 function Sidebar({ isOpen, closeMenu }) {
@@ -21,8 +23,8 @@ function Sidebar({ isOpen, closeMenu }) {
       <nav className="sidebar-nav">
         <div className="nav-label">Menu</div>
 
-        {/* Dashboard Utente - solo per USER */}
-        {user?.roles?.includes('ROLE_USER') && (
+        {/* Dashboard Utente - solo per USER (e non staff/admin) */}
+        {user?.roles?.includes('ROLE_USER') && !isStaff && (
           <NavLink
             to="/dashboard/user"
             className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
@@ -92,7 +94,9 @@ function Sidebar({ isOpen, closeMenu }) {
               className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
               onClick={closeMenu}
             >
-              <span className="nav-icon">🏥</span>
+              <span className="nav-icon">
+                <ServicesIcon width="20" height="20" />
+              </span>
               Prestazioni
             </NavLink>
 
@@ -127,7 +131,9 @@ function Sidebar({ isOpen, closeMenu }) {
               className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
               onClick={closeMenu}
             >
-              <span className="nav-icon">🕐</span>
+              <span className="nav-icon">
+                <ClockIcon width="20" height="20" />
+              </span>
               Orari Studio
             </NavLink>
           </>
