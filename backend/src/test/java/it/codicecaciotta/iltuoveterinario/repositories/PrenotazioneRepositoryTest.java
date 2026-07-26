@@ -33,7 +33,6 @@ class PrenotazioneRepositoryTest {
         visita.setDataOraVisita(prenotazione.getDataOraAppuntamento());
         visita.setTipoVisita(prenotazione.getTipoVisita());
         visita.setPrenotazione(prenotazione);
-        visita.setImportoTotale(java.math.BigDecimal.ZERO);
         visita.setDurata(30);
 
         prenotazione.setVisita(visita);

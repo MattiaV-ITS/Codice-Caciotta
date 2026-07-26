@@ -10,7 +10,8 @@ import {
   SyringeIcon,
   LockIcon,
   ServicesIcon,
-  ClockIcon
+  ClockIcon,
+  InvoiceIcon
 } from '../components/icons';
 
 function Sidebar({ isOpen, closeMenu }) {
@@ -109,6 +110,17 @@ function Sidebar({ isOpen, closeMenu }) {
                 <SyringeIcon width="20" height="20" />
               </span>
               Vaccinazioni
+            </NavLink>
+
+            <NavLink
+              to="/fatture/stats"
+              className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+              onClick={closeMenu}
+            >
+              <span className="nav-icon">
+                <InvoiceIcon width="20" height="20" />
+              </span>
+              Fatture
             </NavLink>
 
             <div className="nav-divider" />

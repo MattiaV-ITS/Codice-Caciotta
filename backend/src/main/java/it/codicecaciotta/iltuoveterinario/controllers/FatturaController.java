@@ -18,6 +18,7 @@ import java.util.UUID;
 import java.math.BigDecimal;
 import java.io.StringWriter;
 import java.io.PrintWriter;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/fatture")
@@ -30,6 +31,25 @@ public class FatturaController {
     FatturaController(FatturaRepository fatturaRepository, VisitaRepository visitaRepository) {
         this.fatturaRepository = fatturaRepository;
         this.visitaRepository = visitaRepository;
+    }
+
+    // Helper per convertire Fattura -> FatturaDTO
+    private FatturaDTO toDTO(Fattura f) {
+        return new FatturaDTO(
+            f.getId(),
+            f.getNumeroFattura(),
+            f.getImportoTotale(),
+            f.getTipoFattura(),
+            f.getDettaglioServizi(),
+            f.getCodiceFiscaleCliente(),
+            f.getIndirizzoCliente(),
+            f.getCittaCliente(),
+            f.getMetodoPagamento(),
+            f.getDataEmissione(),
+            f.getVisita() != null ? f.getVisita().getId() : null,
+            f.getProprietario() != null ? f.getProprietario().getId() : null,
+            f.isPagata()
+        );
     }
 
     // Crea una nuova fattura per una visita
@@ -88,42 +108,10 @@ public class FatturaController {
                 return ResponseEntity.badRequest().body(null);
             }
             
-            // Debug logging
-            System.out.println("DEBUG: Creating fattura with:");
-            System.out.println("  - Visita ID: " + (fattura.getVisita() != null ? fattura.getVisita().getId() : "null"));
-            System.out.println("  - Proprietario: " + (fattura.getProprietario() != null ? "ID=" + fattura.getProprietario().getId() : "null"));
-            System.out.println("  - Numero Fattura: " + fattura.getNumeroFattura());
-            System.out.println("  - Importo Totale: " + fattura.getImportoTotale());
-            System.out.println("  - Codice Fiscale: " + fattura.getCodiceFiscaleCliente());
-            System.out.println("  - Tipo Fattura: " + fattura.getTipoFattura());
-            
             Fattura savedFattura = fatturaRepository.save(fattura);
-            System.out.println("DEBUG: Fattura saved successfully with ID: " + savedFattura.getId());
-            System.out.println("DEBUG: Attempting to initialize lazy relationships...");
-            // Force initialization of lazy-loaded relationships BEFORE returning
-            if (savedFattura.getVisita() != null) {
-                System.out.println("DEBUG: Visita ID: " + savedFattura.getVisita().getId());
-            }
-            if (savedFattura.getProprietario() != null) {
-                System.out.println("DEBUG: Proprietario ID: " + savedFattura.getProprietario().getId());
-            }
-            System.out.println("DEBUG: About to return ResponseEntity");
             
             // Convert to DTO before returning
-            FatturaDTO dto = new FatturaDTO(
-                savedFattura.getId(),
-                savedFattura.getNumeroFattura(),
-                savedFattura.getImportoTotale(),
-                savedFattura.getTipoFattura(),
-                savedFattura.getDettaglioServizi(),
-                savedFattura.getCodiceFiscaleCliente(),
-                savedFattura.getIndirizzoCliente(),
-                savedFattura.getCittaCliente(),
-                savedFattura.getMetodoPagamento(),
-                savedFattura.getDataEmissione(),
-                savedFattura.getVisita() != null ? savedFattura.getVisita().getId() : null,
-                savedFattura.getProprietario() != null ? savedFattura.getProprietario().getId() : null
-            );
+            FatturaDTO dto = toDTO(savedFattura);
             return ResponseEntity.ok(dto);
         } catch (Exception e) {
             System.out.println("ERROR: Exception during fattura creation: " + e.getClass().getSimpleName() + " - " + e.getMessage());
@@ -143,26 +131,7 @@ public class FatturaController {
         Optional<Fattura> fattura = fatturaRepository.findById(safeId);
         if (fattura.isPresent()) {
             Fattura f = fattura.get();
-            // Force initialization of lazy-loaded relationships
-            if (f.getVisita() != null) f.getVisita().getId();
-            if (f.getProprietario() != null) f.getProprietario().getId();
-            
-            // Convert to DTO
-            FatturaDTO dto = new FatturaDTO(
-                f.getId(),
-                f.getNumeroFattura(),
-                f.getImportoTotale(),
-                f.getTipoFattura(),
-                f.getDettaglioServizi(),
-                f.getCodiceFiscaleCliente(),
-                f.getIndirizzoCliente(),
-                f.getCittaCliente(),
-                f.getMetodoPagamento(),
-                f.getDataEmissione(),
-                f.getVisita() != null ? f.getVisita().getId() : null,
-                f.getProprietario() != null ? f.getProprietario().getId() : null
-            );
-            return ResponseEntity.ok(dto);
+            return ResponseEntity.ok(toDTO(f));
         }
         return ResponseEntity.notFound().build();
     }
@@ -175,25 +144,19 @@ public class FatturaController {
         List<Fattura> fatture = fatturaRepository.findByVisitaId(safeVisitaId);
         List<FatturaDTO> fattureDTO = new java.util.ArrayList<>();
         for (Fattura f : fatture) {
-            if (f.getVisita() != null) f.getVisita().getId();
-            if (f.getProprietario() != null) f.getProprietario().getId();
-            
-            // Convert to DTO
-            FatturaDTO dto = new FatturaDTO(
-                f.getId(),
-                f.getNumeroFattura(),
-                f.getImportoTotale(),
-                f.getTipoFattura(),
-                f.getDettaglioServizi(),
-                f.getCodiceFiscaleCliente(),
-                f.getIndirizzoCliente(),
-                f.getCittaCliente(),
-                f.getMetodoPagamento(),
-                f.getDataEmissione(),
-                f.getVisita() != null ? f.getVisita().getId() : null,
-                f.getProprietario() != null ? f.getProprietario().getId() : null
-            );
-            fattureDTO.add(dto);
+            fattureDTO.add(toDTO(f));
+        }
+        return ResponseEntity.ok(fattureDTO);
+    }
+
+    // Ottieni tutte le fatture
+    @GetMapping
+    @Transactional(readOnly = true)
+    public ResponseEntity<List<FatturaDTO>> getAllFatture() {
+        List<Fattura> fatture = fatturaRepository.findAll();
+        List<FatturaDTO> fattureDTO = new java.util.ArrayList<>();
+        for (Fattura f : fatture) {
+            fattureDTO.add(toDTO(f));
         }
         return ResponseEntity.ok(fattureDTO);
     }
@@ -216,26 +179,7 @@ public class FatturaController {
         fattura.setDettaglioServizi(fatturaDetails.getDettaglioServizi());
 
         Fattura updatedFattura = fatturaRepository.save(fattura);
-        // Force initialization of lazy-loaded relationships
-        if (updatedFattura.getVisita() != null) updatedFattura.getVisita().getId();
-        if (updatedFattura.getProprietario() != null) updatedFattura.getProprietario().getId();
-        
-        // Convert to DTO
-        FatturaDTO dto = new FatturaDTO(
-            updatedFattura.getId(),
-            updatedFattura.getNumeroFattura(),
-            updatedFattura.getImportoTotale(),
-            updatedFattura.getTipoFattura(),
-            updatedFattura.getDettaglioServizi(),
-            updatedFattura.getCodiceFiscaleCliente(),
-            updatedFattura.getIndirizzoCliente(),
-            updatedFattura.getCittaCliente(),
-            updatedFattura.getMetodoPagamento(),
-            updatedFattura.getDataEmissione(),
-            updatedFattura.getVisita() != null ? updatedFattura.getVisita().getId() : null,
-            updatedFattura.getProprietario() != null ? updatedFattura.getProprietario().getId() : null
-        );
-        return ResponseEntity.ok(dto);
+        return ResponseEntity.ok(toDTO(updatedFattura));
     }
 
     // Elimina una fattura
@@ -248,6 +192,29 @@ public class FatturaController {
 
         fatturaRepository.delete(Objects.requireNonNull(fattura, "Fattura not found"));
         return ResponseEntity.noContent().build();
+    }
+
+    // Imposta stato pagamento fattura
+    @PatchMapping("/{id}/pagamento")
+    @Transactional
+    public ResponseEntity<FatturaDTO> setPagato(@PathVariable("id") Long id, @RequestBody Map<String, Boolean> body) {
+        Long safeId = Objects.requireNonNull(id, "id must not be null");
+        Optional<Fattura> fatturaOptional = fatturaRepository.findById(safeId);
+        if (fatturaOptional.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        Fattura fattura = fatturaOptional.get();
+        Boolean pagato = body.get("pagata");
+        if (pagato != null) {
+            fattura.setPagata(pagato);
+        } else {
+            // Toggle if not specified
+            fattura.setPagata(!fattura.isPagata());
+        }
+
+        Fattura updatedFattura = fatturaRepository.save(fattura);
+        return ResponseEntity.ok(toDTO(updatedFattura));
     }
 
     // Crea fattura semplificata per una visita
@@ -335,35 +302,10 @@ public class FatturaController {
                 return ResponseEntity.badRequest().body(null);
             }
             
-            // Debug logging
-            System.out.println("DEBUG: Creating fattura semplificata with:");
-            System.out.println("  - Visita ID: " + (fattura.getVisita() != null ? fattura.getVisita().getId() : "null"));
-            System.out.println("  - Proprietario: " + (fattura.getProprietario() != null ? "ID=" + fattura.getProprietario().getId() : "null"));
-            System.out.println("  - Numero Fattura: " + fattura.getNumeroFattura());
-            System.out.println("  - Importo Totale: " + fattura.getImportoTotale());
-            System.out.println("  - Codice Fiscale: " + fattura.getCodiceFiscaleCliente());
-            System.out.println("  - Tipo Fattura: " + fattura.getTipoFattura());
-            System.out.println("  - Dettaglio Servizi: " + fattura.getDettaglioServizi());
-            
             Fattura savedFattura = fatturaRepository.save(fattura);
-            System.out.println("DEBUG: Fattura saved successfully with ID: " + savedFattura.getId());
-            System.out.flush();
             
             // Convert to DTO before transaction closes
-            FatturaDTO dto = new FatturaDTO(
-                savedFattura.getId(),
-                savedFattura.getNumeroFattura(),
-                savedFattura.getImportoTotale(),
-                savedFattura.getTipoFattura(),
-                savedFattura.getDettaglioServizi(),
-                savedFattura.getCodiceFiscaleCliente(),
-                savedFattura.getIndirizzoCliente(),
-                savedFattura.getCittaCliente(),
-                savedFattura.getMetodoPagamento(),
-                savedFattura.getDataEmissione(),
-                savedFattura.getVisita() != null ? savedFattura.getVisita().getId() : null,
-                savedFattura.getProprietario() != null ? savedFattura.getProprietario().getId() : null
-            );
+            FatturaDTO dto = toDTO(savedFattura);
             return ResponseEntity.status(201).body(dto);
         } catch (Exception e) {
             System.out.println("ERROR: Exception during fattura semplificata creation: " + e.getClass().getSimpleName() + " - " + e.getMessage());
