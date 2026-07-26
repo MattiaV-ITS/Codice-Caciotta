@@ -4,19 +4,6 @@ import { useApi } from '../../services/apiService';
 import FormModal from '../FormModal/FormModal';
 import './VaccinazioneEditModal.css';
 
-const TIPI_VACCINO_SELECT = [
-  'Trivalente',
-  'Tetravalente',
-  'Antirabbica',
-  'Leishmaniosi',
-  'Leucemia felina (FeLV)',
-  'Cimurro',
-  'Parvovirosi',
-  'Epatite infettiva',
-  'Tosse dei canili',
-  'Altro'
-];
-
 const VaccinazioneEditModal = ({
   vaccinazione,
   onClose,
@@ -27,7 +14,6 @@ const VaccinazioneEditModal = ({
 
   const [formData, setFormData] = useState({
     tipoVaccino: '',
-    specificaTipoVaccino: '',
     dataSomministrazione: '',
     dataScadenza: '',
     lotto: '',
@@ -52,12 +38,8 @@ const VaccinazioneEditModal = ({
         }
         const dettaglio = await response.json();
 
-        const tipoEsistente = dettaglio.tipoVaccino || '';
-        const isTipoNoto = TIPI_VACCINO_SELECT.includes(tipoEsistente);
-
         setFormData({
-          tipoVaccino: isTipoNoto ? tipoEsistente : (tipoEsistente ? 'Altro' : ''),
-          specificaTipoVaccino: isTipoNoto ? '' : tipoEsistente,
+          tipoVaccino: dettaglio.tipoVaccino || '',
           dataSomministrazione: dettaglio.dataSomministrazione || '',
           dataScadenza: dettaglio.dataScadenza || '',
           lotto: dettaglio.lotto || '',
@@ -79,10 +61,6 @@ const VaccinazioneEditModal = ({
 
     if (!formData.tipoVaccino) {
       newErrors.tipoVaccino = 'Il tipo di vaccino è obbligatorio';
-    }
-
-    if (formData.tipoVaccino === 'Altro' && !formData.specificaTipoVaccino) {
-      newErrors.specificaTipoVaccino = 'Specifica il tipo di vaccino';
     }
 
     if (!formData.dataSomministrazione) {
@@ -132,7 +110,7 @@ const VaccinazioneEditModal = ({
 
     try {
       const payload = {
-        tipoVaccino: formData.tipoVaccino === 'Altro' ? formData.specificaTipoVaccino : formData.tipoVaccino,
+        tipoVaccino: formData.tipoVaccino,
         dataSomministrazione: formData.dataSomministrazione,
         dataScadenza: formData.dataScadenza,
         lotto: formData.lotto,
@@ -169,7 +147,6 @@ const VaccinazioneEditModal = ({
   };
 
   const hasError = (field) => touched[field] && errors[field];
-  const showSpecificaTipo = formData.tipoVaccino === 'Altro';
 
   return (
     <FormModal
@@ -193,41 +170,20 @@ const VaccinazioneEditModal = ({
 
         <div className="form-group">
           <label htmlFor="tipoVaccino">Tipo di Vaccino</label>
-          <select
+          <input
+            type="text"
             id="tipoVaccino"
             name="tipoVaccino"
             value={formData.tipoVaccino}
             onChange={handleChange}
+            placeholder="Es. Trivalente, Antirabbica, ecc."
             className={hasError('tipoVaccino') ? 'error' : ''}
             required
-          >
-            <option value="">Seleziona tipo di vaccino</option>
-            {TIPI_VACCINO_SELECT.map((tipo) => (
-              <option key={tipo} value={tipo}>{tipo}</option>
-            ))}
-          </select>
+          />
           {hasError('tipoVaccino') && (
             <span className="error-message">{errors.tipoVaccino}</span>
           )}
         </div>
-
-        {showSpecificaTipo && (
-          <div className="form-group">
-            <label htmlFor="specificaTipoVaccino">Specifica Tipo Vaccino</label>
-            <input
-              type="text"
-              id="specificaTipoVaccino"
-              name="specificaTipoVaccino"
-              value={formData.specificaTipoVaccino}
-              onChange={handleChange}
-              placeholder="Es. Vaccino antiparassitario"
-              className={hasError('specificaTipoVaccino') ? 'error' : ''}
-            />
-            {hasError('specificaTipoVaccino') && (
-              <span className="error-message">{errors.specificaTipoVaccino}</span>
-            )}
-          </div>
-        )}
 
         <div className="form-row">
           <div className="form-group">

@@ -4,8 +4,9 @@ import { useApi } from '../../services/apiService';
 import SchedaAnimale from '../Animali/SchedaAnimale';
 import VisitaForm from './VisitaForm';
 import FattureLista from '../../components/FattureLista';
+import VaccinazioneCreateModal from '../../components/VaccinazioneCreateModal/VaccinazioneCreateModal';
 import { getCurrentISODatetime, toISODatetimeFormat, toISODateFormat, formatDate, formatDateShort, formatTime, parseDate } from '../../utils/dateUtils';
-import { PlusIcon } from '../../components/icons'; // ✅ icona condivisa
+import { PlusIcon, SyringeIcon } from '../../components/icons';
 
 // ==============================
 // COMPONENTE
@@ -22,6 +23,7 @@ function VisitePagina() {
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showVaccinazioneModal, setShowVaccinazioneModal] = useState(false);
 
   // ID della visita più recente per data (per il pulsante "Torna alla visita corrente")
   const visitaCorrenteId = visite.length > 0 ? Math.max(...visite.map(v => {
@@ -327,7 +329,29 @@ function VisitePagina() {
           <FattureLista visitaId={visita.id} />
         )}
 
-        {/* 3. BLOCCO "VISITE" */}
+        {/* 3. BLOCCO "VACCINAZIONI" */}
+        <div className="visite-card">
+          <div className="visite-card-header">
+            <h3>Vaccinazioni</h3>
+          </div>
+          <div className="visite-card-body">
+            <p className="visite-empty" style={{ fontSize: '13px', color: 'var(--gray-500)' }}>
+              Aggiungi una vaccinazione per {animale.nome}
+            </p>
+          </div>
+          <div className="visite-card-footer">
+            <button
+              className="btn btn-primary btn-sm"
+              onClick={() => setShowVaccinazioneModal(true)}
+              style={{ width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+            >
+              <SyringeIcon width={16} height={16} fill="currentColor" />
+              Nuova Vaccinazione
+            </button>
+          </div>
+        </div>
+
+        {/* 4. BLOCCO "VISITE" */}
         <div className="visite-card visite-card-precedenti">
           <div className="visite-card-header">
             <h3>Visite</h3>
@@ -382,6 +406,18 @@ function VisitePagina() {
           </div>
         </div>
       </div>
+
+      {/* MODALE CREAZIONE VACCINAZIONE */}
+      {showVaccinazioneModal && animale && (
+        <VaccinazioneCreateModal
+          animaleId={animale.id}
+          animaleNome={animale.nome}
+          onClose={() => setShowVaccinazioneModal(false)}
+          onSuccess={() => {
+            setShowVaccinazioneModal(false);
+          }}
+        />
+      )}
 
     </div>
   );
