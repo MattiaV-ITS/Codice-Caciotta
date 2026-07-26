@@ -1,6 +1,7 @@
 package it.codicecaciotta.iltuoveterinario.controllers;
 
 import it.codicecaciotta.iltuoveterinario.dto.AnimaleStatsDTO;
+import it.codicecaciotta.iltuoveterinario.dto.DashboardStatsDTO;
 import it.codicecaciotta.iltuoveterinario.dto.FatturaStatsDTO;
 import it.codicecaciotta.iltuoveterinario.dto.ProprietarioStatsDTO;
 import it.codicecaciotta.iltuoveterinario.dto.VaccinazioneStatsDTO;
@@ -45,5 +46,11 @@ public class StatsController {
     @PreAuthorize("hasAuthority('ROLE_STAFF') or hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<FatturaStatsDTO> getFatturaStats() {
         return ResponseEntity.ok(statsService.getFatturaStats());
+    }
+
+    @GetMapping("/dashboard")
+    @PreAuthorize("hasAuthority('ROLE_STAFF') or hasAuthority('ROLE_ADMIN')")
+    public ResponseEntity<DashboardStatsDTO> getDashboardStats() {
+        return ResponseEntity.ok(statsService.getDashboardStats());
     }
 }

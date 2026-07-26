@@ -673,6 +673,7 @@ VALUES (
 
 -- ============================================================
 -- DIARIO CLINICO — lookup dinamico proprietario_id e animale_id e scomposizione Visite
+-- ============================================================
 
 INSERT INTO diario_clinico (sintomi, diagnosi, trattamento_terapia, note, note_private, visita_id) VALUES
 ('Controllo routine', NULL, 'Vaccinazione polivalente', NULL, NULL,
@@ -799,3 +800,532 @@ INSERT INTO diario_clinico (sintomi, diagnosi, trattamento_terapia, note, note_p
  (SELECT v.id FROM visite v JOIN animali a ON v.animale_id=a.id JOIN proprietari p ON a.proprietario_id=p.id
   WHERE a.nome='Zeus' AND p.nome='Francesco' AND p.cognome='Lombardi'
     AND v.data_ora_visita='2024-04-16T00:00:00' LIMIT 1));
+
+-- ============================================================
+-- FATTURE — creazione fatture per ogni visita con importo dalla CSV
+-- ============================================================
+
+INSERT INTO fatture (numero_fattura, data_emissione, tipo_fattura, codice_fiscale_cliente, indirizzo_cliente, citta_cliente, importo_totale, metodo_pagamento, note, dettaglio_servizi, pagata, proprietario_id, visita_id)
+SELECT
+    'FATT-2024-001',
+    v.data_ora_visita,
+    'Semplificata',
+    COALESCE(p.codice_fiscale, '0000000000000000'),
+    p.indirizzo,
+    p.citta,
+    45.00,
+    NULL,
+    NULL,
+    'Controllo annuale',
+    true,
+    p.id,
+    v.id
+FROM visite v
+JOIN animali a ON v.animale_id = a.id
+JOIN proprietari p ON a.proprietario_id = p.id
+WHERE a.nome='Briciola' AND p.nome='Marco' AND p.cognome='Rossi' AND v.data_ora_visita='2024-01-10T00:00:00'
+LIMIT 1;
+
+INSERT INTO fatture (numero_fattura, data_emissione, tipo_fattura, codice_fiscale_cliente, indirizzo_cliente, citta_cliente, importo_totale, metodo_pagamento, note, dettaglio_servizi, pagata, proprietario_id, visita_id)
+SELECT
+    'FATT-2024-002',
+    v.data_ora_visita,
+    'Semplificata',
+    COALESCE(p.codice_fiscale, '0000000000000000'),
+    p.indirizzo,
+    p.citta,
+    85.00,
+    NULL,
+    NULL,
+    'Visita ortopedica',
+    true,
+    p.id,
+    v.id
+FROM visite v
+JOIN animali a ON v.animale_id = a.id
+JOIN proprietari p ON a.proprietario_id = p.id
+WHERE a.nome='Rex' AND p.nome='Francesca' AND p.cognome='Bianchi' AND v.data_ora_visita='2024-01-12T00:00:00'
+LIMIT 1;
+
+INSERT INTO fatture (numero_fattura, data_emissione, tipo_fattura, codice_fiscale_cliente, indirizzo_cliente, citta_cliente, importo_totale, metodo_pagamento, note, dettaglio_servizi, pagata, proprietario_id, visita_id)
+SELECT
+    'FATT-2024-003',
+    v.data_ora_visita,
+    'Semplificata',
+    COALESCE(p.codice_fiscale, '0000000000000000'),
+    p.indirizzo,
+    p.citta,
+    60.00,
+    NULL,
+    NULL,
+    'Controllo annuale',
+    true,
+    p.id,
+    v.id
+FROM visite v
+JOIN animali a ON v.animale_id = a.id
+JOIN proprietari p ON a.proprietario_id = p.id
+WHERE a.nome='Fido' AND p.nome='Giorgio' AND p.cognome='Ricci' AND v.data_ora_visita='2024-01-15T00:00:00'
+LIMIT 1;
+
+INSERT INTO fatture (numero_fattura, data_emissione, tipo_fattura, codice_fiscale_cliente, indirizzo_cliente, citta_cliente, importo_totale, metodo_pagamento, note, dettaglio_servizi, pagata, proprietario_id, visita_id)
+SELECT
+    'FATT-2024-004',
+    v.data_ora_visita,
+    'Semplificata',
+    COALESCE(p.codice_fiscale, '0000000000000000'),
+    p.indirizzo,
+    p.citta,
+    220.00,
+    NULL,
+    NULL,
+    'Chirurgia',
+    true,
+    p.id,
+    v.id
+FROM visite v
+JOIN animali a ON v.animale_id = a.id
+JOIN proprietari p ON a.proprietario_id = p.id
+WHERE a.nome='Luna' AND p.nome='Francesca' AND p.cognome='Bianchi' AND v.data_ora_visita='2024-01-18T00:00:00'
+LIMIT 1;
+
+INSERT INTO fatture (numero_fattura, data_emissione, tipo_fattura, codice_fiscale_cliente, indirizzo_cliente, citta_cliente, importo_totale, metodo_pagamento, note, dettaglio_servizi, pagata, proprietario_id, visita_id)
+SELECT
+    'FATT-2024-005',
+    v.data_ora_visita,
+    'Semplificata',
+    COALESCE(p.codice_fiscale, '0000000000000000'),
+    p.indirizzo,
+    p.citta,
+    70.00,
+    NULL,
+    NULL,
+    'Visita urgente',
+    true,
+    p.id,
+    v.id
+FROM visite v
+JOIN animali a ON v.animale_id = a.id
+JOIN proprietari p ON a.proprietario_id = p.id
+WHERE a.nome='Tigre' AND p.nome='Roberto' AND p.cognome='Esposito' AND v.data_ora_visita='2024-01-22T00:00:00'
+LIMIT 1;
+
+INSERT INTO fatture (numero_fattura, data_emissione, tipo_fattura, codice_fiscale_cliente, indirizzo_cliente, citta_cliente, importo_totale, metodo_pagamento, note, dettaglio_servizi, pagata, proprietario_id, visita_id)
+SELECT
+    'FATT-2024-006',
+    v.data_ora_visita,
+    'Semplificata',
+    COALESCE(p.codice_fiscale, '0000000000000000'),
+    p.indirizzo,
+    p.citta,
+    35.00,
+    NULL,
+    NULL,
+    'Controllo peso',
+    true,
+    p.id,
+    v.id
+FROM visite v
+JOIN animali a ON v.animale_id = a.id
+JOIN proprietari p ON a.proprietario_id = p.id
+WHERE a.nome='Birillo' AND p.nome='Paolo' AND p.cognome='Manzoni' AND v.data_ora_visita='2024-01-25T00:00:00'
+LIMIT 1;
+
+INSERT INTO fatture (numero_fattura, data_emissione, tipo_fattura, codice_fiscale_cliente, indirizzo_cliente, citta_cliente, importo_totale, metodo_pagamento, note, dettaglio_servizi, pagata, proprietario_id, visita_id)
+SELECT
+    'FATT-2024-007',
+    v.data_ora_visita,
+    'Semplificata',
+    COALESCE(p.codice_fiscale, '0000000000000000'),
+    p.indirizzo,
+    p.citta,
+    50.00,
+    NULL,
+    NULL,
+    'Vaccinazione',
+    true,
+    p.id,
+    v.id
+FROM visite v
+JOIN animali a ON v.animale_id = a.id
+JOIN proprietari p ON a.proprietario_id = p.id
+WHERE a.nome='Zeus' AND p.nome='Francesco' AND p.cognome='Lombardi' AND v.data_ora_visita='2024-01-29T00:00:00'
+LIMIT 1;
+
+INSERT INTO fatture (numero_fattura, data_emissione, tipo_fattura, codice_fiscale_cliente, indirizzo_cliente, citta_cliente, importo_totale, metodo_pagamento, note, dettaglio_servizi, pagata, proprietario_id, visita_id)
+SELECT
+    'FATT-2024-008',
+    v.data_ora_visita,
+    'Semplificata',
+    COALESCE(p.codice_fiscale, '0000000000000000'),
+    p.indirizzo,
+    p.citta,
+    75.00,
+    NULL,
+    NULL,
+    'Dermatologia',
+    true,
+    p.id,
+    v.id
+FROM visite v
+JOIN animali a ON v.animale_id = a.id
+JOIN proprietari p ON a.proprietario_id = p.id
+WHERE a.nome='Micio' AND p.nome='Anna' AND p.cognome='Ferrari' AND v.data_ora_visita='2024-02-02T00:00:00'
+LIMIT 1;
+
+INSERT INTO fatture (numero_fattura, data_emissione, tipo_fattura, codice_fiscale_cliente, indirizzo_cliente, citta_cliente, importo_totale, metodo_pagamento, note, dettaglio_servizi, pagata, proprietario_id, visita_id)
+SELECT
+    'FATT-2024-009',
+    v.data_ora_visita,
+    'Semplificata',
+    COALESCE(p.codice_fiscale, '0000000000000000'),
+    p.indirizzo,
+    p.citta,
+    90.00,
+    NULL,
+    NULL,
+    'Ecografia',
+    true,
+    p.id,
+    v.id
+FROM visite v
+JOIN animali a ON v.animale_id = a.id
+JOIN proprietari p ON a.proprietario_id = p.id
+WHERE a.nome='Cioccolata' AND p.nome='Elena' AND p.cognome='Galli' AND v.data_ora_visita='2024-02-07T00:00:00'
+LIMIT 1;
+
+INSERT INTO fatture (numero_fattura, data_emissione, tipo_fattura, codice_fiscale_cliente, indirizzo_cliente, citta_cliente, importo_totale, metodo_pagamento, note, dettaglio_servizi, pagata, proprietario_id, visita_id)
+SELECT
+    'FATT-2024-010',
+    v.data_ora_visita,
+    'Semplificata',
+    COALESCE(p.codice_fiscale, '0000000000000000'),
+    p.indirizzo,
+    p.citta,
+    95.00,
+    NULL,
+    NULL,
+    'Visita urgente',
+    true,
+    p.id,
+    v.id
+FROM visite v
+JOIN animali a ON v.animale_id = a.id
+JOIN proprietari p ON a.proprietario_id = p.id
+WHERE a.nome='Artù' AND p.nome='Stefano' AND p.cognome='Marchetti' AND v.data_ora_visita='2024-02-12T00:00:00'
+LIMIT 1;
+
+INSERT INTO fatture (numero_fattura, data_emissione, tipo_fattura, codice_fiscale_cliente, indirizzo_cliente, citta_cliente, importo_totale, metodo_pagamento, note, dettaglio_servizi, pagata, proprietario_id, visita_id)
+SELECT
+    'FATT-2024-011',
+    v.data_ora_visita,
+    'Semplificata',
+    COALESCE(p.codice_fiscale, '0000000000000000'),
+    p.indirizzo,
+    p.citta,
+    110.00,
+    NULL,
+    NULL,
+    'Visita neurologica',
+    true,
+    p.id,
+    v.id
+FROM visite v
+JOIN animali a ON v.animale_id = a.id
+JOIN proprietari p ON a.proprietario_id = p.id
+WHERE a.nome='Pallina' AND p.nome='Luigi' AND p.cognome='Colombo' AND v.data_ora_visita='2024-02-15T00:00:00'
+LIMIT 1;
+
+INSERT INTO fatture (numero_fattura, data_emissione, tipo_fattura, codice_fiscale_cliente, indirizzo_cliente, citta_cliente, importo_totale, metodo_pagamento, note, dettaglio_servizi, pagata, proprietario_id, visita_id)
+SELECT
+    'FATT-2024-012',
+    v.data_ora_visita,
+    'Semplificata',
+    COALESCE(p.codice_fiscale, '0000000000000000'),
+    p.indirizzo,
+    p.citta,
+    40.00,
+    NULL,
+    NULL,
+    'Vaccinazione',
+    true,
+    p.id,
+    v.id
+FROM visite v
+JOIN animali a ON v.animale_id = a.id
+JOIN proprietari p ON a.proprietario_id = p.id
+WHERE a.nome='Neve' AND p.nome='Maria' AND p.cognome='Conti' AND v.data_ora_visita='2024-02-19T00:00:00'
+LIMIT 1;
+
+INSERT INTO fatture (numero_fattura, data_emissione, tipo_fattura, codice_fiscale_cliente, indirizzo_cliente, citta_cliente, importo_totale, metodo_pagamento, note, dettaglio_servizi, pagata, proprietario_id, visita_id)
+SELECT
+    'FATT-2024-013',
+    v.data_ora_visita,
+    'Semplificata',
+    COALESCE(p.codice_fiscale, '0000000000000000'),
+    p.indirizzo,
+    p.citta,
+    30.00,
+    NULL,
+    NULL,
+    'Controllo post-op',
+    true,
+    p.id,
+    v.id
+FROM visite v
+JOIN animali a ON v.animale_id = a.id
+JOIN proprietari p ON a.proprietario_id = p.id
+WHERE a.nome='Oscar' AND p.nome='Chiara' AND p.cognome='Ferretti' AND v.data_ora_visita='2024-02-22T00:00:00'
+LIMIT 1;
+
+INSERT INTO fatture (numero_fattura, data_emissione, tipo_fattura, codice_fiscale_cliente, indirizzo_cliente, citta_cliente, importo_totale, metodo_pagamento, note, dettaglio_servizi, pagata, proprietario_id, visita_id)
+SELECT
+    'FATT-2024-014',
+    v.data_ora_visita,
+    'Semplificata',
+    COALESCE(p.codice_fiscale, '0000000000000000'),
+    p.indirizzo,
+    p.citta,
+    65.00,
+    NULL,
+    NULL,
+    'Malattia infettiva',
+    true,
+    p.id,
+    v.id
+FROM visite v
+JOIN animali a ON v.animale_id = a.id
+JOIN proprietari p ON a.proprietario_id = p.id
+WHERE a.nome='Stella' AND p.nome='Valentina' AND p.cognome='Caruso' AND v.data_ora_visita='2024-02-26T00:00:00'
+LIMIT 1;
+
+INSERT INTO fatture (numero_fattura, data_emissione, tipo_fattura, codice_fiscale_cliente, indirizzo_cliente, citta_cliente, importo_totale, metodo_pagamento, note, dettaglio_servizi, pagata, proprietario_id, visita_id)
+SELECT
+    'FATT-2024-015',
+    v.data_ora_visita,
+    'Semplificata',
+    COALESCE(p.codice_fiscale, '0000000000000000'),
+    p.indirizzo,
+    p.citta,
+    35.00,
+    NULL,
+    NULL,
+    'Controllo semestrale',
+    true,
+    p.id,
+    v.id
+FROM visite v
+JOIN animali a ON v.animale_id = a.id
+JOIN proprietari p ON a.proprietario_id = p.id
+WHERE a.nome='Briciola' AND p.nome='Marco' AND p.cognome='Rossi' AND v.data_ora_visita='2024-03-01T00:00:00'
+LIMIT 1;
+
+INSERT INTO fatture (numero_fattura, data_emissione, tipo_fattura, codice_fiscale_cliente, indirizzo_cliente, citta_cliente, importo_totale, metodo_pagamento, note, dettaglio_servizi, pagata, proprietario_id, visita_id)
+SELECT
+    'FATT-2024-016',
+    v.data_ora_visita,
+    'Semplificata',
+    COALESCE(p.codice_fiscale, '0000000000000000'),
+    p.indirizzo,
+    p.citta,
+    55.00,
+    NULL,
+    NULL,
+    'Otorinolaringoiatria',
+    true,
+    p.id,
+    v.id
+FROM visite v
+JOIN animali a ON v.animale_id = a.id
+JOIN proprietari p ON a.proprietario_id = p.id
+WHERE a.nome='Charlie' AND p.nome='Elena' AND p.cognome='Galli' AND v.data_ora_visita='2024-03-05T00:00:00'
+LIMIT 1;
+
+INSERT INTO fatture (numero_fattura, data_emissione, tipo_fattura, codice_fiscale_cliente, indirizzo_cliente, citta_cliente, importo_totale, metodo_pagamento, note, dettaglio_servizi, pagata, proprietario_id, visita_id)
+SELECT
+    'FATT-2024-017',
+    v.data_ora_visita,
+    'Semplificata',
+    COALESCE(p.codice_fiscale, '0000000000000000'),
+    p.indirizzo,
+    p.citta,
+    40.00,
+    NULL,
+    NULL,
+    'Vaccinazione',
+    true,
+    p.id,
+    v.id
+FROM visite v
+JOIN animali a ON v.animale_id = a.id
+JOIN proprietari p ON a.proprietario_id = p.id
+WHERE a.nome='Mochi' AND p.nome='Marco' AND p.cognome='Rossi' AND v.data_ora_visita='2024-03-08T00:00:00'
+LIMIT 1;
+
+INSERT INTO fatture (numero_fattura, data_emissione, tipo_fattura, codice_fiscale_cliente, indirizzo_cliente, citta_cliente, importo_totale, metodo_pagamento, note, dettaglio_servizi, pagata, proprietario_id, visita_id)
+SELECT
+    'FATT-2024-018',
+    v.data_ora_visita,
+    'Semplificata',
+    COALESCE(p.codice_fiscale, '0000000000000000'),
+    p.indirizzo,
+    p.citta,
+    25.00,
+    NULL,
+    NULL,
+    'Controllo annuale',
+    true,
+    p.id,
+    v.id
+FROM visite v
+JOIN animali a ON v.animale_id = a.id
+JOIN proprietari p ON a.proprietario_id = p.id
+WHERE a.nome='Lilly' AND p.nome='Giorgio' AND p.cognome='Ricci' AND v.data_ora_visita='2024-03-12T00:00:00'
+LIMIT 1;
+
+INSERT INTO fatture (numero_fattura, data_emissione, tipo_fattura, codice_fiscale_cliente, indirizzo_cliente, citta_cliente, importo_totale, metodo_pagamento, note, dettaglio_servizi, pagata, proprietario_id, visita_id)
+SELECT
+    'FATT-2024-019',
+    v.data_ora_visita,
+    'Semplificata',
+    COALESCE(p.codice_fiscale, '0000000000000000'),
+    p.indirizzo,
+    p.citta,
+    280.00,
+    NULL,
+    NULL,
+    'Chirurgia',
+    true,
+    p.id,
+    v.id
+FROM visite v
+JOIN animali a ON v.animale_id = a.id
+JOIN proprietari p ON a.proprietario_id = p.id
+WHERE a.nome='Fido' AND p.nome='Giorgio' AND p.cognome='Ricci' AND v.data_ora_visita='2024-03-15T00:00:00'
+LIMIT 1;
+
+INSERT INTO fatture (numero_fattura, data_emissione, tipo_fattura, codice_fiscale_cliente, indirizzo_cliente, citta_cliente, importo_totale, metodo_pagamento, note, dettaglio_servizi, pagata, proprietario_id, visita_id)
+SELECT
+    'FATT-2024-020',
+    v.data_ora_visita,
+    'Semplificata',
+    COALESCE(p.codice_fiscale, '0000000000000000'),
+    p.indirizzo,
+    p.citta,
+    55.00,
+    NULL,
+    NULL,
+    'Controllo annuale',
+    true,
+    p.id,
+    v.id
+FROM visite v
+JOIN animali a ON v.animale_id = a.id
+JOIN proprietari p ON a.proprietario_id = p.id
+WHERE a.nome='Mia' AND p.nome='Giulia' AND p.cognome='Barbieri' AND v.data_ora_visita='2024-03-19T00:00:00'
+LIMIT 1;
+
+INSERT INTO fatture (numero_fattura, data_emissione, tipo_fattura, codice_fiscale_cliente, indirizzo_cliente, citta_cliente, importo_totale, metodo_pagamento, note, dettaglio_servizi, pagata, proprietario_id, visita_id)
+SELECT
+    'FATT-2024-021',
+    v.data_ora_visita,
+    'Semplificata',
+    COALESCE(p.codice_fiscale, '0000000000000000'),
+    p.indirizzo,
+    p.citta,
+    50.00,
+    NULL,
+    NULL,
+    'Visita ortopedica',
+    true,
+    p.id,
+    v.id
+FROM visite v
+JOIN animali a ON v.animale_id = a.id
+JOIN proprietari p ON a.proprietario_id = p.id
+WHERE a.nome='Rex' AND p.nome='Francesca' AND p.cognome='Bianchi' AND v.data_ora_visita='2024-03-22T00:00:00'
+LIMIT 1;
+
+INSERT INTO fatture (numero_fattura, data_emissione, tipo_fattura, codice_fiscale_cliente, indirizzo_cliente, citta_cliente, importo_totale, metodo_pagamento, note, dettaglio_servizi, pagata, proprietario_id, visita_id)
+SELECT
+    'FATT-2024-022',
+    v.data_ora_visita,
+    'Semplificata',
+    COALESCE(p.codice_fiscale, '0000000000000000'),
+    p.indirizzo,
+    p.citta,
+    45.00,
+    NULL,
+    NULL,
+    'Prima visita',
+    true,
+    p.id,
+    v.id
+FROM visite v
+JOIN animali a ON v.animale_id = a.id
+JOIN proprietari p ON a.proprietario_id = p.id
+WHERE a.nome='Fiocco' AND p.nome='Antonio' AND p.cognome='Moretti' AND v.data_ora_visita='2024-03-26T00:00:00'
+LIMIT 1;
+
+INSERT INTO fatture (numero_fattura, data_emissione, tipo_fattura, codice_fiscale_cliente, indirizzo_cliente, citta_cliente, importo_totale, metodo_pagamento, note, dettaglio_servizi, pagata, proprietario_id, visita_id)
+SELECT
+    'FATT-2024-023',
+    v.data_ora_visita,
+    'Semplificata',
+    COALESCE(p.codice_fiscale, '0000000000000000'),
+    p.indirizzo,
+    p.citta,
+    40.00,
+    NULL,
+    NULL,
+    'Prima visita',
+    true,
+    p.id,
+    v.id
+FROM visite v
+JOIN animali a ON v.animale_id = a.id
+JOIN proprietari p ON a.proprietario_id = p.id
+WHERE a.nome='Puffo' AND p.nome='Antonio' AND p.cognome='Moretti' AND v.data_ora_visita='2024-04-02T00:00:00'
+LIMIT 1;
+
+INSERT INTO fatture (numero_fattura, data_emissione, tipo_fattura, codice_fiscale_cliente, indirizzo_cliente, citta_cliente, importo_totale, metodo_pagamento, note, dettaglio_servizi, pagata, proprietario_id, visita_id)
+SELECT
+    'FATT-2024-024',
+    v.data_ora_visita,
+    'Semplificata',
+    COALESCE(p.codice_fiscale, '0000000000000000'),
+    p.indirizzo,
+    p.citta,
+    30.00,
+    NULL,
+    NULL,
+    'Controllo post-op',
+    true,
+    p.id,
+    v.id
+FROM visite v
+JOIN animali a ON v.animale_id = a.id
+JOIN proprietari p ON a.proprietario_id = p.id
+WHERE a.nome='Luna' AND p.nome='Francesca' AND p.cognome='Bianchi' AND v.data_ora_visita='2024-04-09T00:00:00'
+LIMIT 1;
+
+INSERT INTO fatture (numero_fattura, data_emissione, tipo_fattura, codice_fiscale_cliente, indirizzo_cliente, citta_cliente, importo_totale, metodo_pagamento, note, dettaglio_servizi, pagata, proprietario_id, visita_id)
+SELECT
+    'FATT-2024-025',
+    v.data_ora_visita,
+    'Semplificata',
+    COALESCE(p.codice_fiscale, '0000000000000000'),
+    p.indirizzo,
+    p.citta,
+    35.00,
+    NULL,
+    NULL,
+    'Controllo semestrale',
+    true,
+    p.id,
+    v.id
+FROM visite v
+JOIN animali a ON v.animale_id = a.id
+JOIN proprietari p ON a.proprietario_id = p.id
+WHERE a.nome='Zeus' AND p.nome='Francesco' AND p.cognome='Lombardi' AND v.data_ora_visita='2024-04-16T00:00:00'
+LIMIT 1;

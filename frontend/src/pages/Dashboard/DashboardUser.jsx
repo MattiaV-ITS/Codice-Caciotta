@@ -5,6 +5,7 @@ import { useApi } from '../../services/apiService';
 import { formatDate, formatTime } from '../../utils/dateUtils';
 import AnimaleCreate from '../Animali/AnimaleCreate';
 import ProprietarioRegistrationModal from '../../components/ProprietarioRegistrationModal';
+import PrenotazioneCreateUser from '../Prenotazioni/PrenotazioneCreateUser';
 import './DashboardUser.css';
 import { 
   UserIcon, 
@@ -27,6 +28,7 @@ function DashboardUser() {
   const [error, setError] = useState(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showProprietarioModal, setShowProprietarioModal] = useState(false);
+  const [showPrenotazioneModal, setShowPrenotazioneModal] = useState(false);
   const [hasProprietario, setHasProprietario] = useState(false);
 
   const checkProprietario = useCallback(async () => {
@@ -89,7 +91,12 @@ function DashboardUser() {
   };
 
   const handlePrenotaVisita = () => {
-    navigate('/prenotazioni/nuova');
+    setShowPrenotazioneModal(true);
+  };
+
+  const handlePrenotazioneSuccess = () => {
+    setShowPrenotazioneModal(false);
+    loadData();
   };
 
   const handleCreateProprietarioSuccess = () => {
@@ -321,6 +328,14 @@ function DashboardUser() {
           onClose={() => setShowProprietarioModal(false)}
           onSuccess={handleCreateProprietarioSuccess}
           onSkip={handleCreateProprietarioSkip}
+        />
+      )}
+
+      {/* MODALE PRENOTAZIONE VISITA */}
+      {showPrenotazioneModal && (
+        <PrenotazioneCreateUser
+          onClose={() => setShowPrenotazioneModal(false)}
+          onSuccess={handlePrenotazioneSuccess}
         />
       )}
     </div>

@@ -1,19 +1,27 @@
 package it.codicecaciotta.iltuoveterinario.services;
 
 import it.codicecaciotta.iltuoveterinario.dto.AnimaleStatsDTO;
+import it.codicecaciotta.iltuoveterinario.dto.DashboardStatsDTO;
 import it.codicecaciotta.iltuoveterinario.dto.FatturaStatsDTO;
 import it.codicecaciotta.iltuoveterinario.dto.FatturaStatsDTO.FatturaMensileDTO;
 import it.codicecaciotta.iltuoveterinario.dto.ProprietarioStatsDTO;
 import it.codicecaciotta.iltuoveterinario.dto.VaccinazioneStatsDTO;
+import it.codicecaciotta.iltuoveterinario.dto.VisitaOggiDTO;
+import it.codicecaciotta.iltuoveterinario.models.Prenotazione;
 import it.codicecaciotta.iltuoveterinario.repositories.AnimaleRepository;
 import it.codicecaciotta.iltuoveterinario.repositories.FatturaRepository;
+import it.codicecaciotta.iltuoveterinario.repositories.PrenotazioneRepository;
 import it.codicecaciotta.iltuoveterinario.repositories.ProprietarioRepository;
 import it.codicecaciotta.iltuoveterinario.repositories.VaccinazioneRepository;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class StatsServiceImpl implements StatsService {
@@ -22,15 +30,18 @@ public class StatsServiceImpl implements StatsService {
     private final AnimaleRepository animaleRepository;
     private final ProprietarioRepository proprietarioRepository;
     private final FatturaRepository fatturaRepository;
+    private final PrenotazioneRepository prenotazioneRepository;
 
     public StatsServiceImpl(VaccinazioneRepository vaccinazioneRepository,
                           AnimaleRepository animaleRepository,
                           ProprietarioRepository proprietarioRepository,
-                          FatturaRepository fatturaRepository) {
+                          FatturaRepository fatturaRepository,
+                          PrenotazioneRepository prenotazioneRepository) {
         this.vaccinazioneRepository = vaccinazioneRepository;
         this.animaleRepository = animaleRepository;
         this.proprietarioRepository = proprietarioRepository;
         this.fatturaRepository = fatturaRepository;
+        this.prenotazioneRepository = prenotazioneRepository;
     }
 
     @Override
@@ -99,5 +110,40 @@ public class StatsServiceImpl implements StatsService {
         return new FatturaStatsDTO(totaleFatture, fatturePagate, fattureNonPagate,
                                   importoTotale, importoPagato, importoNonPagato,
                                   fatturePerMese);
+    }
+
+    @Override
+    public DashboardStatsDTO getDashboardStats() {
+        LocalDate today = LocalDate.now();
+        LocalDateTime startOfDay = today.atStartOfDay();
+        LocalDateTime endOfDay = today.atTime(LocalTime.MAX);
+
+        long visiteOggi = prenotazioneRepository.countByDataOraAppuntamentoBetween(startOfDay, endOfDay);
+        long prenotazioniTotali = prenotazioneRepository.count();
+        long fattureNonPagate = fatturaRepository.countByPagata(false);
+        BigDecimal importoNonPagato = fatturaRepository.sumImportoTotaleByPagata(false);
+        if (importoNonPagato == null) importoNonPagato = BigDecimal.ZERO;
+        long animaliTotali = animaleRepository.count();
+        long proprietariTotali = proprietarioRepository.count();
+        long proprietariAttivi = proprietarioRepository.countAttivi();
+
+        List<Prenotazione> visiteOggiList = prenotazioneRepository
+                .findByDataOraAppuntamentoBetweenOrderByDataOraAppuntamentoAsc(startOfDay, endOfDay);
+
+        List<VisitaOggiDTO> visiteOggiDTOs = visiteOggiList.stream()
+                .map(p -> new VisitaOggiDTO(
+                        p.getAnimale() != null ? p.getAnimale().getNome() : "Sconosciuto",
+                        p.getProprietario() != null ? p.getProprietario().getNome() : "",
+                        p.getProprietario() != null ? p.getProprietario().getCognome() : "",
+                        p.getDataOraAppuntamento(),
+                        p.getTipoVisita()
+                ))
+                .collect(Collectors.toList());
+
+        return new DashboardStatsDTO(
+                visiteOggi, prenotazioniTotali, fattureNonPagate,
+                importoNonPagato, animaliTotali, proprietariTotali, proprietariAttivi,
+                visiteOggiDTOs
+        );
     }
 }
