@@ -31,14 +31,24 @@ public class PrestazioneServiceImpl implements PrestazioneService {
 
     @Override
     public Prestazione createPrestazione(Prestazione prestazione) {
-        return prestazioneRepository.save(Objects.requireNonNull(prestazione, "prestazione must not be null"));
+        validatePrestazioneDuration(prestazione);
+        return prestazioneRepository.save(prestazione);
     }
 
     @Override
     public Prestazione updatePrestazione(Long id, Prestazione prestazione) {
-        Long safeId = Objects.requireNonNull(id, "id must not be null");
-        prestazione.setId(safeId);
+        prestazione.setId(id);
+        validatePrestazioneDuration(prestazione);
         return prestazioneRepository.save(prestazione);
+    }
+
+    private void validatePrestazioneDuration(Prestazione prestazione) {
+        if (prestazione.getDurataStimata() != null) {
+            // Ensure duration is a multiple of 30 minutes
+            if (prestazione.getDurataStimata() % 30 != 0) {
+                throw new IllegalArgumentException("La durata stimata deve essere un multiplo di 30 minuti");
+            }
+        }
     }
 
     @Override
@@ -54,11 +64,4 @@ public class PrestazioneServiceImpl implements PrestazioneService {
                 .collect(Collectors.toList());
     }
 
-    @Override
-    public List<String> getCategoriePrestazioni() {
-        return prestazioneRepository.findAll().stream()
-                .map(prestazione -> prestazione.getCategoria())
-                .distinct()
-                .collect(Collectors.toList());
-    }
 }

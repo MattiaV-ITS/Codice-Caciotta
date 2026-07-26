@@ -36,7 +36,7 @@ public class PrestazioneController {
             @RequestParam(defaultValue = "asc") String sortDir) {
 
         Pageable pageable = paginationUtils.buildPageRequest(page, size, sortBy, sortDir,
-                java.util.Arrays.asList("nomePrestazione", "categoria", "durataStimata", "costoBase", "stato"));
+                java.util.Arrays.asList("nomePrestazione", "durataStimata", "costoBase", "stato"));
 
         return prestazioneRepository.findAll(pageable);
     }
@@ -78,9 +78,4 @@ public class PrestazioneController {
         return ResponseEntity.ok(prestazioni);
     }
 
-    @GetMapping("/categorie")
-    public ResponseEntity<List<String>> getCategoriePrestazioni() {
-        List<String> categorie = prestazioneService.getCategoriePrestazioni();
-        return ResponseEntity.ok(categorie);
-    }
 }

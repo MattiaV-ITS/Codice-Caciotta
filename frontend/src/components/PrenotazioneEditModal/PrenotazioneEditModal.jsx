@@ -4,17 +4,6 @@ import { useApi } from '../../services/apiService';
 import FormModal from '../FormModal/FormModal';
 import './PrenotazioneEditModal.css';
 
-const TIPI_VISITA_SELECT = [
-  'Visita di controllo',
-  'Vaccinazione',
-  'Visita d\'urgenza',
-  'Chirurgia',
-  'Visita specialistica',
-  'Controllo post-operatorio',
-  'Visita domiciliare',
-  'Altro'
-];
-
 const PrenotazioneEditModal = ({ 
   prenotazione, 
   onClose, 
@@ -24,6 +13,9 @@ const PrenotazioneEditModal = ({
   const { get, put } = useApi();
   const [animali, setAnimali] = useState([]);
   const [loadingAnimali, setLoadingAnimali] = useState(true);
+  const [prestazioni, setPrestazioni] = useState([]);
+  const [loadingPrestazioni, setLoadingPrestazioni] = useState(true);
+  const [errorPrestazioni, setErrorPrestazioni] = useState(null);
   const [formData, setFormData] = useState({
     dataOraAppuntamento: '',
     tipoVisita: '',
@@ -55,17 +47,68 @@ const PrenotazioneEditModal = ({
     fetchAnimali();
   }, [get]);
 
+  // Fetch prestazioni for dynamic visit type options
+  useEffect(() => {
+    const fetchPrestazioni = async () => {
+      try {
+        setLoadingPrestazioni(true);
+        const response = await get('/api/prestazioni');
+        if (response.ok) {
+          const data = await response.json();
+          const prestazioniArray = Array.isArray(data)
+            ? data
+            : (data.content && Array.isArray(data.content)
+                ? data.content
+                : []);
+          setPrestazioni(prestazioniArray);
+        }
+      } catch (error) {
+        console.error('Error fetching prestazioni:', error);
+        setErrorPrestazioni('Errore nel caricamento delle prestazioni');
+      } finally {
+        setLoadingPrestazioni(false);
+      }
+    };
+
+    fetchPrestazioni();
+  }, [get]);
+
   // Initialize form with prenotazione data
   useEffect(() => {
     if (prenotazione) {
+      console.log('Initializing form with prenotazione:', prenotazione);
+      console.log('Prenotazione animaleId:', prenotazione.animaleId);
+      console.log('Prenotazione animale:', prenotazione.animale);
+      console.log('Prenotazione proprietarioId:', prenotazione.proprietarioId);
+      console.log('Prenotazione proprietario:', prenotazione.proprietario);
       setFormData({
         dataOraAppuntamento: prenotazione.dataOraAppuntamento || '',
-        tipoVisita: prenotazione.motivo || prenotazione.tipoVisita || '',
+        tipoVisita: prenotazione.tipoVisita || '',
         specificaTipoVisita: prenotazione.tipoVisita === 'Altro' ? prenotazione.specificaTipoVisita || '' : '',
+        animaleId: prenotazione.animaleId || (prenotazione.animale?.id) || '',
         note: prenotazione.note || ''
       });
     }
   }, [prenotazione]);
+
+  // After prestazioni are loaded, check if we need to update the tipoVisita to match available options
+  useEffect(() => {
+    if (prenotazione && prestazioni.length > 0 && formData.tipoVisita) {
+      // Check if the current tipoVisita exists in prestazioni
+      const tipoVisitaExists = prestazioni.some(p => p.nomePrestazione === formData.tipoVisita);
+
+      // If the current tipoVisita is not found in prestazioni, try to find a matching one from prenotazione
+      if (!tipoVisitaExists && prenotazione.tipoVisita) {
+        const matchingPrestazione = prestazioni.find(p => p.nomePrestazione === prenotazione.tipoVisita);
+        if (matchingPrestazione) {
+          setFormData(prev => ({
+            ...prev,
+            tipoVisita: matchingPrestazione.nomePrestazione
+          }));
+        }
+      }
+    }
+  }, [prenotazione, prestazioni, formData.tipoVisita]);
 
   const validate = () => {
     const newErrors = {};
@@ -100,31 +143,61 @@ const PrenotazioneEditModal = ({
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validate()) return;
-    
+
     setIsSubmitting(true);
-    
+
     try {
+      // Extract IDs with multiple fallback approaches
+      const animaleId = prenotazione?.animaleId || prenotazione?.animale?.id || formData.animaleId;
+      const proprietarioId = prenotazione?.proprietarioId || prenotazione?.proprietario?.id;
+
+      console.log('Submit data - prenotazione:', prenotazione);
+      console.log('Extract animaleId:', animaleId, '| proprietarioId:', proprietarioId);
+
+      if (!animaleId) {
+        throw new Error('Animal ID is missing from prenotazione data');
+      }
+      if (!proprietarioId) {
+        throw new Error('Proprietario ID is missing from prenotazione data');
+      }
+      
+      // Include all required fields for backend deserialization (using DTO format)
       const payload = {
         dataOraAppuntamento: formData.dataOraAppuntamento,
         tipoVisita: formData.tipoVisita === 'Altro' ? formData.specificaTipoVisita : formData.tipoVisita,
-        note: formData.note
+        note: formData.note,
+        animaleId: animaleId,
+        proprietarioId: proprietarioId
       };
 
+      console.log('Final payload being sent:', payload);
+      
       const response = await put(`/api/prenotazioni/${prenotazione.id}`, payload);
       
       if (!response.ok) {
-        throw new Error(`Failed to update prenotazione: ${response.status}`);
+        const errorData = await response.json().catch(() => ({ message: `HTTP ${response.status}` }));
+        throw new Error(`Failed to update prenotazione: ${errorData.message || response.status}`);
       }
 
       const updatedPrenotazione = await response.json();
-      onSuccess(updatedPrenotazione);
+      // Merge the returned DTO with frontend display fields
+      const enhancedPrenotazione = {
+        ...updatedPrenotazione,
+        animale: prenotazione.animale,
+        proprietarioNome: prenotazione.proprietarioNome,
+        animaleNome: prenotazione.animaleNome,
+        specie: prenotazione.specie,
+        // Ensure motivo matches for color mapping
+        motivo: updatedPrenotazione.tipoVisita
+      };
+      onSuccess(enhancedPrenotazione);
       onClose();
       
     } catch (error) {
       console.error('Error updating prenotazione:', error);
-      alert(`Errore durante l\'aggiornamento della prenotazione: ${error.message}`);
+      alert(`Errore durante l'aggiornamento della prenotazione: ${error.message}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -161,19 +234,32 @@ const PrenotazioneEditModal = ({
 
         <div className="form-group">
           <label htmlFor="tipoVisita">Tipo di Visita</label>
-          <select
-            id="tipoVisita"
-            name="tipoVisita"
-            value={formData.tipoVisita}
-            onChange={handleChange}
-            className={hasError('tipoVisita') ? 'error' : ''}
-            required
-          >
-            <option value="">Seleziona tipo di visita</option>
-            {TIPI_VISITA_SELECT.map((tipo) => (
-              <option key={tipo} value={tipo}>{tipo}</option>
-            ))}
-          </select>
+          {loadingPrestazioni ? (
+            <div style={{ color: 'var(--gray-500)', fontSize: '14px', padding: '8px' }}>
+              Caricamento prestazioni...
+            </div>
+          ) : errorPrestazioni ? (
+            <div style={{ color: 'var(--danger)', fontSize: '14px', padding: '8px' }}>
+              {errorPrestazioni}
+            </div>
+          ) : (
+            <select
+              id="tipoVisita"
+              name="tipoVisita"
+              value={formData.tipoVisita}
+              onChange={handleChange}
+              className={hasError('tipoVisita') ? 'error' : ''}
+              required
+            >
+              <option value="">Seleziona tipo di visita</option>
+              {prestazioni.map((prestazione) => (
+                <option key={prestazione.id} value={prestazione.nomePrestazione}>
+                  {prestazione.nomePrestazione} - €{prestazione.costoBase?.toFixed(2) || '0.00'}
+                </option>
+              ))}
+              <option value="Altro">Altro (specifica)</option>
+            </select>
+          )}
           {hasError('tipoVisita') && (
             <span className="error-message">{errors.tipoVisita}</span>
           )}

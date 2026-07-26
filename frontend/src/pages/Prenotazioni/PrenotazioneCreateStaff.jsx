@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { toISODatetimeFormat, toISODateFormat } from '../../utils/dateUtils';
@@ -24,6 +24,10 @@ function PrenotazioneCreateStaff({ onClose, onSuccess }) {
   const [prestazioni, setPrestazioni] = useState([]);
   const [loadingPrestazioni, setLoadingPrestazioni] = useState(true);
   const [errorPrestazioni, setErrorPrestazioni] = useState(null);
+  const [studioHours, setStudioHours] = useState([]);
+  const [loadingStudioHours, setLoadingStudioHours] = useState(true);
+  const [blockedTimes, setBlockedTimes] = useState([]);
+  const [loadingBlockedTimes, setLoadingBlockedTimes] = useState(true);
 
   const [formData, setFormData] = useState({
     dataOraAppuntamento: '',
@@ -59,8 +63,6 @@ function PrenotazioneCreateStaff({ onClose, onSuccess }) {
           setPrenotazioniEsistenti([]); // Ensure prenotazioni is always an array even on error
         }
 
-        // Note: We don't pre-fetch all proprietari anymore since we use server-side search
-        // Initial proprietari state remains empty, data is fetched on-demand during search
 
         // Fetch prestazioni
         const prestazioniResponse = await get('/api/prestazioni');
@@ -79,11 +81,22 @@ function PrenotazioneCreateStaff({ onClose, onSuccess }) {
           setPrestazioni([]);
         }
 
+        // Fetch studio hours
+        const studioHoursResponse = await get('/api/admin/orari');
+        if (studioHoursResponse.ok) {
+          const studioHoursData = await studioHoursResponse.json();
+          setStudioHours(studioHoursData.defaultOrari || []);
+        } else {
+          console.error('Failed to fetch studio hours:', studioHoursResponse.status);
+          setStudioHours([]);
+        }
+
         // Set loading states to false when all requests are done
         setLoadingAnimali(false);
         setLoadingPrenotazioni(false);
         setLoadingProprietari(false);
         setLoadingPrestazioni(false);
+        setLoadingStudioHours(false);
 
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -96,6 +109,7 @@ function PrenotazioneCreateStaff({ onClose, onSuccess }) {
         setLoadingPrenotazioni(false);
         setLoadingProprietari(false);
         setLoadingPrestazioni(false);
+        setLoadingStudioHours(false);
       }
     };
 
@@ -137,9 +151,9 @@ function PrenotazioneCreateStaff({ onClose, onSuccess }) {
           params.append('search', animaleSearchTerm);
           params.append('size', '10'); // Reasonable limit for suggestions
           
-          // Add proprietario filter if selected
+          // Filter by selected proprietario on the backend
           if (selectedProprietario?.id) {
-            // Note: We'll need to implement this filter on backend if needed
+            params.append('proprietarioId', selectedProprietario.id);
           }
           
           const response = await get(`/api/animali?${params.toString()}`);
@@ -165,7 +179,10 @@ function PrenotazioneCreateStaff({ onClose, onSuccess }) {
             });
             
             setAnimaleSuggestions(transformedAnimali);
-            setShowAnimaleSuggestions(transformedAnimali.length > 0);
+            // Only show suggestions when no animal is currently selected, to prevent re-appearing after selection
+            if (!selectedAnimale) {
+              setShowAnimaleSuggestions(transformedAnimali.length > 0);
+            }
           } else {
             console.error('Server search failed:', response.status);
             setAnimaleSuggestions([]);
@@ -260,6 +277,201 @@ function PrenotazioneCreateStaff({ onClose, onSuccess }) {
   const [dateError, setDateError] = useState(''); // eslint-disable-line no-unused-vars
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
+  const [selectedPrestazioneDuration, setSelectedPrestazioneDuration] = useState(30); // Default 30 minutes
+
+  // Helper function to check if a time slot is blocked
+  const isTimeSlotBlocked = (date, hour) => {
+    if (!selectedDate || !blockedTimes || !Array.isArray(blockedTimes)) return false;
+
+    const [hourPart, minutePart] = hour.split(':').map(Number);
+    const appointmentDateTime = new Date(selectedDate);
+    appointmentDateTime.setHours(hourPart, minutePart, 0, 0);
+
+    return blockedTimes.some(blocked => {
+      try {
+        const blockedDate = new Date(blocked.data);
+        if (isSameDay(blockedDate, appointmentDateTime)) {
+          const [blockedStartHour, blockedStartMin] = blocked.oraInizio.split(':').map(Number);
+          const [blockedEndHour, blockedEndMin] = blocked.oraFine.split(':').map(Number);
+
+          const blockedStart = new Date(blockedDate);
+          blockedStart.setHours(blockedStartHour, blockedStartMin, 0, 0);
+
+          const blockedEnd = new Date(blockedDate);
+          blockedEnd.setHours(blockedEndHour, blockedEndMin, 0, 0);
+
+          return appointmentDateTime >= blockedStart && appointmentDateTime < blockedEnd;
+        }
+        return false;
+      } catch (error) {
+        console.error('Error checking blocked time:', error);
+        return false;
+      }
+    });
+  };
+
+  // Helper function to check if studio is closed
+  const isStudioClosed = (date, hour) => {
+    if (!selectedDate || !studioHours || !Array.isArray(studioHours)) return false;
+
+    try {
+      const [hourPart] = hour.split(':').map(Number);
+      const appointmentDate = new Date(selectedDate);
+      const dayOfWeek = appointmentDate.getDay(); // 0 = Sunday, 1 = Monday, etc.
+
+      // Map day index to Italian day names
+      const daysOfWeek = ['DOMENICA', 'LUNEDI', 'MARTEDI', 'MERCOLEDI', 'GIOVEDI', 'VENERDI', 'SABATO'];
+      const dayName = daysOfWeek[dayOfWeek];
+
+      const dayHours = studioHours.find(h => h.giornoSettimana === dayName);
+
+      if (!dayHours) return true; // No hours defined for this day = closed
+
+      if (dayHours.chiuso) return true; // Explicitly closed
+
+      // Check if time is outside opening hours
+      const [openHour, openMin] = dayHours.oraApertura.split(':').map(Number);
+      const [closeHour, closeMin] = dayHours.oraChiusura.split(':').map(Number);
+
+      const appointmentTimeInMinutes = hourPart * 60;
+      const openTimeInMinutes = openHour * 60 + openMin;
+      const closeTimeInMinutes = closeHour * 60 + closeMin;
+
+      // Check if time is outside opening hours
+      if (appointmentTimeInMinutes < openTimeInMinutes || appointmentTimeInMinutes >= closeTimeInMinutes) {
+        return true;
+      }
+
+      // Check if time is during lunch break
+      if (dayHours.oraInizioPausaPranzo && dayHours.oraFinePausaPranzo) {
+        const [lunchStartHour, lunchStartMin] = dayHours.oraInizioPausaPranzo.split(':').map(Number);
+        const [lunchEndHour, lunchEndMin] = dayHours.oraFinePausaPranzo.split(':').map(Number);
+
+        const lunchStartInMinutes = lunchStartHour * 60 + lunchStartMin;
+        const lunchEndInMinutes = lunchEndHour * 60 + lunchEndMin;
+
+        if (appointmentTimeInMinutes >= lunchStartInMinutes && appointmentTimeInMinutes < lunchEndInMinutes) {
+          return true;
+        }
+      }
+
+      return false;
+    } catch (error) {
+      console.error('Error checking studio hours:', error);
+      return false;
+    }
+  };
+
+  // Helper function to check if two dates are the same day
+  const isSameDay = (date1, date2) => {
+    return date1.getFullYear() === date2.getFullYear() &&
+      date1.getMonth() === date2.getMonth() &&
+      date1.getDate() === date2.getDate();
+  };
+
+  // Helper function to check if the entire prestazione duration fits within opening hours
+  const isOpeningHoursEnough = (date, startMinutes, endMinutes) => {
+    if (!date || !studioHours || !Array.isArray(studioHours)) return false;
+
+    try {
+      const appointmentDate = new Date(date);
+      const dayOfWeek = appointmentDate.getDay();
+      const daysOfWeek = ['DOMENICA', 'LUNEDI', 'MARTEDI', 'MERCOLEDI', 'GIOVEDI', 'VENERDI', 'SABATO'];
+      const dayName = daysOfWeek[dayOfWeek];
+      const dayHours = studioHours.find(h => h.giornoSettimana === dayName);
+
+      if (!dayHours || dayHours.chiuso) return false;
+
+      const [openHour, openMin] = dayHours.oraApertura.split(':').map(Number);
+      const [closeHour, closeMin] = dayHours.oraChiusura.split(':').map(Number);
+      const openTimeInMinutes = openHour * 60 + openMin;
+      const closeTimeInMinutes = closeHour * 60 + closeMin;
+
+      // The entire duration must fit within opening hours
+      if (startMinutes < openTimeInMinutes || endMinutes > closeTimeInMinutes) {
+        return false;
+      }
+
+      // Check if the duration overlaps with lunch break
+      if (dayHours.oraInizioPausaPranzo && dayHours.oraFinePausaPranzo) {
+        const [lunchStartHour, lunchStartMin] = dayHours.oraInizioPausaPranzo.split(':').map(Number);
+        const [lunchEndHour, lunchEndMin] = dayHours.oraFinePausaPranzo.split(':').map(Number);
+        const lunchStartInMinutes = lunchStartHour * 60 + lunchStartMin;
+        const lunchEndInMinutes = lunchEndHour * 60 + lunchEndMin;
+
+        // The duration must not overlap with lunch break
+        if (startMinutes < lunchEndInMinutes && endMinutes > lunchStartInMinutes) {
+          return false;
+        }
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Error checking opening hours:', error);
+      return false;
+    }
+  };
+
+  // Helper function to check if the entire prestazione duration overlaps with blocked times
+  const doesDurationOverlapBlocked = (date, hour, durationMinutes) => {
+    if (!date || !blockedTimes || !Array.isArray(blockedTimes)) return false;
+
+    const [startHour, startMin] = hour.split(':').map(Number);
+    const appointmentStart = new Date(date);
+    appointmentStart.setHours(startHour, startMin, 0, 0);
+
+    const appointmentEnd = new Date(appointmentStart);
+    appointmentEnd.setMinutes(appointmentEnd.getMinutes() + durationMinutes);
+
+    return blockedTimes.some(blocked => {
+      try {
+        const blockedDate = new Date(blocked.data);
+        if (isSameDay(blockedDate, appointmentStart)) {
+          const [blockedStartHour, blockedStartMin] = blocked.oraInizio.split(':').map(Number);
+          const [blockedEndHour, blockedEndMin] = blocked.oraFine.split(':').map(Number);
+
+          const blockedStart = new Date(blockedDate);
+          blockedStart.setHours(blockedStartHour, blockedStartMin, 0, 0);
+
+          const blockedEnd = new Date(blockedDate);
+          blockedEnd.setHours(blockedEndHour, blockedEndMin, 0, 0);
+
+          // Check if the appointment duration overlaps with the blocked period
+          return appointmentStart < blockedEnd && appointmentEnd > blockedStart;
+        }
+        return false;
+      } catch (error) {
+        console.error('Error checking blocked time overlap:', error);
+        return false;
+      }
+    });
+  };
+
+  // Fetch blocked times when date changes
+  useEffect(() => {
+    const fetchBlockedTimes = async () => {
+      if (selectedDate) {
+        try {
+          setLoadingBlockedTimes(true);
+          const response = await get('/api/admin/orari/bloccati');
+          if (response.ok) {
+            const data = await response.json();
+            setBlockedTimes(data || []);
+          } else {
+            console.error('Failed to fetch blocked times:', response.status);
+            setBlockedTimes([]);
+          }
+        } catch (error) {
+          console.error('Error fetching blocked times:', error);
+          setBlockedTimes([]);
+        } finally {
+          setLoadingBlockedTimes(false);
+        }
+      }
+    };
+
+    fetchBlockedTimes();
+  }, [selectedDate, get]);
 
   useEffect(() => {
     if (selectedDate) {
@@ -270,14 +482,58 @@ function PrenotazioneCreateStaff({ onClose, onSuccess }) {
           allHours.push(hourStr);
         }
       }
-      const occupiedHours = Array.isArray(prenotazioniEsistenti)
-        ? prenotazioniEsistenti.filter(p => p.dataOraAppuntamento?.startsWith(selectedDate))
-          .map(p => p.dataOraAppuntamento.substring(11, 16))
-        : [];
-      const available = allHours.filter(h => !occupiedHours.includes(h));
+
+      // Filter out unavailable hours
+      const available = allHours.filter(hour => {
+        // Check if studio is closed at the start time
+        if (isStudioClosed(selectedDate, hour)) {
+          return false;
+        }
+
+        // Check if time slot is blocked at the start time
+        if (isTimeSlotBlocked(selectedDate, hour)) {
+          return false;
+        }
+
+        // Check if the entire prestazione fits before closing time
+        const [startHour, startMin] = hour.split(':').map(Number);
+        const startMinutes = startHour * 60 + startMin;
+        const endMinutes = startMinutes + selectedPrestazioneDuration;
+
+        // Check if the end time is still within opening hours
+        if (!isOpeningHoursEnough(selectedDate, startMinutes, endMinutes)) {
+          return false;
+        }
+
+        // Check if the end time doesn't overlap with blocked times
+        if (doesDurationOverlapBlocked(selectedDate, hour, selectedPrestazioneDuration)) {
+          return false;
+        }
+
+        // Check if time slot is already booked (double booking)
+        const occupiedHours = Array.isArray(prenotazioniEsistenti)
+          ? prenotazioniEsistenti.filter(p => p.dataOraAppuntamento?.startsWith(selectedDate))
+            .map(p => p.dataOraAppuntamento.substring(11, 16))
+          : [];
+
+        return !occupiedHours.includes(hour);
+      });
+
       setAvailableHours(available);
     }
-  }, [selectedDate, prenotazioniEsistenti]);
+  }, [selectedDate, prenotazioniEsistenti, studioHours, blockedTimes, selectedPrestazioneDuration]);
+
+  // Update selectedPrestazioneDuration when prestazione changes
+  const updateSelectedPrestazioneDuration = useCallback((tipoVisita) => {
+    if (tipoVisita && tipoVisita !== 'Altro') {
+      const selected = prestazioni.find(p => p.nomePrestazione === tipoVisita);
+      if (selected && selected.durataStimata && selected.durataStimata > 0) {
+        setSelectedPrestazioneDuration(selected.durataStimata);
+        return;
+      }
+    }
+    setSelectedPrestazioneDuration(30); // Default fallback
+  }, [prestazioni]);
 
   // ============================================================
   // HANDLER GENERICI
@@ -305,6 +561,12 @@ function PrenotazioneCreateStaff({ onClose, onSuccess }) {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+    
+    // Update duration when tipoVisita changes
+    if (name === 'tipoVisita') {
+      updateSelectedPrestazioneDuration(value);
+    }
+    
     if (touched[name]) {
       const error = validateField(name, value);
       setErrors(prev => ({ ...prev, [name]: error }));
@@ -514,7 +776,9 @@ function PrenotazioneCreateStaff({ onClose, onSuccess }) {
 
   const hasError = (field) => touched[field] && errors[field];
   const hasSelectedDate = !!selectedDate;
+  const isTipoVisitaSelected = !!formData.tipoVisita;
   const showSpecificaTipo = formData.tipoVisita === 'Altro';
+  const canSelectDate = isTipoVisitaSelected;
 
   // ============================================================
   // RENDER SUGGERIMENTI ANIMALE (solo per STAFF/ADMIN)
@@ -832,109 +1096,6 @@ function PrenotazioneCreateStaff({ onClose, onSuccess }) {
           )}
         </div>
 
-        {/* Data Appuntamento */}
-        <div className="form-group">
-          <label className="form-label">Data Appuntamento *</label>
-          <input
-            type="date"
-            className={`form-control ${hasError('dataOraAppuntamento') ? 'is-invalid' : ''}`}
-            value={selectedDate}
-            onChange={handleDateChange}
-            min={new Date().toISOString().split('T')[0]}
-          />
-        </div>
-
-        {/* Ora Appuntamento */}
-        <div className="form-group">
-          <label className="form-label">Ora Appuntamento *</label>
-          {hasSelectedDate ? (
-            availableHours.length > 0 ? (
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(4, 1fr)',
-                gap: '4px',
-                maxHeight: '120px',
-                overflowY: 'auto',
-                padding: '4px',
-                border: `1px solid ${hasError('dataOraAppuntamento') ? 'var(--danger)' : 'var(--gray-200)'}`,
-                borderRadius: 'var(--radius)',
-                background: 'var(--white)'
-              }}>
-                {availableHours.map(h => (
-                  <button
-                    key={h}
-                    type="button"
-                    className={`btn btn-sm ${formData.dataOraAppuntamento === `${selectedDate}T${h}:00` ? 'btn-primary' : 'btn-secondary'}`}
-                    onClick={() => handleHourSelect(h)}
-                    style={{ fontSize: '12px', padding: '4px 6px' }}
-                  >
-                    {h}
-                  </button>
-                ))}
-              </div>
-            ) : (
-              <div style={{ color: 'var(--danger)', fontSize: '14px', padding: '8px' }}>
-                Nessuna ora disponibile per questa data
-              </div>
-            )
-          ) : (
-            <div style={{ color: 'var(--gray-500)', fontSize: '14px', padding: '8px' }}>
-              Seleziona prima una data
-            </div>
-          )}
-          {hasError('dataOraAppuntamento') && <div className="form-error">{errors.dataOraAppuntamento}</div>}
-        </div>
-
-        {/* Tipo Visita */}
-        <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-          <label className="form-label">Tipo Visita *</label>
-          {loadingPrestazioni ? (
-            <div style={{ color: 'var(--gray-500)', fontSize: '14px', padding: '8px' }}>
-              Caricamento prestazioni...
-            </div>
-          ) : errorPrestazioni ? (
-            <div style={{ color: 'var(--danger)', fontSize: '14px', padding: '8px' }}>
-              {errorPrestazioni}
-            </div>
-          ) : (
-            <>
-              <select
-                name="tipoVisita"
-                className={`form-control ${hasError('tipoVisita') ? 'is-invalid' : ''}`}
-                value={formData.tipoVisita}
-                onChange={handleChange}
-                onBlur={handleBlur}
-              >
-                <option value="">Seleziona tipo visita</option>
-                {prestazioni.map((prestazione) => (
-                  <option key={prestazione.id} value={prestazione.nomePrestazione}>
-                    {prestazione.nomePrestazione} - €{prestazione.costoBase?.toFixed(2) || '0.00'}
-                  </option>
-                ))}
-                <option value="Altro">Altro (specifica)</option>
-              </select>
-              {hasError('tipoVisita') && <div className="form-error">{errors.tipoVisita}</div>}
-            </>
-          )}
-        </div>
-
-        {/* Specifica Tipo Visita (per Altro) */}
-        {showSpecificaTipo && (
-          <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-            <label className="form-label">Specifica tipo visita *</label>
-            <input
-              type="text"
-              name="specificaTipoVisita"
-              className={`form-control ${hasError('specificaTipoVisita') ? 'is-invalid' : ''}`}
-              value={formData.specificaTipoVisita}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              placeholder="Inserisci il tipo di visita..."
-            />
-            {hasError('specificaTipoVisita') && <div className="form-error">{errors.specificaTipoVisita}</div>}
-          </div>
-        )}
-
         {/* Animale */}
         <div className="form-group" style={{ gridColumn: '1 / -1' }}>
           <label className="form-label">Animale *</label>
@@ -1018,6 +1179,121 @@ function PrenotazioneCreateStaff({ onClose, onSuccess }) {
               </span>
             </div>
           )}
+        </div>
+
+        {/* Tipo Visita */}
+        <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+          <label className="form-label">Tipo Visita *</label>
+          {loadingPrestazioni ? (
+            <div style={{ color: 'var(--gray-500)', fontSize: '14px', padding: '8px' }}>
+              Caricamento prestazioni...
+            </div>
+          ) : errorPrestazioni ? (
+            <div style={{ color: 'var(--danger)', fontSize: '14px', padding: '8px' }}>
+              {errorPrestazioni}
+            </div>
+          ) : (
+            <>
+              <select
+                name="tipoVisita"
+                className={`form-control ${hasError('tipoVisita') ? 'is-invalid' : ''}`}
+                value={formData.tipoVisita}
+                onChange={handleChange}
+                onBlur={handleBlur}
+              >
+                <option value="">Seleziona tipo visita</option>
+                {prestazioni.map((prestazione) => (
+                  <option key={prestazione.id} value={prestazione.nomePrestazione}>
+                    {prestazione.nomePrestazione} - €{prestazione.costoBase?.toFixed(2) || '0.00'}
+                  </option>
+                ))}
+                <option value="Altro">Altro (specifica)</option>
+              </select>
+              {hasError('tipoVisita') && <div className="form-error">{errors.tipoVisita}</div>}
+            </>
+          )}
+        </div>
+
+        {/* Specifica Tipo Visita (per Altro) */}
+        {showSpecificaTipo && (
+          <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+            <label className="form-label">Specifica tipo visita *</label>
+            <input
+              type="text"
+              name="specificaTipoVisita"
+              className={`form-control ${hasError('specificaTipoVisita') ? 'is-invalid' : ''}`}
+              value={formData.specificaTipoVisita}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              placeholder="Inserisci il tipo di visita..."
+            />
+            {hasError('specificaTipoVisita') && <div className="form-error">{errors.specificaTipoVisita}</div>}
+          </div>
+        )}
+
+        {/* Data Appuntamento */}
+        <div className="form-group">
+          <label className="form-label">Data Appuntamento *</label>
+          {canSelectDate ? (
+            <input
+              type="date"
+              className={`form-control ${hasError('dataOraAppuntamento') ? 'is-invalid' : ''}`}
+              value={selectedDate}
+              onChange={handleDateChange}
+              min={new Date().toISOString().split('T')[0]}
+            />
+          ) : (
+            <div style={{ color: 'var(--gray-500)', fontSize: '14px', padding: '8px', border: '1px solid var(--gray-200)', borderRadius: 'var(--radius)', background: 'var(--gray-50)' }}>
+              Seleziona prima il tipo di visita
+            </div>
+          )}
+        </div>
+
+        {/* Ora Appuntamento */}
+        <div className="form-group">
+          <label className="form-label">Ora Appuntamento *</label>
+          {canSelectDate ? (
+            hasSelectedDate ? (
+              availableHours.length > 0 ? (
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(4, 1fr)',
+                  gap: '4px',
+                  maxHeight: '120px',
+                  overflowY: 'auto',
+                  padding: '4px',
+                  border: `1px solid ${hasError('dataOraAppuntamento') ? 'var(--danger)' : 'var(--gray-200)'}`,
+                  borderRadius: 'var(--radius)',
+                  background: 'var(--white)'
+                }}>
+                  {availableHours.map(h => (
+                    <button
+                      key={h}
+                      type="button"
+                      className={`btn btn-sm ${formData.dataOraAppuntamento === `${selectedDate}T${h}:00` ? 'btn-primary' : 'btn-secondary'}`}
+                      onClick={() => handleHourSelect(h)}
+                      style={{ fontSize: '12px', padding: '4px 6px' }}
+                    >
+                      {h}
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div style={{ color: 'var(--danger)', fontSize: '14px', padding: '8px' }}>
+                  Nessuna ora disponibile per questa data
+                </div>
+              )
+            ) : (
+              <div style={{ color: 'var(--gray-500)', fontSize: '14px', padding: '8px' }}>
+                Seleziona prima una data
+              </div>
+            )
+          ) : (
+            <div style={{ color: 'var(--gray-500)', fontSize: '14px', padding: '8px', border: '1px solid var(--gray-200)', borderRadius: 'var(--radius)', background: 'var(--gray-50)' }}>
+              Seleziona prima il tipo di visita
+            </div>
+          )}
+          {hasError('dataOraAppuntamento') && <div className="form-error">{errors.dataOraAppuntamento}</div>}
         </div>
 
         {/* Note */}

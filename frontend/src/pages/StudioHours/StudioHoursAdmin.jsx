@@ -1,7 +1,18 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import './StudioHoursAdmin.css';
 import OrarioBloccatoCreateModal from '../../components/OrarioBloccatoCreateModal';
+
+// Move daysOfWeek outside the component to prevent recreation on every render
+const daysOfWeek = [
+  { value: 'LUNEDI', label: 'Lunedì' },
+  { value: 'MARTEDI', label: 'Martedì' },
+  { value: 'MERCOLEDI', label: 'Mercoledì' },
+  { value: 'GIOVEDI', label: 'Giovedì' },
+  { value: 'VENERDI', label: 'Venerdì' },
+  { value: 'SABATO', label: 'Sabato' },
+  { value: 'DOMENICA', label: 'Domenica' }
+];
 
 const StudioHoursAdmin = () => {
   const { token } = useAuth();
@@ -33,16 +44,6 @@ const StudioHoursAdmin = () => {
     giorniEsclusi: []
   });
 
-  const daysOfWeek = [
-    { value: 'LUNEDI', label: 'Lunedì' },
-    { value: 'MARTEDI', label: 'Martedì' },
-    { value: 'MERCOLEDI', label: 'Mercoledì' },
-    { value: 'GIOVEDI', label: 'Giovedì' },
-    { value: 'VENERDI', label: 'Venerdì' },
-    { value: 'SABATO', label: 'Sabato' },
-    { value: 'DOMENICA', label: 'Domenica' }
-  ];
-
   const showMessage = useCallback((type, text) => {
     setMessage({ type, text });
     setTimeout(() => setMessage(null), 5000);
@@ -59,7 +60,23 @@ const StudioHoursAdmin = () => {
       });
       if (!response.ok) throw new Error('Errore nel recupero degli orari');
       const data = await response.json();
-      setDefaultHours(data.defaultOrari || []);
+
+      // Build a map of fetched default hours
+      const dayMap = {};
+      (data.defaultOrari || []).forEach(h => dayMap[h.giornoSettimana] = h);
+
+      // Ensure all 7 days exist with fallback values
+      const allDays = daysOfWeek.map(day => ({
+        giornoSettimana: day.value,
+        oraApertura: dayMap[day.value]?.oraApertura || '09:00',
+        oraChiusura: dayMap[day.value]?.oraChiusura || '18:00',
+        oraInizioPausaPranzo: dayMap[day.value]?.oraInizioPausaPranzo || null,
+        oraFinePausaPranzo: dayMap[day.value]?.oraFinePausaPranzo || null,
+        chiuso: dayMap[day.value]?.chiuso || false,
+        id: dayMap[day.value]?.id || null
+      }));
+
+      setDefaultHours(allDays);
       setSpecificHours(data.specificOrari || []);
     } catch (error) {
       showMessage('error', error.message);
@@ -85,8 +102,25 @@ const StudioHoursAdmin = () => {
 
   const currentDayHours = getCurrentDayHours();
 
+  // Update local state for the selected day (used before saving)
+  const updateSelectedDay = (field, value) => {
+    setDefaultHours(prev => prev.map(h =>
+      h.giornoSettimana === selectedDay ? { ...h, [field]: value } : h
+    ));
+  };
+
+  const handleClosedToggle = () => {
+    updateSelectedDay('chiuso', !currentDayHours.chiuso);
+  };
+
+  const handleTimeChange = (field, value) => {
+    updateSelectedDay(field, value);
+  };
+
   const handleDefaultHoursUpdate = async () => {
     setSaving(true);
+    const dayData = defaultHours.find(h => h.giornoSettimana === selectedDay);
+    if (!dayData) return; // should never happen
     try {
       const response = await fetch('/api/admin/orari/default/with-lunch', {
         method: 'PUT',
@@ -96,11 +130,11 @@ const StudioHoursAdmin = () => {
         },
         body: JSON.stringify({
           giornoSettimana: selectedDay,
-          oraApertura: currentDayHours.oraApertura,
-          oraChiusura: currentDayHours.oraChiusura,
-          oraInizioPausaPranzo: currentDayHours.oraInizioPausaPranzo,
-          oraFinePausaPranzo: currentDayHours.oraFinePausaPranzo,
-          chiuso: currentDayHours.chiuso
+          oraApertura: dayData.oraApertura,
+          oraChiusura: dayData.oraChiusura,
+          oraInizioPausaPranzo: dayData.oraInizioPausaPranzo,
+          oraFinePausaPranzo: dayData.oraFinePausaPranzo,
+          chiuso: dayData.chiuso
         })
       });
       if (!response.ok) throw new Error('Salvataggio orari predefiniti fallito');
@@ -111,18 +145,6 @@ const StudioHoursAdmin = () => {
     } finally {
       setSaving(false);
     }
-  };
-
-  const handleTimeChange = (field, value) => {
-    setDefaultHours(prev => prev.map(h =>
-      h.giornoSettimana === selectedDay ? { ...h, [field]: value } : h
-    ));
-  };
-
-  const handleClosedToggle = () => {
-    setDefaultHours(prev => prev.map(h =>
-      h.giornoSettimana === selectedDay ? { ...h, chiuso: !h.chiuso } : h
-    ));
   };
 
   const handleAllDaysUpdate = async () => {
@@ -175,30 +197,42 @@ const StudioHoursAdmin = () => {
   const handleSpecificDateSave = async () => {
     setSaving(true);
     try {
+      let response;
       if (editingSpecificId) {
-        await fetch(`/api/admin/orari/specific/${editingSpecificId}`, {
-          method: 'DELETE',
+        // Use PUT for updates
+        response = await fetch(`/api/admin/orari/specific/${editingSpecificId}/with-lunch`, {
+          method: 'PUT',
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
-          }
+          },
+          body: JSON.stringify({
+            data: specificDateData.data,
+            oraApertura: specificDateData.oraApertura,
+            oraChiusura: specificDateData.oraChiusura,
+            oraInizioPausaPranzo: specificDateData.oraInizioPausaPranzo,
+            oraFinePausaPranzo: specificDateData.oraFinePausaPranzo,
+            chiuso: specificDateData.chiuso
+          })
+        });
+      } else {
+        // Use POST for new entries
+        response = await fetch('/api/admin/orari/specific/with-lunch', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            data: specificDateData.data,
+            oraApertura: specificDateData.oraApertura,
+            oraChiusura: specificDateData.oraChiusura,
+            oraInizioPausaPranzo: specificDateData.oraInizioPausaPranzo,
+            oraFinePausaPranzo: specificDateData.oraFinePausaPranzo,
+            chiuso: specificDateData.chiuso
+          })
         });
       }
-      const response = await fetch('/api/admin/orari/specific/with-lunch', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          data: specificDateData.data,
-          oraApertura: specificDateData.oraApertura,
-          oraChiusura: specificDateData.oraChiusura,
-          oraInizioPausaPranzo: specificDateData.oraInizioPausaPranzo,
-          oraFinePausaPranzo: specificDateData.oraFinePausaPranzo,
-          chiuso: specificDateData.chiuso
-        })
-      });
       if (!response.ok) throw new Error('Salvataggio eccezione fallito');
       await fetchStudioHours();
       setShowSpecificDateModal(false);
@@ -235,7 +269,7 @@ const StudioHoursAdmin = () => {
   const goToNextMonth = () => setCurrentMonth(prev => new Date(prev.getFullYear(), prev.getMonth() + 1));
   const goToToday = () => setCurrentMonth(new Date());
 
-  const generateCalendarDays = () => {
+  const generateCalendarDays = useCallback(() => {
     const year = currentMonth.getFullYear();
     const month = currentMonth.getMonth();
     const firstDayOfWeek = new Date(year, month, 1).getDay();
@@ -255,7 +289,6 @@ const StudioHoursAdmin = () => {
       const defaultDay = daysOfWeek.find(d => d.label.toLowerCase() === dayName.toLowerCase());
       const defaultOverride = defaultHours.find(h => h.giornoSettimana === defaultDay?.value);
 
-      // Verifica se esiste un orario (override o default non chiuso/null)
       const hasHours = !!(specificOverride || (defaultOverride && !defaultOverride.chiuso));
 
       days.push({
@@ -264,7 +297,7 @@ const StudioHoursAdmin = () => {
         isToday: dateStr === todayStr,
         hasOverride: !!specificOverride,
         isClosed: specificOverride ? specificOverride.chiuso : (defaultOverride?.chiuso || false),
-        hasHours, // true se c'è un orario disponibile (override o default non chiuso)
+        hasHours,
         hours: specificOverride
           ? (specificOverride.chiuso ? 'Chiuso' : `${specificOverride.oraApertura} - ${specificOverride.oraChiusura}`)
           : defaultOverride
@@ -273,9 +306,9 @@ const StudioHoursAdmin = () => {
       });
     }
     return days;
-  };
+  }, [currentMonth, specificHours, defaultHours]);
 
-  const calendarDays = generateCalendarDays();
+  const calendarDays = useMemo(() => generateCalendarDays(), [generateCalendarDays]);
   const monthNames = ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno', 'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
   const currentMonthName = monthNames[currentMonth.getMonth()];
 
@@ -338,7 +371,7 @@ const StudioHoursAdmin = () => {
                   checked={currentDayHours.chiuso || false}
                   onChange={handleClosedToggle}
                 />
-                <span className="slider round"></span>
+                <span className="slider"></span>
                 <span className="toggle-label">
                   {currentDayHours.chiuso ? 'Chiuso' : 'Aperto'}
                 </span>
@@ -458,7 +491,7 @@ const StudioHoursAdmin = () => {
                   checked={allDaysData.chiuso}
                   onChange={(e) => setAllDaysData({...allDaysData, chiuso: e.target.checked})}
                 />
-                <span className="slider round"></span>
+                <span className="slider"></span>
                 <span className="toggle-label">
                   {allDaysData.chiuso ? 'Chiuso' : 'Aperto'}
                 </span>
@@ -574,7 +607,7 @@ const StudioHoursAdmin = () => {
                   checked={specificDateData.chiuso}
                   onChange={(e) => setSpecificDateData({...specificDateData, chiuso: e.target.checked})}
                 />
-                <span className="slider round"></span>
+                <span className="slider"></span>
                 <span className="toggle-label">
                   {specificDateData.chiuso ? 'Chiuso' : 'Aperto'}
                 </span>

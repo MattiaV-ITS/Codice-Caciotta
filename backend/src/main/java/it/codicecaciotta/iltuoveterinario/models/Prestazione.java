@@ -3,6 +3,8 @@ package it.codicecaciotta.iltuoveterinario.models;
 import java.math.BigDecimal;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import lombok.Data;
 
 @Entity
@@ -20,10 +22,9 @@ public class Prestazione {
     @Column(nullable = true)
     private String descrizione;
 
-    @Column(nullable = false)
-    private String categoria;
-
     @Column(name ="durata_stimata", nullable = false)
+    @NotNull(message = "La durata stimata è obbligatoria")
+    @Positive(message = "La durata stimata deve essere positiva")
     private Integer durataStimata; // in minuti
 
     @Column(name = "costo_base", nullable = false, precision = 10, scale = 2)

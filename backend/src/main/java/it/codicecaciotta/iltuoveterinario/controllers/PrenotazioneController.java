@@ -1,6 +1,7 @@
 package it.codicecaciotta.iltuoveterinario.controllers;
 
 import it.codicecaciotta.iltuoveterinario.dto.PrenotazioneCreateDTO;
+import it.codicecaciotta.iltuoveterinario.dto.PrenotazioneUpdateDTO;
 import it.codicecaciotta.iltuoveterinario.dto.PrenotazioneDTO;
 import it.codicecaciotta.iltuoveterinario.mappers.PrenotazioneMapper;
 import it.codicecaciotta.iltuoveterinario.models.Prenotazione;
@@ -60,7 +61,6 @@ public class PrenotazioneController {
         try {
             Prenotazione prenotazione = PrenotazioneMapper.toEntity(prenotazioneDTO, animaleRepository, proprietarioRepository);
             Prenotazione createdPrenotazione = prenotazioneService.createPrenotazione(prenotazione);
-            // Return DTO instead of entity to avoid LazyInitializationException
             PrenotazioneDTO resultDTO = PrenotazioneMapper.toDTO(createdPrenotazione);
             return ResponseEntity.ok(resultDTO);
         } catch (jakarta.validation.ConstraintViolationException e) {
@@ -87,13 +87,28 @@ public class PrenotazioneController {
     @PutMapping("/{id}")
     public ResponseEntity<?> updatePrenotazione(
             @PathVariable Long id, 
-            @RequestBody Prenotazione prenotazioneDetails) {
+            @RequestBody PrenotazioneUpdateDTO prenotazioneDTO) {
         try {
+            logger.info("Updating prenotazione ID: {}", id);
+            logger.debug("Update DTO: dataOraAppuntamento={}, tipoVisita={}, animaleId={}, proprietarioId={}",
+                prenotazioneDTO.getDataOraAppuntamento(),
+                prenotazioneDTO.getTipoVisita(),
+                prenotazioneDTO.getAnimaleId(),
+                prenotazioneDTO.getProprietarioId());
+            
+            Prenotazione prenotazioneDetails = PrenotazioneMapper.toEntity(prenotazioneDTO, animaleRepository, proprietarioRepository);
             Prenotazione updatedPrenotazione = prenotazioneService.updatePrenotazione(id, prenotazioneDetails);
-            // Return DTO instead of entity to avoid LazyInitializationException
             PrenotazioneDTO resultDTO = PrenotazioneMapper.toDTO(updatedPrenotazione);
+            logger.info("Successfully updated prenotazione ID: {}", id);
             return ResponseEntity.ok(resultDTO);
+        } catch (IllegalArgumentException e) {
+            logger.warn("Validation failed for prenotazione ID {}: {}", id, e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of(
+                "error", "Validation error",
+                "message", e.getMessage()
+            ));
         } catch (Exception e) {
+            logger.error("Failed to update prenotazione ID {}", id, e);
             return ResponseEntity.internalServerError().body(Map.of(
                 "error", "Internal server error",
                 "message", "Failed to update prenotazione: " + e.getMessage()
@@ -160,15 +175,12 @@ public class PrenotazioneController {
             if (visitaOptional.isPresent()) {
                 Visita visita = visitaOptional.get();
                 logger.info("Found visita with ID: {}", visita != null ? visita.getId() : "null");
-                // Access only the ID to avoid lazy loading issues
                 Long visitaId = visita != null ? visita.getId() : null;
-                // Use HashMap instead of Map.of to allow null values
                 java.util.Map<String, Object> response = new java.util.HashMap<>();
                 response.put("visitaId", visitaId);
                 return ResponseEntity.ok().body(response);
             } else {
                 logger.info("No visita found for prenotazione ID: {}", prenotazioneId);
-                // Use HashMap instead of Map.of to allow null values
                 java.util.Map<String, Object> response = new java.util.HashMap<>();
                 response.put("visitaId", null);
                 return ResponseEntity.ok().body(response);

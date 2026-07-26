@@ -1,7 +1,7 @@
 // components/Header.jsx
 import { useAuth } from '../context/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
-import logo from '../assets/logo.svg';
+import logo from '../../public/icon.svg';
 import './Header.css';
 
 function Header({ onMenuToggle }) {

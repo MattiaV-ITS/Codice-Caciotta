@@ -1,30 +1,18 @@
-import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useMemo, useRef, useState, useCallback, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './PrenotazioniProgramma.css';
+import './PrenotazioniCalendario.css';
 import { formatDate, formatTime, parseDate } from '../../utils/dateUtils';
 import { useApi } from '../../services/apiService';
 import PrenotazioneCreateStaff from './PrenotazioneCreateStaff';
-import PrenotazioneContextMenu from '../../components/PrenotazioneContextMenu/PrenotazioneContextMenu';
-
-
-
-const MOTIVO_CLASS = {
-  'Visita di controllo': 'tipo-controllo',
-  'Vaccinazione': 'tipo-vaccinazione',
-  'Visita specialistica': 'tipo-specialistica',
-  "Visita d'urgenza": 'tipo-urgenza',
-  'Controllo post-operatorio': 'tipo-post-operatorio',
-  'Altro': 'tipo-altro'
-};
-
-const MOTIVO_LEGENDA = [
-  { label: 'Controllo', color: '#3B82F6' },
-  { label: 'Vaccinazione', color: '#8B5CF6' },
-  { label: 'Specialistica', color: '#2A9D8F' },
-  { label: 'Urgenza', color: '#EF4444' },
-  { label: 'Post-operatorio', color: '#F59E0B' },
-  { label: 'Altro', color: '#6B7280' }
-];
+const PrenotazioneContextMenu = lazy(() => import('../../components/PrenotazioneContextMenu/PrenotazioneContextMenu'));
+import {
+  getPrestazioneClass,
+  getPrestazioneColor,
+  getPrestazioneDuration,
+  getPrestazioneLegenda,
+  FALLBACK_COLOR
+} from './prenotazioniUtils';
 
 const GIORNI_BREVI = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
 
@@ -84,6 +72,9 @@ function PrenotazioniProgramma() {
   const [now, setNow] = useState(new Date());
   const todayRef = useRef(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [prestazioni, setPrestazioni] = useState([]);
+  const [loadingPrestazioni, setLoadingPrestazioni] = useState(true);
+  const [showLegendPopup, setShowLegendPopup] = useState(false);
 
   const fetchPrenotazioni = useCallback(async () => {
     try {
@@ -142,7 +133,7 @@ function PrenotazioniProgramma() {
           animaleNome: animaleNome,
           specie: specie,
           proprietarioNome: proprietarioNome,
-          durataMinuti: 30 // Default duration
+          durataMinuti: 30 // Will be overridden in dayGroups with real prestazione duration
         };
       });
       
@@ -167,6 +158,32 @@ function PrenotazioniProgramma() {
     return () => clearInterval(tick);
   }, []);
 
+  // Fetch prestazioni for color mapping
+  useEffect(() => {
+    const fetchPrestazioni = async () => {
+      try {
+        setLoadingPrestazioni(true);
+        const response = await get('/api/prestazioni');
+        if (response.ok) {
+          // Handle both array and Spring Page response formats
+          const data = await response.json();
+          const prestazioniArray = Array.isArray(data)
+            ? data
+            : (data.content && Array.isArray(data.content)
+                ? data.content
+                : []);
+          setPrestazioni(prestazioniArray);
+        }
+      } catch (error) {
+        console.error('Error fetching prestazioni:', error);
+      } finally {
+        setLoadingPrestazioni(false);
+      }
+    };
+
+    fetchPrestazioni();
+  }, [get]);
+
   // Raggruppa le prenotazioni per giorno e garantisce sempre la presenza
   // del giorno odierno (anche se vuoto), cosi' la barra "Ora" e' sempre visibile.
   const dayGroups = useMemo(() => {
@@ -177,7 +194,9 @@ function PrenotazioniProgramma() {
         const start = parseDate(p.dataOraAppuntamento) || new Date();
         const key = dateKey(start);
         if (!map.has(key)) map.set(key, { date: startOfDay(start), events: [] });
-        map.get(key).events.push({ ...p, _start: start });
+        // Use real prestazione duration instead of hardcoded 30
+        const realDuration = getPrestazioneDuration(p.motivo, prestazioni);
+        map.get(key).events.push({ ...p, _start: start, durataMinuti: realDuration });
       } catch (error) {
         console.error('Error parsing date for prenotazione:', p.id, error);
         // Skip this prenotazione if date parsing fails
@@ -192,7 +211,7 @@ function PrenotazioniProgramma() {
     const groups = Array.from(map.values()).sort((a, b) => a.date - b.date);
     groups.forEach((g) => g.events.sort((a, b) => a._start - b._start));
     return groups;
-  }, [prenotazioni, now]);
+  }, [prenotazioni, now, prestazioni]);
 
   // Costruisce la lista finale intervallando etichette per gli intervalli di
   // giorni senza prenotazioni (come fa Google Calendar nella vista Programma).
@@ -273,13 +292,21 @@ function PrenotazioniProgramma() {
 
       <div className="prog-toolbar">
         <button className="cal-today-btn" onClick={scrollToToday}>Vai a oggi</button>
-        <div className="cal-legend">
-          {MOTIVO_LEGENDA.map((m) => (
-            <span className="cal-legend-item" key={m.label}>
-              <span className="cal-legend-dot" style={{ background: m.color }}></span>{m.label}
-            </span>
-          ))}
-        </div>
+          <div className="cal-legend">
+            {getPrestazioneLegenda(prestazioni).map((m) => (
+              <span className="cal-legend-item" key={m.label}>
+                <span className="cal-legend-dot" style={{ background: m.color }}></span>{m.label}
+              </span>
+            ))}
+            {prestazioni.length > 5 && (
+              <button
+                className="cal-legend-more"
+                onClick={() => setShowLegendPopup(!showLegendPopup)}
+              >
+                +{prestazioni.length - 5} altre
+              </button>
+            )}
+          </div>
       </div>
 
       <div className="prog-list">
@@ -325,23 +352,34 @@ function PrenotazioniProgramma() {
                         <span className="prog-now-rule"></span>
                       </div>
                     )}
-                    <PrenotazioneContextMenu
-                      prenotazione={ev}
-                      onPrenotazioneDeleted={handlePrenotazioneDeleted}
-                      onPrenotazioneUpdated={handlePrenotazioneUpdated}
-                    >
-                      <div
-                        className={`prog-event ${MOTIVO_CLASS[ev.motivo] || 'tipo-altro'} ${
-                          ev.statoPrenotazione === 'Annullata' ? 'is-annullata' :
-                          ev.statoPrenotazione === 'Attesa' ? 'is-attesa' : ''
-                        }`}
+                    <Suspense fallback={<div className="prog-event prog-event-loading">Caricamento...</div>}>
+                      <PrenotazioneContextMenu
+                        prenotazione={ev}
+                        onPrenotazioneDeleted={handlePrenotazioneDeleted}
+                        onPrenotazioneUpdated={handlePrenotazioneUpdated}
                       >
-                        <div className="prog-event-title">{ev.animaleNome}</div>
-                        <div className="prog-event-time">{formatTimeRange(ev._start, ev.durataMinuti)}</div>
-                        <div className="prog-event-owner">{ev.proprietarioNome || 'Proprietario sconosciuto'}</div>
-                        <div className="prog-event-motivo">{ev.motivo}</div>
-                      </div>
-                    </PrenotazioneContextMenu>
+                        <div
+                          className={`prog-event ${getPrestazioneClass(ev.motivo, prestazioni)} ${
+                            ev.statoPrenotazione === 'Annullata' ? 'is-annullata' :
+                            ev.statoPrenotazione === 'Attesa' ? 'is-attesa' : ''
+                          }`}
+                          style={{
+                            ...(getPrestazioneColor(ev.motivo, prestazioni) !== FALLBACK_COLOR && getPrestazioneColor(ev.motivo, prestazioni)
+                              ? {
+                                  background: `${getPrestazioneColor(ev.motivo, prestazioni)}22`,
+                                  borderLeftColor: getPrestazioneColor(ev.motivo, prestazioni),
+                                  color: getPrestazioneColor(ev.motivo, prestazioni)
+                                }
+                              : {})
+                          }}
+                        >
+                          <div className="prog-event-title">{ev.animaleNome}</div>
+                          <div className="prog-event-time">{formatTimeRange(ev._start, ev.durataMinuti)}</div>
+                          <div className="prog-event-owner">{ev.proprietarioNome || 'Proprietario sconosciuto'}</div>
+                          <div className="prog-event-motivo">{ev.motivo}</div>
+                        </div>
+                      </PrenotazioneContextMenu>
+                    </Suspense>
                   </React.Fragment>
                 ))}
 
@@ -370,6 +408,29 @@ function PrenotazioniProgramma() {
             fetchPrenotazioni();
           }}
         />
+      )}
+
+      {/* Legend Popup */}
+      {showLegendPopup && (
+        <div className="cal-legend-popup-overlay" onClick={() => setShowLegendPopup(false)}>
+          <div className="cal-legend-popup" onClick={e => e.stopPropagation()}>
+            <div className="cal-legend-popup-header">
+              <h3>Tutte le Prestazioni</h3>
+              <button className="cal-legend-popup-close" onClick={() => setShowLegendPopup(false)}>
+                ×
+              </button>
+            </div>
+            <div className="cal-legend-popup-content">
+              {prestazioni.map((p) => (
+                <div key={p.id} className="cal-legend-popup-item">
+                  <span className="cal-legend-popup-dot" style={{ backgroundColor: p.colore || '#6B7280' }}></span>
+                  <span className="cal-legend-popup-label">{p.nomePrestazione}</span>
+                  <span className="cal-legend-popup-cost">€{p.costoBase?.toFixed(2) || '0.00'}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

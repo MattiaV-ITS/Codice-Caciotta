@@ -51,5 +51,15 @@ public class AnimaleListaServiceImpl implements AnimaleListaService {
                 .map(AnimaleListaMapper::toListaDTO);
     }
 
-    // TODO: Implementare un metodo per ottenere gli animali di un proprietario specifico
+    @Override
+    public Page<AnimaleListaDTO> getAnimaliByProprietarioId(Long proprietarioId, Pageable pageable) {
+        return animaleRepository.findByProprietarioId(proprietarioId, pageable)
+                .map(AnimaleListaMapper::toListaDTO);
+    }
+
+    @Override
+    public Page<AnimaleListaDTO> searchAnimaliByProprietario(Long proprietarioId, String searchTerm, Pageable pageable) {
+        return animaleRepository.searchByProprietario(proprietarioId, searchTerm, pageable)
+                .map(AnimaleListaMapper::toListaDTO);
+    }
 }

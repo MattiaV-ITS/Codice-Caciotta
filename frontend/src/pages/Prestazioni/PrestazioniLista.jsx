@@ -24,7 +24,7 @@ function PrestazioniLista() {
   const {
     searchTerm, searchFields,
     handleSearchChange, handleSearchSubmit, handleSearchClear
-  } = useSearchControls(['nomePrestazione', 'categoria', 'descrizione']);
+  } = useSearchControls(['nomePrestazione', 'descrizione']);
 
   const memoizedFilters = useMemo(() => ({
     search: searchTerm
@@ -50,12 +50,6 @@ function PrestazioniLista() {
       accessor: 'nomePrestazione',
       sortable: true,
       width: '25%'
-    },
-    {
-      Header: 'Categoria',
-      accessor: 'categoria',
-      sortable: true,
-      width: '15%'
     },
     {
       Header: 'Descrizione',

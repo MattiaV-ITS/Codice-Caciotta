@@ -10,7 +10,6 @@ function PrestazioneCreate() {
   const [formData, setFormData] = useState({
     nomePrestazione: '',
     descrizione: '',
-    categoria: 'Generale',
     durataStimata: 30,
     costoBase: 45.00,
     aliquotaIva: 22,
@@ -21,11 +20,6 @@ function PrestazioneCreate() {
 
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
-
-  const categoriePrestazioni = [
-    'Generale', 'Preventiva', 'Emergenza', 'Chirurgica',
-    'Specialistica', 'Post-operatorio', 'Domiciliare', 'Igiene', 'Diagnostica'
-  ];
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -48,8 +42,6 @@ function PrestazioneCreate() {
     switch (name) {
       case 'nomePrestazione':
         return !value.trim() ? 'Il nome della prestazione è obbligatorio' : '';
-      case 'categoria':
-        return !value ? 'La categoria è obbligatoria' : '';
       case 'durataStimata':
         return isNaN(value) || value <= 0 ? 'La durata deve essere un numero positivo' : '';
       case 'costoBase':
@@ -63,7 +55,7 @@ function PrestazioneCreate() {
 
   const validateForm = () => {
     const newErrors = {};
-    const fieldsToValidate = ['nomePrestazione', 'categoria', 'durataStimata', 'costoBase', 'aliquotaIva'];
+    const fieldsToValidate = ['nomePrestazione', 'durataStimata', 'costoBase', 'aliquotaIva'];
 
     fieldsToValidate.forEach(field => {
       const error = validateField(field, formData[field]);
@@ -127,24 +119,6 @@ function PrestazioneCreate() {
             placeholder="Es. Visita di controllo"
           />
           {hasError('nomePrestazione') && <div className="form-error">{errors.nomePrestazione}</div>}
-        </div>
-
-        {/* Categoria */}
-        <div className="form-group">
-          <label className="form-label">Categoria *</label>
-          <select
-            name="categoria"
-            className={`form-control ${hasError('categoria') ? 'is-invalid' : ''}`}
-            value={formData.categoria}
-            onChange={handleChange}
-            onBlur={handleBlur}
-          >
-            <option value="">Seleziona categoria</option>
-            {categoriePrestazioni.map(cat => (
-              <option key={cat} value={cat}>{cat}</option>
-            ))}
-          </select>
-          {hasError('categoria') && <div className="form-error">{errors.categoria}</div>}
         </div>
 
         {/* Descrizione */}

@@ -12,5 +12,4 @@ public interface PrestazioneService {
     Prestazione updatePrestazione(Long id, Prestazione prestazione);
     void deletePrestazione(Long id);
     List<Prestazione> getPrestazioniDisponibili();
-    List<String> getCategoriePrestazioni();
 }

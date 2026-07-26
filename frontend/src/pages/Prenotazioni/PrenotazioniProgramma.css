@@ -164,36 +164,8 @@
   margin-top: 1px;
 }
 
-.prog-event.tipo-controllo {
-  background: #DBEAFE;
-  border-left-color: #3B82F6;
-  color: #1E40AF;
-}
-
-.prog-event.tipo-vaccinazione {
-  background: #EDE9FE;
-  border-left-color: #8B5CF6;
-  color: #5B21B6;
-}
-
-.prog-event.tipo-specialistica {
-  background: #E6F6F4;
-  border-left-color: #2A9D8F;
-  color: #1F7A70;
-}
-
-.prog-event.tipo-urgenza {
-  background: #FEE2E2;
-  border-left-color: #EF4444;
-  color: #991B1B;
-}
-
-.prog-event.tipo-post-operatorio {
-  background: #FFEDD5;
-  border-left-color: #F59E0B;
-  color: #92400E;
-}
-
+/* Colori dinamici: applicati via inline style dal DB (campo colore delle prestazioni) */
+/* CSS classes are still used for state modifiers and fallback typing */
 .prog-event.tipo-altro {
   background: var(--gray-100);
   border-left-color: var(--gray-400);
