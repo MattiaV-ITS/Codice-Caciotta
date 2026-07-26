@@ -457,6 +457,10 @@ input:checked + .slider:before {
 
 /* Pulsante Aggiungi Eccezione (colore primario) */
 .add-specific-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   width: 100%;
   padding: 10px 20px;
   background: var(--primary);

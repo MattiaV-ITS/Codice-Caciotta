@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import './StudioHoursAdmin.css';
 import OrarioBloccatoCreateModal from '../../components/OrarioBloccatoCreateModal';
+import { PlusIcon, CalendarIcon2, ClockIcon } from '../../components/icons';
 
 // Move daysOfWeek outside the component to prevent recreation on every render
 const daysOfWeek = [
@@ -322,7 +323,9 @@ const StudioHoursAdmin = () => {
 
   return (
     <div className="studio-hours-container">
-      <h2>Gestione Orari Studio</h2>
+      <h2>
+        Gestione Orari Studio
+      </h2>
 
       {message && (
         <div className={`message ${message.type}`}>
@@ -338,10 +341,12 @@ const StudioHoursAdmin = () => {
 
           <div className="all-days-actions">
             <button onClick={() => setShowAllDaysModal(true)} className="update-all-button">
-              📅 Imposta Tutti i Giorni
+              <CalendarIcon2 width="16" height="16" fill="currentColor" />
+              Imposta Tutti i Giorni
             </button>
             <button onClick={() => setShowBlockedSpotModal(true)} className="btn-secondary">
-              + Crea Orario Bloccato
+              <PlusIcon width="16" height="16" stroke="currentColor" />
+              Crea Orario Bloccato
             </button>
           </div>
 
@@ -472,7 +477,8 @@ const StudioHoursAdmin = () => {
           </div>
 
           <button onClick={() => openSpecificDateModal()} className="add-specific-button">
-            + Aggiungi Eccezione
+            <PlusIcon width="24" height="24" stroke="currentColor" />
+            Aggiungi Eccezione
           </button>
         </div>
       </div>
