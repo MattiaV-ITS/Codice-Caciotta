@@ -23,7 +23,7 @@ export function Dashboard() {
     <div className="dashboard">
       <div className="dashboard-header">
         <h1>Dashboard</h1>
-        <p className="text-muted">Benvenuto, oggi hai {stats.visiteOggi} visite programmate</p>
+        <p className="text-muted">Bentornato, oggi hai {stats.visiteOggi} visite programmate</p>
       </div>
 
       <div className="kpi-grid">

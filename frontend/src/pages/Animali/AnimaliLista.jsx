@@ -117,7 +117,6 @@ function AnimaliLista() {
     }
   ];
 
-  // ✅ Icona per stato vuoto
   const emptyIcon = (
     <PawIcon width="48" height="48" style={{ color: 'var(--gray-400)', opacity: 0.5 }} />
   );

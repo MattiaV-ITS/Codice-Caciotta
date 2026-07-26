@@ -5,6 +5,7 @@ import ErrorMessage from '../common/ErrorMessage';
 import PaginationFooter from '../common/PaginationFooter';
 import SearchBox from '../common/SearchBox';
 import FilterBar from '../common/FilterBar';
+import { PlusIcon } from '../icons';
 
 function getSingularForm(word) {
   // Handle specific Italian plural to singular conversions
@@ -51,9 +52,12 @@ function ListPageTemplate({
           <h2>{title}</h2>
           <p className="page-subtitle">{subtitle}</p>
         </div>
-        {showAddButton && (
-          <button className="btn-add" onClick={onAddClick}>+ Nuovo {getSingularForm(title.split(' ')[1] || 'Elemento')}</button>
-        )}
+          {showAddButton && (
+            <button className="btn-add" onClick={onAddClick}>
+              <PlusIcon width={16} height={16} stroke="currentColor" />
+              Nuovo {getSingularForm(title.split(' ')[1] || 'Elemento')}
+            </button>
+          )}
       </div>
 
       {statsContent && (

@@ -23,8 +23,8 @@ function Sidebar({ isOpen, closeMenu }) {
       <nav className="sidebar-nav">
         <div className="nav-label">Menu</div>
 
-        {/* Dashboard Utente - solo per USER */}
-        {user?.roles?.includes('ROLE_USER') && (
+        {/* Dashboard Utente - solo per USER (e non staff/admin) */}
+        {user?.roles?.includes('ROLE_USER') && !isStaff && (
           <NavLink
             to="/dashboard/user"
             className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}

@@ -4,6 +4,7 @@ import { useApi } from '../../services/apiService';
 import { formatDate, getCurrentISODatetime, parseDate, toISODatetimeFormat, toISODateFormat } from '../../utils/dateUtils';
 import { validateRequired, validatePositiveNumber } from '../../utils/validationUtils';
 import FatturaSemplificataModal from '../../components/FatturaSemplificataModal';
+import { PlusIcon, InvoiceIcon } from '../../components/icons'; // ✅ icone condivise
 
 // Inline styles for edit mode banner
 const bannerStyles = `
@@ -33,30 +34,9 @@ const bannerStyles = `
 `;
 
 // ==============================
-// ICONE SVG (invariate)
+// ICONE RIMASTE (solo se necessarie)
 // ==============================
-const PlusIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="12" cy="12" r="10" stroke="var(--primary)" strokeWidth="2"/>
-    <path d="M12 8V16M8 12H16" stroke="var(--primary)" strokeWidth="2" strokeLinecap="round"/>
-  </svg>
-);
-
-const ShareIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="18" cy="5" r="3" stroke="var(--gray-600)" strokeWidth="2"/>
-    <circle cx="6" cy="12" r="3" stroke="var(--gray-600)" strokeWidth="2"/>
-    <circle cx="18" cy="19" r="3" stroke="var(--gray-600)" strokeWidth="2"/>
-    <path d="M8.59 13.51L15.42 17.49" stroke="var(--gray-600)" strokeWidth="2"/>
-    <path d="M15.41 6.51L8.59 10.49" stroke="var(--gray-600)" strokeWidth="2"/>
-  </svg>
-);
-
-const LightningIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M13 2L4 14H12L11 22L20 10H12L13 2Z" stroke="var(--primary)" strokeWidth="2" strokeLinejoin="round"/>
-  </svg>
-);
+// (ShareIcon e LightningIcon non erano usate nel JSX restituito, le ho rimosse)
 
 function getDefaultVisita() {
   const nowStr = getCurrentISODatetime();
@@ -574,7 +554,7 @@ function VisitaForm({ visita, animale, proprietario, onSave, onCancel, isSaving,
           {fatturaEsistente && fatturaData && (
             <div className="visite-fattura-info">
               <div className="visite-fattura-header">
-                <span className="visite-fattura-icon">📄</span>
+                <InvoiceIcon width={18} height={18} style={{ marginRight: '8px' }} />
                 <strong>Fattura Associata</strong>
               </div>
               <div className="visite-fattura-details">
@@ -782,7 +762,8 @@ function VisitaForm({ visita, animale, proprietario, onSave, onCancel, isSaving,
                       disabled={true}
                       title="Esiste già una fattura per questa visita"
                     >
-                      📄 Fattura Esistente
+                      <InvoiceIcon width={16} height={16} style={{ marginRight: '6px' }} />
+                      Fattura Esistente
                     </button>
                   ) : (
                     <button 
@@ -791,7 +772,8 @@ function VisitaForm({ visita, animale, proprietario, onSave, onCancel, isSaving,
                       onClick={() => setShowFatturaModal(true)}
                       disabled={isSaving}
                     >
-                      📄 Crea Fattura Semplificata
+                      <InvoiceIcon width={16} height={16} style={{ marginRight: '6px' }} />
+                      Crea Fattura Semplificata
                     </button>
                   )}
                 </div>

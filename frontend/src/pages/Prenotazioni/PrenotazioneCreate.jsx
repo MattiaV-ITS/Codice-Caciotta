@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { toISODatetimeFormat, toISODateFormat } from '../../utils/dateUtils';
 import { useApi } from '../../services/apiService';
 import FormModal from '../../components/FormModal/FormModal';
+import { PlusIcon } from '../../components/icons'; // ✅ Import aggiunto
 
 // ==============================
 // MOCK PRENOTAZIONI (per controllo date/ore libere)
@@ -574,10 +575,11 @@ function PrenotazioneCreate({ onClose, onSuccess }) {
               <button
                 type="button"
                 className="btn btn-sm btn-primary"
-                style={{ marginTop: '8px' }}
+                style={{ marginTop: '8px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
                 onClick={() => alert('Apri modale creazione animale')}
               >
-                + Registra Animale
+                <PlusIcon width={16} height={16} stroke="currentColor" />
+                Registra Animale
               </button>
             </div>
             <input type="hidden" name="animaleId" value="" />

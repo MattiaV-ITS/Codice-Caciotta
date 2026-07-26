@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import SchedaAnimale from './SchedaAnimale';
 import AnimaleCreate from './AnimaleCreate';
 import { formatDateShort, formatTime } from '../../utils/dateUtils';
+import { PlusIcon } from '../../components/icons'; // ✅ Import aggiunto
 
 function AnimaleDettaglio() {
   const { id } = useParams();
@@ -135,9 +136,10 @@ function AnimaleDettaglio() {
             <button 
               className="btn btn-primary"
               onClick={goToNuovaVisita}
-              style={{ marginTop: '20px' }}
+              style={{ marginTop: '20px', display: 'inline-flex', alignItems: 'center', gap: '8px' }}
             >
-              + Crea Nuova Visita
+              <PlusIcon width={16} height={16} stroke="currentColor" />
+              Crea Nuova Visita
             </button>
           </div>
         </div>
