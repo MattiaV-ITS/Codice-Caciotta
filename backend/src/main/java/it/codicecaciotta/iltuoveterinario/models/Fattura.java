@@ -46,6 +46,9 @@ public class Fattura {
     @Column(name = "dettaglio_servizi", nullable = true, columnDefinition = "TEXT")
     private String dettaglioServizi;
 
+    @Column(name = "pagata", nullable = false)
+    private boolean pagata = false;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "proprietario_id", nullable = true)
     @EqualsAndHashCode.Exclude

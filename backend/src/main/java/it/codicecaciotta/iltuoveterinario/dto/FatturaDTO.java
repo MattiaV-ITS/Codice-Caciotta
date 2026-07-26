@@ -21,13 +21,14 @@ public class FatturaDTO {
     private LocalDateTime dataEmissione;
     private Long visitaId;
     private Long proprietarioId;
+    private boolean pagata;
 
     public FatturaDTO() {}
 
     public FatturaDTO(Long id, String numeroFattura, BigDecimal importoTotale, String tipoFattura,
                      String dettaglioServizi, String codiceFiscaleCliente, String indirizzoCliente,
                      String cittaCliente, String metodoPagamento, LocalDateTime dataEmissione,
-                     Long visitaId, Long proprietarioId) {
+                     Long visitaId, Long proprietarioId, boolean pagata) {
         this.id = id;
         this.numeroFattura = numeroFattura;
         this.importoTotale = importoTotale;
@@ -40,5 +41,6 @@ public class FatturaDTO {
         this.dataEmissione = dataEmissione;
         this.visitaId = visitaId;
         this.proprietarioId = proprietarioId;
+        this.pagata = pagata;
     }
 }

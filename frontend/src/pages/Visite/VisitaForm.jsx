@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useApi } from '../../services/apiService';
 import { formatDate, getCurrentISODatetime, parseDate, toISODatetimeFormat, toISODateFormat } from '../../utils/dateUtils';
@@ -144,6 +144,7 @@ function VisitaForm({ visita, animale, proprietario, onSave, onCancel, isSaving,
   const [loadingPrestazioni, setLoadingPrestazioni] = useState(true);
   const [errorPrestazioni, setErrorPrestazioni] = useState(null);
   const [visitaId, setVisitaId] = useState(null);
+  const [togglingPagamento, setTogglingPagamento] = useState(false);
 
   useEffect(() => {
     if (visita) {
@@ -529,6 +530,22 @@ function VisitaForm({ visita, animale, proprietario, onSave, onCancel, isSaving,
       font-weight: 600;
       color: var(--primary);
     }
+    .fattura-status-badge {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 9999px;
+      font-size: var(--font-xs);
+      font-weight: 600;
+      margin-left: auto;
+    }
+    .fattura-status-badge.pagata {
+      background-color: #c6f6d5;
+      color: #22543d;
+    }
+    .fattura-status-badge.non-pagata {
+      background-color: #fed7d7;
+      color: #9b2c2c;
+    }
   `;
 
   return (
@@ -570,6 +587,9 @@ function VisitaForm({ visita, animale, proprietario, onSave, onCancel, isSaving,
               <div className="visite-fattura-header">
                 <InvoiceIcon width={18} height={18} style={{ marginRight: '8px' }} />
                 <strong>Fattura Associata</strong>
+                <span className={`fattura-status-badge ${fatturaData.pagata ? 'pagata' : 'non-pagata'}`}>
+                  {fatturaData.pagata ? '✅ Pagata' : '❌ Non Pagata'}
+                </span>
               </div>
               <div className="visite-fattura-details">
                 <div className="visite-fattura-row">
@@ -586,6 +606,39 @@ function VisitaForm({ visita, animale, proprietario, onSave, onCancel, isSaving,
                   <span className="visite-fattura-label">Importo:</span>
                   <span className="visite-fattura-value fattura-importo">
                     {fatturaData.importoTotale ? fatturaData.importoTotale.toFixed(2) + ' €' : 'N/D'}
+                  </span>
+                </div>
+                <div className="visite-fattura-row">
+                  <span className="visite-fattura-label">Stato:</span>
+                  <span className="visite-fattura-value">
+                    <button
+                      type="button"
+                      className={`btn btn-sm ${fatturaData.pagata ? 'btn-warning' : 'btn-success'}`}
+                      onClick={async () => {
+                        setTogglingPagamento(true);
+                        try {
+                          const response = await api.patch(`/api/fatture/${fatturaData.id}/pagamento`, {
+                            pagata: !fatturaData.pagata
+                          });
+                          if (response.ok) {
+                            const updated = await response.json();
+                            setFatturaData(updated);
+                          }
+                        } catch (err) {
+                          console.error('Errore aggiornamento pagamento:', err);
+                        } finally {
+                          setTogglingPagamento(false);
+                        }
+                      }}
+                      disabled={togglingPagamento}
+                    >
+                      {togglingPagamento
+                        ? '...'
+                        : fatturaData.pagata
+                          ? 'Segna come Non Pagata'
+                          : 'Segna come Pagata'
+                      }
+                    </button>
                   </span>
                 </div>
               </div>

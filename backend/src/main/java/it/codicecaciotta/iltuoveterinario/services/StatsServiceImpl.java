@@ -1,12 +1,19 @@
 package it.codicecaciotta.iltuoveterinario.services;
 
 import it.codicecaciotta.iltuoveterinario.dto.AnimaleStatsDTO;
+import it.codicecaciotta.iltuoveterinario.dto.FatturaStatsDTO;
+import it.codicecaciotta.iltuoveterinario.dto.FatturaStatsDTO.FatturaMensileDTO;
 import it.codicecaciotta.iltuoveterinario.dto.ProprietarioStatsDTO;
 import it.codicecaciotta.iltuoveterinario.dto.VaccinazioneStatsDTO;
 import it.codicecaciotta.iltuoveterinario.repositories.AnimaleRepository;
+import it.codicecaciotta.iltuoveterinario.repositories.FatturaRepository;
 import it.codicecaciotta.iltuoveterinario.repositories.ProprietarioRepository;
 import it.codicecaciotta.iltuoveterinario.repositories.VaccinazioneRepository;
 import org.springframework.stereotype.Service;
+
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class StatsServiceImpl implements StatsService {
@@ -14,13 +21,16 @@ public class StatsServiceImpl implements StatsService {
     private final VaccinazioneRepository vaccinazioneRepository;
     private final AnimaleRepository animaleRepository;
     private final ProprietarioRepository proprietarioRepository;
+    private final FatturaRepository fatturaRepository;
 
     public StatsServiceImpl(VaccinazioneRepository vaccinazioneRepository,
                           AnimaleRepository animaleRepository,
-                          ProprietarioRepository proprietarioRepository) {
+                          ProprietarioRepository proprietarioRepository,
+                          FatturaRepository fatturaRepository) {
         this.vaccinazioneRepository = vaccinazioneRepository;
         this.animaleRepository = animaleRepository;
         this.proprietarioRepository = proprietarioRepository;
+        this.fatturaRepository = fatturaRepository;
     }
 
     @Override
@@ -62,5 +72,32 @@ public class StatsServiceImpl implements StatsService {
         }
 
         return new ProprietarioStatsDTO(totalCount, attiviCount, inattiviCount, averageAnimaliPerProprietario);
+    }
+
+    @Override
+    public FatturaStatsDTO getFatturaStats() {
+        long totaleFatture = fatturaRepository.count();
+        long fatturePagate = fatturaRepository.countByPagata(true);
+        long fattureNonPagate = fatturaRepository.countByPagata(false);
+        BigDecimal importoTotale = fatturaRepository.sumImportoTotale();
+        BigDecimal importoPagato = fatturaRepository.sumImportoTotaleByPagata(true);
+        BigDecimal importoNonPagato = fatturaRepository.sumImportoTotaleByPagata(false);
+
+        // Monthly breakdown
+        List<Object[]> mensili = fatturaRepository.getFattureMensili();
+        List<FatturaMensileDTO> fatturePerMese = new ArrayList<>();
+        for (Object[] row : mensili) {
+            int anno = ((Number) row[0]).intValue();
+            int mese = ((Number) row[1]).intValue();
+            long totale = ((Number) row[2]).longValue();
+            long pagate = ((Number) row[3]).longValue();
+            long nonPagate = ((Number) row[4]).longValue();
+            BigDecimal importoMensile = (BigDecimal) row[5];
+            fatturePerMese.add(new FatturaMensileDTO(anno, mese, totale, pagate, nonPagate, importoMensile));
+        }
+
+        return new FatturaStatsDTO(totaleFatture, fatturePagate, fattureNonPagate,
+                                  importoTotale, importoPagato, importoNonPagato,
+                                  fatturePerMese);
     }
 }

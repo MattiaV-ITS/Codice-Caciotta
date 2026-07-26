@@ -15,6 +15,7 @@ import PrestazioneCreate from './pages/Prestazioni/PrestazioneCreate';
 import AnimaleDettaglioUser from './pages/Animali/AnimaleDettaglioUser';
 import PrenotazioniCalendario from './pages/Prenotazioni/PrenotazioniCalendario';
 import PrenotazioniProgramma from './pages/Prenotazioni/PrenotazioniProgramma';
+import FattureStats from './pages/Fatture/FattureStats';
 import AdminRoleManagement from "./components/AdminRoleManagement";
 import StudioHoursAdmin from "./pages/StudioHours/StudioHoursAdmin";
 import { useAuth } from './context/AuthContext';
@@ -76,6 +77,7 @@ function App() {
         <Route path="/vaccinazioni" element={<StaffRoute><VaccinazioniLista /></StaffRoute>} />
         <Route path="/dashboard/user" element={<ProtectedRoute><DashboardUser /></ProtectedRoute>} />
         <Route path="/animali/user/:id" element={<ProtectedRoute><AnimaleDettaglioUser /></ProtectedRoute>} />
+        <Route path="/fatture/stats" element={<StaffRoute><FattureStats /></StaffRoute>} />
         <Route path="/admin" element={<AdminRoute><AdminRoleManagement /></AdminRoute>} />
         <Route path="/admin/orari" element={<AdminRoute><StudioHoursAdmin /></AdminRoute>} />
       </Route>
