@@ -109,7 +109,6 @@
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
-  font-family: inherit;
   text-decoration: none;
   line-height: 1.4;
 }
@@ -133,12 +132,11 @@
   border: 1px solid var(--gray-300);
   background: white;
   color: var(--gray-700);
-  border-radius: 20px; /* pill shape */
+  border-radius: 20px;
   cursor: pointer;
   transition: all 0.2s ease;
   font-weight: 500;
   font-size: 13px;
-  font-family: inherit;
 }
 .day-button:hover {
   background: var(--gray-50);
@@ -190,7 +188,6 @@
   width: 100%;
   max-width: 200px;
   font-size: 14px;
-  font-family: inherit;
   color: var(--gray-800);
   background: white;
   transition: border-color 0.2s, box-shadow 0.2s;
@@ -225,7 +222,7 @@
   position: relative;
   display: inline-block;
   cursor: pointer;
-  background-color: #9ca3af; /* grigio medio, sempre visibile */
+  background-color: #9ca3af;
   border: 1px solid #6b7280;
   transition: background-color 0.4s, border-color 0.4s;
   border-radius: 34px;
@@ -290,7 +287,6 @@ input:checked + .slider:before {
   cursor: pointer;
   transition: all 0.2s ease;
   margin-top: var(--space-3);
-  font-family: inherit;
 }
 .save-button:hover {
   background: var(--primary-dark);
@@ -345,7 +341,6 @@ input:checked + .slider:before {
   cursor: pointer;
   font-weight: 500;
   transition: all 0.2s ease;
-  font-family: inherit;
 }
 .today-button:hover {
   background: var(--primary-dark);
@@ -471,7 +466,6 @@ input:checked + .slider:before {
   font-weight: 500;
   margin-top: var(--space-3);
   transition: all 0.2s ease;
-  font-family: inherit;
   font-size: 14px;
 }
 .add-specific-button:hover {
@@ -542,7 +536,6 @@ input:checked + .slider:before {
   cursor: pointer;
   font-weight: 500;
   transition: all 0.2s ease;
-  font-family: inherit;
 }
 .cancel-button:hover {
   background: var(--gray-300);
@@ -565,6 +558,22 @@ input:checked + .slider:before {
   cursor: pointer;
   font-weight: 400;
   font-size: 14px;
+}
+
+/* ========================================
+   FORZA FONT SU INPUT TIME E DATE
+   ======================================== */
+.studio-hours-container input[type="time"],
+.studio-hours-container input[type="date"] {
+  font-family: inherit;
+}
+
+/* Forza il font anche negli input dei modali */
+.modal-content input[type="time"],
+.modal-content input[type="date"],
+.modal-content input[type="text"],
+.modal-content textarea {
+  font-family: inherit;
 }
 
 /* ========================================

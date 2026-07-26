@@ -104,6 +104,7 @@ function OrarioBloccatoCreateModal({ onClose, onSuccess, selectedDate }) {
                 onChange={handleChange}
                 className={errors.data ? 'form-error' : ''}
                 required
+                style={{ fontFamily: 'inherit' }}
               />
               {errors.data && <span className="error-message">{errors.data}</span>}
             </div>
@@ -118,7 +119,8 @@ function OrarioBloccatoCreateModal({ onClose, onSuccess, selectedDate }) {
                 onChange={handleChange}
                 className={errors.oraInizio ? 'form-error' : ''}
                 required
-                step="900" // 15-minute intervals
+                step="900"
+                style={{ fontFamily: 'inherit' }}
               />
               {errors.oraInizio && <span className="error-message">{errors.oraInizio}</span>}
             </div>
@@ -133,8 +135,9 @@ function OrarioBloccatoCreateModal({ onClose, onSuccess, selectedDate }) {
                 onChange={handleChange}
                 className={errors.oraFine ? 'form-error' : ''}
                 required
-                step="900" // 15-minute intervals
+                step="900"
                 min={formData.oraInizio}
+                style={{ fontFamily: 'inherit' }}
               />
               {errors.oraFine && <span className="error-message">{errors.oraFine}</span>}
             </div>
@@ -155,10 +158,10 @@ function OrarioBloccatoCreateModal({ onClose, onSuccess, selectedDate }) {
           {errors.submit && <div className="form-error">{errors.submit}</div>}
 
           <div className="modal-footer">
-            <button type="button" className="btn-cancel" onClick={onClose} disabled={isSubmitting}>
+            <button type="button" className="btn btn-secondary" onClick={onClose} disabled={isSubmitting}>
               Annulla
             </button>
-            <button type="submit" className="btn-submit" disabled={isSubmitting}>
+            <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
               {isSubmitting ? 'Creazione in corso...' : 'Crea Orario Bloccato'}
             </button>
           </div>
