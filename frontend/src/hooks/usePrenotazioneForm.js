@@ -15,6 +15,7 @@ export function usePrenotazioneForm({ onClose, onSuccess }) {
   const [errorPrestazioni, setErrorPrestazioni] = useState(null);
   const [prenotazioniEsistenti, setPrenotazioniEsistenti] = useState([]);
   const [studioHours, setStudioHours] = useState([]);
+  const [specificOrari, setSpecificOrari] = useState([]);
   const [blockedTimes, setBlockedTimes] = useState([]);
   const [loadingBlockedTimes, setLoadingBlockedTimes] = useState(true);
 
@@ -60,11 +61,12 @@ export function usePrenotazioneForm({ onClose, onSuccess }) {
           setPrestazioni(Array.isArray(data) ? data : (data.content || []));
         }
 
-        // Fetch studio hours
+        // Fetch studio hours (default + specific date overrides)
         const studioHoursResponse = await get('/api/admin/orari');
         if (studioHoursResponse.ok) {
           const data = await studioHoursResponse.json();
           setStudioHours(data.defaultOrari || []);
+          setSpecificOrari(data.specificOrari || []);
         }
 
         setLoadingPrestazioni(false);
@@ -138,6 +140,34 @@ export function usePrenotazioneForm({ onClose, onSuccess }) {
       const dayOfWeek = appointmentDate.getDay();
       const daysOfWeek = ['DOMENICA', 'LUNEDI', 'MARTEDI', 'MERCOLEDI', 'GIOVEDI', 'VENERDI', 'SABATO'];
       const dayName = daysOfWeek[dayOfWeek];
+
+      // First check if there's a specific date override for this date
+      const dateStr = selectedDate; // already in YYYY-MM-DD format
+      const specificOverride = Array.isArray(specificOrari)
+        ? specificOrari.find(h => h.dataSpecifica === dateStr)
+        : null;
+
+      if (specificOverride) {
+        // If the specific override marks the day as closed, it's closed
+        if (specificOverride.chiuso) return true;
+        // Otherwise use the specific override hours
+        const [openHour, openMin] = specificOverride.oraApertura.split(':').map(Number);
+        const [closeHour, closeMin] = specificOverride.oraChiusura.split(':').map(Number);
+        const appointmentTimeInMinutes = hourPart * 60;
+        const openTimeInMinutes = openHour * 60 + openMin;
+        const closeTimeInMinutes = closeHour * 60 + closeMin;
+        if (appointmentTimeInMinutes < openTimeInMinutes || appointmentTimeInMinutes >= closeTimeInMinutes) return true;
+        if (specificOverride.oraInizioPausaPranzo && specificOverride.oraFinePausaPranzo) {
+          const [lunchStartHour, lunchStartMin] = specificOverride.oraInizioPausaPranzo.split(':').map(Number);
+          const [lunchEndHour, lunchEndMin] = specificOverride.oraFinePausaPranzo.split(':').map(Number);
+          const lunchStartInMinutes = lunchStartHour * 60 + lunchStartMin;
+          const lunchEndInMinutes = lunchEndHour * 60 + lunchEndMin;
+          if (appointmentTimeInMinutes >= lunchStartInMinutes && appointmentTimeInMinutes < lunchEndInMinutes) return true;
+        }
+        return false;
+      }
+
+      // No specific override, fall back to default weekly hours
       const dayHours = studioHours.find(h => h.giornoSettimana === dayName);
       if (!dayHours) return true;
       if (dayHours.chiuso) return true;
@@ -165,6 +195,31 @@ export function usePrenotazioneForm({ onClose, onSuccess }) {
       const dayOfWeek = appointmentDate.getDay();
       const daysOfWeek = ['DOMENICA', 'LUNEDI', 'MARTEDI', 'MERCOLEDI', 'GIOVEDI', 'VENERDI', 'SABATO'];
       const dayName = daysOfWeek[dayOfWeek];
+
+      // First check if there's a specific date override for this date
+      const dateStr = typeof date === 'string' ? date : date.toISOString().split('T')[0];
+      const specificOverride = Array.isArray(specificOrari)
+        ? specificOrari.find(h => h.dataSpecifica === dateStr)
+        : null;
+
+      if (specificOverride) {
+        if (specificOverride.chiuso) return false;
+        const [openHour, openMin] = specificOverride.oraApertura.split(':').map(Number);
+        const [closeHour, closeMin] = specificOverride.oraChiusura.split(':').map(Number);
+        const openTimeInMinutes = openHour * 60 + openMin;
+        const closeTimeInMinutes = closeHour * 60 + closeMin;
+        if (startMinutes < openTimeInMinutes || endMinutes > closeTimeInMinutes) return false;
+        if (specificOverride.oraInizioPausaPranzo && specificOverride.oraFinePausaPranzo) {
+          const [lunchStartHour, lunchStartMin] = specificOverride.oraInizioPausaPranzo.split(':').map(Number);
+          const [lunchEndHour, lunchEndMin] = specificOverride.oraFinePausaPranzo.split(':').map(Number);
+          const lunchStartInMinutes = lunchStartHour * 60 + lunchStartMin;
+          const lunchEndInMinutes = lunchEndHour * 60 + lunchEndMin;
+          if (startMinutes < lunchEndInMinutes && endMinutes > lunchStartInMinutes) return false;
+        }
+        return true;
+      }
+
+      // No specific override, fall back to default weekly hours
       const dayHours = studioHours.find(h => h.giornoSettimana === dayName);
       if (!dayHours || dayHours.chiuso) return false;
       const [openHour, openMin] = dayHours.oraApertura.split(':').map(Number);

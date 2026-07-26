@@ -13,6 +13,7 @@ import {
   FALLBACK_COLOR
 } from './prenotazioniUtils';
 import { PlusIcon } from '../../components/icons'; // ✅ Import aggiunto
+import OrarioBloccatoCreateModal from '../../components/OrarioBloccatoCreateModal';
 
 const GIORNI = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
 const SLOT_MIN = 30;    // blocchi da 30 minuti
@@ -136,9 +137,11 @@ function PrenotazioniCalendario() {
   const [loadingPrestazioni, setLoadingPrestazioni] = useState(true);
   const [showLegendPopup, setShowLegendPopup] = useState(false);
   const [studioHours, setStudioHours] = useState([]);
+  const [specificOrari, setSpecificOrari] = useState([]);
   const [loadingStudioHours, setLoadingStudioHours] = useState(true);
   const [blockedTimes, setBlockedTimes] = useState([]);
   const [loadingBlockedTimes, setLoadingBlockedTimes] = useState(true);
+  const [showBlockedSpotModal, setShowBlockedSpotModal] = useState(false);
 
   // Days of week mapping for studio hours
   const daysOfWeek = [
@@ -256,7 +259,7 @@ function PrenotazioniCalendario() {
     fetchPrestazioni();
   }, [get]);
 
-  // Fetch studio hours for calendar display
+  // Fetch studio hours (default + specific date overrides) for calendar display
   useEffect(() => {
     const fetchStudioHours = async () => {
       try {
@@ -265,6 +268,7 @@ function PrenotazioniCalendario() {
         if (response.ok) {
           const data = await response.json();
           setStudioHours(data.defaultOrari || []);
+          setSpecificOrari(data.specificOrari || []);
         }
       } catch (error) {
         console.error('Error fetching studio hours:', error);
@@ -370,6 +374,22 @@ function PrenotazioniCalendario() {
     const day = weekDays[dayIndex];
     const dayName = day.toLocaleDateString('it-IT', { weekday: 'long' });
     const dayKey = daysOfWeek.find(d => d.label.toUpperCase() === dayName.toUpperCase())?.value;
+
+    // First check if there's a specific date override for this day
+    const dateStr = day.toISOString().split('T')[0];
+    const specificOverride = Array.isArray(specificOrari)
+      ? specificOrari.find(h => h.dataSpecifica === dateStr)
+      : null;
+
+    if (specificOverride) {
+      return {
+        chiuso: specificOverride.chiuso,
+        start: specificOverride.oraApertura,
+        end: specificOverride.oraChiusura,
+        lunchStart: specificOverride.oraInizioPausaPranzo,
+        lunchEnd: specificOverride.oraFinePausaPranzo
+      };
+    }
 
     if (dayKey) {
       const dayHours = studioHours.find(h => h.giornoSettimana === dayKey);
@@ -530,6 +550,10 @@ function PrenotazioniCalendario() {
           <button className="btn-add" onClick={() => setShowCreateModal(true)}>
             <PlusIcon width={16} height={16} stroke="currentColor" />
             Nuova Prenotazione
+          </button>
+          <button className="btn-secondary" onClick={() => setShowBlockedSpotModal(true)}>
+            <PlusIcon width={16} height={16} stroke="currentColor" />
+            Crea Orario Bloccato
           </button>
         </div>
       </div>
@@ -802,6 +826,29 @@ function PrenotazioniCalendario() {
             setShowCreateModal(false);
             fetchPrenotazioni();
           }}
+        />
+      )}
+
+      {showBlockedSpotModal && (
+        <OrarioBloccatoCreateModal
+          onClose={() => setShowBlockedSpotModal(false)}
+          onSuccess={() => {
+            setShowBlockedSpotModal(false);
+            // Refresh blocked times
+            const fetchBlockedTimes = async () => {
+              try {
+                const response = await get('/api/admin/orari/bloccati');
+                if (response.ok) {
+                  const data = await response.json();
+                  setBlockedTimes(data || []);
+                }
+              } catch (error) {
+                console.error('Error refreshing blocked times:', error);
+              }
+            };
+            fetchBlockedTimes();
+          }}
+          selectedDate={weekStart.toISOString().split('T')[0]}
         />
       )}
 

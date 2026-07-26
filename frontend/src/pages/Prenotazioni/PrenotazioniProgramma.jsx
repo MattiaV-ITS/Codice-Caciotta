@@ -14,6 +14,7 @@ import {
   FALLBACK_COLOR
 } from './prenotazioniUtils';
 import { PlusIcon } from '../../components/icons'; // ✅ Aggiunto
+import OrarioBloccatoCreateModal from '../../components/OrarioBloccatoCreateModal';
 
 const GIORNI_BREVI = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
 
@@ -76,6 +77,12 @@ function PrenotazioniProgramma() {
   const [prestazioni, setPrestazioni] = useState([]);
   const [loadingPrestazioni, setLoadingPrestazioni] = useState(true);
   const [showLegendPopup, setShowLegendPopup] = useState(false);
+  const [studioHours, setStudioHours] = useState([]);
+  const [specificOrari, setSpecificOrari] = useState([]);
+  const [loadingStudioHours, setLoadingStudioHours] = useState(true);
+  const [blockedTimes, setBlockedTimes] = useState([]);
+  const [loadingBlockedTimes, setLoadingBlockedTimes] = useState(true);
+  const [showBlockedSpotModal, setShowBlockedSpotModal] = useState(false);
 
   const fetchPrenotazioni = useCallback(async () => {
     try {
@@ -185,6 +192,54 @@ function PrenotazioniProgramma() {
     fetchPrestazioni();
   }, [get]);
 
+  // Fetch studio hours (default + specific date overrides)
+  useEffect(() => {
+    const fetchStudioHours = async () => {
+      try {
+        setLoadingStudioHours(true);
+        const response = await get('/api/admin/orari');
+        if (response.ok) {
+          const data = await response.json();
+          setStudioHours(data.defaultOrari || []);
+          setSpecificOrari(data.specificOrari || []);
+        }
+      } catch (error) {
+        console.error('Error fetching studio hours:', error);
+      } finally {
+        setLoadingStudioHours(false);
+      }
+    };
+
+    fetchStudioHours();
+  }, [get]);
+
+  // Fetch blocked times
+  useEffect(() => {
+    const fetchBlockedTimes = async () => {
+      try {
+        setLoadingBlockedTimes(true);
+        const response = await get('/api/admin/orari/bloccati');
+        if (response.ok) {
+          const data = await response.json();
+          setBlockedTimes(data || []);
+        } else if (response.status === 403) {
+          const publicResponse = await get('/api/orari/bloccati');
+          if (publicResponse.ok) {
+            const publicData = await publicResponse.json();
+            setBlockedTimes(publicData || []);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching blocked times:', error);
+        setBlockedTimes([]);
+      } finally {
+        setLoadingBlockedTimes(false);
+      }
+    };
+
+    fetchBlockedTimes();
+  }, [get]);
+
   // Raggruppa le prenotazioni per giorno e garantisce sempre la presenza
   // del giorno odierno (anche se vuoto), cosi' la barra "Ora" e' sempre visibile.
   const dayGroups = useMemo(() => {
@@ -290,6 +345,10 @@ function PrenotazioniProgramma() {
           <button className="btn-add" onClick={() => setShowCreateModal(true)}>
             <PlusIcon width={16} height={16} stroke="currentColor" />
             Nuova Prenotazione
+          </button>
+          <button className="btn-secondary" onClick={() => setShowBlockedSpotModal(true)}>
+            <PlusIcon width={16} height={16} stroke="currentColor" />
+            Crea Orario Bloccato
           </button>
         </div>
       </div>
@@ -415,6 +474,29 @@ function PrenotazioniProgramma() {
             // Refresh the list after successful creation
             fetchPrenotazioni();
           }}
+        />
+      )}
+
+      {showBlockedSpotModal && (
+        <OrarioBloccatoCreateModal
+          onClose={() => setShowBlockedSpotModal(false)}
+          onSuccess={() => {
+            setShowBlockedSpotModal(false);
+            // Refresh blocked times
+            const fetchBlockedTimes = async () => {
+              try {
+                const response = await get('/api/admin/orari/bloccati');
+                if (response.ok) {
+                  const data = await response.json();
+                  setBlockedTimes(data || []);
+                }
+              } catch (error) {
+                console.error('Error refreshing blocked times:', error);
+              }
+            };
+            fetchBlockedTimes();
+          }}
+          selectedDate={new Date().toISOString().split('T')[0]}
         />
       )}
 
