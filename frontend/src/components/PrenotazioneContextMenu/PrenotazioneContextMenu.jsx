@@ -34,7 +34,7 @@ const DeleteIcon = () => (
 const PrenotazioneContextMenu = ({ children, prenotazione, onPrenotazioneUpdated, onPrenotazioneDeleted }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { get, post, delete: deleteRequest } = useApi();
+  const { get, post, patch, delete: deleteRequest } = useApi();
   const [isLoading, setIsLoading] = useState(false);
 
   const isStaffOrAdmin = user?.roles?.includes('ROLE_STAFF') || user?.roles?.includes('ROLE_ADMIN');
@@ -118,6 +118,42 @@ const PrenotazioneContextMenu = ({ children, prenotazione, onPrenotazioneUpdated
     }
   }, [prenotazione, isStaffOrAdmin, deleteRequest, onPrenotazioneDeleted]);
 
+  const handleChangeStato = useCallback(async (nuovoStato) => {
+    if (!prenotazione?.id) return;
+    try {
+      setIsLoading(true);
+      const response = await patch(`/api/prenotazioni/${prenotazione.id}/stato`, { stato: nuovoStato });
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `Failed to update stato: ${response.status}`);
+      }
+      const updatedPrenotazione = await response.json();
+      onPrenotazioneUpdated?.(updatedPrenotazione);
+    } catch (error) {
+      console.error('Error updating stato:', error);
+      alert(`Errore aggiornando lo stato: ${error.message}`);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [prenotazione, onPrenotazioneUpdated, patch]);
+
+  // Icone inline per i tre stati
+  const NonArrivatoIcon = () => (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="12" cy="12" r="8" stroke="currentColor" strokeWidth="2" fill="none" />
+    </svg>
+  );
+  const InAttesaIcon = () => (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="12" cy="12" r="8" stroke="currentColor" strokeWidth="2" strokeDasharray="4 3" fill="none" />
+    </svg>
+  );
+  const CompletatoIcon = () => (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="12" cy="12" r="8" fill="currentColor" />
+    </svg>
+  );
+
   const menuItems = [
     {
       label: 'Apri/Crea Visita',
@@ -130,11 +166,34 @@ const PrenotazioneContextMenu = ({ children, prenotazione, onPrenotazioneUpdated
       icon: <EditIcon />,
       onClick: handleEditPrenotazione,
       disabled: isLoading
+    },
+    { divider: true },
+    {
+      label: 'Non arrivato',
+      icon: <NonArrivatoIcon />,
+      onClick: () => handleChangeStato('NON_ARRIVATO'),
+      disabled: isLoading,
+      className: prenotazione?.stato === 'NON_ARRIVATO' ? 'context-menu-item-active' : ''
+    },
+    {
+      label: 'In attesa',
+      icon: <InAttesaIcon />,
+      onClick: () => handleChangeStato('IN_ATTESA'),
+      disabled: isLoading,
+      className: prenotazione?.stato === 'IN_ATTESA' ? 'context-menu-item-active' : ''
+    },
+    {
+      label: 'Completato',
+      icon: <CompletatoIcon />,
+      onClick: () => handleChangeStato('COMPLETATO'),
+      disabled: isLoading,
+      className: prenotazione?.stato === 'COMPLETATO' ? 'context-menu-item-active' : ''
     }
   ];
 
   // Add delete option only for staff/admin
   if (isStaffOrAdmin) {
+    menuItems.push({ divider: true });
     menuItems.push({
       label: 'Elimina Prenotazione',
       icon: <DeleteIcon />,

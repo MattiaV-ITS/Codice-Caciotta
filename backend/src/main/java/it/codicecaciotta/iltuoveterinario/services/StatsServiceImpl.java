@@ -153,11 +153,13 @@ public class StatsServiceImpl implements StatsService {
 
         List<VisitaOggiDTO> visiteOggiDTOs = visiteOggiList.stream()
                 .map(p -> new VisitaOggiDTO(
+                        p.getId(),
                         p.getAnimale() != null ? p.getAnimale().getNome() : "Sconosciuto",
                         p.getProprietario() != null ? p.getProprietario().getNome() : "",
                         p.getProprietario() != null ? p.getProprietario().getCognome() : "",
                         p.getDataOraAppuntamento(),
-                        p.getTipoVisita()
+                        p.getTipoVisita(),
+                        p.getStato() != null ? p.getStato().name() : "NON_ARRIVATO"
                 ))
                 .collect(Collectors.toList());
 

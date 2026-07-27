@@ -204,7 +204,7 @@ function PrenotazioniCalendario() {
           dataOraAppuntamento: dataOraAppuntamento,
           tipoVisita: p.tipoVisita,
           motivo: p.tipoVisita,
-          statoPrenotazione: 'Confermata',
+          stato: p.stato || 'NON_ARRIVATO',
           priorita: 'Media',
           note: p.note || '',
           animaleId: p.animaleId,
@@ -501,12 +501,15 @@ function PrenotazioniCalendario() {
         dataOraAppuntamento: updatedPrenotazione.dataOraAppuntamento,
         tipoVisita: updatedPrenotazione.tipoVisita,
         motivo: updatedPrenotazione.tipoVisita,
+        stato: updatedPrenotazione.stato || p.stato,
         note: updatedPrenotazione.note,
         animaleId: updatedPrenotazione.animaleId,
-        animaleNome: updatedPrenotazione.animale?.nome || p.animaleNome,
+        animaleNome: updatedPrenotazione.animale?.nome || updatedPrenotazione.animaleNome || p.animaleNome,
         specie: updatedPrenotazione.animale?.specie || p.specie,
         proprietarioId: updatedPrenotazione.proprietarioId,
-        proprietarioNome: updatedPrenotazione.proprietarioNome || p.proprietarioNome,
+        proprietarioNome: updatedPrenotazione.proprietarioNome 
+          ? `${updatedPrenotazione.proprietarioNome} ${updatedPrenotazione.proprietarioCognome || ''}`.trim() 
+          : p.proprietarioNome,
         animale: updatedPrenotazione.animale || p.animale,
         proprietario: updatedPrenotazione.proprietario || p.proprietario
       } : p)
@@ -737,11 +740,13 @@ function PrenotazioniCalendario() {
 
                     const prestazioneColor = getPrestazioneColor(ev.motivo, prestazioni);
                     const prestazioneClass = getPrestazioneClass(ev.motivo, prestazioni);
-                    const statoModifier = ev.statoPrenotazione === 'Annullata'
-                      ? 'is-annullata'
-                      : ev.statoPrenotazione === 'Attesa'
-                        ? 'is-attesa'
-                        : '';
+                    const statoModifier = ev.stato === 'COMPLETATO'
+                      ? 'is-completato'
+                      : ev.stato === 'IN_ATTESA'
+                        ? 'is-in-attesa'
+                        : ev.stato === 'NON_ARRIVATO'
+                          ? 'is-non-arrivato'
+                          : '';
 
                     return (
                       <Suspense key={ev.id} fallback={<div className="cal-event" style={{ top, height, left: `calc(${leftPct}% + 2px)`, width: `calc(${widthPct}% - 4px)` }} />}>

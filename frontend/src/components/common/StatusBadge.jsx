@@ -13,6 +13,11 @@ const STATUS_CONFIG = {
   'Completata': { className: 'badge-completata', label: 'Completata' },
   'Annullata': { className: 'badge-annullata', label: 'Annullata' },
   
+  // Stato prenotazione (sala d'attesa)
+  'NON_ARRIVATO': { className: 'badge-non-arrivato', label: 'Non arrivato' },
+  'IN_ATTESA': { className: 'badge-in-attesa', label: 'In attesa' },
+  'COMPLETATO': { className: 'badge-completato', label: 'Completato' },
+  
   // Visite
   'Pianificata': { className: 'badge-pianificata', label: 'Pianificata' },
   'In corso': { className: 'badge-in-corso', label: 'In corso' },

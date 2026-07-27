@@ -116,6 +116,23 @@ public class PrenotazioneController {
         }
     }
 
+    @PatchMapping("/{id}/stato")
+    public ResponseEntity<?> updateStatoPrenotazione(@PathVariable Long id, @RequestBody Map<String, String> body) {
+        try {
+            String nuovoStato = body.get("stato");
+            if (nuovoStato == null || nuovoStato.isBlank()) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Il campo 'stato' è obbligatorio"));
+            }
+            Prenotazione updated = prenotazioneService.updateStato(id, nuovoStato);
+            PrenotazioneDTO resultDTO = PrenotazioneMapper.toDTO(updated);
+            return ResponseEntity.ok(resultDTO);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(Map.of("error", "Errore aggiornando lo stato: " + e.getMessage()));
+        }
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletePrenotazione(@PathVariable Long id) {
         prenotazioneService.deletePrenotazione(id);

@@ -19,6 +19,9 @@ public class PrenotazioneDTO {
     private Long animaleId;
     private String animaleNome;
     
+    // Stato prenotazione
+    private String stato;
+    
     // Proprietario fields
     private Long proprietarioId;
     private String proprietarioNome;

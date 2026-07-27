@@ -1,6 +1,7 @@
 package it.codicecaciotta.iltuoveterinario.services;
 
 import it.codicecaciotta.iltuoveterinario.models.DiarioClinico;
+import it.codicecaciotta.iltuoveterinario.models.EStatoPrenotazione;
 import it.codicecaciotta.iltuoveterinario.models.Prenotazione;
 import it.codicecaciotta.iltuoveterinario.models.Prestazione;
 import it.codicecaciotta.iltuoveterinario.models.Visita;
@@ -250,6 +251,9 @@ public class PrenotazioneService {
                     prenotazione.setNote(prenotazioneDetails.getNote());
                     prenotazione.setAnimale(prenotazioneDetails.getAnimale());
                     prenotazione.setProprietario(prenotazioneDetails.getProprietario());
+                    if (prenotazioneDetails.getStato() != null) {
+                        prenotazione.setStato(prenotazioneDetails.getStato());
+                    }
                     
                     logger.debug("Validating updated prenotazione");
                     validateAppointmentTime(prenotazione);
@@ -342,6 +346,26 @@ public class PrenotazioneService {
 
                     return savedVisita;
                 });
+    }
+
+    @Transactional
+    public Prenotazione updateStato(Long id, String nuovoStato) {
+        Long prenotazioneId = Objects.requireNonNull(id, "Prenotazione id cannot be null");
+        Objects.requireNonNull(nuovoStato, "Stato cannot be null");
+        
+        EStatoPrenotazione stato;
+        try {
+            stato = EStatoPrenotazione.valueOf(nuovoStato.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Stato non valido: " + nuovoStato + ". Valori ammessi: NON_ARRIVATO, IN_ATTESA, COMPLETATO");
+        }
+        
+        return prenotazioneRepository.findById(prenotazioneId)
+                .map(prenotazione -> {
+                    prenotazione.setStato(stato);
+                    return prenotazioneRepository.save(prenotazione);
+                })
+                .orElseThrow(() -> new RuntimeException("Prenotazione not found with id: " + prenotazioneId));
     }
 
     @Transactional(readOnly = true)
