@@ -135,7 +135,7 @@ function PrenotazioniProgramma() {
           id: p.id,
           dataOraAppuntamento: dataOraAppuntamento,
           motivo: p.tipoVisita,
-          statoPrenotazione: 'Confermata', // Default status
+          stato: p.stato || 'NON_ARRIVATO',
           priorita: 'Media', // Default priority
           note: p.note || '',
           animaleNome: animaleNome,
@@ -299,10 +299,13 @@ function PrenotazioniProgramma() {
         ...p,
         dataOraAppuntamento: updatedPrenotazione.dataOraAppuntamento,
         motivo: updatedPrenotazione.tipoVisita,
+        stato: updatedPrenotazione.stato || p.stato,
         note: updatedPrenotazione.note,
-        animaleNome: updatedPrenotazione.animale?.nome || p.animaleNome,
+        animaleNome: updatedPrenotazione.animale?.nome || updatedPrenotazione.animaleNome || p.animaleNome,
         specie: updatedPrenotazione.animale?.specie || p.specie,
-        proprietarioNome: updatedPrenotazione.proprietarioNome || p.proprietarioNome
+        proprietarioNome: updatedPrenotazione.proprietarioNome 
+          ? `${updatedPrenotazione.proprietarioNome} ${updatedPrenotazione.proprietarioCognome || ''}`.trim() 
+          : p.proprietarioNome
       } : p)
     );
   };
@@ -425,8 +428,9 @@ function PrenotazioniProgramma() {
                       >
                         <div
                           className={`prog-event ${getPrestazioneClass(ev.motivo, prestazioni)} ${
-                            ev.statoPrenotazione === 'Annullata' ? 'is-annullata' :
-                            ev.statoPrenotazione === 'Attesa' ? 'is-attesa' : ''
+                            ev.stato === 'COMPLETATO' ? 'is-completato' :
+                            ev.stato === 'IN_ATTESA' ? 'is-in-attesa' :
+                            ev.stato === 'NON_ARRIVATO' ? 'is-non-arrivato' : ''
                           }`}
                           style={{
                             ...(getPrestazioneColor(ev.motivo, prestazioni) !== FALLBACK_COLOR && getPrestazioneColor(ev.motivo, prestazioni)

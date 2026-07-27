@@ -172,14 +172,16 @@
   color: var(--gray-700);
 }
 
-.prog-event.is-attesa {
-  border-left-style: dashed;
+.prog-event.is-completato {
+  border-left-style: solid !important;
 }
 
-.prog-event.is-annullata {
-  opacity: 0.55;
-  text-decoration: line-through;
-  text-decoration-color: currentColor;
+.prog-event.is-in-attesa {
+  border-left-style: dashed !important;
+}
+
+.prog-event.is-non-arrivato {
+  border-left: 1px solid var(--gray-200) !important;
 }
 
 /* ----- Pulsante flottante "+" ----- */

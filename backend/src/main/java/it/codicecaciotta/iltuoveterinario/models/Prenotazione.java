@@ -22,7 +22,7 @@ public class Prenotazione {
     private LocalDateTime dataOraAppuntamento;
 
     @Column(nullable = false)
-    private String tipoVisita; // TODO: collegare con la tabella Prestazioni
+    private String tipoVisita;
 
     @Column(nullable = true)
     private String note;
@@ -44,6 +44,10 @@ public class Prenotazione {
     @EqualsAndHashCode.Exclude
     @ToString.Exclude
     private Proprietario proprietario;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "stato", nullable = false)
+    private EStatoPrenotazione stato = EStatoPrenotazione.NON_ARRIVATO;
 
     @OneToOne(mappedBy = "prenotazione", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @EqualsAndHashCode.Exclude

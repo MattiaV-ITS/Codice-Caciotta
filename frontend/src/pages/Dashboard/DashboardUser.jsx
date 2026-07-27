@@ -61,13 +61,19 @@ function DashboardUser() {
     setError(null);
 
     try {
-      const animaliRes = await get(`/api/animali?proprietarioId=${user.id}&page=0&size=4`);
+      const proprietarioId = user.proprietarioId;
+      if (!proprietarioId) {
+        setAnimali([]);
+        setLoading(false);
+        return;
+      }
+      const animaliRes = await get(`/api/animali?proprietarioId=${proprietarioId}&page=0&size=4`);
       const animaliData = await animaliRes.json();
       setAnimali(animaliData.content || []);
 
-      const prenotazioniRes = await get(`/api/prenotazioni?proprietarioId=${user.id}&page=0&size=5&sortBy=dataOraAppuntamento&sortDir=asc`);
+      const prenotazioniRes = await get(`/api/prenotazioni?proprietarioId=${proprietarioId}`);
       const prenotazioniData = await prenotazioniRes.json();
-      setPrenotazioni(prenotazioniData.content || []);
+      setPrenotazioni(Array.isArray(prenotazioniData) ? prenotazioniData : []);
 
       setLoading(false);
     } catch (err) {
@@ -318,7 +324,7 @@ function DashboardUser() {
         <AnimaleCreate
           onClose={() => setShowCreateModal(false)}
           onSuccess={handleCreateSuccess}
-          proprietarioPrecompilatoId={user?.id}
+          proprietarioPrecompilatoId={user?.proprietarioId}
         />
       )}
 

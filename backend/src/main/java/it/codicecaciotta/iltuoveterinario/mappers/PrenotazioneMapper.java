@@ -4,6 +4,7 @@ import it.codicecaciotta.iltuoveterinario.dto.PrenotazioneDTO;
 import it.codicecaciotta.iltuoveterinario.dto.PrenotazioneCreateDTO;
 import it.codicecaciotta.iltuoveterinario.dto.PrenotazioneUpdateDTO;
 import it.codicecaciotta.iltuoveterinario.models.Prenotazione;
+import it.codicecaciotta.iltuoveterinario.models.EStatoPrenotazione;
 import it.codicecaciotta.iltuoveterinario.models.Animale;
 import it.codicecaciotta.iltuoveterinario.models.Proprietario;
 import it.codicecaciotta.iltuoveterinario.repositories.AnimaleRepository;
@@ -22,6 +23,7 @@ public class PrenotazioneMapper {
         dto.setDataOraAppuntamento(prenotazione.getDataOraAppuntamento());
         dto.setTipoVisita(prenotazione.getTipoVisita());
         dto.setNote(prenotazione.getNote());
+        dto.setStato(prenotazione.getStato() != null ? prenotazione.getStato().name() : "NON_ARRIVATO");
         
         // Handle animale relationship safely
         if (prenotazione.getAnimale() != null) {
@@ -57,6 +59,7 @@ public class PrenotazioneMapper {
         prenotazione.setDataOraAppuntamento(dto.getDataOraAppuntamento());
         prenotazione.setTipoVisita(dto.getTipoVisita());
         prenotazione.setNote(dto.getNote());
+        prenotazione.setStato(dto.getStato() != null ? EStatoPrenotazione.valueOf(dto.getStato()) : EStatoPrenotazione.NON_ARRIVATO);
         
         // Fetch and set Animale entity
         if (dto.getAnimaleId() != null) {
@@ -94,6 +97,7 @@ public class PrenotazioneMapper {
         prenotazione.setDataOraAppuntamento(dto.getDataOraAppuntamento());
         prenotazione.setTipoVisita(dto.getTipoVisita());
         prenotazione.setNote(dto.getNote());
+        prenotazione.setStato(dto.getStato() != null ? EStatoPrenotazione.valueOf(dto.getStato()) : EStatoPrenotazione.NON_ARRIVATO);
         
         // Fetch and set Animale entity
         if (dto.getAnimaleId() != null) {
@@ -131,6 +135,7 @@ public class PrenotazioneMapper {
         prenotazione.setDataOraAppuntamento(dto.getDataOraAppuntamento());
         prenotazione.setTipoVisita(dto.getTipoVisita());
         prenotazione.setNote(dto.getNote());
+        prenotazione.setStato(dto.getStato() != null ? EStatoPrenotazione.valueOf(dto.getStato()) : EStatoPrenotazione.NON_ARRIVATO);
         
         // Fetch and set Animale entity
         if (dto.getAnimaleId() != null) {

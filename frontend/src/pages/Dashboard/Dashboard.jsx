@@ -7,7 +7,7 @@ import { formatTime } from '../../utils/dateUtils';
 import './Dashboard.css';
 
 export function Dashboard() {
-  const { get } = useApi();
+  const { get, patch } = useApi();
   const navigate = useNavigate();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -32,6 +32,22 @@ export function Dashboard() {
   useEffect(() => {
     fetchDashboardData();
   }, [fetchDashboardData]);
+
+  const handleChangeStato = useCallback(async (prenotazioneId, nuovoStato) => {
+    if (!prenotazioneId) return;
+    try {
+      const response = await patch(`/api/prenotazioni/${prenotazioneId}/stato`, { stato: nuovoStato });
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `Failed to update stato: ${response.status}`);
+      }
+      // Refresh dashboard data to reflect changes
+      fetchDashboardData();
+    } catch (error) {
+      console.error('Error updating stato:', error);
+      alert(`Errore aggiornando lo stato: ${error.message}`);
+    }
+  }, [fetchDashboardData, patch]);
 
   if (loading) {
     return (
@@ -110,16 +126,36 @@ export function Dashboard() {
                     <th>Proprietario</th>
                     <th>Orario</th>
                     <th style={{ textAlign: 'center' }}>STATO</th>
+                    <th style={{ textAlign: 'center' }}>AZIONI</th>
                   </tr>
                 </thead>
                 <tbody>
                   {visiteOggiList.map((visita, index) => (
-                    <tr key={index}>
+                    <tr key={visita.id || index}>
                       <td><strong>{visita.animaleNome}</strong></td>
                       <td>{visita.proprietarioNome} {visita.proprietarioCognome}</td>
                       <td>{formatTime(visita.dataOraAppuntamento)}</td>
                       <td style={{ textAlign: 'center' }}>
-                        <StatusBadge status="Pianificata" />
+                        <StatusBadge status={visita.stato || 'NON_ARRIVATO'} />
+                      </td>
+                      <td style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>
+                        <div className="stato-actions">
+                          <button
+                            className={`stato-box stato-non-arrivato ${visita.stato === 'NON_ARRIVATO' ? 'active' : ''}`}
+                            onClick={() => handleChangeStato(visita.id, 'NON_ARRIVATO')}
+                            title="Non arrivato"
+                          />
+                          <button
+                            className={`stato-box stato-in-attesa ${visita.stato === 'IN_ATTESA' ? 'active' : ''}`}
+                            onClick={() => handleChangeStato(visita.id, 'IN_ATTESA')}
+                            title="In attesa"
+                          />
+                          <button
+                            className={`stato-box stato-completato ${visita.stato === 'COMPLETATO' ? 'active' : ''}`}
+                            onClick={() => handleChangeStato(visita.id, 'COMPLETATO')}
+                            title="Completato"
+                          />
+                        </div>
                       </td>
                     </tr>
                   ))}

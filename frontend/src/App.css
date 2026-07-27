@@ -1332,6 +1332,9 @@ body {
 .badge-da-pagare { background: #FEE2E2; color: #991B1B; }
 .badge-pagato { background: #D1FAE5; color: #065F46; }
 .badge-annullato { background: #F1F5F9; color: #64748B; }
+.badge-non-arrivato { background: #F3F4F6; color: #6B7280; }
+.badge-in-attesa { background: #FEF3C7; color: #92400E; }
+.badge-completato { background: #D1FAE5; color: #065F46; }
 
 /* ========================================
    BOTTONI

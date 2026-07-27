@@ -42,6 +42,8 @@ const FatturaSemplificataModal = ({ visitaId, proprietario, animale, onClose, on
                   : matchingPrestazione.costoBase;
                 setFormData(prev => ({ ...prev, importoTotale: costo.toFixed(2) }));
               }
+              // Prefill dettaglioServizi with the visita type description
+              setFormData(prev => ({ ...prev, dettaglioServizi: `Servizio di ${visitaData.tipoVisita}` }));
             }
           }
         }

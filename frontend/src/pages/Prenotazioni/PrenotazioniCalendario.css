@@ -538,14 +538,28 @@
 
 /* Modificatori di stato: non cambiano il colore (che indica il tipo di visita),
    ma aggiungono un indizio visivo sottile sullo stato della prenotazione */
-.cal-event.is-attesa {
-  border-left-style: dashed;
+.cal-event.is-completato {
+  border-left-style: solid !important;
 }
 
-.cal-event.is-annullata {
-  opacity: 0.55;
-  text-decoration: line-through;
-  text-decoration-color: currentColor;
+.cal-event.is-in-attesa {
+  border-left-style: dashed !important;
+}
+
+.cal-event.is-non-arrivato {
+  border-left: 1px solid var(--gray-200) !important;
+}
+
+.cal-event-bg.is-completato {
+  border-left-style: solid !important;
+}
+
+.cal-event-bg.is-in-attesa {
+  border-left-style: dashed !important;
+}
+
+.cal-event-bg.is-non-arrivato {
+  border-left: 1px solid var(--gray-200) !important;
 }
 
 /* Closed hours background - grey out non-business hours */
