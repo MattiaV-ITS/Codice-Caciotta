@@ -36,6 +36,8 @@ services:
       - APP_JWT_EXPIRATION_MS=${APP_JWT_EXPIRATION_MS}
     ports:
       - "${SPRING_LOCAL_PORT}:${SPRING_DOCKER_PORT}"
+    volumes:
+      - uploads:/app/uploads
     healthcheck:
       test: ["CMD-SHELL", "timeout 5 bash -c 'cat < /dev/null > /dev/tcp/localhost/8080' || exit 1"]
       interval: 30s
@@ -62,4 +64,6 @@ services:
 
 volumes:
   db:
+    driver: local
+  uploads:
     driver: local

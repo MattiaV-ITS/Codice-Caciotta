@@ -115,6 +115,7 @@ public class OrarioBloccatoService {
     /**
      * Update an existing blocked time slot
      * @param id ID of the blocked time slot to update
+     * @param data New date (optional, can be null to keep current)
      * @param oraInizio New start time
      * @param oraFine New end time
      * @param motivo New reason
@@ -122,22 +123,26 @@ public class OrarioBloccatoService {
      * @throws IllegalArgumentException if validation fails
      */
     @Transactional
-    public OrarioBloccato updateOrarioBloccato(Long id, LocalTime oraInizio, LocalTime oraFine, String motivo) {
+    public OrarioBloccato updateOrarioBloccato(Long id, LocalDate data, LocalTime oraInizio, LocalTime oraFine, String motivo) {
         Long safeId = Objects.requireNonNull(id, "id must not be null");
         OrarioBloccato existing = orarioBloccatoRepository.findById(safeId)
                 .orElseThrow(() -> new IllegalArgumentException("Orario bloccato non trovato"));
 
+        // Use existing data if not provided
+        LocalDate targetData = data != null ? data : existing.getData();
+
         // Validate the time slot
-        validateTimeSlot(existing.getData(), oraInizio, oraFine);
+        validateTimeSlot(targetData, oraInizio, oraFine);
 
         // Check for overlaps with other blocked slots (excluding itself)
         List<OrarioBloccato> overlapping = orarioBloccatoRepository.findOverlappingBlockedTimes(
-            existing.getData(), oraInizio, oraFine);
+            targetData, oraInizio, oraFine);
         if (!overlapping.isEmpty() && !overlapping.stream().anyMatch(o -> Objects.equals(o.getId(), safeId))) {
             throw new IllegalArgumentException("Esiste già un orario bloccato che si sovrappone a questo slot");
         }
 
         // Update the fields
+        existing.setData(targetData);
         existing.setOraInizio(oraInizio);
         existing.setOraFine(oraFine);
         existing.setMotivo(motivo);

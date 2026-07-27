@@ -4,8 +4,9 @@ import { useApi } from '../../services/apiService';
 import { useAuth } from '../../context/AuthContext';
 import SchedaAnimale from './SchedaAnimale';
 import AnimaleCreate from './AnimaleCreate';
+import DocumentiAllegati from '../../components/Documenti/DocumentiAllegati';
 import { formatDateShort, formatTime } from '../../utils/dateUtils';
-import { PlusIcon } from '../../components/icons'; // ✅ Import aggiunto
+import { PlusIcon } from '../../components/icons';
 
 function AnimaleDettaglio() {
   const { id } = useParams();
@@ -146,6 +147,20 @@ function AnimaleDettaglio() {
       </div>
 
       <div className="visite-colonna-destra">
+        {/* DOCUMENTI DELL'ANIMALE */}
+        <div className="visite-card">
+          <div className="visite-card-header">
+            <h3>Documenti</h3>
+          </div>
+          <div className="visite-card-body" style={{ padding: 'var(--space-2)' }}>
+            <DocumentiAllegati
+              animaleId={animaleId}
+              titolo="Documenti"
+              nascondiSeVuoto={false}
+            />
+          </div>
+        </div>
+
         <div className="visite-card visite-card-precedenti">
           <div className="visite-card-header">
             <h3>Visite dell'Animale</h3>

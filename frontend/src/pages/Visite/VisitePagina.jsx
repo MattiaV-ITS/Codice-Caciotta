@@ -5,8 +5,9 @@ import SchedaAnimale from '../Animali/SchedaAnimale';
 import VisitaForm from './VisitaForm';
 import FattureLista from '../../components/FattureLista';
 import VaccinazioneCreateModal from '../../components/VaccinazioneCreateModal/VaccinazioneCreateModal';
+import DocumentiAllegati from '../../components/Documenti/DocumentiAllegati';
 import { getCurrentISODatetime, toISODatetimeFormat, toISODateFormat, formatDate, formatDateShort, formatTime, parseDate } from '../../utils/dateUtils';
-import { PlusIcon, SyringeIcon } from '../../components/icons';
+import { PlusIcon, SyringeIcon, DangerIcon } from '../../components/icons';
 
 // ==============================
 // COMPONENTE
@@ -215,7 +216,9 @@ function VisitePagina() {
   if (error) {
     return (
       <div className="error-wrapper">
-        <div className="error-icon">⚠️</div>
+        <div className="error-icon">
+          <DangerIcon width={32} height={32} style={{ color: '#C62828' }} />
+        </div>
         <h3>Errore di caricamento</h3>
         <p>{error}</p>
         <button className="btn btn-primary" onClick={() => window.location.reload()}>Riprova</button>
@@ -226,7 +229,7 @@ function VisitePagina() {
   if (!visita || !animale) {
     return (
       <div className="error-wrapper">
-        <div className="error-icon">❌</div>
+        <div className="error-icon" style={{ color: '#C62828', fontSize: '32px', fontWeight: 'bold' }}>✕</div>
         <h3>Dati non disponibili</h3>
         <p>Impossibile caricare i dati della visita o dell'animale</p>
         <button className="btn btn-primary" onClick={() => window.location.reload()}>Riprova</button>
@@ -235,13 +238,6 @@ function VisitePagina() {
   }
 
   const isVisitaCorrente = visitaId === visitaCorrente || !visita.id;
-  
-  // Funzioni per la struttura cartella
-  const handleFolderClick = (folderName) => {
-    console.log(`Apertura cartella: ${folderName}`);
-    // In una implementazione reale, questo navigherebbe alla pagina appropriata
-    // o aprirebbe un modal con i contenuti della cartella
-  };
 
   return (
     <div className="visite-pagina">
@@ -263,70 +259,42 @@ function VisitePagina() {
       {/* ==================== COLONNA DESTRA ==================== */}
       <div className="visite-colonna-destra">
 
-        {/* 1. BLOCCO "STRUTTURA CARTELLA" */}
-        <div className="visite-card">
-          <div className="visite-card-header">
-            <h3>Struttura Cartella</h3>
-          </div>
-          <div className="visite-card-body" style={{ paddingBottom: 'var(--space-3)' }}>
-            <div className="folder-tree">
-              <div 
-                className="folder-tree-item folder-main"
-                onClick={() => handleFolderClick('Cartella clinica')}
-                style={{ cursor: 'pointer' }}
-              >
-                <span className="folder-icon">📁</span>
-                <span className="folder-name">Cartella clinica</span>
-              </div>
-              <div className="folder-tree-children">
-                <div 
-                  className="folder-tree-item"
-                  onClick={() => handleFolderClick('Cronologia visite')}
-                  style={{ cursor: 'pointer' }}
-                >
-                  <span className="folder-icon">📁</span>
-                  <span className="folder-name">Cronologia visite</span>
-                </div>
-                <div 
-                  className="folder-tree-item"
-                  onClick={() => handleFolderClick('Ricette')}
-                  style={{ cursor: 'pointer' }}
-                >
-                  <span className="folder-icon">📁</span>
-                  <span className="folder-name">Ricette</span>
-                </div>
-                <div 
-                  className="folder-tree-item"
-                  onClick={() => handleFolderClick('Libretto vaccini')}
-                  style={{ cursor: 'pointer' }}
-                >
-                  <span className="folder-icon">📁</span>
-                  <span className="folder-name">Libretto vaccini</span>
-                </div>
-                <div 
-                  className="folder-tree-item"
-                  onClick={() => handleFolderClick('Documenti e allegati')}
-                  style={{ cursor: 'pointer' }}
-                >
-                  <span className="folder-icon">📁</span>
-                  <span className="folder-name">Documenti e allegati</span>
-                </div>
-                <div 
-                  className="folder-tree-item"
-                  onClick={() => handleFolderClick('Referti')}
-                  style={{ cursor: 'pointer' }}
-                >
-                  <span className="folder-icon">📁</span>
-                  <span className="folder-name">Referti</span>
-                </div>
-              </div>
+        {/* 1. BLOCCO "DOCUMENTI DELLA VISITA" */}
+        {visita.id && animale && (
+          <div className="visite-card">
+            <div className="visite-card-header">
+              <h3>Documenti Visita</h3>
+            </div>
+            <div className="visite-card-body" style={{ padding: 'var(--space-2)' }}>
+              <DocumentiAllegati
+                animaleId={animale.id}
+                visitaId={visita.id}
+                titolo="Documenti visita"
+                nascondiSeVuoto={false}
+              />
             </div>
           </div>
-        </div>
+        )}
+
+        {/* 1b. BLOCCO "DOCUMENTI DELL'ANIMALE" (sempre visibili) */}
+        {animale && (
+          <div className="visite-card">
+            <div className="visite-card-header">
+              <h3>Documenti Animale</h3>
+            </div>
+            <div className="visite-card-body" style={{ padding: 'var(--space-2)' }}>
+              <DocumentiAllegati
+                animaleId={animale.id}
+                titolo="Tutti i documenti"
+                nascondiSeVuoto={false}
+              />
+            </div>
+          </div>
+        )}
 
         {/* 2. BLOCCO "FATTURE" */}
         {visita.id && (
-          <FattureLista visitaId={visita.id} />
+          <FattureLista visitaId={visita.id} animaleId={animale.id} />
         )}
 
         {/* 3. BLOCCO "VACCINAZIONI" */}
