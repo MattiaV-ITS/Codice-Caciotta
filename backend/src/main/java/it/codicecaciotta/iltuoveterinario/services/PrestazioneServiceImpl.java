@@ -66,12 +66,12 @@ public class PrestazioneServiceImpl implements PrestazioneService {
     @Override
     public List<Prestazione> getPrestazioniDisponibili() {
         return prestazioneRepository.findAll().stream()
-                .filter(p -> "Disponibile".equals(p.getStato()))
+                .filter(p -> Boolean.TRUE.equals(p.getStato()))
                 .collect(Collectors.toList());
     }
 
     @Override
-    public Page<Prestazione> findByFilters(String search, String stato, Pageable pageable) {
+    public Page<Prestazione> findByFilters(String search, Boolean stato, Pageable pageable) {
         Pageable safePageable = Objects.requireNonNull(pageable, "pageable must not be null");
         
         // Base: predicato sempre vero (nessuna condizione)
@@ -97,7 +97,7 @@ public class PrestazioneServiceImpl implements PrestazioneService {
             }
         }
 
-        if (stato != null && !stato.isBlank()) {
+        if (stato != null) {
             Specification<Prestazione> statoSpec = (root, query, cb) ->
                 cb.equal(root.get("stato"), stato);
             spec = spec.and(statoSpec);

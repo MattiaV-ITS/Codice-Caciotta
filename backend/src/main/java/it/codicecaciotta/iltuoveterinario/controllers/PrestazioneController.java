@@ -34,7 +34,7 @@ public class PrestazioneController {
             @RequestParam(defaultValue = "nomePrestazione") String sortBy,
             @RequestParam(defaultValue = "asc") String sortDir,
             @RequestParam(required = false) String search,
-            @RequestParam(required = false) String stato
+            @RequestParam(required = false) Boolean stato
     ) {
         Pageable pageable = paginationUtils.buildPageRequest(page, size, sortBy, sortDir,
                 Arrays.asList("nomePrestazione", "durataStimata", "costoBase", "stato"));

@@ -14,7 +14,7 @@ public interface PrestazioneRepository
 
     Optional<Prestazione> findByNomePrestazione(String nomePrestazione);
 
-    long countByStato(String stato);
+    long countByStato(Boolean stato);
 
     @Query("SELECT AVG(p.costoBase) FROM Prestazione p")
     BigDecimal averageCostoBase();

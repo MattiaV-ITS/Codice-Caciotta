@@ -34,7 +34,7 @@ public class Prestazione {
     private Integer aliquotaIva = 22; // percentuale
 
     @Column(nullable = false)
-    private String stato = "Disponibile"; //TODO: rendere boolean
+    private Boolean stato = true; // true = Disponibile, false = Non disponibile
 
     @Column(nullable = true)
     private String note;

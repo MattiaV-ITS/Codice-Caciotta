@@ -22,5 +22,5 @@ public interface PrestazioneService {
     List<Prestazione> getPrestazioniDisponibili();
 
     // Nuovo metodo per ricerca e filtro
-    Page<Prestazione> findByFilters(String search, String stato, Pageable pageable);
+    Page<Prestazione> findByFilters(String search, Boolean stato, Pageable pageable);
 }

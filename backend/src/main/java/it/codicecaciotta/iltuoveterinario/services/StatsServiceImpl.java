@@ -121,8 +121,8 @@ public class StatsServiceImpl implements StatsService {
     @Override
     public PrestazioneStatsDTO getPrestazioneStats() {
         long totalCount = prestazioneRepository.count();
-        long activeCount = prestazioneRepository.countByStato("Disponibile");
-        long inactiveCount = prestazioneRepository.countByStato("Non disponibile");
+        long activeCount = prestazioneRepository.countByStato(Boolean.TRUE);
+        long inactiveCount = prestazioneRepository.countByStato(Boolean.FALSE);
 
         BigDecimal avgCost = prestazioneRepository.averageCostoBase();
         String averageCost = avgCost != null ? avgCost.setScale(2, RoundingMode.HALF_UP).toPlainString() : "0.00";
