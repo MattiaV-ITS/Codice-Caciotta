@@ -14,6 +14,7 @@ import {
 } from './prenotazioniUtils';
 import { PlusIcon } from '../../components/icons'; // ✅ Import aggiunto
 import OrarioBloccatoCreateModal from '../../components/OrarioBloccatoCreateModal';
+const OrarioBloccatoContextMenu = lazy(() => import('../../components/OrarioBloccatoContextMenu/OrarioBloccatoContextMenu'));
 
 const GIORNI = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
 const SLOT_MIN = 30;    // blocchi da 30 minuti
@@ -512,6 +513,16 @@ function PrenotazioniCalendario() {
     );
   };
 
+  const handleBlockedTimeUpdated = (updatedBlockedTime) => {
+    setBlockedTimes(prev =>
+      prev.map(b => b.id === updatedBlockedTime.id ? updatedBlockedTime : b)
+    );
+  };
+
+  const handleBlockedTimeDeleted = (deletedId) => {
+    setBlockedTimes(prev => prev.filter(b => b.id !== deletedId));
+  };
+
   const nowOffset = minutesFromExtendedGridStart(now);
   const showNowLine = nowOffset >= 0 && nowOffset <= EXTENDED_SLOTS_COUNT * SLOT_MIN;
   const todayIndex = weekDays.findIndex((d) => isSameDay(d, now));
@@ -792,24 +803,31 @@ function PrenotazioniCalendario() {
                     const timeLabel = `${blocked._startDate.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}–${blocked._endDate.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}`;
 
                     return (
-                      <div
-                        key={`blocked-${blocked.id}`}
-                        className="cal-blocked-time"
-                        style={{
-                          top,
-                          height,
-                          left: '2px',
-                          width: 'calc(100% - 4px)'
-                        }}
-                        title={`Orario bloccato: ${blocked.motivo || 'Non specificato'} (${timeLabel})`}
-                      >
-                        <div className="cal-blocked-label">
-                          {blocked.motivo || 'Orario bloccato'}
-                        </div>
-                        <div className="cal-blocked-time-label">
-                          {timeLabel}
-                        </div>
-                      </div>
+                      <Suspense key={`blocked-${blocked.id}`} fallback={<div className="cal-blocked-time" style={{ top, height, left: '2px', width: 'calc(100% - 4px)' }} />}>
+                        <OrarioBloccatoContextMenu
+                          blockedTime={blocked}
+                          onBlockedTimeDeleted={handleBlockedTimeDeleted}
+                          onBlockedTimeUpdated={handleBlockedTimeUpdated}
+                        >
+                          <div
+                            className="cal-blocked-time"
+                            style={{
+                              top,
+                              height,
+                              left: '2px',
+                              width: 'calc(100% - 4px)'
+                            }}
+                            title={`Orario bloccato: ${blocked.motivo || 'Non specificato'} (${timeLabel})`}
+                          >
+                            <div className="cal-blocked-label">
+                              {blocked.motivo || 'Orario bloccato'}
+                            </div>
+                            <div className="cal-blocked-time-label">
+                              {timeLabel}
+                            </div>
+                          </div>
+                        </OrarioBloccatoContextMenu>
+                      </Suspense>
                     );
                   })}
                 </div>
