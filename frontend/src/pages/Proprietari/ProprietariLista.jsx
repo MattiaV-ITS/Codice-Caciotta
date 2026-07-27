@@ -8,8 +8,6 @@ import { useTableControls } from '../../hooks/useTableControls';
 import { usePaginatedFetch } from '../../hooks/usePaginatedFetch';
 import { useSearchControls } from '../../hooks/useSearchControls';
 import { useApi } from '../../services/apiService';
-import LoadingSpinner from '../../components/common/LoadingSpinner';
-import ErrorMessage from '../../components/common/ErrorMessage';
 
 function ProprietariLista() {
   const table = useTableControls({
@@ -24,7 +22,7 @@ function ProprietariLista() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingProprietario, setEditingProprietario] = useState(null);
   const [stats, setStats] = useState(null);
-  const [statsLoading, setStatsLoading] = useState(true);
+  const [statsLoading, setStatsLoading] = useState(false);
   const [statsError, setStatsError] = useState(null);
   const [statsRefreshIndex, setStatsRefreshIndex] = useState(0);
   const { get, patch } = useApi();
@@ -96,24 +94,22 @@ function ProprietariLista() {
       render: (item) => (
         <GearMenu
           menuItems={[
-              {
-                label: 'Modifica',
-                onClick: () => handleEditProprietario(item)
-              },
-              { divider: true },
-              {
-                label: 'Imposta come Attivo',
-                onClick: () => handleStatusChange(item.id, true)
-              },
-              {
-                label: 'Imposta come Inattivo',
-                onClick: () => handleStatusChange(item.id, false)
-              }
-            ]}
+            {
+              label: 'Modifica',
+              onClick: () => handleEditProprietario(item)
+            }
+          ]}
         />
       )
     }
   ];
+
+  const emptyIcon = (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+      <circle cx="12" cy="7" r="4" />
+    </svg>
+  );
 
   // Fetch stats from backend
   useEffect(() => {
@@ -141,11 +137,7 @@ function ProprietariLista() {
     <>
       {statsLoading ? (
         <div className="stats-loading">
-          <LoadingSpinner size="small" />
-        </div>
-      ) : statsError ? (
-        <div className="stats-error">
-          <ErrorMessage error={statsError} />
+          <p>Caricamento statistiche...</p>
         </div>
       ) : stats ? (
         <>
@@ -176,16 +168,9 @@ function ProprietariLista() {
     </>
   );
 
-  const emptyIcon = (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-      <circle cx="12" cy="7" r="4" />
-    </svg>
-  );
-
-  const emptyMessage = search.appliedSearchTerm || statoFiltro
-    ? 'Prova a modificare i filtri.'
-    : 'Inizia aggiungendo primo proprietario.';
+  const emptyMessage = search.appliedSearchTerm || statoFiltro 
+    ? 'Prova a modificare i filtri.' 
+    : 'Inizia aggiungendo il primo proprietario.';
 
   const handleEditProprietario = (proprietario) => {
     // Load full proprietario data before opening the edit modal
@@ -203,9 +188,12 @@ function ProprietariLista() {
     );
   };
 
-  const handleStatusChange = async (id, newStatus) => {
+  const handleToggleStato = async (proprietario) => {
     try {
-      const response = await patch(`/api/proprietari/${id}`, { stato: newStatus });
+      const response = await patch(`/api/proprietari/${proprietario.id}`, { 
+        ...proprietario, 
+        stato: !proprietario.stato 
+      });
       if (!response.ok) {
         throw new Error(`Errore nell'aggiornamento dello stato: ${response.status}`);
       }
@@ -213,7 +201,7 @@ function ProprietariLista() {
       setStatsRefreshIndex(prev => prev + 1);
       refetch();
     } catch (err) {
-      console.error('Failed to update proprietario status:', err);
+      console.error('Error updating proprietario status:', err);
     }
   };
 
