@@ -2,10 +2,15 @@ package it.codicecaciotta.iltuoveterinario.services;
 
 import it.codicecaciotta.iltuoveterinario.models.Prestazione;
 import it.codicecaciotta.iltuoveterinario.repositories.PrestazioneRepository;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
-import java.util.Objects;
+import java.math.BigDecimal;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -44,7 +49,6 @@ public class PrestazioneServiceImpl implements PrestazioneService {
 
     private void validatePrestazioneDuration(Prestazione prestazione) {
         if (prestazione.getDurataStimata() != null) {
-            // Ensure duration is a multiple of 30 minutes
             if (prestazione.getDurataStimata() % 30 != 0) {
                 throw new IllegalArgumentException("La durata stimata deve essere un multiplo di 30 minuti");
             }
@@ -64,4 +68,39 @@ public class PrestazioneServiceImpl implements PrestazioneService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public Page<Prestazione> findByFilters(String search, String stato, Pageable pageable) {
+        Specification<Prestazione> spec = Specification.where(null);
+
+        if (search != null && !search.isBlank()) {
+            String pattern = "%" + search.toLowerCase() + "%";
+
+            // Prima parte: ricerca testuale su nome e descrizione
+            Specification<Prestazione> textSpec = (root, query, cb) ->
+                    cb.or(
+                            cb.like(cb.lower(root.get("nomePrestazione")), pattern),
+                            cb.like(cb.lower(root.get("descrizione")), pattern)
+                    );
+
+            // Seconda parte: ricerca per costo esatto (se il testo è un numero valido)
+            try {
+                BigDecimal costoSearched = new BigDecimal(search);
+                Specification<Prestazione> costSpec = (root, query, cb) ->
+                        cb.equal(root.get("costoBase"), costoSearched);
+                // Unisci le due condizioni in OR
+                spec = spec.and(textSpec.or(costSpec));
+            } catch (NumberFormatException e) {
+                // Se non è un numero, applichiamo solo la ricerca testuale
+                spec = spec.and(textSpec);
+            }
+        }
+
+        if (stato != null && !stato.isBlank()) {
+            spec = spec.and((root, query, cb) ->
+                    cb.equal(root.get("stato"), stato)
+            );
+        }
+
+        return prestazioneRepository.findAll(spec, pageable);
+    }
 }
