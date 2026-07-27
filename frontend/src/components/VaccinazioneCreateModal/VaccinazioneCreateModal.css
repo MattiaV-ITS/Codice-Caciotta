@@ -1,9 +1,30 @@
-.vaccinazione-create-form {
+.vaccinazione-create-form { 
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
 }
 
+/* Add validation error styles */
+.error {
+  border-color: var(--danger) !important;
+}
+
+.error-message {
+  color: var(--danger);
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+.required-asterisk {
+  color: var(--danger);
+  margin-left: 0.25rem;
+}
+
+.form-group {
+  margin-bottom: 1.25rem;
+}
+
+/* Existing styles below */
 .vaccinazione-create-form .form-group {
   display: flex;
   flex-direction: column;
@@ -44,18 +65,6 @@
   box-shadow: 0 0 0 2px var(--primary-light);
 }
 
-.vaccinazione-create-form input.error,
-.vaccinazione-create-form select.error,
-.vaccinazione-create-form textarea.error {
-  border-color: var(--error);
-}
-
-.vaccinazione-create-form .error-message {
-  color: var(--error);
-  font-size: 12px;
-  margin-top: var(--space-1);
-}
-
 .vaccinazione-create-form .form-actions {
   display: flex;
   justify-content: flex-end;
@@ -63,7 +72,6 @@
   margin-top: var(--space-4);
 }
 
-/* Campo di sola lettura (es. animale associato) */
 .vaccinazione-create-form .readonly-field {
   padding: 8px 12px;
   background-color: var(--gray-50);

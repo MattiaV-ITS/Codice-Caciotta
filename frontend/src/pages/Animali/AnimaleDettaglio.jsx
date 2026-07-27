@@ -5,9 +5,9 @@ import { useAuth } from '../../context/AuthContext';
 import SchedaAnimale from './SchedaAnimale';
 import AnimaleCreate from './AnimaleCreate';
 import DocumentiAllegati from '../../components/Documenti/DocumentiAllegati';
-import VaccinazioneCreateModal from '../../components/VaccinazioneCreateModal/VaccinazioneCreateModal';
 import { formatDateShort, formatTime } from '../../utils/dateUtils';
-import { PlusIcon, SyringeIcon } from '../../components/icons';
+import { PlusIcon } from '../../components/icons';
+import VaccinazioniSidebar from '../../components/VaccinazioniSidebar/VaccinazioniSidebar';
 
 function AnimaleDettaglio() {
   const { id } = useParams();
@@ -23,11 +23,6 @@ function AnimaleDettaglio() {
   const [error, setError] = useState(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingAnimale, setEditingAnimale] = useState(null);
-  const [showVaccinazioneModal, setShowVaccinazioneModal] = useState(false);
-  const [vaccinazioni, setVaccinazioni] = useState([]);
-  const [vaccinazioniLoading, setVaccinazioniLoading] = useState(true);
-  const [vaccinazioniError, setVaccinazioniError] = useState(null);
-  const [vaccinazioniRefresh, setVaccinazioniRefresh] = useState(0);
 
   const isStaffOrAdmin = user?.roles?.some(r => r === 'ROLE_STAFF' || r === 'ROLE_ADMIN');
 
@@ -73,33 +68,6 @@ function AnimaleDettaglio() {
     
     fetchData();
   }, [animaleId, get]);
-
-  useEffect(() => {
-    let cancelled = false;
-    const fetchVaccinazioni = async () => {
-      try {
-        if (!animale?.id) {
-          setVaccinazioni([]);
-          setVaccinazioniLoading(false);
-          return;
-        }
-        setVaccinazioniLoading(true);
-        const response = await api.get('/api/vaccinazioni', { params: { animaleId: animale.id, size: 200, page: 0 } });
-        if (!cancelled && response.ok) {
-          const data = await response.json();
-          const list = Array.isArray(data?.content) ? data.content : (Array.isArray(data) ? data : []);
-          setVaccinazioni(list);
-          setVaccinazioniError(null);
-        }
-      } catch (err) {
-        if (!cancelled) setVaccinazioniError(err.message || 'Errore caricamento vaccinazioni');
-      } finally {
-        if (!cancelled) setVaccinazioniLoading(false);
-      }
-    };
-    fetchVaccinazioni();
-    return () => { cancelled = true; };
-  }, [animale?.id, vaccinazioniRefresh, get]);
 
   const handleEditAnimale = (animaleData) => {
     setEditingAnimale(animaleData);
@@ -196,67 +164,7 @@ function AnimaleDettaglio() {
         </div>
 
         {/* VACCINAZIONI */}
-        <div className="visite-card">
-          <div className="visite-card-header">
-            <h3>Vaccinazioni</h3>
-          </div>
-          <div className="visite-card-body">
-            {vaccinazioniLoading ? (
-              <div style={{ color: 'var(--gray-500)', fontSize: '13px' }}>Caricamento vaccinazioni...</div>
-            ) : vaccinazioniError ? (
-              <div style={{ color: 'var(--danger)', fontSize: '13px' }}>{vaccinazioniError}</div>
-            ) : vaccinazioni.length === 0 ? (
-              <p className="visite-empty" style={{ fontSize: '13px', color: 'var(--gray-500)' }}>
-                Nessuna vaccinazione per {animale.nome}
-              </p>
-            ) : (
-              <div style={{ maxHeight: '320px', overflowY: 'auto', paddingRight: '4px' }}>
-                {vaccinazioni.map((v) => {
-                  const stato = String(v.statoVaccinazione || '').toUpperCase();
-                  const colors =
-                    stato === 'VALIDO'
-                      ? { bg: '#f0fff4', border: '#38a169' }
-                      : stato === 'PROSSIMO'
-                        ? { bg: '#fffaf0', border: '#dd6b20' }
-                        : stato === 'SCADUTO'
-                          ? { bg: '#fff5f5', border: '#e53e3e' }
-                          : { bg: '#fff', border: '#ccc' };
-                  return (
-                    <div
-                      key={v.id}
-                      style={{
-                        padding: '8px',
-                        marginBottom: '6px',
-                        borderRadius: '4px',
-                        backgroundColor: colors.bg,
-                        borderLeft: `3px solid ${colors.border}`,
-                        fontSize: '13px'
-                      }}
-                    >
-                      <div style={{ fontWeight: 600 }}>{v.tipoVaccino}</div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--gray-600)', fontSize: '12px', marginTop: '2px' }}>
-                        <span>Somministrazione: {v.dataSomministrazione}</span>
-                        <span>Scadenza: {v.dataScadenza}</span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-          {isStaffOrAdmin && (
-            <div className="visite-card-footer">
-              <button
-                className="btn btn-primary btn-sm"
-                onClick={() => setShowVaccinazioneModal(true)}
-                style={{ width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
-              >
-                <SyringeIcon width={16} height={16} fill="currentColor" />
-                Nuova Vaccinazione
-              </button>
-            </div>
-          )}
-        </div>
+        <VaccinazioniSidebar animaleId={animale.id} animaleNome={animale.nome} isStaffOrAdmin={isStaffOrAdmin} />
 
         <div className="visite-card visite-card-precedenti">
           <div className="visite-card-header">
@@ -296,18 +204,6 @@ function AnimaleDettaglio() {
           isEditMode={true}
           onClose={() => setShowEditModal(false)}
           onSuccess={handleEditSuccess}
-        />
-      )}
-
-      {showVaccinazioneModal && animale && (
-        <VaccinazioneCreateModal
-          animaleId={animale.id}
-          animaleNome={animale.nome}
-          onClose={() => setShowVaccinazioneModal(false)}
-          onSuccess={() => {
-            setShowVaccinazioneModal(false);
-            setVaccinazioniRefresh((prev) => prev + 1);
-          }}
         />
       )}
     </div>

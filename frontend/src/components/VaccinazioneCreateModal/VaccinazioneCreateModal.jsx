@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApi } from '../../services/apiService';
 import FormModal from '../FormModal/FormModal';
 import './VaccinazioneCreateModal.css';
@@ -6,13 +6,14 @@ import './VaccinazioneCreateModal.css';
 const VaccinazioneCreateModal = ({
   animaleId,
   animaleNome,
+  initialTipoVaccino = '',
   onClose,
   onSuccess
 }) => {
-  const { post } = useApi();
+  const { post, get } = useApi();
 
   const [formData, setFormData] = useState({
-    tipoVaccino: '',
+    tipoVaccino: initialTipoVaccino || '',
     dataSomministrazione: new Date().toISOString().split('T')[0],
     dataScadenza: '',
     lotto: '',
@@ -22,6 +23,8 @@ const VaccinazioneCreateModal = ({
   const [touched, setTouched] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
+  const [tipiEsistenti, setTipiEsistenti] = useState([]);
+  const [loadingTipi, setLoadingTipi] = useState(false);
 
   const validate = () => {
     const newErrors = {};
@@ -71,6 +74,15 @@ const VaccinazioneCreateModal = ({
 
     setSubmitError(null);
 
+    // Mark all fields as touched to show errors on submit
+    setTouched({
+      tipoVaccino: true,
+      dataSomministrazione: true,
+      dataScadenza: true,
+      lotto: true,
+      note: true
+    });
+
     if (!validate()) return;
 
     setIsSubmitting(true);
@@ -116,6 +128,37 @@ const VaccinazioneCreateModal = ({
 
   const hasError = (field) => touched[field] && errors[field];
 
+  useEffect(() => {
+    let cancelled = false;
+    const fetchTipi = async () => {
+      if (!animaleId) return;
+      try {
+        setLoadingTipi(true);
+        const response = await get('/api/vaccinazioni', {
+          params: { animaleId, size: 200, page: 0 },
+        });
+        if (!cancelled && response.ok) {
+          const data = await response.json();
+          const list = Array.isArray(data?.content)
+            ? data.content
+            : Array.isArray(data)
+              ? data
+              : [];
+          const tipi = Array.from(new Set(list.map((v) => v.tipoVaccino).filter(Boolean)));
+          setTipiEsistenti(tipi);
+        }
+      } catch {
+        // ignore tipos fetch errors
+      } finally {
+        if (!cancelled) setLoadingTipi(false);
+      }
+    };
+    fetchTipi();
+    return () => { cancelled = true; };
+  }, [animaleId, get]);
+
+  const isTipoPersonalizzato = !tipiEsistenti.includes(formData.tipoVaccino);
+
   return (
     <FormModal
       title="Nuova Vaccinazione"
@@ -137,25 +180,67 @@ const VaccinazioneCreateModal = ({
         )}
 
         <div className="form-group">
-          <label htmlFor="tipoVaccino">Tipo di Vaccino</label>
-          <input
-            type="text"
+          <label htmlFor="tipoVaccino">
+            Tipo di Vaccino
+            <span className="required-asterisk">*</span>
+          </label>
+          <select
             id="tipoVaccino"
             name="tipoVaccino"
             value={formData.tipoVaccino}
-            onChange={handleChange}
-            placeholder="Es. Trivalente, Antirabbica, ecc."
+            onChange={(e) => {
+              const value = e.target.value;
+              setFormData((prev) => ({ ...prev, tipoVaccino: value }));
+              setTouched((prev) => ({ ...prev, tipoVaccino: true }));
+            }}
             className={hasError('tipoVaccino') ? 'error' : ''}
             required
-          />
+          >
+            <option value="">Seleziona tipo</option>
+            {tipiEsistenti.map((tipo) => (
+              <option key={tipo} value={tipo}>
+                {tipo}
+              </option>
+            ))}
+            <option value="__altro__">Altro (specifica)</option>
+          </select>
           {hasError('tipoVaccino') && (
             <span className="error-message">{errors.tipoVaccino}</span>
           )}
         </div>
 
+        {(!formData.tipoVaccino || isTipoPersonalizzato) && (
+          <div className="form-group">
+            <label htmlFor="tipoVaccino_custom">
+              Specifica tipo vaccino
+              {!formData.tipoVaccino && <span className="required-asterisk">*</span>}
+            </label>
+            <input
+              type="text"
+              id="tipoVaccino_custom"
+              name="tipoVaccino_custom"
+              value={isTipoPersonalizzato ? formData.tipoVaccino : ''}
+              onChange={(e) => {
+                const value = e.target.value;
+                setFormData((prev) => ({ ...prev, tipoVaccino: value }));
+                setTouched((prev) => ({ ...prev, tipoVaccino: true }));
+              }}
+              placeholder="Es. Trivalente, Antirabbica, ecc."
+              className={hasError('tipoVaccino') ? 'error' : ''}
+              required={!formData.tipoVaccino}
+            />
+            {hasError('tipoVaccino') && (
+              <span className="error-message">{errors.tipoVaccino}</span>
+            )}
+          </div>
+        )}
+
         <div className="form-row">
           <div className="form-group">
-            <label htmlFor="dataSomministrazione">Data Somministrazione</label>
+            <label htmlFor="dataSomministrazione">
+              Data Somministrazione
+              <span className="required-asterisk">*</span>
+            </label>
             <input
               type="date"
               id="dataSomministrazione"
@@ -171,7 +256,10 @@ const VaccinazioneCreateModal = ({
           </div>
 
           <div className="form-group">
-            <label htmlFor="dataScadenza">Data Scadenza</label>
+            <label htmlFor="dataScadenza">
+              Data Scadenza
+              <span className="required-asterisk">*</span>
+            </label>
             <input
               type="date"
               id="dataScadenza"
@@ -188,7 +276,10 @@ const VaccinazioneCreateModal = ({
         </div>
 
         <div className="form-group">
-          <label htmlFor="lotto">Lotto</label>
+          <label htmlFor="lotto">
+            Lotto
+            <span className="required-asterisk">*</span>
+          </label>
           <input
             type="text"
             id="lotto"
