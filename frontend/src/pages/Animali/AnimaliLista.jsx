@@ -13,8 +13,8 @@ import { getIconLetter } from "../../utils";
 
 function AnimaliLista() {
   const table = useTableControls({
-    defaultSortBy: 'id',
-    defaultSortDir: 'desc',
+    defaultSortBy: 'nome',
+    defaultSortDir: 'asc',
     defaultPageSize: 15
   });
 
@@ -52,6 +52,16 @@ function AnimaliLista() {
     searchable: 'nome, microchip, specie, o proprietario'
   };
 
+  const getStatusInfo = (status) => {
+    const map = {
+      SANO: { label: 'Sano', className: 'badge-sano' },
+      MALATO: { label: 'Malato', className: 'badge-malato' },
+      IN_CURA: { label: 'In cura', className: 'badge-in-cura' },
+      DECEDUTO: { label: 'Deceduto', className: 'badge-deceduto' }
+    };
+    return map[status] || { label: 'Sconosciuto', className: 'badge-sconosciuto' };
+  };
+
   const customColumns = [
     {
       header: 'NOME ANIMALE',
@@ -81,7 +91,7 @@ function AnimaliLista() {
     },
     { header: 'SPECIE', field: 'specie', sortable: true },
     { header: 'RAZZA', field: 'razza', sortable: true },
-    { header: 'PROPRIETARIO', field: 'proprietario', sortable: false }, // TODO: Implementare sorting per proprietario non basta il true ma handling specifico
+    { header: 'PROPRIETARIO', field: 'proprietario', sortable: true },
     { header: 'DATA DI NASCITA', field: 'dataNascita', type: 'date', sortable: true },
     { header: 'MICROCHIP', field: 'microchip', sortable: true },
     {
@@ -89,13 +99,7 @@ function AnimaliLista() {
       field: 'stato',
       sortable: false,
       render: (item) => {
-        const map = {
-          SANO: { label: 'Sano', className: 'badge-sano' },
-          MALATO: { label: 'Malato', className: 'badge-malato' },
-          IN_CURA: { label: 'In cura', className: 'badge-in-cura' },
-          DECEDUTO: { label: 'Deceduto', className: 'badge-deceduto' }
-        };
-        const status = map[item.stato] || { label: 'Sconosciuto', className: 'badge-sconosciuto' };
+        const status = getStatusInfo(item.stato);
         return <span className={`badge-status ${status.className}`}>{status.label}</span>;
       }
     },
@@ -134,9 +138,54 @@ function AnimaliLista() {
       </svg>
   );
 
+  const statsContent = (
+    <>
+      <div className="stat-card">
+        <div className="stat-number stat-primary">{animali.length}</div>
+        <div className="stat-label">Totale Animali</div>
+      </div>
+      <div className="stat-card">
+        <div className="stat-number stat-info">
+          {animali.filter(a => a.specie?.toLowerCase() === 'cane').length}
+        </div>
+        <div className="stat-label">Cani</div>
+      </div>
+      <div className="stat-card">
+        <div className="stat-number stat-info">
+          {animali.filter(a => a.specie?.toLowerCase() === 'gatto').length}
+        </div>
+        <div className="stat-label">Gatti</div>
+      </div>
+      <div className="stat-card">
+        <div className="stat-number stat-info">
+          {animali.filter(a => !['cane', 'gatto'].includes(a.specie?.toLowerCase())).length}
+        </div>
+        <div className="stat-label">Altri</div>
+      </div>
+      <div className="stat-card">
+        <div className="stat-number stat-success">
+          {animali.filter(a => a.stato === 'SANO').length}
+        </div>
+        <div className="stat-label">Sani</div>
+      </div>
+      <div className="stat-card">
+        <div className="stat-number stat-warning">
+          {animali.filter(a => a.stato === 'MALATO').length}
+        </div>
+        <div className="stat-label">Malati</div>
+      </div>
+      <div className="stat-card">
+        <div className="stat-number stat-danger">
+          {animali.filter(a => a.stato === 'DECEDUTO').length}
+        </div>
+        <div className="stat-label">Deceduti</div>
+      </div>
+    </>
+  );
+
   const emptyMessage = search.appliedSearchTerm || specieFilter 
     ? 'Prova a modificare i filtri.' 
-    : 'Inizia aggiungendo primo animale.';
+    : 'Inizia aggiungendo il primo animale.';
 
   const navigate = useNavigate();
 
@@ -210,6 +259,7 @@ function AnimaliLista() {
       onAddClick={() => setShowCreateModal(true)}
       additionalContent={additionalContent}
       onRowClick={handleRowClick}
+      statsContent={statsContent}
     />
   );
 }

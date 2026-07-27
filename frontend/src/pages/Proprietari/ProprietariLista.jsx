@@ -105,9 +105,39 @@ function ProprietariLista() {
     </svg>
   );
 
+  const statsContent = (
+    <>
+      <div className="stat-card">
+        <div className="stat-number stat-primary">{proprietari.length}</div>
+        <div className="stat-label">Totale Proprietari</div>
+      </div>
+      <div className="stat-card">
+        <div className="stat-number stat-success">
+          {proprietari.filter(p => p.stato === true).length}
+        </div>
+        <div className="stat-label">Attivi</div>
+      </div>
+      <div className="stat-card">
+        <div className="stat-number stat-gray">
+          {proprietari.filter(p => p.stato === false).length}
+        </div>
+        <div className="stat-label">Inattivi</div>
+      </div>
+      <div className="stat-card">
+        <div className="stat-number stat-info">
+          {proprietari.length > 0 
+            ? (proprietari.reduce((sum, p) => sum + (p.numeroAnimali || 0), 0) / proprietari.length).toFixed(1)
+            : 0
+          }
+        </div>
+        <div className="stat-label">Media Animali</div>
+      </div>
+    </>
+  );
+
   const emptyMessage = search.appliedSearchTerm || statoFiltro 
     ? 'Prova a modificare i filtri.' 
-    : 'Inizia aggiungendo primo proprietario.';
+    : 'Inizia aggiungendo il primo proprietario.';
 
   const handleEditProprietario = (proprietario) => {
     // Load full proprietario data before opening the edit modal
@@ -132,7 +162,6 @@ function ProprietariLista() {
           onClose={() => setShowCreateModal(false)}
           onSuccess={(newProprietario) => {
             // Ricarica i dati dopo la creazione
-            // Questo triggererà un nuovo fetch dei dati
             table.setPage(0);
             search.clearSearch();
             setStatoFiltro('');
@@ -174,6 +203,7 @@ function ProprietariLista() {
       emptyIcon={emptyIcon}
       onAddClick={() => setShowCreateModal(true)}
       additionalContent={additionalContent}
+      statsContent={statsContent}
     />
   );
 }
