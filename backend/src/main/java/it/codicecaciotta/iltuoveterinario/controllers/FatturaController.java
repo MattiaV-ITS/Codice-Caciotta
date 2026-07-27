@@ -15,11 +15,11 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Objects;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 import java.math.BigDecimal;
 import java.io.StringWriter;
 import java.io.PrintWriter;
 import java.util.Map;
+import java.time.Year;
 
 @RestController
 @RequestMapping("/api/fatture")
@@ -86,7 +86,10 @@ public class FatturaController {
         
         // Genera numero fattura unico se non fornito
         if (fattura.getNumeroFattura() == null || fattura.getNumeroFattura().isEmpty()) {
-            fattura.setNumeroFattura("FAT-" + safeVisitaId + "-" + UUID.randomUUID().toString().substring(0, 8));
+            int annoCorrente = Year.now().getValue();
+            long conteggioEsistenti = fatturaRepository.countByDataEmissioneYear(annoCorrente);
+            String numeroSeq = String.valueOf(conteggioEsistenti + 1);
+            fattura.setNumeroFattura("FAT-" + annoCorrente + "-" + numeroSeq);
         }
 
         // Imposta codice fiscale dal proprietario se non già impostato e proprietario esiste
@@ -261,7 +264,10 @@ public class FatturaController {
         }
         
         // Genera un numero fattura unico per evitare conflitti
-        fattura.setNumeroFattura("FAT-" + safeVisitaId + "-" + UUID.randomUUID().toString().substring(0, 8));
+        int annoCorrente = Year.now().getValue();
+        long conteggioEsistenti = fatturaRepository.countByDataEmissioneYear(annoCorrente);
+        String numeroSeq = String.valueOf(conteggioEsistenti + 1);
+       fattura.setNumeroFattura("FAT-" + annoCorrente + "-" + numeroSeq);
         
         // Imposta dati dal request body se disponibili, altrimenti dal proprietario (se esiste)
         Proprietario proprietario = (visita.getAnimale() != null && visita.getAnimale().getProprietario() != null) ? visita.getAnimale().getProprietario() : null;

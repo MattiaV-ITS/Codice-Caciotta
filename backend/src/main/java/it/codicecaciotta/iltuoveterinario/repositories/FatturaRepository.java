@@ -30,4 +30,7 @@ public interface FatturaRepository extends JpaRepository<Fattura, Long> {
            "GROUP BY YEAR(f.dataEmissione), MONTH(f.dataEmissione) " +
            "ORDER BY anno DESC, mese DESC")
     List<Object[]> getFattureMensili();
+
+    @Query("SELECT COUNT(f) FROM Fattura f WHERE YEAR(f.dataEmissione) = :anno")
+    long countByDataEmissioneYear(@Param("anno") int anno);
 }
