@@ -125,10 +125,11 @@ WHERE NOT EXISTS (
 );
 
 -- ------------------------------------------------------------
--- 4. PRESTAZIONI
+-- 4. PRESTAZIONI  (FIXED: no unique constraint on nome_prestazione)
 -- ------------------------------------------------------------
 INSERT INTO prestazioni (nome_prestazione, descrizione, durata_stimata, costo_base, aliquota_iva, stato, colore)
-VALUES
+SELECT v.nome_prestazione, v.descrizione, v.durata_stimata, v.costo_base, v.aliquota_iva, v.stato, v.colore
+FROM (VALUES
   ('Controllo annuale', 'Visita di controllo annuale', 30, 45.00, 22, true, '#4299E1'),
   ('Visita ortopedica', 'Visita specialistica ortopedica', 30, 85.00, 22, true, '#9F7AEA'),
   ('Chirurgia', 'Intervento chirurgico', 120, 220.00, 22, true, '#ED8936'),
@@ -143,7 +144,10 @@ VALUES
   ('Controllo semestrale', 'Visita di controllo semestrale', 30, 40.00, 22, true, '#3182CE'),
   ('Otorinolaringoiatria', 'Visita specialistica ORL', 30, 60.00, 22, true, '#805AD5'),
   ('Prima visita', 'Prima visita per nuovo paziente', 30, 40.00, 22, true, '#2C7A7B')
-ON CONFLICT (nome_prestazione) DO NOTHING;
+) AS v(nome_prestazione, descrizione, durata_stimata, costo_base, aliquota_iva, stato, colore)
+WHERE NOT EXISTS (
+  SELECT 1 FROM prestazioni p WHERE p.nome_prestazione = v.nome_prestazione
+);
 
 -- ------------------------------------------------------------
 -- 5. VISITE
@@ -293,480 +297,52 @@ WITH visit_ref AS (
   FROM visite v
   JOIN animali a ON v.animale_id = a.id
   JOIN proprietari p ON a.proprietario_id = p.id
+),
+fatture_data AS (
+  VALUES
+    ('FATT-2024-001', 45.00, 'Controllo annuale', 'Briciola', 'marco.rossi@email.it', '2024-01-10 00:00:00+00'::timestamptz),
+    ('FATT-2024-002', 85.00, 'Visita ortopedica', 'Rex', 'f.bianchi@gmail.com', '2024-01-12 00:00:00+00'::timestamptz),
+    ('FATT-2024-003', 60.00, 'Controllo annuale', 'Fido', 'g.ricci@email.it', '2024-01-15 00:00:00+00'::timestamptz),
+    ('FATT-2024-004', 220.00, 'Chirurgia', 'Luna', 'f.bianchi@gmail.com', '2024-01-18 00:00:00+00'::timestamptz),
+    ('FATT-2024-005', 70.00, 'Visita urgente', 'Tigre', 'r.esposito@gmail.com', '2024-01-22 00:00:00+00'::timestamptz),
+    ('FATT-2024-006', 35.00, 'Controllo peso', 'Birillo', 'p.manzoni@libero.it', '2024-01-25 00:00:00+00'::timestamptz),
+    ('FATT-2024-007', 50.00, 'Vaccinazione', 'Zeus', 'f.lombardi@email.it', '2024-01-29 00:00:00+00'::timestamptz),
+    ('FATT-2024-008', 75.00, 'Dermatologia', 'Micio', 'anna.ferrari@yahoo.it', '2024-02-02 00:00:00+00'::timestamptz),
+    ('FATT-2024-009', 90.00, 'Ecografia', 'Cioccolata', 'e.galli@email.it', '2024-02-07 00:00:00+00'::timestamptz),
+    ('FATT-2024-010', 95.00, 'Visita urgente', 'Artù', 's.marchetti@gmail.com', '2024-02-12 00:00:00+00'::timestamptz),
+    ('FATT-2024-011', 110.00, 'Visita neurologica', 'Pallina', 'l.colombo@libero.it', '2024-02-15 00:00:00+00'::timestamptz),
+    ('FATT-2024-012', 40.00, 'Vaccinazione', 'Neve', 'maria.conti@gmail.com', '2024-02-19 00:00:00+00'::timestamptz),
+    ('FATT-2024-013', 30.00, 'Controllo post-op', 'Oscar', 'c.ferretti@email.it', '2024-02-22 00:00:00+00'::timestamptz),
+    ('FATT-2024-014', 65.00, 'Malattia infettiva', 'Stella', 'v.caruso@gmail.com', '2024-02-26 00:00:00+00'::timestamptz),
+    ('FATT-2024-015', 35.00, 'Controllo semestrale', 'Briciola', 'marco.rossi@email.it', '2024-03-01 00:00:00+00'::timestamptz),
+    ('FATT-2024-016', 55.00, 'Otorinolaringoiatria', 'Charlie', 'e.galli@email.it', '2024-03-05 00:00:00+00'::timestamptz),
+    ('FATT-2024-017', 40.00, 'Vaccinazione', 'Mochi', 'marco.rossi@email.it', '2024-03-08 00:00:00+00'::timestamptz),
+    ('FATT-2024-018', 25.00, 'Controllo annuale', 'Lilly', 'g.ricci@email.it', '2024-03-12 00:00:00+00'::timestamptz),
+    ('FATT-2024-019', 280.00, 'Chirurgia', 'Fido', 'g.ricci@email.it', '2024-03-15 00:00:00+00'::timestamptz),
+    ('FATT-2024-020', 55.00, 'Controllo annuale', 'Mia', 'g.barbieri@yahoo.it', '2024-03-19 00:00:00+00'::timestamptz),
+    ('FATT-2024-021', 50.00, 'Visita ortopedica', 'Rex', 'f.bianchi@gmail.com', '2024-03-22 00:00:00+00'::timestamptz),
+    ('FATT-2024-022', 45.00, 'Prima visita', 'Fiocco', 'a.moretti@libero.it', '2024-03-26 00:00:00+00'::timestamptz),
+    ('FATT-2024-023', 40.00, 'Prima visita', 'Puffo', 'a.moretti@libero.it', '2024-04-02 00:00:00+00'::timestamptz),
+    ('FATT-2024-024', 30.00, 'Controllo post-op', 'Luna', 'f.bianchi@gmail.com', '2024-04-09 00:00:00+00'::timestamptz),
+    ('FATT-2024-025', 35.00, 'Controllo semestrale', 'Zeus', 'f.lombardi@email.it', '2024-04-16 00:00:00+00'::timestamptz)
 )
 INSERT INTO fatture (numero_fattura, data_emissione, tipo_fattura, codice_fiscale_cliente, indirizzo_cliente, citta_cliente, importo_totale, metodo_pagamento, note, dettaglio_servizi, pagata, proprietario_id, visita_id)
 SELECT
-  'FATT-2024-001',
+  fd.column1,
   vr.data_ora_visita,
   'Semplificata',
   vr.cf,
   vr.indirizzo,
   vr.citta,
-  45.00,
+  fd.column2,
   NULL,
   NULL,
-  'Controllo annuale',
+  fd.column3,
   true,
   vr.proprietario_id,
   vr.id
-FROM visit_ref vr
-WHERE vr.nome='Briciola' AND vr.email='marco.rossi@email.it' AND vr.data_ora_visita='2024-01-10 00:00:00+00'::timestamptz
-ON CONFLICT (numero_fattura) DO NOTHING;
-
-INSERT INTO fatture (numero_fattura, data_emissione, tipo_fattura, codice_fiscale_cliente, indirizzo_cliente, citta_cliente, importo_totale, metodo_pagamento, note, dettaglio_servizi, pagata, proprietario_id, visita_id)
-SELECT
-  'FATT-2024-002',
-  vr.data_ora_visita,
-  'Semplificata',
-  vr.cf,
-  vr.indirizzo,
-  vr.citta,
-  85.00,
-  NULL,
-  NULL,
-  'Visita ortopedica',
-  true,
-  vr.proprietario_id,
-  vr.id
-FROM visit_ref vr
-WHERE vr.nome='Rex' AND vr.email='f.bianchi@gmail.com' AND vr.data_ora_visita='2024-01-12 00:00:00+00'::timestamptz
-ON CONFLICT (numero_fattura) DO NOTHING;
-
-INSERT INTO fatture (numero_fattura, data_emissione, tipo_fattura, codice_fiscale_cliente, indirizzo_cliente, citta_cliente, importo_totale, metodo_pagamento, note, dettaglio_servizi, pagata, proprietario_id, visita_id)
-SELECT
-  'FATT-2024-003',
-  vr.data_ora_visita,
-  'Semplificata',
-  vr.cf,
-  vr.indirizzo,
-  vr.citta,
-  60.00,
-  NULL,
-  NULL,
-  'Controllo annuale',
-  true,
-  vr.proprietario_id,
-  vr.id
-FROM visit_ref vr
-WHERE vr.nome='Fido' AND vr.email='g.ricci@email.it' AND vr.data_ora_visita='2024-01-15 00:00:00+00'::timestamptz
-ON CONFLICT (numero_fattura) DO NOTHING;
-
-INSERT INTO fatture (numero_fattura, data_emissione, tipo_fattura, codice_fiscale_cliente, indirizzo_cliente, citta_cliente, importo_totale, metodo_pagamento, note, dettaglio_servizi, pagata, proprietario_id, visita_id)
-SELECT
-  'FATT-2024-004',
-  vr.data_ora_visita,
-  'Semplificata',
-  vr.cf,
-  vr.indirizzo,
-  vr.citta,
-  220.00,
-  NULL,
-  NULL,
-  'Chirurgia',
-  true,
-  vr.proprietario_id,
-  vr.id
-FROM visit_ref vr
-WHERE vr.nome='Luna' AND vr.email='f.bianchi@gmail.com' AND vr.data_ora_visita='2024-01-18 00:00:00+00'::timestamptz
-ON CONFLICT (numero_fattura) DO NOTHING;
-
-INSERT INTO fatture (numero_fattura, data_emissione, tipo_fattura, codice_fiscale_cliente, indirizzo_cliente, citta_cliente, importo_totale, metodo_pagamento, note, dettaglio_servizi, pagata, proprietario_id, visita_id)
-SELECT
-  'FATT-2024-005',
-  vr.data_ora_visita,
-  'Semplificata',
-  vr.cf,
-  vr.indirizzo,
-  vr.citta,
-  70.00,
-  NULL,
-  NULL,
-  'Visita urgente',
-  true,
-  vr.proprietario_id,
-  vr.id
-FROM visit_ref vr
-WHERE vr.nome='Tigre' AND vr.email='r.esposito@gmail.com' AND vr.data_ora_visita='2024-01-22 00:00:00+00'::timestamptz
-ON CONFLICT (numero_fattura) DO NOTHING;
-
-INSERT INTO fatture (numero_fattura, data_emissione, tipo_fattura, codice_fiscale_cliente, indirizzo_cliente, citta_cliente, importo_totale, metodo_pagamento, note, dettaglio_servizi, pagata, proprietario_id, visita_id)
-SELECT
-  'FATT-2024-006',
-  vr.data_ora_visita,
-  'Semplificata',
-  vr.cf,
-  vr.indirizzo,
-  vr.citta,
-  35.00,
-  NULL,
-  NULL,
-  'Controllo peso',
-  true,
-  vr.proprietario_id,
-  vr.id
-FROM visit_ref vr
-WHERE vr.nome='Birillo' AND vr.email='p.manzoni@libero.it' AND vr.data_ora_visita='2024-01-25 00:00:00+00'::timestamptz
-ON CONFLICT (numero_fattura) DO NOTHING;
-
-INSERT INTO fatture (numero_fattura, data_emissione, tipo_fattura, codice_fiscale_cliente, indirizzo_cliente, citta_cliente, importo_totale, metodo_pagamento, note, dettaglio_servizi, pagata, proprietario_id, visita_id)
-SELECT
-  'FATT-2024-007',
-  vr.data_ora_visita,
-  'Semplificata',
-  vr.cf,
-  vr.indirizzo,
-  vr.citta,
-  50.00,
-  NULL,
-  NULL,
-  'Vaccinazione',
-  true,
-  vr.proprietario_id,
-  vr.id
-FROM visit_ref vr
-WHERE vr.nome='Zeus' AND vr.email='f.lombardi@email.it' AND vr.data_ora_visita='2024-01-29 00:00:00+00'::timestamptz
-ON CONFLICT (numero_fattura) DO NOTHING;
-
-INSERT INTO fatture (numero_fattura, data_emissione, tipo_fattura, codice_fiscale_cliente, indirizzo_cliente, citta_cliente, importo_totale, metodo_pagamento, note, dettaglio_servizi, pagata, proprietario_id, visita_id)
-SELECT
-  'FATT-2024-008',
-  vr.data_ora_visita,
-  'Semplificata',
-  vr.cf,
-  vr.indirizzo,
-  vr.citta,
-  75.00,
-  NULL,
-  NULL,
-  'Dermatologia',
-  true,
-  vr.proprietario_id,
-  vr.id
-FROM visit_ref vr
-WHERE vr.nome='Micio' AND vr.email='anna.ferrari@yahoo.it' AND vr.data_ora_visita='2024-02-02 00:00:00+00'::timestamptz
-ON CONFLICT (numero_fattura) DO NOTHING;
-
-INSERT INTO fatture (numero_fattura, data_emissione, tipo_fattura, codice_fiscale_cliente, indirizzo_cliente, citta_cliente, importo_totale, metodo_pagamento, note, dettaglio_servizi, pagata, proprietario_id, visita_id)
-SELECT
-  'FATT-2024-009',
-  vr.data_ora_visita,
-  'Semplificata',
-  vr.cf,
-  vr.indirizzo,
-  vr.citta,
-  90.00,
-  NULL,
-  NULL,
-  'Ecografia',
-  true,
-  vr.proprietario_id,
-  vr.id
-FROM visit_ref vr
-WHERE vr.nome='Cioccolata' AND vr.email='e.galli@email.it' AND vr.data_ora_visita='2024-02-07 00:00:00+00'::timestamptz
-ON CONFLICT (numero_fattura) DO NOTHING;
-
-INSERT INTO fatture (numero_fattura, data_emissione, tipo_fattura, codice_fiscale_cliente, indirizzo_cliente, citta_cliente, importo_totale, metodo_pagamento, note, dettaglio_servizi, pagata, proprietario_id, visita_id)
-SELECT
-  'FATT-2024-010',
-  vr.data_ora_visita,
-  'Semplificata',
-  vr.cf,
-  vr.indirizzo,
-  vr.citta,
-  95.00,
-  NULL,
-  NULL,
-  'Visita urgente',
-  true,
-  vr.proprietario_id,
-  vr.id
-FROM visit_ref vr
-WHERE vr.nome='Artù' AND vr.email='s.marchetti@gmail.com' AND vr.data_ora_visita='2024-02-12 00:00:00+00'::timestamptz
-ON CONFLICT (numero_fattura) DO NOTHING;
-
-INSERT INTO fatture (numero_fattura, data_emissione, tipo_fattura, codice_fiscale_cliente, indirizzo_cliente, citta_cliente, importo_totale, metodo_pagamento, note, dettaglio_servizi, pagata, proprietario_id, visita_id)
-SELECT
-  'FATT-2024-011',
-  vr.data_ora_visita,
-  'Semplificata',
-  vr.cf,
-  vr.indirizzo,
-  vr.citta,
-  110.00,
-  NULL,
-  NULL,
-  'Visita neurologica',
-  true,
-  vr.proprietario_id,
-  vr.id
-FROM visit_ref vr
-WHERE vr.nome='Pallina' AND vr.email='l.colombo@libero.it' AND vr.data_ora_visita='2024-02-15 00:00:00+00'::timestamptz
-ON CONFLICT (numero_fattura) DO NOTHING;
-
-INSERT INTO fatture (numero_fattura, data_emissione, tipo_fattura, codice_fiscale_cliente, indirizzo_cliente, citta_cliente, importo_totale, metodo_pagamento, note, dettaglio_servizi, pagata, proprietario_id, visita_id)
-SELECT
-  'FATT-2024-012',
-  vr.data_ora_visita,
-  'Semplificata',
-  vr.cf,
-  vr.indirizzo,
-  vr.citta,
-  40.00,
-  NULL,
-  NULL,
-  'Vaccinazione',
-  true,
-  vr.proprietario_id,
-  vr.id
-FROM visit_ref vr
-WHERE vr.nome='Neve' AND vr.email='maria.conti@gmail.com' AND vr.data_ora_visita='2024-02-19 00:00:00+00'::timestamptz
-ON CONFLICT (numero_fattura) DO NOTHING;
-
-INSERT INTO fatture (numero_fattura, data_emissione, tipo_fattura, codice_fiscale_cliente, indirizzo_cliente, citta_cliente, importo_totale, metodo_pagamento, note, dettaglio_servizi, pagata, proprietario_id, visita_id)
-SELECT
-  'FATT-2024-013',
-  vr.data_ora_visita,
-  'Semplificata',
-  vr.cf,
-  vr.indirizzo,
-  vr.citta,
-  30.00,
-  NULL,
-  NULL,
-  'Controllo post-op',
-  true,
-  vr.proprietario_id,
-  vr.id
-FROM visit_ref vr
-WHERE vr.nome='Oscar' AND vr.email='c.ferretti@email.it' AND vr.data_ora_visita='2024-02-22 00:00:00+00'::timestamptz
-ON CONFLICT (numero_fattura) DO NOTHING;
-
-INSERT INTO fatture (numero_fattura, data_emissione, tipo_fattura, codice_fiscale_cliente, indirizzo_cliente, citta_cliente, importo_totale, metodo_pagamento, note, dettaglio_servizi, pagata, proprietario_id, visita_id)
-SELECT
-  'FATT-2024-014',
-  vr.data_ora_visita,
-  'Semplificata',
-  vr.cf,
-  vr.indirizzo,
-  vr.citta,
-  65.00,
-  NULL,
-  NULL,
-  'Malattia infettiva',
-  true,
-  vr.proprietario_id,
-  vr.id
-FROM visit_ref vr
-WHERE vr.nome='Stella' AND vr.email='v.caruso@gmail.com' AND vr.data_ora_visita='2024-02-26 00:00:00+00'::timestamptz
-ON CONFLICT (numero_fattura) DO NOTHING;
-
-INSERT INTO fatture (numero_fattura, data_emissione, tipo_fattura, codice_fiscale_cliente, indirizzo_cliente, citta_cliente, importo_totale, metodo_pagamento, note, dettaglio_servizi, pagata, proprietario_id, visita_id)
-SELECT
-  'FATT-2024-015',
-  vr.data_ora_visita,
-  'Semplificata',
-  vr.cf,
-  vr.indirizzo,
-  vr.citta,
-  35.00,
-  NULL,
-  NULL,
-  'Controllo semestrale',
-  true,
-  vr.proprietario_id,
-  vr.id
-FROM visit_ref vr
-WHERE vr.nome='Briciola' AND vr.email='marco.rossi@email.it' AND vr.data_ora_visita='2024-03-01 00:00:00+00'::timestamptz
-ON CONFLICT (numero_fattura) DO NOTHING;
-
-INSERT INTO fatture (numero_fattura, data_emissione, tipo_fattura, codice_fiscale_cliente, indirizzo_cliente, citta_cliente, importo_totale, metodo_pagamento, note, dettaglio_servizi, pagata, proprietario_id, visita_id)
-SELECT
-  'FATT-2024-016',
-  vr.data_ora_visita,
-  'Semplificata',
-  vr.cf,
-  vr.indirizzo,
-  vr.citta,
-  55.00,
-  NULL,
-  NULL,
-  'Otorinolaringoiatria',
-  true,
-  vr.proprietario_id,
-  vr.id
-FROM visit_ref vr
-WHERE vr.nome='Charlie' AND vr.email='e.galli@email.it' AND vr.data_ora_visita='2024-03-05 00:00:00+00'::timestamptz
-ON CONFLICT (numero_fattura) DO NOTHING;
-
-INSERT INTO fatture (numero_fattura, data_emissione, tipo_fattura, codice_fiscale_cliente, indirizzo_cliente, citta_cliente, importo_totale, metodo_pagamento, note, dettaglio_servizi, pagata, proprietario_id, visita_id)
-SELECT
-  'FATT-2024-017',
-  vr.data_ora_visita,
-  'Semplificata',
-  vr.cf,
-  vr.indirizzo,
-  vr.citta,
-  40.00,
-  NULL,
-  NULL,
-  'Vaccinazione',
-  true,
-  vr.proprietario_id,
-  vr.id
-FROM visit_ref vr
-WHERE vr.nome='Mochi' AND vr.email='marco.rossi@email.it' AND vr.data_ora_visita='2024-03-08 00:00:00+00'::timestamptz
-ON CONFLICT (numero_fattura) DO NOTHING;
-
-INSERT INTO fatture (numero_fattura, data_emissione, tipo_fattura, codice_fiscale_cliente, indirizzo_cliente, citta_cliente, importo_totale, metodo_pagamento, note, dettaglio_servizi, pagata, proprietario_id, visita_id)
-SELECT
-  'FATT-2024-018',
-  vr.data_ora_visita,
-  'Semplificata',
-  vr.cf,
-  vr.indirizzo,
-  vr.citta,
-  25.00,
-  NULL,
-  NULL,
-  'Controllo annuale',
-  true,
-  vr.proprietario_id,
-  vr.id
-FROM visit_ref vr
-WHERE vr.nome='Lilly' AND vr.email='g.ricci@email.it' AND vr.data_ora_visita='2024-03-12 00:00:00+00'::timestamptz
-ON CONFLICT (numero_fattura) DO NOTHING;
-
-INSERT INTO fatture (numero_fattura, data_emissione, tipo_fattura, codice_fiscale_cliente, indirizzo_cliente, citta_cliente, importo_totale, metodo_pagamento, note, dettaglio_servizi, pagata, proprietario_id, visita_id)
-SELECT
-  'FATT-2024-019',
-  vr.data_ora_visita,
-  'Semplificata',
-  vr.cf,
-  vr.indirizzo,
-  vr.citta,
-  280.00,
-  NULL,
-  NULL,
-  'Chirurgia',
-  true,
-  vr.proprietario_id,
-  vr.id
-FROM visit_ref vr
-WHERE vr.nome='Fido' AND vr.email='g.ricci@email.it' AND vr.data_ora_visita='2024-03-15 00:00:00+00'::timestamptz
-ON CONFLICT (numero_fattura) DO NOTHING;
-
-INSERT INTO fatture (numero_fattura, data_emissione, tipo_fattura, codice_fiscale_cliente, indirizzo_cliente, citta_cliente, importo_totale, metodo_pagamento, note, dettaglio_servizi, pagata, proprietario_id, visita_id)
-SELECT
-  'FATT-2024-020',
-  vr.data_ora_visita,
-  'Semplificata',
-  vr.cf,
-  vr.indirizzo,
-  vr.citta,
-  55.00,
-  NULL,
-  NULL,
-  'Controllo annuale',
-  true,
-  vr.proprietario_id,
-  vr.id
-FROM visit_ref vr
-WHERE vr.nome='Mia' AND vr.email='g.barbieri@yahoo.it' AND vr.data_ora_visita='2024-03-19 00:00:00+00'::timestamptz
-ON CONFLICT (numero_fattura) DO NOTHING;
-
-INSERT INTO fatture (numero_fattura, data_emissione, tipo_fattura, codice_fiscale_cliente, indirizzo_cliente, citta_cliente, importo_totale, metodo_pagamento, note, dettaglio_servizi, pagata, proprietario_id, visita_id)
-SELECT
-  'FATT-2024-021',
-  vr.data_ora_visita,
-  'Semplificata',
-  vr.cf,
-  vr.indirizzo,
-  vr.citta,
-  50.00,
-  NULL,
-  NULL,
-  'Visita ortopedica',
-  true,
-  vr.proprietario_id,
-  vr.id
-FROM visit_ref vr
-WHERE vr.nome='Rex' AND vr.email='f.bianchi@gmail.com' AND vr.data_ora_visita='2024-03-22 00:00:00+00'::timestamptz
-ON CONFLICT (numero_fattura) DO NOTHING;
-
-INSERT INTO fatture (numero_fattura, data_emissione, tipo_fattura, codice_fiscale_cliente, indirizzo_cliente, citta_cliente, importo_totale, metodo_pagamento, note, dettaglio_servizi, pagata, proprietario_id, visita_id)
-SELECT
-  'FATT-2024-022',
-  vr.data_ora_visita,
-  'Semplificata',
-  vr.cf,
-  vr.indirizzo,
-  vr.citta,
-  45.00,
-  NULL,
-  NULL,
-  'Prima visita',
-  true,
-  vr.proprietario_id,
-  vr.id
-FROM visit_ref vr
-WHERE vr.nome='Fiocco' AND vr.email='a.moretti@libero.it' AND vr.data_ora_visita='2024-03-26 00:00:00+00'::timestamptz
-ON CONFLICT (numero_fattura) DO NOTHING;
-
-INSERT INTO fatture (numero_fattura, data_emissione, tipo_fattura, codice_fiscale_cliente, indirizzo_cliente, citta_cliente, importo_totale, metodo_pagamento, note, dettaglio_servizi, pagata, proprietario_id, visita_id)
-SELECT
-  'FATT-2024-023',
-  vr.data_ora_visita,
-  'Semplificata',
-  vr.cf,
-  vr.indirizzo,
-  vr.citta,
-  40.00,
-  NULL,
-  NULL,
-  'Prima visita',
-  true,
-  vr.proprietario_id,
-  vr.id
-FROM visit_ref vr
-WHERE vr.nome='Puffo' AND vr.email='a.moretti@libero.it' AND vr.data_ora_visita='2024-04-02 00:00:00+00'::timestamptz
-ON CONFLICT (numero_fattura) DO NOTHING;
-
-INSERT INTO fatture (numero_fattura, data_emissione, tipo_fattura, codice_fiscale_cliente, indirizzo_cliente, citta_cliente, importo_totale, metodo_pagamento, note, dettaglio_servizi, pagata, proprietario_id, visita_id)
-SELECT
-  'FATT-2024-024',
-  vr.data_ora_visita,
-  'Semplificata',
-  vr.cf,
-  vr.indirizzo,
-  vr.citta,
-  30.00,
-  NULL,
-  NULL,
-  'Controllo post-op',
-  true,
-  vr.proprietario_id,
-  vr.id
-FROM visit_ref vr
-WHERE vr.nome='Luna' AND vr.email='f.bianchi@gmail.com' AND vr.data_ora_visita='2024-04-09 00:00:00+00'::timestamptz
-ON CONFLICT (numero_fattura) DO NOTHING;
-
-INSERT INTO fatture (numero_fattura, data_emissione, tipo_fattura, codice_fiscale_cliente, indirizzo_cliente, citta_cliente, importo_totale, metodo_pagamento, note, dettaglio_servizi, pagata, proprietario_id, visita_id)
-SELECT
-  'FATT-2024-025',
-  vr.data_ora_visita,
-  'Semplificata',
-  vr.cf,
-  vr.indirizzo,
-  vr.citta,
-  35.00,
-  NULL,
-  NULL,
-  'Controllo semestrale',
-  true,
-  vr.proprietario_id,
-  vr.id
-FROM visit_ref vr
-WHERE vr.nome='Zeus' AND vr.email='f.lombardi@email.it' AND vr.data_ora_visita='2024-04-16 00:00:00+00'::timestamptz
+FROM fatture_data fd
+JOIN visit_ref vr ON vr.nome = fd.column4 AND vr.email = fd.column5 AND vr.data_ora_visita = fd.column6
 ON CONFLICT (numero_fattura) DO NOTHING;
 
 COMMIT;
