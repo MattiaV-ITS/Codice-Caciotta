@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import AuthService from '../services/authService';
+import { useAuth } from '../context/AuthContext';
 import ProprietarioRegistrationModal from './ProprietarioRegistrationModal';
 import './Auth.css';
 
@@ -18,6 +19,7 @@ function Signup() {
   const [showProprietarioModal, setShowProprietarioModal] = useState(false);
   
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleChange = (e) => {
     setFormData({
@@ -64,12 +66,21 @@ function Signup() {
     setIsLoading(true);
 
     try {
+      // 1. Registra l'utente
       await AuthService.signup(
         formData.username,
         formData.email,
         formData.password,
         ['user']
       );
+
+      // 2. Effettua l'auto-login per ottenere il token JWT (necessario per le chiamate successive)
+      const loginData = await AuthService.login(
+        formData.username,
+        formData.password
+      );
+      login(loginData.token, loginData.user);
+
       setSuccess('Registrazione completata!');
       // Show proprietario creation modal instead of immediately navigating to login
       setShowProprietarioModal(true);
@@ -81,13 +92,13 @@ function Signup() {
   };
 
   const handleProprietarioSuccess = () => {
-    setSuccess('Profilo proprietario creato con successo! Ora puoi effettuare il login.');
-    setTimeout(() => navigate('/login'), 2000);
+    setSuccess('Profilo proprietario creato con successo!');
+    setTimeout(() => navigate('/'), 2000);
   };
 
   const handleProprietarioSkip = () => {
-    setSuccess('Registrazione completata! Ora puoi effettuare il login.');
-    setTimeout(() => navigate('/login'), 2000);
+    setSuccess('Registrazione completata!');
+    setTimeout(() => navigate('/'), 2000);
   };
 
   return (
