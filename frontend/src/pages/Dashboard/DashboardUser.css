@@ -206,6 +206,61 @@
   background: #9E9E9E;
 }
 
+/* ========================================
+   STATUS-BASED CARD BACKGROUNDS
+   ======================================== */
+
+.animali-user-card-compact.status-sano {
+  background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+  border-color: #28a745;
+}
+
+.animali-user-card-compact.status-malato {
+  background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+  border-color: #dc3545;
+}
+
+.animali-user-card-compact.status-in_cura {
+  background: linear-gradient(135deg, #fff3cd 0%, #ffe5a0 100%);
+  border-color: #ffc107;
+}
+
+.animali-user-card-compact.status-deceduto {
+  background: linear-gradient(135deg, #d1d5db 0%, #9ca3af 100%);
+  border-color: #6b7280;
+}
+
+.animali-user-card-status {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-top: 4px;
+  display: inline-block;
+}
+
+.animali-user-card-status.status-sano {
+  background: #28a745;
+  color: white;
+}
+
+.animali-user-card-status.status-malato {
+  background: #dc3545;
+  color: white;
+}
+
+.animali-user-card-status.status-in_cura {
+  background: #ffc107;
+  color: #333;
+}
+
+.animali-user-card-status.status-deceduto {
+  background: #6b7280;
+  color: white;
+}
+
 .animali-user-card-info-compact {
   flex: 1;
   min-width: 0;

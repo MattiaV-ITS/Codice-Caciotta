@@ -303,22 +303,32 @@ function DashboardUser() {
             </div>
           ) : (
             <div className="animali-user-grid-compact">
-              {animali.map((animale) => (
-                <div
-                  key={animale.id}
-                  className="animali-user-card-compact"
-                  data-specie={animale.specie}
-                  onClick={() => handleSchedaAnimale(animale.id)}
-                >
-                  <div className="animali-user-avatar-small">
-                    {animale.nome?.charAt(0).toUpperCase() || '?'}
+              {animali.map((animale) => {
+                const statusClass = animale.stato 
+                  ? `status-${animale.stato.toLowerCase()}` 
+                  : '';
+                return (
+                  <div
+                    key={animale.id}
+                    className={`animali-user-card-compact ${statusClass}`}
+                    data-specie={animale.specie}
+                    onClick={() => handleSchedaAnimale(animale.id)}
+                  >
+                    <div className="animali-user-avatar-small">
+                      {animale.nome?.charAt(0).toUpperCase() || '?'}
+                    </div>
+                    <div className="animali-user-card-info-compact">
+                      <div className="animali-user-card-nome">{animale.nome}</div>
+                      <div className="animali-user-card-specie">{animale.specie}</div>
+                      {animale.stato && (
+                        <div className={`animali-user-card-status status-${animale.stato.toLowerCase()}`}>
+                          {animale.stato}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <div className="animali-user-card-info-compact">
-                    <div className="animali-user-card-nome">{animale.nome}</div>
-                    <div className="animali-user-card-specie">{animale.specie}</div>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

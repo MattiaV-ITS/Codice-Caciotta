@@ -27,7 +27,7 @@ public class PrestazioneController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAuthority('ROLE_STAFF') or hasAuthority('ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('ROLE_USER') or hasAuthority('ROLE_STAFF') or hasAuthority('ROLE_ADMIN')")
     public Page<Prestazione> getAllPrestazioni(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -43,14 +43,14 @@ public class PrestazioneController {
     }
 
     @GetMapping("/all")
-    @PreAuthorize("hasAuthority('ROLE_STAFF') or hasAuthority('ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('ROLE_USER') or hasAuthority('ROLE_STAFF') or hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<List<Prestazione>> getAllPrestazioniSimple() {
         List<Prestazione> prestazioni = prestazioneService.getAllPrestazioni();
         return ResponseEntity.ok(prestazioni);
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('ROLE_STAFF') or hasAuthority('ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('ROLE_USER') or hasAuthority('ROLE_STAFF') or hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<Prestazione> getPrestazioneById(@PathVariable Long id) {
         Optional<Prestazione> prestazione = prestazioneService.getPrestazioneById(id);
         return prestazione.map(ResponseEntity::ok)
@@ -80,7 +80,7 @@ public class PrestazioneController {
     }
 
     @GetMapping("/disponibili")
-    @PreAuthorize("hasAuthority('ROLE_STAFF') or hasAuthority('ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('ROLE_USER') or hasAuthority('ROLE_STAFF') or hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<List<Prestazione>> getPrestazioniDisponibili() {
         List<Prestazione> prestazioni = prestazioneService.getPrestazioniDisponibili();
         return ResponseEntity.ok(prestazioni);
