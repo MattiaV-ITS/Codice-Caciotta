@@ -149,6 +149,7 @@ function ProprietarioCreate({ onClose, onSuccess, proprietario, isEditMode = fal
   return (
     <FormModal
       title={isEditMode ? "Modifica Proprietario" : "Nuovo Proprietario"}
+      submitLabel={isEditMode ? "Salva" : "Aggiungi"}
       onClose={onClose}
       isSubmitting={isSubmitting}
       submitError={submitError}

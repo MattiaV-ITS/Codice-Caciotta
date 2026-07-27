@@ -144,6 +144,7 @@ function PrestazioneCreate() {
   return (
     <FormModal
       title={isEditMode ? 'Modifica Prestazione' : 'Nuova Prestazione'}
+      submitLabel={isEditMode ? 'Salva' : 'Aggiungi'}
       onClose={() => navigate('/prestazioni')}
       onSubmit={handleSubmit}
       size="lg"

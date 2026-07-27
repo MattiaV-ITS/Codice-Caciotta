@@ -384,6 +384,7 @@ function AnimaleCreate({ onClose, onSuccess, animale, isEditMode = false }) {
   return (
     <FormModal
       title={isEditMode ? "Modifica Animale" : "Nuovo Animale"}
+      submitLabel={isEditMode ? "Salva" : "Aggiungi"}
       onClose={onClose}
       isSubmitting={isLoading}
       submitError={errors.form}
