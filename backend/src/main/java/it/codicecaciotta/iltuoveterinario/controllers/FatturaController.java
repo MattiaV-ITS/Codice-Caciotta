@@ -8,6 +8,7 @@ import it.codicecaciotta.iltuoveterinario.repositories.FatturaRepository;
 import it.codicecaciotta.iltuoveterinario.repositories.VisitaRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.Nullable;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
@@ -54,6 +55,7 @@ public class FatturaController {
 
     // Crea una nuova fattura per una visita
     @PostMapping("/visita/{visitaId}")
+    @PreAuthorize("hasAuthority('ROLE_STAFF') or hasAuthority('ROLE_ADMIN')")
     @Transactional
     public ResponseEntity<FatturaDTO> createFatturaForVisita(@PathVariable("visitaId") Long visitaId, @RequestBody Fattura fattura) {
         Long safeVisitaId = Objects.requireNonNull(visitaId, "visitaId must not be null");
@@ -125,6 +127,7 @@ public class FatturaController {
 
     // Ottieni fattura per ID
     @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('ROLE_STAFF') or hasAuthority('ROLE_ADMIN')")
     @Transactional(readOnly = true)
     public ResponseEntity<FatturaDTO> getFattura(@PathVariable("id") Long id) {
         Long safeId = Objects.requireNonNull(id, "id must not be null");
@@ -138,6 +141,7 @@ public class FatturaController {
 
     // Ottieni fatture per visita
     @GetMapping("/visita/{visitaId}")
+    @PreAuthorize("hasAuthority('ROLE_STAFF') or hasAuthority('ROLE_ADMIN')")
     @Transactional(readOnly = true)
     public ResponseEntity<List<FatturaDTO>> getFattureByVisita(@PathVariable("visitaId") Long visitaId) {
         Long safeVisitaId = Objects.requireNonNull(visitaId, "visitaId must not be null");
@@ -151,6 +155,7 @@ public class FatturaController {
 
     // Ottieni tutte le fatture
     @GetMapping
+    @PreAuthorize("hasAuthority('ROLE_STAFF') or hasAuthority('ROLE_ADMIN')")
     @Transactional(readOnly = true)
     public ResponseEntity<List<FatturaDTO>> getAllFatture() {
         List<Fattura> fatture = fatturaRepository.findAll();
@@ -163,6 +168,7 @@ public class FatturaController {
 
     // Aggiorna una fattura
     @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('ROLE_STAFF') or hasAuthority('ROLE_ADMIN')")
     @Transactional
     public ResponseEntity<FatturaDTO> updateFattura(@PathVariable("id") Long id, @RequestBody Fattura fatturaDetails) {
         Long safeId = Objects.requireNonNull(id, "id must not be null");
@@ -184,6 +190,7 @@ public class FatturaController {
 
     // Elimina una fattura
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @Transactional
     public ResponseEntity<Void> deleteFattura(@PathVariable("id") Long id) {
         Long safeId = Objects.requireNonNull(id, "id must not be null");
@@ -196,6 +203,7 @@ public class FatturaController {
 
     // Imposta stato pagamento fattura
     @PatchMapping("/{id}/pagamento")
+    @PreAuthorize("hasAuthority('ROLE_STAFF') or hasAuthority('ROLE_ADMIN')")
     @Transactional
     public ResponseEntity<FatturaDTO> setPagato(@PathVariable("id") Long id, @RequestBody Map<String, Boolean> body) {
         Long safeId = Objects.requireNonNull(id, "id must not be null");
@@ -219,6 +227,7 @@ public class FatturaController {
 
     // Crea fattura semplificata per una visita
     @PostMapping("/semplificata/visita/{visitaId}")
+    @PreAuthorize("hasAuthority('ROLE_STAFF') or hasAuthority('ROLE_ADMIN')")
     @Transactional
     public ResponseEntity<FatturaDTO> createFatturaSemplificata(@PathVariable("visitaId") Long visitaId, 
                                                              @RequestBody(required = false) @Nullable Fattura fatturaData) {
