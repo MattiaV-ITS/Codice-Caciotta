@@ -193,6 +193,25 @@ public class AdminController {
 	}
 
 	@PreAuthorize("hasAuthority('ROLE_ADMIN')")
+	@PutMapping("/orari/bloccati/{id}")
+	public ResponseEntity<?> updateBlockedTimeSlot(@PathVariable Long id, @Valid @RequestBody UpdateBlockedTimeRequest request) {
+		try {
+			OrarioBloccato updated = orarioBloccatoService.updateOrarioBloccato(
+					id,
+					request.getData(),
+					request.getOraInizio(),
+					request.getOraFine(),
+					request.getMotivo()
+			);
+			logger.info("Updated blocked time slot: {} {}-{}",
+					updated.getData(), updated.getOraInizio(), updated.getOraFine());
+			return ResponseEntity.ok(updated);
+		} catch (IllegalArgumentException e) {
+			return ResponseEntity.badRequest().body(new MessageResponse(e.getMessage()));
+		}
+	}
+
+	@PreAuthorize("hasAuthority('ROLE_ADMIN')")
 	@DeleteMapping("/orari/bloccati/{id}")
 	public ResponseEntity<?> deleteBlockedTimeSlot(@PathVariable Long id) {
 		try {
@@ -206,6 +225,52 @@ public class AdminController {
 
 
 	public static class CreateBlockedTimeRequest {
+		@NotNull
+		private LocalDate data;
+
+		@NotNull
+		private LocalTime oraInizio;
+
+		@NotNull
+		private LocalTime oraFine;
+
+		private String motivo;
+
+		// Getters and setters
+		public LocalDate getData() {
+			return data;
+		}
+
+		public void setData(LocalDate data) {
+			this.data = data;
+		}
+
+		public LocalTime getOraInizio() {
+			return oraInizio;
+		}
+
+		public void setOraInizio(LocalTime oraInizio) {
+			this.oraInizio = oraInizio;
+		}
+
+		public LocalTime getOraFine() {
+			return oraFine;
+		}
+
+		public void setOraFine(LocalTime oraFine) {
+			this.oraFine = oraFine;
+		}
+
+		public String getMotivo() {
+			return motivo;
+		}
+
+		public void setMotivo(String motivo) {
+			this.motivo = motivo;
+		}
+	}
+
+	public static class UpdateBlockedTimeRequest {
 		@NotNull
 		private LocalDate data;
 

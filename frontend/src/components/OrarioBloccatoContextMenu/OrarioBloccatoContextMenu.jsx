@@ -24,7 +24,7 @@ const DeleteIcon = () => (
 
 const OrarioBloccatoContextMenu = ({ children, blockedTime, onBlockedTimeUpdated, onBlockedTimeDeleted }) => {
   const { user } = useAuth();
-  const { get, post, delete: deleteRequest } = useApi();
+  const { get, post, remove } = useApi();
   const [isLoading, setIsLoading] = useState(false);
 
   const isStaffOrAdmin = user?.roles?.includes('ROLE_STAFF') || user?.roles?.includes('ROLE_ADMIN');
@@ -49,7 +49,7 @@ const OrarioBloccatoContextMenu = ({ children, blockedTime, onBlockedTimeUpdated
 
     try {
       setIsLoading(true);
-      const response = await deleteRequest(`/api/admin/orari/bloccati/${blockedTime.id}`);
+      const response = await remove(`/api/admin/orari/bloccati/${blockedTime.id}`);
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -65,7 +65,7 @@ const OrarioBloccatoContextMenu = ({ children, blockedTime, onBlockedTimeUpdated
     } finally {
       setIsLoading(false);
     }
-  }, [blockedTime, isStaffOrAdmin, deleteRequest, onBlockedTimeDeleted]);
+  }, [blockedTime, isStaffOrAdmin, remove, onBlockedTimeDeleted]);
 
   const menuItems = [
     {
