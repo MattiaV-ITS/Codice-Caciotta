@@ -5,7 +5,7 @@ import ListPageTemplate from '../../components/ListPageTemplate/ListPageTemplate
 import { GearMenu } from '../../components/ContextMenu/ContextMenu';
 import { useTableControls } from '../../hooks/useTableControls';
 import { usePaginatedFetch } from '../../hooks/usePaginatedFetch';
-import { useSearchControls } from '../../hooks/useSearchControls'; // nuovo
+import { useSearchControls } from '../../hooks/useSearchControls';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import ErrorMessage from '../../components/common/ErrorMessage';
 import { PlusIcon, ServicesIcon } from '../../components/icons';
@@ -24,10 +24,10 @@ function PrestazioniLista() {
     defaultPageSize: 10
   });
 
-  const search = useSearchControls(); // nuovo
-  const [statoFiltro, setStatoFiltro] = useState(''); // nuovo
+  const search = useSearchControls();
+  const [statoFiltro, setStatoFiltro] = useState('');
 
-  // Filtri: search + stato
+  // Filtri combinati
   const filters = useMemo(() => ({
     search: search.appliedSearchTerm,
     stato: statoFiltro
@@ -185,7 +185,7 @@ function PrestazioniLista() {
     }
   ];
 
-  // Filtro di stato (come in ProprietariLista)
+  // Opzioni filtro stato
   const statoOptions = [
     { label: 'Tutti', value: '' },
     { label: 'Disponibili', value: 'Disponibile', className: 'btn-filter-success' },
@@ -198,7 +198,22 @@ function PrestazioniLista() {
     searchable: 'nome, descrizione o costo'
   };
 
-  // Contenuto statistiche (identico a ProprietariLista)
+  // Gestione click KPI card
+  const handleStatoCardFilter = (stato) => {
+    if (statoFiltro === stato) {
+      setStatoFiltro('');
+    } else {
+      setStatoFiltro(stato);
+    }
+    table.setPage(0);
+  };
+
+  const handleClearAllFilters = () => {
+    search.clearSearch();
+    setStatoFiltro('');
+  };
+
+  // Contenuto statistiche con card cliccabili
   const statsContent = (
     <>
       {statsLoading ? (
@@ -211,22 +226,46 @@ function PrestazioniLista() {
         </div>
       ) : stats ? (
         <>
-          <div className="stat-card">
+          {/* Card Totale (reset filtri) */}
+          <div
+            className={`stat-card ${!statoFiltro ? 'stat-active' : ''}`}
+            onClick={() => {
+              setStatoFiltro('');
+              table.setPage(0);
+            }}
+            style={{ cursor: 'pointer' }}
+          >
             <div className="stat-number stat-primary">{stats.totalCount}</div>
             <div className="stat-label">Totale Prestazioni</div>
           </div>
-          <div className="stat-card">
+
+          {/* Card Attive */}
+          <div
+            className={`stat-card ${statoFiltro === 'Disponibile' ? 'stat-active' : ''}`}
+            onClick={() => handleStatoCardFilter('Disponibile')}
+            style={{ cursor: 'pointer' }}
+          >
             <div className="stat-number stat-success">{stats.activeCount}</div>
             <div className="stat-label">Attive</div>
           </div>
-          <div className="stat-card">
+
+          {/* Card Disabilitate */}
+          <div
+            className={`stat-card ${statoFiltro === 'Non disponibile' ? 'stat-active' : ''}`}
+            onClick={() => handleStatoCardFilter('Non disponibile')}
+            style={{ cursor: 'pointer' }}
+          >
             <div className="stat-number stat-gray">{stats.inactiveCount}</div>
             <div className="stat-label">Disabilitate</div>
           </div>
+
+          {/* Card Costo Medio (informativa) */}
           <div className="stat-card">
             <div className="stat-number stat-info">€{stats.averageCost}</div>
             <div className="stat-label">Costo Medio</div>
           </div>
+
+          {/* Card Durata Media (informativa) */}
           <div className="stat-card">
             <div className="stat-number stat-info">{stats.averageDuration} min</div>
             <div className="stat-label">Durata Media</div>
@@ -249,8 +288,8 @@ function PrestazioniLista() {
       loading={loading}
       error={error}
       tableControls={{ ...table, totalPages, totalCount }}
-      searchControls={search}                         // ← ripristina la searchbox
-      filterOptions={filterOptions}                   // ← filtro stato
+      searchControls={search}
+      filterOptions={filterOptions}
       activeFilter={statoFiltro}
       onFilterSelect={setStatoFiltro}
       emptyMessage={search.appliedSearchTerm || statoFiltro ? 'Prova a modificare i filtri.' : 'Inizia aggiungendo la prima prestazione.'}
@@ -259,6 +298,7 @@ function PrestazioniLista() {
       onAddClick={handleCreatePrestazione}
       addIcon={<PlusIcon width={16} height={16} stroke="currentColor" />}
       statsContent={statsContent}
+      onClearAllFilters={handleClearAllFilters}
     />
   );
 }

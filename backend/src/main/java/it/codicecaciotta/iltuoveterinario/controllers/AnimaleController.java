@@ -1,5 +1,7 @@
 package it.codicecaciotta.iltuoveterinario.controllers;
 
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+
 import it.codicecaciotta.iltuoveterinario.dto.AnimaleCreateDTO;
 import it.codicecaciotta.iltuoveterinario.dto.AnimaleListaDTO;
 import it.codicecaciotta.iltuoveterinario.dto.AnimaleSchedaDTO;
@@ -14,17 +16,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
 import java.net.URI;
@@ -39,8 +31,9 @@ public class AnimaleController {
     private final AnimaleListaServiceImpl animaleListaService;
     private final PaginationAndSortingUtils paginationAndSortingUtils;
 
-    public AnimaleController(AnimaleService animaleService, AnimaleListaServiceImpl animaleListaService,
-            PaginationAndSortingUtils paginationAndSortingUtils) {
+    public AnimaleController(AnimaleService animaleService,
+                             AnimaleListaServiceImpl animaleListaService,
+                             PaginationAndSortingUtils paginationAndSortingUtils) {
         this.animaleService = animaleService;
         this.animaleListaService = animaleListaService;
         this.paginationAndSortingUtils = paginationAndSortingUtils;
@@ -50,12 +43,10 @@ public class AnimaleController {
     @PreAuthorize("hasAuthority('ROLE_USER') or hasAuthority('ROLE_STAFF') or hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<Animale> createAnimale(@Valid @RequestBody AnimaleCreateDTO animaleCreateDTO) {
         Animale createdAnimale = animaleService.createAnimale(animaleCreateDTO);
-
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{id}")
                 .buildAndExpand(createdAnimale.getId())
                 .toUri();
-
         return ResponseEntity.created(location).body(createdAnimale);
     }
 
@@ -67,14 +58,13 @@ public class AnimaleController {
         }
         Animale animale = animaleService.getAnimaleById(id);
         AnimaleSchedaDTO schedaDTO = AnimaleSchedaMapper.toSchedaDTO(animale);
-        
         return ResponseEntity.ok(schedaDTO);
     }
 
     @PatchMapping("/{id}")
     @PreAuthorize("hasAuthority('ROLE_STAFF') or hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<Animale> updateAnimale(@PathVariable Long id,
-            @Valid @RequestBody AnimaleUpdateDTO animaleUpdateDTO) {
+                                                 @Valid @RequestBody AnimaleUpdateDTO animaleUpdateDTO) {
         if (id == null) {
             return ResponseEntity.badRequest().build();
         }
@@ -92,7 +82,10 @@ public class AnimaleController {
         return ResponseEntity.noContent().build();
     }
 
-    private static final List<String> ALLOWED_SORT_FIELDS = List.of("id", "nome", "specie", "razza", "dataNascita", "sesso", "microchip", "stato", "idProprietario", "proprietario");
+    private static final List<String> ALLOWED_SORT_FIELDS = List.of(
+            "id", "nome", "specie", "razza", "dataNascita", "sesso", "microchip", "stato",
+            "idProprietario", "proprietario"
+    );
 
     @GetMapping
     public Page<AnimaleListaDTO> getAnimali(
@@ -102,29 +95,12 @@ public class AnimaleController {
             @RequestParam(defaultValue = "asc") String sortDir,
             @RequestParam(required = false) String search,
             @RequestParam(required = false) String specie,
+            @RequestParam(required = false) String stato,
             @RequestParam(required = false) Long proprietarioId) {
 
         Pageable pageable = paginationAndSortingUtils.buildPageRequest(
                 page, size, sortBy, sortDir, ALLOWED_SORT_FIELDS);
 
-        // Combined search by proprietario and search term
-        if (proprietarioId != null && search != null && !search.trim().isEmpty()) {
-            return animaleListaService.searchAnimaliByProprietario(proprietarioId, search.trim(), pageable);
-        }
-
-        // Filter by proprietario only
-        if (proprietarioId != null) {
-            return animaleListaService.getAnimaliByProprietarioId(proprietarioId, pageable);
-        }
-
-        if (search != null && !search.trim().isEmpty()) {
-            return animaleListaService.searchAnimaliComprehensive(search.trim(), pageable);
-        }
-
-        if (specie != null && !specie.trim().isEmpty()) {
-            return animaleListaService.getAnimaliBySpecie(specie.trim(), pageable);
-        }
-
-        return animaleListaService.getAllAnimali(pageable);
+        return animaleListaService.getAnimaliByFilters(search, specie, stato, proprietarioId, pageable);
     }
 }

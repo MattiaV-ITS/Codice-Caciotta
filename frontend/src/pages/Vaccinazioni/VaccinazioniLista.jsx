@@ -32,7 +32,7 @@ function VaccinazioniLista() {
   const [statsRefreshIndex, setStatsRefreshIndex] = useState(0);
   const { get } = useApi();
 
-  // Memoizza i filtri per evitare ricalcoli inutili e garantire stabilità dei riferimenti
+  // Filtri combinati
   const memoizedFilters = useMemo(() => ({
     search: search.appliedSearchTerm,
     stato: statoFilter
@@ -62,13 +62,11 @@ function VaccinazioniLista() {
 
   const getStatusInfo = (status) => {
     const normalized = status ? String(status).toUpperCase() : '';
-
     const map = {
       VALIDO: { label: 'Valido', className: 'badge-valido' },
       PROSSIMO: { label: 'In scadenza', className: 'badge-prossimo' },
       SCADUTO: { label: 'Scaduto', className: 'badge-scaduto' }
     };
-
     return map[normalized] || { label: 'Sconosciuto', className: 'badge-sconosciuto' };
   };
 
@@ -114,6 +112,22 @@ function VaccinazioniLista() {
     }
   ];
 
+  // Gestione click KPI
+  const handleStatoCardFilter = (stato) => {
+    if (statoFilter === stato) {
+      setStatoFilter('');
+    } else {
+      setStatoFilter(stato);
+    }
+    table.setPage(0);
+  };
+
+  const handleClearAllFilters = () => {
+    search.clearSearch();
+    setStatoFilter('');
+  };
+
+  // Contenuto statistiche con card cliccabili
   const statsContent = (
     <>
       {statsLoading ? (
@@ -126,26 +140,46 @@ function VaccinazioniLista() {
         </div>
       ) : stats ? (
         <>
-          <div className="stat-card">
+          {/* Totale: clic per resettare */}
+          <div
+            className={`stat-card ${!statoFilter ? 'stat-active' : ''}`}
+            onClick={() => {
+              setStatoFilter('');
+              table.setPage(0);
+            }}
+            style={{ cursor: 'pointer' }}
+          >
             <div className="stat-number stat-primary">{stats.totalCount}</div>
             <div className="stat-label">Totale Vaccinazioni</div>
           </div>
-          <div className="stat-card">
-            <div className="stat-number stat-success">
-              {stats.valideCount}
-            </div>
+
+          {/* Valide */}
+          <div
+            className={`stat-card ${statoFilter === 'VALIDO' ? 'stat-active' : ''}`}
+            onClick={() => handleStatoCardFilter('VALIDO')}
+            style={{ cursor: 'pointer' }}
+          >
+            <div className="stat-number stat-success">{stats.valideCount}</div>
             <div className="stat-label">Valide</div>
           </div>
-          <div className="stat-card">
-            <div className="stat-number stat-warning">
-              {stats.prossimeCount}
-            </div>
+
+          {/* In Scadenza */}
+          <div
+            className={`stat-card ${statoFilter === 'PROSSIMO' ? 'stat-active' : ''}`}
+            onClick={() => handleStatoCardFilter('PROSSIMO')}
+            style={{ cursor: 'pointer' }}
+          >
+            <div className="stat-number stat-warning">{stats.prossimeCount}</div>
             <div className="stat-label">In Scadenza</div>
           </div>
-          <div className="stat-card">
-            <div className="stat-number stat-danger">
-              {stats.scaduteCount}
-            </div>
+
+          {/* Scadute */}
+          <div
+            className={`stat-card ${statoFilter === 'SCADUTO' ? 'stat-active' : ''}`}
+            onClick={() => handleStatoCardFilter('SCADUTO')}
+            style={{ cursor: 'pointer' }}
+          >
+            <div className="stat-number stat-danger">{stats.scaduteCount}</div>
             <div className="stat-label">Scadute</div>
           </div>
         </>
@@ -153,43 +187,31 @@ function VaccinazioniLista() {
     </>
   );
 
-  // Fetch stats from backend
+  // Fetch stats
   useEffect(() => {
     const fetchStats = async () => {
       try {
         setStatsLoading(true);
-        console.log('Fetching vaccination stats...');
         const response = await get('/api/stats/vaccinazioni');
         const data = await response.json();
-        console.log('Vaccination stats received:', data);
         setStats(data);
         setStatsError(null);
       } catch (err) {
-        console.error('Failed to fetch vaccination stats:', err);
         setStatsError(err);
       } finally {
         setStatsLoading(false);
       }
     };
-
     fetchStats();
   }, [get, statsRefreshIndex]);
 
-const emptyIcon = (
-  <SyringeIcon
-    width={48}
-    height={48}
-    fill="var(--gray-400)"
-    opacity={0.5}
-  />
-);
+  const emptyIcon = (
+    <SyringeIcon width={48} height={48} fill="var(--gray-400)" opacity={0.5} />
+  );
 
   const emptyMessage = search.appliedSearchTerm || statoFilter
     ? 'Prova a modificare i filtri di ricerca.'
     : 'Inizia aggiungendo la prima vaccinazione.';
-
-  if (loading) return <LoadingSpinner label="Caricamento vaccinazioni..." />;
-  if (error) return <ErrorMessage error={error} />;
 
   return (
     <>
@@ -209,6 +231,7 @@ const emptyIcon = (
         emptyIcon={emptyIcon}
         showAddButton={false}
         statsContent={statsContent}
+        onClearAllFilters={handleClearAllFilters}
       />
 
       {editingVaccinazione && (

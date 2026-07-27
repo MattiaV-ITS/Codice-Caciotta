@@ -29,13 +29,13 @@ function ProprietariLista() {
   const [statsRefreshIndex, setStatsRefreshIndex] = useState(0);
   const { get, patch } = useApi();
 
-  // Memoizza i filtri per evitare ricalcoli inutili e garantire stabilità dei riferimenti
+  // Memoizza i filtri
   const memoizedFilters = useMemo(() => ({
     search: search.appliedSearchTerm,
     stato: statoFiltro
   }), [search.appliedSearchTerm, statoFiltro]);
 
-  const { data: proprietari, loading, error, totalPages, totalCount } =
+  const { data: proprietari, loading, error, totalPages, totalCount, refetch } =
     usePaginatedFetch('/api/proprietari', {
       page: table.page,
       size: table.size,
@@ -115,27 +115,38 @@ function ProprietariLista() {
     }
   ];
 
-  // Fetch stats from backend
+  // Fetch stats
   useEffect(() => {
     const fetchStats = async () => {
       try {
         setStatsLoading(true);
-        console.log('Fetching proprietario stats...');
         const response = await get('/api/stats/proprietari');
         const data = await response.json();
-        console.log('Proprietario stats received:', data);
         setStats(data || {});
         setStatsError(null);
       } catch (err) {
-        console.error('Failed to fetch proprietario stats:', err);
         setStatsError(err);
       } finally {
         setStatsLoading(false);
       }
     };
-
     fetchStats();
   }, [get, statsRefreshIndex]);
+
+  // GESTIONE CLICK KPI
+  const handleStatoCardFilter = (stato) => {
+    if (statoFiltro === stato) {
+      setStatoFiltro(''); // deseleziona
+    } else {
+      setStatoFiltro(stato);
+    }
+    table.setPage(0);
+  };
+
+  const handleClearAllFilters = () => {
+    search.clearSearch();
+    setStatoFiltro('');
+  };
 
   const statsContent = (
     <>
@@ -149,22 +160,44 @@ function ProprietariLista() {
         </div>
       ) : stats ? (
         <>
-          <div className="stat-card">
+          {/* Totale: clic per resettare */}
+          <div
+            className={`stat-card ${!statoFiltro ? 'stat-active' : ''}`}
+            onClick={() => {
+              setStatoFiltro('');
+              table.setPage(0);
+            }}
+            style={{ cursor: 'pointer' }}
+          >
             <div className="stat-number stat-primary">{stats.totalCount}</div>
             <div className="stat-label">Totale Proprietari</div>
           </div>
-          <div className="stat-card">
+
+          {/* Attivi */}
+          <div
+            className={`stat-card ${statoFiltro === 'true' ? 'stat-active' : ''}`}
+            onClick={() => handleStatoCardFilter('true')}
+            style={{ cursor: 'pointer' }}
+          >
             <div className="stat-number stat-success">
               {stats.attiviCount}
             </div>
             <div className="stat-label">Attivi</div>
           </div>
-          <div className="stat-card">
+
+          {/* Inattivi */}
+          <div
+            className={`stat-card ${statoFiltro === 'false' ? 'stat-active' : ''}`}
+            onClick={() => handleStatoCardFilter('false')}
+            style={{ cursor: 'pointer' }}
+          >
             <div className="stat-number stat-gray">
               {stats.inattiviCount}
             </div>
             <div className="stat-label">Inattivi</div>
           </div>
+
+          {/* Media Animali: non cliccabile */}
           <div className="stat-card">
             <div className="stat-number stat-info">
               {stats.averageAnimaliPerProprietario.toFixed(1)}
@@ -188,15 +221,12 @@ function ProprietariLista() {
     : 'Inizia aggiungendo primo proprietario.';
 
   const handleEditProprietario = (proprietario) => {
-    // Load full proprietario data before opening the edit modal
     loadFullProprietarioData(proprietario.id,
       (fullProprietarioData) => {
         setEditingProprietario(fullProprietarioData);
         setShowEditModal(true);
       },
       (error) => {
-        console.error('Failed to load full proprietario data, using partial data:', error);
-        // Fallback to partial data if full data load fails
         setEditingProprietario(proprietario);
         setShowEditModal(true);
       }
@@ -209,9 +239,8 @@ function ProprietariLista() {
       if (!response.ok) {
         throw new Error(`Errore nell'aggiornamento dello stato: ${response.status}`);
       }
-      // Refresh the list and stats
       setStatsRefreshIndex(prev => prev + 1);
-      table.setPage(0);
+      refetch();
     } catch (err) {
       console.error('Failed to update proprietario status:', err);
     }
@@ -223,7 +252,6 @@ function ProprietariLista() {
         <ProprietarioCreate
           onClose={() => setShowCreateModal(false)}
           onSuccess={(newProprietario) => {
-            // Ricarica i dati e le statistiche dopo la creazione
             setStatsRefreshIndex(prev => prev + 1);
             table.setPage(0);
             search.clearSearch();
@@ -235,7 +263,6 @@ function ProprietariLista() {
         <ProprietarioCreate
           onClose={() => setShowEditModal(false)}
           onSuccess={(updatedProprietario) => {
-            // Ricarica i dati e le statistiche dopo l'aggiornamento
             setStatsRefreshIndex(prev => prev + 1);
             table.setPage(0);
             search.clearSearch();
@@ -268,6 +295,7 @@ function ProprietariLista() {
       onAddClick={() => setShowCreateModal(true)}
       additionalContent={additionalContent}
       statsContent={statsContent}
+      onClearAllFilters={handleClearAllFilters}   // ← nuova prop
     />
   );
 }
