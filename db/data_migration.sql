@@ -46,7 +46,7 @@ VALUES
   ('Pallina','Cane','Bassotto','2016-11-28'::date,'F',9.1,'380260040456789',
    (SELECT id FROM prop WHERE email='l.colombo@libero.it'), 'Problemi alla schiena', 'IN_CURA'),
   ('Micio','Gatto','Persiano','2019-04-06'::date,'M',5.8,'380260040567890',
-   (SELECT id FROM prop WHERE email='anna.ferrari@yahoo.it'), NULL, 'SANO'),  -- corrected from DECEDUTO
+   (SELECT id FROM prop WHERE email='anna.ferrari@yahoo.it'), NULL, 'SANO'),
   ('Fido','Cane','Golden Retriever','2018-08-14'::date,'M',31.2,'380260040678901',
    (SELECT id FROM prop WHERE email='g.ricci@email.it'), NULL, 'SANO'),
   ('Neve','Gatto','Siamese','2021-01-22'::date,'F',3.9,'380260040789012',
@@ -88,58 +88,41 @@ WITH animal_lookup AS (
   JOIN proprietari p ON a.proprietario_id = p.id
 )
 INSERT INTO vaccinazioni (animale_id, tipo_vaccino, data_somministrazione, data_scadenza, lotto, note)
-VALUES
-  ((SELECT id FROM animal_lookup WHERE nome='Briciola' AND email='marco.rossi@email.it'),
-   'Polivalente cane (DHPPI)', '2024-01-10'::date, '2025-01-10'::date, 'LOT-2024-0011', NULL),
-  ((SELECT id FROM animal_lookup WHERE nome='Briciola' AND email='marco.rossi@email.it'),
-   'Antirabbico', '2024-01-10'::date, '2027-01-10'::date, 'LOT-2024-0012', 'Validità 3 anni'),
-  ((SELECT id FROM animal_lookup WHERE nome='Rex' AND email='f.bianchi@gmail.com'),
-   'Polivalente cane (DHPPI)', '2023-03-15'::date, '2024-03-15'::date, 'LOT-2023-0045', 'Richiamo non ancora effettuato'),
-  ((SELECT id FROM animal_lookup WHERE nome='Rex' AND email='f.bianchi@gmail.com'),
-   'Antirabbico', '2023-03-15'::date, '2026-03-15'::date, 'LOT-2023-0046', NULL),
-  ((SELECT id FROM animal_lookup WHERE nome='Luna' AND email='f.bianchi@gmail.com'),
-   'Trivalente felina (HCP)', '2024-01-18'::date, '2025-01-18'::date, 'LOT-2024-0031', NULL),
-  ((SELECT id FROM animal_lookup WHERE nome='Luna' AND email='f.bianchi@gmail.com'),
-   'Leucemia felina (FeLV)', '2024-01-18'::date, '2025-01-18'::date, 'LOT-2024-0032', NULL),
-  ((SELECT id FROM animal_lookup WHERE nome='Micio' AND email='anna.ferrari@yahoo.it'),
-   'Trivalente felina (HCP)', '2023-04-22'::date, '2024-04-22'::date, 'LOT-2023-0078', 'Proprietaria contattata via WhatsApp'),
-  ((SELECT id FROM animal_lookup WHERE nome='Fido' AND email='g.ricci@email.it'),
-   'Polivalente cane (DHPPI)', '2024-01-15'::date, '2025-01-15'::date, 'LOT-2024-0019', NULL),
-  ((SELECT id FROM animal_lookup WHERE nome='Fido' AND email='g.ricci@email.it'),
-   'Antirabbico', '2024-01-15'::date, '2027-01-15'::date, 'LOT-2024-0020', NULL),
-  ((SELECT id FROM animal_lookup WHERE nome='Fido' AND email='g.ricci@email.it'),
-   'Leishmaniosi', '2024-01-15'::date, '2025-01-15'::date, 'LOT-2024-0021', 'Zona a rischio'),
-  ((SELECT id FROM animal_lookup WHERE nome='Neve' AND email='maria.conti@gmail.com'),
-   'Trivalente felina (HCP)', '2024-02-19'::date, '2025-02-19'::date, 'LOT-2024-0041', 'Prima vaccinazione'),
-  ((SELECT id FROM animal_lookup WHERE nome='Birillo' AND email='p.manzoni@libero.it'),
-   'Polivalente cane (DHPPI)', '2023-05-20'::date, '2024-05-20'::date, 'LOT-2023-0099', NULL),
-  ((SELECT id FROM animal_lookup WHERE nome='Cioccolata' AND email='e.galli@email.it'),
-   'Polivalente cane (DHPPI)', '2023-06-07'::date, '2024-06-07'::date, 'LOT-2023-0102', NULL),
-  ((SELECT id FROM animal_lookup WHERE nome='Cioccolata' AND email='e.galli@email.it'),
-   'Antirabbico', '2023-06-07'::date, '2026-06-07'::date, 'LOT-2023-0103', NULL),
-  ((SELECT id FROM animal_lookup WHERE nome='Tigre' AND email='r.esposito@gmail.com'),
-   'Trivalente felina (HCP)', '2023-03-14'::date, '2024-03-14'::date, 'LOT-2023-0061', NULL),
-  ((SELECT id FROM animal_lookup WHERE nome='Oscar' AND email='c.ferretti@email.it'),
-   'Polivalente cane (DHPPI)', '2023-08-10'::date, '2024-08-10'::date, 'LOT-2023-0121', NULL),
-  ((SELECT id FROM animal_lookup WHERE nome='Puffo' AND email='a.moretti@libero.it'),
-   'Trivalente felina (HCP)', '2024-02-26'::date, '2025-02-26'::date, 'LOT-2024-0051', NULL),
-  ((SELECT id FROM animal_lookup WHERE nome='Stella' AND email='v.caruso@gmail.com'),
-   'Polivalente cane (DHPPI)', '2024-01-29'::date, '2025-01-29'::date, 'LOT-2024-0022', NULL),
-  ((SELECT id FROM animal_lookup WHERE nome='Stella' AND email='v.caruso@gmail.com'),
-   'Antirabbico', '2024-01-29'::date, '2027-01-29'::date, 'LOT-2024-0023', NULL),
-  ((SELECT id FROM animal_lookup WHERE nome='Zeus' AND email='f.lombardi@email.it'),
-   'Trivalente felina (HCP)', '2024-03-19'::date, '2025-03-19'::date, 'LOT-2024-0062', NULL),
-  ((SELECT id FROM animal_lookup WHERE nome='Mia' AND email='g.barbieri@yahoo.it'),
-   'Polivalente cane (DHPPI)', '2023-11-10'::date, '2024-11-10'::date, 'LOT-2023-0155', NULL),
-  ((SELECT id FROM animal_lookup WHERE nome='Mia' AND email='g.barbieri@yahoo.it'),
-   'Antirabbico', '2023-11-10'::date, '2026-11-10'::date, 'LOT-2023-0156', NULL),
-  ((SELECT id FROM animal_lookup WHERE nome='Artù' AND email='s.marchetti@gmail.com'),
-   'Trivalente felina (HCP)', '2024-03-08'::date, '2025-03-08'::date, 'LOT-2024-0058', NULL),
-  ((SELECT id FROM animal_lookup WHERE nome='Mochi' AND email='marco.rossi@email.it'),
-   'Polivalente cane (DHPPI)', '2023-04-25'::date, '2024-04-25'::date, 'LOT-2023-0088', NULL),
-  ((SELECT id FROM animal_lookup WHERE nome='Lilly' AND email='g.ricci@email.it'),
-   'Polivalente cane (DHPPI)', '2023-07-12'::date, '2024-07-12'::date, 'LOT-2023-0112', NULL)
-ON CONFLICT (animale_id, tipo_vaccino, data_somministrazione) DO NOTHING;
+SELECT al.id, v.tipo_vaccino, v.data_somministrazione, v.data_scadenza, v.lotto, v.note
+FROM (VALUES
+  ('Briciola', 'marco.rossi@email.it', 'Polivalente cane (DHPPI)', '2024-01-10'::date, '2025-01-10'::date, 'LOT-2024-0011', NULL),
+  ('Briciola', 'marco.rossi@email.it', 'Antirabbico', '2024-01-10'::date, '2027-01-10'::date, 'LOT-2024-0012', 'Validità 3 anni'),
+  ('Rex', 'f.bianchi@gmail.com', 'Polivalente cane (DHPPI)', '2023-03-15'::date, '2024-03-15'::date, 'LOT-2023-0045', 'Richiamo non ancora effettuato'),
+  ('Rex', 'f.bianchi@gmail.com', 'Antirabbico', '2023-03-15'::date, '2026-03-15'::date, 'LOT-2023-0046', NULL),
+  ('Luna', 'f.bianchi@gmail.com', 'Trivalente felina (HCP)', '2024-01-18'::date, '2025-01-18'::date, 'LOT-2024-0031', NULL),
+  ('Luna', 'f.bianchi@gmail.com', 'Leucemia felina (FeLV)', '2024-01-18'::date, '2025-01-18'::date, 'LOT-2024-0032', NULL),
+  ('Micio', 'anna.ferrari@yahoo.it', 'Trivalente felina (HCP)', '2023-04-22'::date, '2024-04-22'::date, 'LOT-2023-0078', 'Proprietaria contattata via WhatsApp'),
+  ('Fido', 'g.ricci@email.it', 'Polivalente cane (DHPPI)', '2024-01-15'::date, '2025-01-15'::date, 'LOT-2024-0019', NULL),
+  ('Fido', 'g.ricci@email.it', 'Antirabbico', '2024-01-15'::date, '2027-01-15'::date, 'LOT-2024-0020', NULL),
+  ('Fido', 'g.ricci@email.it', 'Leishmaniosi', '2024-01-15'::date, '2025-01-15'::date, 'LOT-2024-0021', 'Zona a rischio'),
+  ('Neve', 'maria.conti@gmail.com', 'Trivalente felina (HCP)', '2024-02-19'::date, '2025-02-19'::date, 'LOT-2024-0041', 'Prima vaccinazione'),
+  ('Birillo', 'p.manzoni@libero.it', 'Polivalente cane (DHPPI)', '2023-05-20'::date, '2024-05-20'::date, 'LOT-2023-0099', NULL),
+  ('Cioccolata', 'e.galli@email.it', 'Polivalente cane (DHPPI)', '2023-06-07'::date, '2024-06-07'::date, 'LOT-2023-0102', NULL),
+  ('Cioccolata', 'e.galli@email.it', 'Antirabbico', '2023-06-07'::date, '2026-06-07'::date, 'LOT-2023-0103', NULL),
+  ('Tigre', 'r.esposito@gmail.com', 'Trivalente felina (HCP)', '2023-03-14'::date, '2024-03-14'::date, 'LOT-2023-0061', NULL),
+  ('Oscar', 'c.ferretti@email.it', 'Polivalente cane (DHPPI)', '2023-08-10'::date, '2024-08-10'::date, 'LOT-2023-0121', NULL),
+  ('Puffo', 'a.moretti@libero.it', 'Trivalente felina (HCP)', '2024-02-26'::date, '2025-02-26'::date, 'LOT-2024-0051', NULL),
+  ('Stella', 'v.caruso@gmail.com', 'Polivalente cane (DHPPI)', '2024-01-29'::date, '2025-01-29'::date, 'LOT-2024-0022', NULL),
+  ('Stella', 'v.caruso@gmail.com', 'Antirabbico', '2024-01-29'::date, '2027-01-29'::date, 'LOT-2024-0023', NULL),
+  ('Zeus', 'f.lombardi@email.it', 'Trivalente felina (HCP)', '2024-03-19'::date, '2025-03-19'::date, 'LOT-2024-0062', NULL),
+  ('Mia', 'g.barbieri@yahoo.it', 'Polivalente cane (DHPPI)', '2023-11-10'::date, '2024-11-10'::date, 'LOT-2023-0155', NULL),
+  ('Mia', 'g.barbieri@yahoo.it', 'Antirabbico', '2023-11-10'::date, '2026-11-10'::date, 'LOT-2023-0156', NULL),
+  ('Artù', 's.marchetti@gmail.com', 'Trivalente felina (HCP)', '2024-03-08'::date, '2025-03-08'::date, 'LOT-2024-0058', NULL),
+  ('Mochi', 'marco.rossi@email.it', 'Polivalente cane (DHPPI)', '2023-04-25'::date, '2024-04-25'::date, 'LOT-2023-0088', NULL),
+  ('Lilly', 'g.ricci@email.it', 'Polivalente cane (DHPPI)', '2023-07-12'::date, '2024-07-12'::date, 'LOT-2023-0112', NULL)
+) AS v(nome, email, tipo_vaccino, data_somministrazione, data_scadenza, lotto, note)
+JOIN animal_lookup al ON al.nome = v.nome AND al.email = v.email
+WHERE NOT EXISTS (
+  SELECT 1 FROM vaccinazioni v2
+  WHERE v2.animale_id = al.id
+    AND v2.tipo_vaccino = v.tipo_vaccino
+    AND v2.data_somministrazione = v.data_somministrazione
+);
 
 -- ------------------------------------------------------------
 -- 4. PRESTAZIONI
@@ -171,58 +154,40 @@ WITH animal_ref AS (
   JOIN proprietari p ON a.proprietario_id = p.id
 )
 INSERT INTO visite (data_ora_visita, data_ora_fine_visita, animale_id, prenotazione_id)
-VALUES
-  ('2024-01-10 00:00:00+00'::timestamptz, '2024-01-10 00:30:00+00'::timestamptz,
-   (SELECT id FROM animal_ref WHERE nome='Briciola' AND email='marco.rossi@email.it'), NULL),
-  ('2024-01-12 00:00:00+00'::timestamptz, '2024-01-12 01:00:00+00'::timestamptz,
-   (SELECT id FROM animal_ref WHERE nome='Rex' AND email='f.bianchi@gmail.com'), NULL),
-  ('2024-01-15 00:00:00+00'::timestamptz, '2024-01-15 00:45:00+00'::timestamptz,
-   (SELECT id FROM animal_ref WHERE nome='Fido' AND email='g.ricci@email.it'), NULL),
-  ('2024-01-18 00:00:00+00'::timestamptz, '2024-01-18 02:00:00+00'::timestamptz,
-   (SELECT id FROM animal_ref WHERE nome='Luna' AND email='f.bianchi@gmail.com'), NULL),
-  ('2024-01-22 00:00:00+00'::timestamptz, '2024-01-22 01:00:00+00'::timestamptz,
-   (SELECT id FROM animal_ref WHERE nome='Tigre' AND email='r.esposito@gmail.com'), NULL),
-  ('2024-01-25 00:00:00+00'::timestamptz, '2024-01-25 00:30:00+00'::timestamptz,
-   (SELECT id FROM animal_ref WHERE nome='Birillo' AND email='p.manzoni@libero.it'), NULL),
-  ('2024-01-29 00:00:00+00'::timestamptz, '2024-01-29 00:45:00+00'::timestamptz,
-   (SELECT id FROM animal_ref WHERE nome='Zeus' AND email='f.lombardi@email.it'), NULL),
-  ('2024-02-02 00:00:00+00'::timestamptz, '2024-02-02 01:00:00+00'::timestamptz,
-   (SELECT id FROM animal_ref WHERE nome='Micio' AND email='anna.ferrari@yahoo.it'), NULL),
-  ('2024-02-07 00:00:00+00'::timestamptz, '2024-02-07 01:15:00+00'::timestamptz,
-   (SELECT id FROM animal_ref WHERE nome='Cioccolata' AND email='e.galli@email.it'), NULL),
-  ('2024-02-12 00:00:00+00'::timestamptz, '2024-02-12 01:15:00+00'::timestamptz,
-   (SELECT id FROM animal_ref WHERE nome='Artù' AND email='s.marchetti@gmail.com'), NULL),
-  ('2024-02-15 00:00:00+00'::timestamptz, '2024-02-15 01:30:00+00'::timestamptz,
-   (SELECT id FROM animal_ref WHERE nome='Pallina' AND email='l.colombo@libero.it'), NULL),
-  ('2024-02-19 00:00:00+00'::timestamptz, '2024-02-19 00:30:00+00'::timestamptz,
-   (SELECT id FROM animal_ref WHERE nome='Neve' AND email='maria.conti@gmail.com'), NULL),
-  ('2024-02-22 00:00:00+00'::timestamptz, '2024-02-22 00:30:00+00'::timestamptz,
-   (SELECT id FROM animal_ref WHERE nome='Oscar' AND email='c.ferretti@email.it'), NULL),
-  ('2024-02-26 00:00:00+00'::timestamptz, '2024-02-26 01:00:00+00'::timestamptz,
-   (SELECT id FROM animal_ref WHERE nome='Stella' AND email='v.caruso@gmail.com'), NULL),
-  ('2024-03-01 00:00:00+00'::timestamptz, '2024-03-01 00:30:00+00'::timestamptz,
-   (SELECT id FROM animal_ref WHERE nome='Briciola' AND email='marco.rossi@email.it'), NULL),
-  ('2024-03-05 00:00:00+00'::timestamptz, '2024-03-05 00:45:00+00'::timestamptz,
-   (SELECT id FROM animal_ref WHERE nome='Charlie' AND email='e.galli@email.it'), NULL),
-  ('2024-03-08 00:00:00+00'::timestamptz, '2024-03-08 00:30:00+00'::timestamptz,
-   (SELECT id FROM animal_ref WHERE nome='Mochi' AND email='marco.rossi@email.it'), NULL),
-  ('2024-03-12 00:00:00+00'::timestamptz, '2024-03-12 00:30:00+00'::timestamptz,
-   (SELECT id FROM animal_ref WHERE nome='Lilly' AND email='g.ricci@email.it'), NULL),
-  ('2024-03-15 00:00:00+00'::timestamptz, '2024-03-15 03:00:00+00'::timestamptz,
-   (SELECT id FROM animal_ref WHERE nome='Fido' AND email='g.ricci@email.it'), NULL),
-  ('2024-03-19 00:00:00+00'::timestamptz, '2024-03-19 00:45:00+00'::timestamptz,
-   (SELECT id FROM animal_ref WHERE nome='Mia' AND email='g.barbieri@yahoo.it'), NULL),
-  ('2024-03-22 00:00:00+00'::timestamptz, '2024-03-22 00:45:00+00'::timestamptz,
-   (SELECT id FROM animal_ref WHERE nome='Rex' AND email='f.bianchi@gmail.com'), NULL),
-  ('2024-03-26 00:00:00+00'::timestamptz, '2024-03-26 00:30:00+00'::timestamptz,
-   (SELECT id FROM animal_ref WHERE nome='Fiocco' AND email='a.moretti@libero.it'), NULL),
-  ('2024-04-02 00:00:00+00'::timestamptz, '2024-04-02 00:30:00+00'::timestamptz,
-   (SELECT id FROM animal_ref WHERE nome='Puffo' AND email='a.moretti@libero.it'), NULL),
-  ('2024-04-09 00:00:00+00'::timestamptz, '2024-04-09 00:30:00+00'::timestamptz,
-   (SELECT id FROM animal_ref WHERE nome='Luna' AND email='f.bianchi@gmail.com'), NULL),
-  ('2024-04-16 00:00:00+00'::timestamptz, '2024-04-16 00:30:00+00'::timestamptz,
-   (SELECT id FROM animal_ref WHERE nome='Zeus' AND email='f.lombardi@email.it'), NULL)
-ON CONFLICT DO NOTHING;  -- no unique constraint, but safe to skip if duplicate
+SELECT v.data_ora, v.data_ora_fine, al.id, NULL
+FROM (VALUES
+  ('2024-01-10 00:00:00+00'::timestamptz, '2024-01-10 00:30:00+00'::timestamptz, 'Briciola', 'marco.rossi@email.it'),
+  ('2024-01-12 00:00:00+00'::timestamptz, '2024-01-12 01:00:00+00'::timestamptz, 'Rex', 'f.bianchi@gmail.com'),
+  ('2024-01-15 00:00:00+00'::timestamptz, '2024-01-15 00:45:00+00'::timestamptz, 'Fido', 'g.ricci@email.it'),
+  ('2024-01-18 00:00:00+00'::timestamptz, '2024-01-18 02:00:00+00'::timestamptz, 'Luna', 'f.bianchi@gmail.com'),
+  ('2024-01-22 00:00:00+00'::timestamptz, '2024-01-22 01:00:00+00'::timestamptz, 'Tigre', 'r.esposito@gmail.com'),
+  ('2024-01-25 00:00:00+00'::timestamptz, '2024-01-25 00:30:00+00'::timestamptz, 'Birillo', 'p.manzoni@libero.it'),
+  ('2024-01-29 00:00:00+00'::timestamptz, '2024-01-29 00:45:00+00'::timestamptz, 'Zeus', 'f.lombardi@email.it'),
+  ('2024-02-02 00:00:00+00'::timestamptz, '2024-02-02 01:00:00+00'::timestamptz, 'Micio', 'anna.ferrari@yahoo.it'),
+  ('2024-02-07 00:00:00+00'::timestamptz, '2024-02-07 01:15:00+00'::timestamptz, 'Cioccolata', 'e.galli@email.it'),
+  ('2024-02-12 00:00:00+00'::timestamptz, '2024-02-12 01:15:00+00'::timestamptz, 'Artù', 's.marchetti@gmail.com'),
+  ('2024-02-15 00:00:00+00'::timestamptz, '2024-02-15 01:30:00+00'::timestamptz, 'Pallina', 'l.colombo@libero.it'),
+  ('2024-02-19 00:00:00+00'::timestamptz, '2024-02-19 00:30:00+00'::timestamptz, 'Neve', 'maria.conti@gmail.com'),
+  ('2024-02-22 00:00:00+00'::timestamptz, '2024-02-22 00:30:00+00'::timestamptz, 'Oscar', 'c.ferretti@email.it'),
+  ('2024-02-26 00:00:00+00'::timestamptz, '2024-02-26 01:00:00+00'::timestamptz, 'Stella', 'v.caruso@gmail.com'),
+  ('2024-03-01 00:00:00+00'::timestamptz, '2024-03-01 00:30:00+00'::timestamptz, 'Briciola', 'marco.rossi@email.it'),
+  ('2024-03-05 00:00:00+00'::timestamptz, '2024-03-05 00:45:00+00'::timestamptz, 'Charlie', 'e.galli@email.it'),
+  ('2024-03-08 00:00:00+00'::timestamptz, '2024-03-08 00:30:00+00'::timestamptz, 'Mochi', 'marco.rossi@email.it'),
+  ('2024-03-12 00:00:00+00'::timestamptz, '2024-03-12 00:30:00+00'::timestamptz, 'Lilly', 'g.ricci@email.it'),
+  ('2024-03-15 00:00:00+00'::timestamptz, '2024-03-15 03:00:00+00'::timestamptz, 'Fido', 'g.ricci@email.it'),
+  ('2024-03-19 00:00:00+00'::timestamptz, '2024-03-19 00:45:00+00'::timestamptz, 'Mia', 'g.barbieri@yahoo.it'),
+  ('2024-03-22 00:00:00+00'::timestamptz, '2024-03-22 00:45:00+00'::timestamptz, 'Rex', 'f.bianchi@gmail.com'),
+  ('2024-03-26 00:00:00+00'::timestamptz, '2024-03-26 00:30:00+00'::timestamptz, 'Fiocco', 'a.moretti@libero.it'),
+  ('2024-04-02 00:00:00+00'::timestamptz, '2024-04-02 00:30:00+00'::timestamptz, 'Puffo', 'a.moretti@libero.it'),
+  ('2024-04-09 00:00:00+00'::timestamptz, '2024-04-09 00:30:00+00'::timestamptz, 'Luna', 'f.bianchi@gmail.com'),
+  ('2024-04-16 00:00:00+00'::timestamptz, '2024-04-16 00:30:00+00'::timestamptz, 'Zeus', 'f.lombardi@email.it')
+) AS v(data_ora, data_ora_fine, nome_animale, email_prop)
+JOIN animal_ref al ON al.nome = v.nome_animale AND al.email = v.email_prop
+WHERE NOT EXISTS (
+  SELECT 1 FROM visite v2
+  WHERE v2.animale_id = al.id
+    AND v2.data_ora_visita = v.data_ora
+);
 
 -- ------------------------------------------------------------
 -- 6. VISITA_PRESTAZIONI
@@ -234,72 +199,47 @@ WITH visit_ref AS (
   JOIN proprietari p ON a.proprietario_id = p.id
 )
 INSERT INTO visita_prestazioni (visita_id, prestazione_id)
-VALUES
-  ((SELECT id FROM visit_ref WHERE nome='Briciola' AND email='marco.rossi@email.it' AND data_ora_visita='2024-01-10 00:00:00+00'::timestamptz),
-   (SELECT id FROM prestazioni WHERE nome_prestazione='Controllo annuale')),
-  ((SELECT id FROM visit_ref WHERE nome='Rex' AND email='f.bianchi@gmail.com' AND data_ora_visita='2024-01-12 00:00:00+00'::timestamptz),
-   (SELECT id FROM prestazioni WHERE nome_prestazione='Visita urgente')),
-  ((SELECT id FROM visit_ref WHERE nome='Fido' AND email='g.ricci@email.it' AND data_ora_visita='2024-01-15 00:00:00+00'::timestamptz),
-   (SELECT id FROM prestazioni WHERE nome_prestazione='Controllo annuale')),
-  ((SELECT id FROM visit_ref WHERE nome='Fido' AND email='g.ricci@email.it' AND data_ora_visita='2024-01-15 00:00:00+00'::timestamptz),
-   (SELECT id FROM prestazioni WHERE nome_prestazione='Vaccinazione')),
-  ((SELECT id FROM visit_ref WHERE nome='Luna' AND email='f.bianchi@gmail.com' AND data_ora_visita='2024-01-18 00:00:00+00'::timestamptz),
-   (SELECT id FROM prestazioni WHERE nome_prestazione='Chirurgia')),
-  ((SELECT id FROM visit_ref WHERE nome='Tigre' AND email='r.esposito@gmail.com' AND data_ora_visita='2024-01-22 00:00:00+00'::timestamptz),
-   (SELECT id FROM prestazioni WHERE nome_prestazione='Visita urgente')),
-  ((SELECT id FROM visit_ref WHERE nome='Birillo' AND email='p.manzoni@libero.it' AND data_ora_visita='2024-01-25 00:00:00+00'::timestamptz),
-   (SELECT id FROM prestazioni WHERE nome_prestazione='Controllo peso')),
-  ((SELECT id FROM visit_ref WHERE nome='Zeus' AND email='f.lombardi@email.it' AND data_ora_visita='2024-01-29 00:00:00+00'::timestamptz),
-   (SELECT id FROM prestazioni WHERE nome_prestazione='Controllo annuale')),
-  ((SELECT id FROM visit_ref WHERE nome='Micio' AND email='anna.ferrari@yahoo.it' AND data_ora_visita='2024-02-02 00:00:00+00'::timestamptz),
-   (SELECT id FROM prestazioni WHERE nome_prestazione='Dermatologia')),
-  ((SELECT id FROM visit_ref WHERE nome='Cioccolata' AND email='e.galli@email.it' AND data_ora_visita='2024-02-07 00:00:00+00'::timestamptz),
-   (SELECT id FROM prestazioni WHERE nome_prestazione='Ecografia')),
-  ((SELECT id FROM visit_ref WHERE nome='Cioccolata' AND email='e.galli@email.it' AND data_ora_visita='2024-02-07 00:00:00+00'::timestamptz),
-   (SELECT id FROM prestazioni WHERE nome_prestazione='Malattia infettiva')),
-  ((SELECT id FROM visit_ref WHERE nome='Artù' AND email='s.marchetti@gmail.com' AND data_ora_visita='2024-02-12 00:00:00+00'::timestamptz),
-   (SELECT id FROM prestazioni WHERE nome_prestazione='Visita urgente')),
-  ((SELECT id FROM visit_ref WHERE nome='Artù' AND email='s.marchetti@gmail.com' AND data_ora_visita='2024-02-12 00:00:00+00'::timestamptz),
-   (SELECT id FROM prestazioni WHERE nome_prestazione='Visita neurologica')),
-  ((SELECT id FROM visit_ref WHERE nome='Pallina' AND email='l.colombo@libero.it' AND data_ora_visita='2024-02-15 00:00:00+00'::timestamptz),
-   (SELECT id FROM prestazioni WHERE nome_prestazione='Visita ortopedica')),
-  ((SELECT id FROM visit_ref WHERE nome='Pallina' AND email='l.colombo@libero.it' AND data_ora_visita='2024-02-15 00:00:00+00'::timestamptz),
-   (SELECT id FROM prestazioni WHERE nome_prestazione='Visita neurologica')),
-  ((SELECT id FROM visit_ref WHERE nome='Neve' AND email='maria.conti@gmail.com' AND data_ora_visita='2024-02-19 00:00:00+00'::timestamptz),
-   (SELECT id FROM prestazioni WHERE nome_prestazione='Controllo semestrale')),
-  ((SELECT id FROM visit_ref WHERE nome='Oscar' AND email='c.ferretti@email.it' AND data_ora_visita='2024-02-22 00:00:00+00'::timestamptz),
-   (SELECT id FROM prestazioni WHERE nome_prestazione='Controllo post-op')),
-  ((SELECT id FROM visit_ref WHERE nome='Stella' AND email='v.caruso@gmail.com' AND data_ora_visita='2024-02-26 00:00:00+00'::timestamptz),
-   (SELECT id FROM prestazioni WHERE nome_prestazione='Otorinolaringoiatria')),
-  ((SELECT id FROM visit_ref WHERE nome='Stella' AND email='v.caruso@gmail.com' AND data_ora_visita='2024-02-26 00:00:00+00'::timestamptz),
-   (SELECT id FROM prestazioni WHERE nome_prestazione='Malattia infettiva')),
-  ((SELECT id FROM visit_ref WHERE nome='Briciola' AND email='marco.rossi@email.it' AND data_ora_visita='2024-03-01 00:00:00+00'::timestamptz),
-   (SELECT id FROM prestazioni WHERE nome_prestazione='Controllo annuale')),
-  ((SELECT id FROM visit_ref WHERE nome='Charlie' AND email='e.galli@email.it' AND data_ora_visita='2024-03-05 00:00:00+00'::timestamptz),
-   (SELECT id FROM prestazioni WHERE nome_prestazione='Visita ortopedica')),
-  ((SELECT id FROM visit_ref WHERE nome='Mochi' AND email='marco.rossi@email.it' AND data_ora_visita='2024-03-08 00:00:00+00'::timestamptz),
-   (SELECT id FROM prestazioni WHERE nome_prestazione='Controllo annuale')),
-  ((SELECT id FROM visit_ref WHERE nome='Lilly' AND email='g.ricci@email.it' AND data_ora_visita='2024-03-12 00:00:00+00'::timestamptz),
-   (SELECT id FROM prestazioni WHERE nome_prestazione='Controllo semestrale')),
-  ((SELECT id FROM visit_ref WHERE nome='Lilly' AND email='g.ricci@email.it' AND data_ora_visita='2024-03-12 00:00:00+00'::timestamptz),
-   (SELECT id FROM prestazioni WHERE nome_prestazione='Vaccinazione')),
-  ((SELECT id FROM visit_ref WHERE nome='Fido' AND email='g.ricci@email.it' AND data_ora_visita='2024-03-15 00:00:00+00'::timestamptz),
-   (SELECT id FROM prestazioni WHERE nome_prestazione='Chirurgia')),
-  ((SELECT id FROM visit_ref WHERE nome='Mia' AND email='g.barbieri@yahoo.it' AND data_ora_visita='2024-03-19 00:00:00+00'::timestamptz),
-   (SELECT id FROM prestazioni WHERE nome_prestazione='Controllo annuale')),
-  ((SELECT id FROM visit_ref WHERE nome='Mia' AND email='g.barbieri@yahoo.it' AND data_ora_visita='2024-03-19 00:00:00+00'::timestamptz),
-   (SELECT id FROM prestazioni WHERE nome_prestazione='Vaccinazione')),
-  ((SELECT id FROM visit_ref WHERE nome='Rex' AND email='f.bianchi@gmail.com' AND data_ora_visita='2024-03-22 00:00:00+00'::timestamptz),
-   (SELECT id FROM prestazioni WHERE nome_prestazione='Controllo post-op')),
-  ((SELECT id FROM visit_ref WHERE nome='Fiocco' AND email='a.moretti@libero.it' AND data_ora_visita='2024-03-26 00:00:00+00'::timestamptz),
-   (SELECT id FROM prestazioni WHERE nome_prestazione='Prima visita')),
-  ((SELECT id FROM visit_ref WHERE nome='Puffo' AND email='a.moretti@libero.it' AND data_ora_visita='2024-04-02 00:00:00+00'::timestamptz),
-   (SELECT id FROM prestazioni WHERE nome_prestazione='Prima visita')),
-  ((SELECT id FROM visit_ref WHERE nome='Luna' AND email='f.bianchi@gmail.com' AND data_ora_visita='2024-04-09 00:00:00+00'::timestamptz),
-   (SELECT id FROM prestazioni WHERE nome_prestazione='Controllo post-op')),
-  ((SELECT id FROM visit_ref WHERE nome='Zeus' AND email='f.lombardi@email.it' AND data_ora_visita='2024-04-16 00:00:00+00'::timestamptz),
-   (SELECT id FROM prestazioni WHERE nome_prestazione='Controllo annuale'))
-ON CONFLICT (visita_id, prestazione_id) DO NOTHING;
+SELECT vr.id, p.id
+FROM (VALUES
+  ('Briciola', 'marco.rossi@email.it', '2024-01-10 00:00:00+00'::timestamptz, 'Controllo annuale'),
+  ('Rex', 'f.bianchi@gmail.com', '2024-01-12 00:00:00+00'::timestamptz, 'Visita urgente'),
+  ('Fido', 'g.ricci@email.it', '2024-01-15 00:00:00+00'::timestamptz, 'Controllo annuale'),
+  ('Fido', 'g.ricci@email.it', '2024-01-15 00:00:00+00'::timestamptz, 'Vaccinazione'),
+  ('Luna', 'f.bianchi@gmail.com', '2024-01-18 00:00:00+00'::timestamptz, 'Chirurgia'),
+  ('Tigre', 'r.esposito@gmail.com', '2024-01-22 00:00:00+00'::timestamptz, 'Visita urgente'),
+  ('Birillo', 'p.manzoni@libero.it', '2024-01-25 00:00:00+00'::timestamptz, 'Controllo peso'),
+  ('Zeus', 'f.lombardi@email.it', '2024-01-29 00:00:00+00'::timestamptz, 'Controllo annuale'),
+  ('Micio', 'anna.ferrari@yahoo.it', '2024-02-02 00:00:00+00'::timestamptz, 'Dermatologia'),
+  ('Cioccolata', 'e.galli@email.it', '2024-02-07 00:00:00+00'::timestamptz, 'Ecografia'),
+  ('Cioccolata', 'e.galli@email.it', '2024-02-07 00:00:00+00'::timestamptz, 'Malattia infettiva'),
+  ('Artù', 's.marchetti@gmail.com', '2024-02-12 00:00:00+00'::timestamptz, 'Visita urgente'),
+  ('Artù', 's.marchetti@gmail.com', '2024-02-12 00:00:00+00'::timestamptz, 'Visita neurologica'),
+  ('Pallina', 'l.colombo@libero.it', '2024-02-15 00:00:00+00'::timestamptz, 'Visita ortopedica'),
+  ('Pallina', 'l.colombo@libero.it', '2024-02-15 00:00:00+00'::timestamptz, 'Visita neurologica'),
+  ('Neve', 'maria.conti@gmail.com', '2024-02-19 00:00:00+00'::timestamptz, 'Controllo semestrale'),
+  ('Oscar', 'c.ferretti@email.it', '2024-02-22 00:00:00+00'::timestamptz, 'Controllo post-op'),
+  ('Stella', 'v.caruso@gmail.com', '2024-02-26 00:00:00+00'::timestamptz, 'Otorinolaringoiatria'),
+  ('Stella', 'v.caruso@gmail.com', '2024-02-26 00:00:00+00'::timestamptz, 'Malattia infettiva'),
+  ('Briciola', 'marco.rossi@email.it', '2024-03-01 00:00:00+00'::timestamptz, 'Controllo annuale'),
+  ('Charlie', 'e.galli@email.it', '2024-03-05 00:00:00+00'::timestamptz, 'Visita ortopedica'),
+  ('Mochi', 'marco.rossi@email.it', '2024-03-08 00:00:00+00'::timestamptz, 'Controllo annuale'),
+  ('Lilly', 'g.ricci@email.it', '2024-03-12 00:00:00+00'::timestamptz, 'Controllo semestrale'),
+  ('Lilly', 'g.ricci@email.it', '2024-03-12 00:00:00+00'::timestamptz, 'Vaccinazione'),
+  ('Fido', 'g.ricci@email.it', '2024-03-15 00:00:00+00'::timestamptz, 'Chirurgia'),
+  ('Mia', 'g.barbieri@yahoo.it', '2024-03-19 00:00:00+00'::timestamptz, 'Controllo annuale'),
+  ('Mia', 'g.barbieri@yahoo.it', '2024-03-19 00:00:00+00'::timestamptz, 'Vaccinazione'),
+  ('Rex', 'f.bianchi@gmail.com', '2024-03-22 00:00:00+00'::timestamptz, 'Controllo post-op'),
+  ('Fiocco', 'a.moretti@libero.it', '2024-03-26 00:00:00+00'::timestamptz, 'Prima visita'),
+  ('Puffo', 'a.moretti@libero.it', '2024-04-02 00:00:00+00'::timestamptz, 'Prima visita'),
+  ('Luna', 'f.bianchi@gmail.com', '2024-04-09 00:00:00+00'::timestamptz, 'Controllo post-op'),
+  ('Zeus', 'f.lombardi@email.it', '2024-04-16 00:00:00+00'::timestamptz, 'Controllo annuale')
+) AS v(nome_animale, email_prop, data_ora_visita, nome_prestazione)
+JOIN visit_ref vr ON vr.nome = v.nome_animale AND vr.email = v.email_prop AND vr.data_ora_visita = v.data_ora_visita
+JOIN prestazioni p ON p.nome_prestazione = v.nome_prestazione
+WHERE NOT EXISTS (
+  SELECT 1 FROM visita_prestazioni vp
+  WHERE vp.visita_id = vr.id AND vp.prestazione_id = p.id
+);
 
 -- ------------------------------------------------------------
 -- 7. DIARIO CLINICO
@@ -311,58 +251,38 @@ WITH visit_ref AS (
   JOIN proprietari p ON a.proprietario_id = p.id
 )
 INSERT INTO diario_clinico (sintomi, diagnosi, trattamento_terapia, note, note_private, visita_id)
-VALUES
-  ('Controllo routine', NULL, 'Vaccinazione polivalente', NULL, NULL,
-   (SELECT id FROM visit_ref WHERE nome='Briciola' AND email='marco.rossi@email.it' AND data_ora_visita='2024-01-10 00:00:00+00'::timestamptz)),
-  ('Zoppia arto posteriore dx', NULL, 'Rx arto, anti-infiammatori', 'Rx allegato alla cartella', NULL,
-   (SELECT id FROM visit_ref WHERE nome='Rex' AND email='f.bianchi@gmail.com' AND data_ora_visita='2024-01-12 00:00:00+00'::timestamptz)),
-  ('Controllo peso e dentizione', NULL, 'Pulizia denti professionale', NULL, NULL,
-   (SELECT id FROM visit_ref WHERE nome='Fido' AND email='g.ricci@email.it' AND data_ora_visita='2024-01-15 00:00:00+00'::timestamptz)),
-  (NULL, 'Sterilizzazione programmata', 'Ovariectomia', 'Decorso regolare', NULL,
-   (SELECT id FROM visit_ref WHERE nome='Luna' AND email='f.bianchi@gmail.com' AND data_ora_visita='2024-01-18 00:00:00+00'::timestamptz)),
-  ('Vomito persistente', NULL, 'Fluidoterapia, antiemetico', NULL, NULL,
-   (SELECT id FROM visit_ref WHERE nome='Tigre' AND email='r.esposito@gmail.com' AND data_ora_visita='2024-01-22 00:00:00+00'::timestamptz)),
-  ('Sovrappeso', NULL, 'Piano dietetico', 'Peso: 13,1 kg', NULL,
-   (SELECT id FROM visit_ref WHERE nome='Birillo' AND email='p.manzoni@libero.it' AND data_ora_visita='2024-01-25 00:00:00+00'::timestamptz)),
-  ('Richiamo annuale', NULL, 'Polivalente + antirabbico', NULL, NULL,
-   (SELECT id FROM visit_ref WHERE nome='Zeus' AND email='f.lombardi@email.it' AND data_ora_visita='2024-01-29 00:00:00+00'::timestamptz)),
-  ('Alopecia localizzata', NULL, 'Esame micologico, antifungino', NULL, NULL,
-   (SELECT id FROM visit_ref WHERE nome='Micio' AND email='anna.ferrari@yahoo.it' AND data_ora_visita='2024-02-02 00:00:00+00'::timestamptz)),
-  (NULL, 'Controllo gravidanza', 'Ecografia addominale', '4 cuccioli attesi', NULL,
-   (SELECT id FROM visit_ref WHERE nome='Cioccolata' AND email='e.galli@email.it' AND data_ora_visita='2024-02-07 00:00:00+00'::timestamptz)),
-  ('Ingestione corpo estraneo', NULL, 'Rx addome, emesi indotta', NULL, NULL,
-   (SELECT id FROM visit_ref WHERE nome='Artù' AND email='s.marchetti@gmail.com' AND data_ora_visita='2024-02-12 00:00:00+00'::timestamptz)),
-  ('Difficoltà deambulazione', NULL, 'Rx colonna, cortisone', 'Riposo 2 settimane', NULL,
-   (SELECT id FROM visit_ref WHERE nome='Pallina' AND email='l.colombo@libero.it' AND data_ora_visita='2024-02-15 00:00:00+00'::timestamptz)),
-  ('Prima vaccinazione', NULL, 'Trivalente felina', NULL, NULL,
-   (SELECT id FROM visit_ref WHERE nome='Neve' AND email='maria.conti@gmail.com' AND data_ora_visita='2024-02-19 00:00:00+00'::timestamptz)),
-  (NULL, 'Follow-up sterilizzazione', 'Rimozione punti', NULL, NULL,
-   (SELECT id FROM visit_ref WHERE nome='Oscar' AND email='c.ferretti@email.it' AND data_ora_visita='2024-02-22 00:00:00+00'::timestamptz)),
-  (NULL, 'Monitoraggio FIV', 'Esami ematochimici', 'Condizioni stabili', NULL,
-   (SELECT id FROM visit_ref WHERE nome='Stella' AND email='v.caruso@gmail.com' AND data_ora_visita='2024-02-26 00:00:00+00'::timestamptz)),
-  ('Visita di routine', NULL, NULL, NULL, NULL,
-   (SELECT id FROM visit_ref WHERE nome='Briciola' AND email='marco.rossi@email.it' AND data_ora_visita='2024-03-01 00:00:00+00'::timestamptz)),
-  ('Otite esterna ricorrente', NULL, 'Pulizia auricolare, antibiotico', 'Terza recidiva in 1 anno', NULL,
-   (SELECT id FROM visit_ref WHERE nome='Charlie' AND email='e.galli@email.it' AND data_ora_visita='2024-03-05 00:00:00+00'::timestamptz)),
-  ('Richiamo annuale', NULL, 'Trivalente felina', NULL, NULL,
-   (SELECT id FROM visit_ref WHERE nome='Mochi' AND email='marco.rossi@email.it' AND data_ora_visita='2024-03-08 00:00:00+00'::timestamptz)),
-  ('Unghie + visita generale', NULL, 'Taglio unghie', NULL, NULL,
-   (SELECT id FROM visit_ref WHERE nome='Lilly' AND email='g.ricci@email.it' AND data_ora_visita='2024-03-12 00:00:00+00'::timestamptz)),
-  (NULL, 'Ernia inguinale', 'Intervento chirurgico', 'Decorso ottimale', NULL,
-   (SELECT id FROM visit_ref WHERE nome='Fido' AND email='g.ricci@email.it' AND data_ora_visita='2024-03-15 00:00:00+00'::timestamptz)),
-  ('Visita + antiparassitario', NULL, 'Vaccino + spot-on antiparassitario', NULL, NULL,
-   (SELECT id FROM visit_ref WHERE nome='Mia' AND email='g.barbieri@yahoo.it' AND data_ora_visita='2024-03-19 00:00:00+00'::timestamptz)),
-  (NULL, 'Follow-up zoppia', 'Fisioterapia consigliata', 'Miglioramento evidente', NULL,
-   (SELECT id FROM visit_ref WHERE nome='Rex' AND email='f.bianchi@gmail.com' AND data_ora_visita='2024-03-22 00:00:00+00'::timestamptz)),
-  ('Nuovo paziente', NULL, 'Visita completa, peso, parassiti', NULL, NULL,
-   (SELECT id FROM visit_ref WHERE nome='Fiocco' AND email='a.moretti@libero.it' AND data_ora_visita='2024-03-26 00:00:00+00'::timestamptz)),
-  ('Nuovo paziente', NULL, 'Visita completa coniglio', NULL, NULL,
-   (SELECT id FROM visit_ref WHERE nome='Puffo' AND email='a.moretti@libero.it' AND data_ora_visita='2024-04-02 00:00:00+00'::timestamptz)),
-  (NULL, 'Follow-up ovariectomia', 'Controllo cicatrice', 'Guarigione completa', NULL,
-   (SELECT id FROM visit_ref WHERE nome='Luna' AND email='f.bianchi@gmail.com' AND data_ora_visita='2024-04-09 00:00:00+00'::timestamptz)),
-  ('Visita di routine', NULL, NULL, 'Tutto nella norma', NULL,
-   (SELECT id FROM visit_ref WHERE nome='Zeus' AND email='f.lombardi@email.it' AND data_ora_visita='2024-04-16 00:00:00+00'::timestamptz))
-ON CONFLICT (visita_id) DO NOTHING;
+SELECT d.sintomi, d.diagnosi, d.trattamento_terapia, d.note, d.note_private, vr.id
+FROM (VALUES
+  ('Controllo routine', NULL, 'Vaccinazione polivalente', NULL, NULL, 'Briciola', 'marco.rossi@email.it', '2024-01-10 00:00:00+00'::timestamptz),
+  ('Zoppia arto posteriore dx', NULL, 'Rx arto, anti-infiammatori', 'Rx allegato alla cartella', NULL, 'Rex', 'f.bianchi@gmail.com', '2024-01-12 00:00:00+00'::timestamptz),
+  ('Controllo peso e dentizione', NULL, 'Pulizia denti professionale', NULL, NULL, 'Fido', 'g.ricci@email.it', '2024-01-15 00:00:00+00'::timestamptz),
+  (NULL, 'Sterilizzazione programmata', 'Ovariectomia', 'Decorso regolare', NULL, 'Luna', 'f.bianchi@gmail.com', '2024-01-18 00:00:00+00'::timestamptz),
+  ('Vomito persistente', NULL, 'Fluidoterapia, antiemetico', NULL, NULL, 'Tigre', 'r.esposito@gmail.com', '2024-01-22 00:00:00+00'::timestamptz),
+  ('Sovrappeso', NULL, 'Piano dietetico', 'Peso: 13,1 kg', NULL, 'Birillo', 'p.manzoni@libero.it', '2024-01-25 00:00:00+00'::timestamptz),
+  ('Richiamo annuale', NULL, 'Polivalente + antirabbico', NULL, NULL, 'Zeus', 'f.lombardi@email.it', '2024-01-29 00:00:00+00'::timestamptz),
+  ('Alopecia localizzata', NULL, 'Esame micologico, antifungino', NULL, NULL, 'Micio', 'anna.ferrari@yahoo.it', '2024-02-02 00:00:00+00'::timestamptz),
+  (NULL, 'Controllo gravidanza', 'Ecografia addominale', '4 cuccioli attesi', NULL, 'Cioccolata', 'e.galli@email.it', '2024-02-07 00:00:00+00'::timestamptz),
+  ('Ingestione corpo estraneo', NULL, 'Rx addome, emesi indotta', NULL, NULL, 'Artù', 's.marchetti@gmail.com', '2024-02-12 00:00:00+00'::timestamptz),
+  ('Difficoltà deambulazione', NULL, 'Rx colonna, cortisone', 'Riposo 2 settimane', NULL, 'Pallina', 'l.colombo@libero.it', '2024-02-15 00:00:00+00'::timestamptz),
+  ('Prima vaccinazione', NULL, 'Trivalente felina', NULL, NULL, 'Neve', 'maria.conti@gmail.com', '2024-02-19 00:00:00+00'::timestamptz),
+  (NULL, 'Follow-up sterilizzazione', 'Rimozione punti', NULL, NULL, 'Oscar', 'c.ferretti@email.it', '2024-02-22 00:00:00+00'::timestamptz),
+  (NULL, 'Monitoraggio FIV', 'Esami ematochimici', 'Condizioni stabili', NULL, 'Stella', 'v.caruso@gmail.com', '2024-02-26 00:00:00+00'::timestamptz),
+  ('Visita di routine', NULL, NULL, NULL, NULL, 'Briciola', 'marco.rossi@email.it', '2024-03-01 00:00:00+00'::timestamptz),
+  ('Otite esterna ricorrente', NULL, 'Pulizia auricolare, antibiotico', 'Terza recidiva in 1 anno', NULL, 'Charlie', 'e.galli@email.it', '2024-03-05 00:00:00+00'::timestamptz),
+  ('Richiamo annuale', NULL, 'Trivalente felina', NULL, NULL, 'Mochi', 'marco.rossi@email.it', '2024-03-08 00:00:00+00'::timestamptz),
+  ('Unghie + visita generale', NULL, 'Taglio unghie', NULL, NULL, 'Lilly', 'g.ricci@email.it', '2024-03-12 00:00:00+00'::timestamptz),
+  (NULL, 'Ernia inguinale', 'Intervento chirurgico', 'Decorso ottimale', NULL, 'Fido', 'g.ricci@email.it', '2024-03-15 00:00:00+00'::timestamptz),
+  ('Visita + antiparassitario', NULL, 'Vaccino + spot-on antiparassitario', NULL, NULL, 'Mia', 'g.barbieri@yahoo.it', '2024-03-19 00:00:00+00'::timestamptz),
+  (NULL, 'Follow-up zoppia', 'Fisioterapia consigliata', 'Miglioramento evidente', NULL, 'Rex', 'f.bianchi@gmail.com', '2024-03-22 00:00:00+00'::timestamptz),
+  ('Nuovo paziente', NULL, 'Visita completa, peso, parassiti', NULL, NULL, 'Fiocco', 'a.moretti@libero.it', '2024-03-26 00:00:00+00'::timestamptz),
+  ('Nuovo paziente', NULL, 'Visita completa coniglio', NULL, NULL, 'Puffo', 'a.moretti@libero.it', '2024-04-02 00:00:00+00'::timestamptz),
+  (NULL, 'Follow-up ovariectomia', 'Controllo cicatrice', 'Guarigione completa', NULL, 'Luna', 'f.bianchi@gmail.com', '2024-04-09 00:00:00+00'::timestamptz),
+  ('Visita di routine', NULL, NULL, 'Tutto nella norma', NULL, 'Zeus', 'f.lombardi@email.it', '2024-04-16 00:00:00+00'::timestamptz)
+) AS d(sintomi, diagnosi, trattamento_terapia, note, note_private, nome_animale, email_prop, data_ora_visita)
+JOIN visit_ref vr ON vr.nome = d.nome_animale AND vr.email = d.email_prop AND vr.data_ora_visita = d.data_ora_visita
+WHERE NOT EXISTS (
+  SELECT 1 FROM diario_clinico dc WHERE dc.visita_id = vr.id
+);
 
 -- ------------------------------------------------------------
 -- 8. FATTURE
