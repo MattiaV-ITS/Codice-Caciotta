@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useApi } from '../../services/apiService';
 import { formatDate } from '../../utils/dateUtils';
 import EditIcon from '../../components/icons/EditIcon';
-import DangerIcon from '../../components/icons/DangerIcon'; // import aggiunto
+import DangerIcon from '../../components/icons/DangerIcon';
 
 function SchedaAnimale({ animale, onEditClick }) {
   const navigate = useNavigate();

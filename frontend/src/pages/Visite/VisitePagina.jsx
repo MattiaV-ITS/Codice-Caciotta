@@ -6,7 +6,7 @@ import VisitaForm from './VisitaForm';
 import FattureLista from '../../components/FattureLista';
 import VaccinazioneCreateModal from '../../components/VaccinazioneCreateModal/VaccinazioneCreateModal';
 import { getCurrentISODatetime, toISODatetimeFormat, toISODateFormat, formatDate, formatDateShort, formatTime, parseDate } from '../../utils/dateUtils';
-import { PlusIcon, SyringeIcon } from '../../components/icons';
+import { PlusIcon, SyringeIcon, DangerIcon } from '../../components/icons';
 
 // ==============================
 // COMPONENTE
@@ -215,7 +215,9 @@ function VisitePagina() {
   if (error) {
     return (
       <div className="error-wrapper">
-        <div className="error-icon">⚠️</div>
+        <div className="error-icon">
+          <DangerIcon width={32} height={32} style={{ color: '#C62828' }} />
+        </div>
         <h3>Errore di caricamento</h3>
         <p>{error}</p>
         <button className="btn btn-primary" onClick={() => window.location.reload()}>Riprova</button>
@@ -226,7 +228,7 @@ function VisitePagina() {
   if (!visita || !animale) {
     return (
       <div className="error-wrapper">
-        <div className="error-icon">❌</div>
+        <div className="error-icon" style={{ color: '#C62828', fontSize: '32px', fontWeight: 'bold' }}>✕</div>
         <h3>Dati non disponibili</h3>
         <p>Impossibile caricare i dati della visita o dell'animale</p>
         <button className="btn btn-primary" onClick={() => window.location.reload()}>Riprova</button>
