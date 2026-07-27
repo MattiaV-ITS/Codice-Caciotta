@@ -120,13 +120,17 @@ function FattureStats() {
         <div className="kpi-card border-success">
           <div className="kpi-label">Importo Pagato</div>
           <div className="kpi-value">{formatEuro(stats.importoPagato)}</div>
-          <div className="kpi-change">✅ Incassato</div>
+          <div className="kpi-change" style={{ color: '#38a169' }}>
+            Incassato
+          </div>
         </div>
 
         <div className="kpi-card border-danger">
           <div className="kpi-label">Importo Non Pagato</div>
           <div className="kpi-value">{formatEuro(stats.importoNonPagato)}</div>
-          <div className="kpi-change">❌ Da incassare</div>
+          <div className="kpi-change" style={{ color: '#e53e3e' }}>
+            Da incassare
+          </div>
         </div>
       </div>
 
