@@ -16,7 +16,7 @@ public class AnimaleListaMapper {
         dto.setSesso(animale.getSesso());
         dto.setDataNascita(animale.getDataNascita());
         dto.setMicrochip(animale.getMicrochip());
-        dto.setStato(animale.getStato().name()); // TODO: Stato vaccinazioni
+        dto.setStato(animale.getStato().name());
         
         if (animale.getProprietario() != null) {
             dto.setIdProprietario(animale.getProprietario().getId());

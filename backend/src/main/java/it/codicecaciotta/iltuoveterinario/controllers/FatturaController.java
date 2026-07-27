@@ -78,11 +78,10 @@ public class FatturaController {
         if (fattura.getImportoTotale() == null && visita.getPrestazioni() != null && !visita.getPrestazioni().isEmpty()) {
             BigDecimal importoFromPrestazioni = visita.getPrestazioni().stream()
                 .map(p -> p.getCostoBase() != null ? p.getCostoBase() : BigDecimal.ZERO)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+                .reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
             fattura.setImportoTotale(importoFromPrestazioni);
         }
 
-        // Ora solo fatture semplificate - imposta tipo fisso
         fattura.setTipoFattura("Semplificata");
         
         // Genera numero fattura unico se non fornito
@@ -255,7 +254,7 @@ public class FatturaController {
         } else if (visita.getPrestazioni() != null && !visita.getPrestazioni().isEmpty()) {
             BigDecimal importoFromPrestazioni = visita.getPrestazioni().stream()
                 .map(p -> p.getCostoBase() != null ? p.getCostoBase() : BigDecimal.ZERO)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+                .reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
             fattura.setImportoTotale(importoFromPrestazioni);
         } else {
             fattura.setImportoTotale(new BigDecimal("0.00")); // Default value

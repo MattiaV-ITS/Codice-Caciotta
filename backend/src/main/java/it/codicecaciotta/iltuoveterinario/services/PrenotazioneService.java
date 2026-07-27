@@ -9,14 +9,11 @@ import it.codicecaciotta.iltuoveterinario.repositories.DiarioClinicoRepository;
 import it.codicecaciotta.iltuoveterinario.repositories.PrenotazioneRepository;
 import it.codicecaciotta.iltuoveterinario.repositories.PrestazioneRepository;
 import it.codicecaciotta.iltuoveterinario.repositories.VisitaRepository;
-import it.codicecaciotta.iltuoveterinario.services.OrarioBloccatoService;
-import it.codicecaciotta.iltuoveterinario.services.OrarioStudioService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;

@@ -2,7 +2,6 @@ package it.codicecaciotta.iltuoveterinario.controllers;
 
 import it.codicecaciotta.iltuoveterinario.dto.DocumentoAllegatoDTO;
 import it.codicecaciotta.iltuoveterinario.models.Animale;
-import it.codicecaciotta.iltuoveterinario.models.DocumentoAllegato;
 import it.codicecaciotta.iltuoveterinario.models.ETipoDocumento;
 import it.codicecaciotta.iltuoveterinario.models.Utente;
 import it.codicecaciotta.iltuoveterinario.repositories.AnimaleRepository;
@@ -17,10 +16,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.lang.NonNull;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Objects;
 
 @RestController
 @RequestMapping("/api")
@@ -29,13 +30,16 @@ public class DocumentoAllegatoController {
     private final DocumentoAllegatoService documentoService;
     private final UtenteRepository utenteRepository;
     private final AnimaleRepository animaleRepository;
+    private final it.codicecaciotta.iltuoveterinario.repositories.VisitaRepository visitaRepository;
 
     public DocumentoAllegatoController(DocumentoAllegatoService documentoService,
                                        UtenteRepository utenteRepository,
-                                       AnimaleRepository animaleRepository) {
+                                       AnimaleRepository animaleRepository,
+                                       it.codicecaciotta.iltuoveterinario.repositories.VisitaRepository visitaRepository) {
         this.documentoService = documentoService;
         this.utenteRepository = utenteRepository;
         this.animaleRepository = animaleRepository;
+        this.visitaRepository = visitaRepository;
     }
 
     // ==================== UPLOAD ====================
@@ -98,19 +102,24 @@ public class DocumentoAllegatoController {
     // ==================== LISTA ====================
 
     private boolean isUserOwnerOfAnimale(Long animaleId) {
+        if (animaleId == null) {
+            return false;
+        }
+        
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         boolean isStaffOrAdmin = authentication.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_STAFF") || a.getAuthority().equals("ROLE_ADMIN"));
         if (isStaffOrAdmin) return true;
 
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
-        Utente currentUser = utenteRepository.findById(userDetails.getId())
+        Long userId = Objects.requireNonNull(userDetails.getId(), "User ID cannot be null");
+        Utente currentUser = utenteRepository.findById(userId)
                 .orElseThrow(() -> new IllegalStateException("User not found"));
         if (currentUser.getProprietario() == null) return false;
 
         Animale animale = animaleRepository.findById(animaleId).orElse(null);
         return animale != null && animale.getProprietario() != null &&
-               currentUser.getProprietario().getId().equals(animale.getProprietario().getId());
+               Objects.equals(currentUser.getProprietario().getId(), animale.getProprietario().getId());
     }
 
     @GetMapping("/animali/{animaleId}/documenti")
@@ -155,11 +164,15 @@ public class DocumentoAllegatoController {
 
     @GetMapping("/visite/{visitaId}/documenti")
     @PreAuthorize("hasAuthority('ROLE_STAFF') or hasAuthority('ROLE_ADMIN') or hasAuthority('ROLE_USER')")
-    public ResponseEntity<List<DocumentoAllegatoDTO>> getDocumentiByVisita(@PathVariable Long visitaId) {
-        // For ROLE_USER, the ownership check happens via the animale relationship
+    public ResponseEntity<List<DocumentoAllegatoDTO>> getDocumentiByVisita(@PathVariable @NonNull Long visitaId) {
         if (!isStaffOrAdmin()) {
-            DocumentoAllegatoDTO doc = documentoService.getMetadati(visitaId);
-            // TODO: Add proper visita ownership verification if needed
+            it.codicecaciotta.iltuoveterinario.models.Visita visita = visitaRepository.findById(visitaId).orElse(null);
+            if (visita == null || visita.getAnimale() == null) {
+                return ResponseEntity.status(403).build();
+            }
+            if (!isUserOwnerOfAnimale(visita.getAnimale().getId())) {
+                return ResponseEntity.status(403).build();
+            }
         }
         try {
             return ResponseEntity.ok(documentoService.getDocumentiByVisita(visitaId));
@@ -193,13 +206,15 @@ public class DocumentoAllegatoController {
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
-        Utente currentUser = utenteRepository.findById(userDetails.getId())
+        Long userId = Objects.requireNonNull(userDetails.getId(), "User ID cannot be null");
+        Utente currentUser = utenteRepository.findById(userId)
                 .orElseThrow(() -> new IllegalStateException("User not found"));
         if (currentUser.getProprietario() == null) return false;
 
-        Animale animale = animaleRepository.findById(metadati.getAnimaleId()).orElse(null);
+        Long animaleId = Objects.requireNonNull(metadati.getAnimaleId());
+        Animale animale = animaleRepository.findById(animaleId).orElse(null);
         return animale != null && animale.getProprietario() != null &&
-               currentUser.getProprietario().getId().equals(animale.getProprietario().getId());
+               Objects.equals(currentUser.getProprietario().getId(), animale.getProprietario().getId());
     }
 
     @GetMapping("/documenti/{documentoId}/download")
@@ -212,12 +227,10 @@ public class DocumentoAllegatoController {
             }
             Resource resource = documentoService.downloadDocumento(documentoId);
 
-            String contentType = metadati.getTipoMIME() != null ? metadati.getTipoMIME() : "application/octet-stream";
-
+            String contentDispositionValue = "inline; filename=\"" + (metadati.getNomeOriginale() != null ? metadati.getNomeOriginale() : "documento") + "\"";
             return ResponseEntity.ok()
-                    .contentType(MediaType.parseMediaType(contentType))
-                    .header(HttpHeaders.CONTENT_DISPOSITION,
-                            "inline; filename=\"" + metadati.getNomeOriginale() + "\"")
+                    .contentType(MediaType.parseMediaType(Objects.requireNonNull(metadati.getTipoMIME() != null ? metadati.getTipoMIME() : "application/octet-stream")))
+                    .header(HttpHeaders.CONTENT_DISPOSITION, Objects.requireNonNull(contentDispositionValue, "Content-Disposition cannot be null"))
                     .body(resource);
         } catch (EntityNotFoundException e) {
             return ResponseEntity.notFound().build();

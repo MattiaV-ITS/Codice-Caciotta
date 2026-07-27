@@ -39,15 +39,14 @@ public class IltuoveterinarioApplication {
 		};
 	}
 
-	//TODO: aggiungere a .env le credenziali di default per l'utente admin
 	@Bean
 	public CommandLineRunner seedSecurityData(
 			RuoloRepository roleRepository,
 			UtenteRepository userRepository,
 			PasswordEncoder passwordEncoder,
-			@Value("${app.admin.username:admin}") String adminUsername,
-			@Value("${app.admin.email:admin@example.com}") String adminEmail,
-			@Value("${app.admin.password:Admin123!}") String adminPassword) {
+			@Value("${APP_ADMIN_USERNAME:admin}") String adminUsername,
+			@Value("${APP_ADMIN_EMAIL:admin@example.com}") String adminEmail,
+			@Value("${APP_ADMIN_PASSWORD:Admin123!}") String adminPassword) {
 		return args -> {
 			Set<Ruolo> roles = EnumSet.allOf(ERuoli.class).stream()
 					.map(roleName -> roleRepository.findByNome(roleName)

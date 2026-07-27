@@ -13,8 +13,6 @@ import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import jakarta.persistence.EntityManager;
-
 import java.util.List;
 import java.util.Objects;
 
@@ -24,14 +22,12 @@ public class VisitaServiceImpl implements VisitaService {
     private final VisitaRepository visitaRepository;
     private final AnimaleRepository animaleRepository;
     private final DiarioClinicoService diarioClinicoService;
-    private final EntityManager entityManager;
 
     public VisitaServiceImpl(VisitaRepository visitaRepository, AnimaleRepository animaleRepository,
-            DiarioClinicoService diarioClinicoService, EntityManager entityManager) {
+            DiarioClinicoService diarioClinicoService) {
         this.visitaRepository = visitaRepository;
         this.animaleRepository = animaleRepository;
         this.diarioClinicoService = diarioClinicoService;
-        this.entityManager = entityManager;
     }
 
     @Override

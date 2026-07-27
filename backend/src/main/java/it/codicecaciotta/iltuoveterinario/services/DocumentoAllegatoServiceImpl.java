@@ -19,6 +19,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -27,7 +28,7 @@ public class DocumentoAllegatoServiceImpl implements DocumentoAllegatoService {
 
     private final DocumentoAllegatoRepository repository;
 
-    @Value("${app.upload.dir:/app/uploads}")
+    @Value("${app.upload-dir:/app/uploads}")
     private String uploadDir;
 
     public DocumentoAllegatoServiceImpl(DocumentoAllegatoRepository repository) {
@@ -85,11 +86,13 @@ public class DocumentoAllegatoServiceImpl implements DocumentoAllegatoService {
     @Override
     @Transactional(readOnly = true)
     public Resource downloadDocumento(Long documentoId) {
+        Objects.requireNonNull(documentoId, "Il documentoId non può essere null");
         DocumentoAllegato documento = repository.findById(documentoId)
                 .orElseThrow(() -> new EntityNotFoundException("Documento non trovato con id: " + documentoId));
 
         Path filePath = Paths.get(uploadDir, documento.getPercorsoFile());
-        Resource resource = new FileSystemResource(filePath.toFile());
+        String filePathStr = Objects.requireNonNull(filePath.toString(), "Il percorso del file non può essere null");
+        Resource resource = new FileSystemResource(filePathStr);
 
         if (!resource.exists()) {
             throw new EntityNotFoundException("File non trovato sul disco: " + filePath);
@@ -101,6 +104,7 @@ public class DocumentoAllegatoServiceImpl implements DocumentoAllegatoService {
     @Override
     @Transactional(readOnly = true)
     public DocumentoAllegatoDTO getMetadati(Long documentoId) {
+        Objects.requireNonNull(documentoId, "Il documentoId non può essere null");
         DocumentoAllegato documento = repository.findById(documentoId)
                 .orElseThrow(() -> new EntityNotFoundException("Documento non trovato con id: " + documentoId));
         return toDTO(documento);
@@ -149,6 +153,8 @@ public class DocumentoAllegatoServiceImpl implements DocumentoAllegatoService {
     @Override
     @Transactional
     public void eliminaDocumento(Long documentoId) {
+        Objects.requireNonNull(documentoId, "Il documentoId non può essere null");
+        
         DocumentoAllegato documento = repository.findById(documentoId)
                 .orElseThrow(() -> new EntityNotFoundException("Documento non trovato con id: " + documentoId));
 

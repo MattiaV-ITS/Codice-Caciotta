@@ -13,6 +13,8 @@ import jakarta.validation.constraints.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.transaction.annotation.Transactional;
@@ -175,12 +177,15 @@ public class AdminController {
 	@PostMapping("/orari/bloccati")
 	public ResponseEntity<?> createBlockedTimeSlot(@Valid @RequestBody CreateBlockedTimeRequest request) {
 		try {
+			Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+			String currentUsername = authentication != null ? authentication.getName() : "admin";
+
 			OrarioBloccato created = orarioBloccatoService.createOrarioBloccato(
 					request.getData(),
 					request.getOraInizio(),
 					request.getOraFine(),
 					request.getMotivo(),
-					"admin" // TODO: Get from authentication
+					currentUsername
 			);
 
 			logger.info("Created blocked time slot: {} {}-{}",

@@ -75,7 +75,8 @@ public class AnimaleController {
         // For regular users (ROLE_USER), verify they own this animal
         if (!isStaffOrAdmin) {
             UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
-            Utente currentUser = utenteRepository.findById(userDetails.getId())
+            Long userId = Objects.requireNonNull(userDetails.getId(), "User ID cannot be null");
+            Utente currentUser = utenteRepository.findById(userId)
                     .orElseThrow(() -> new IllegalStateException("User not found"));
             if (currentUser.getProprietario() == null ||
                 !currentUser.getProprietario().getId().equals(
@@ -134,7 +135,8 @@ public class AnimaleController {
         // For regular users (ROLE_USER), force filtering by their own proprietarioId
         if (!isStaffOrAdmin) {
             UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
-            Utente currentUser = utenteRepository.findById(userDetails.getId())
+            Long userId = Objects.requireNonNull(userDetails.getId(), "User ID cannot be null");
+            Utente currentUser = utenteRepository.findById(userId)
                     .orElseThrow(() -> new IllegalStateException("User not found"));
             if (currentUser.getProprietario() != null) {
                 proprietarioId = currentUser.getProprietario().getId();

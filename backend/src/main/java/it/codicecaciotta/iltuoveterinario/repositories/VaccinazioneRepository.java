@@ -9,15 +9,12 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.time.LocalDate;
-
 public interface VaccinazioneRepository extends JpaRepository<Vaccinazione, Long> {
 
     Page<Vaccinazione> findByAnimaleId(Long animaleId, Pageable pageable);
 
     java.util.List<Vaccinazione> findByAnimaleOrderByDataScadenzaAsc(Animale animale);
 
-    //TODO: Ricerca per dataSomministrazione
     // Ricerca completa per tipoVaccino, lotto, note e nome animale
     @Query("""
         SELECT v FROM Vaccinazione v

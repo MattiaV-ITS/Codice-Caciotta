@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Set;
 
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

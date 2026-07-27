@@ -1,6 +1,5 @@
 package it.codicecaciotta.iltuoveterinario.dto;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 

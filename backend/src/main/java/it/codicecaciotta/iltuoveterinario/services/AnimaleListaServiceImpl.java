@@ -72,6 +72,10 @@ public class AnimaleListaServiceImpl implements AnimaleListaService {
     public Page<AnimaleListaDTO> getAnimaliByFilters(
             String search, String specie, String stato, Long proprietarioId, Pageable pageable) {
 
+        if (pageable == null) {
+            throw new IllegalArgumentException("Pageable parameter cannot be null");
+        }
+
         Specification<Animale> spec = (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 

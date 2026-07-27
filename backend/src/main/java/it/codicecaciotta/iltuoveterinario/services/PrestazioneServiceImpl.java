@@ -36,12 +36,14 @@ public class PrestazioneServiceImpl implements PrestazioneService {
 
     @Override
     public Prestazione createPrestazione(Prestazione prestazione) {
+        Objects.requireNonNull(prestazione, "prestazione must not be null");
         validatePrestazioneDuration(prestazione);
         return prestazioneRepository.save(prestazione);
     }
 
     @Override
     public Prestazione updatePrestazione(Long id, Prestazione prestazione) {
+        Objects.requireNonNull(prestazione, "prestazione must not be null");
         prestazione.setId(id);
         validatePrestazioneDuration(prestazione);
         return prestazioneRepository.save(prestazione);
@@ -70,6 +72,8 @@ public class PrestazioneServiceImpl implements PrestazioneService {
 
     @Override
     public Page<Prestazione> findByFilters(String search, String stato, Pageable pageable) {
+        Pageable safePageable = Objects.requireNonNull(pageable, "pageable must not be null");
+        
         // Base: predicato sempre vero (nessuna condizione)
         Specification<Prestazione> spec = (root, query, cb) -> cb.conjunction();
 
@@ -99,6 +103,6 @@ public class PrestazioneServiceImpl implements PrestazioneService {
             spec = spec.and(statoSpec);
         }
 
-        return prestazioneRepository.findAll(spec, pageable);
+        return prestazioneRepository.findAll(spec, safePageable);
     }
 }

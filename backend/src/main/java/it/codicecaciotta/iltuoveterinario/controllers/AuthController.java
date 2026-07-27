@@ -42,8 +42,7 @@ import it.codicecaciotta.iltuoveterinario.dto.ProprietarioCreateDTO;
 
 @RestController
 @RequestMapping("/api/auth")
-// TODO: Esternalizzare l'origine consentita in un file di configurazione o variabile d'ambiente
-@CrossOrigin(origins = "${app.cors.allowedOrigins:http://localhost:5173}", maxAge = 3600)
+@CrossOrigin(origins = "${app.cors.allowed-origins}", maxAge = 3600)
 public class AuthController {
 
   private static final Logger logger = LoggerFactory.getLogger(AuthController.class);

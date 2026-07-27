@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useApi } from '../../services/apiService';
@@ -52,7 +52,7 @@ function DashboardUser() {
       console.error('Errore nel controllo del proprietario:', err);
       return false;
     }
-  }, [get, updateUser, user]);
+  }, [get, updateUser, user.id]);
 
   const loadData = useCallback(async () => {
     if (!user?.id) return;
@@ -83,8 +83,13 @@ function DashboardUser() {
     }
   }, [get, user]);
 
+  const isInitialized = useRef(false);
+
   useEffect(() => {
     const initialize = async () => {
+      if (isInitialized.current) return;
+      isInitialized.current = true;
+
       await checkProprietario();
       await loadData();
     };

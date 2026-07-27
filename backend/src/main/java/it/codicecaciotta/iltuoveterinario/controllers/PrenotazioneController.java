@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -59,7 +60,8 @@ public class PrenotazioneController {
         // For regular users (ROLE_USER), force filtering by their own proprietarioId
         if (!isStaffOrAdmin) {
             UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
-            Utente currentUser = utenteRepository.findById(userDetails.getId())
+            Long userId = Objects.requireNonNull(userDetails.getId(), "User ID cannot be null");
+            Utente currentUser = utenteRepository.findById(userId)
                     .orElseThrow(() -> new IllegalStateException("User not found"));
             if (currentUser.getProprietario() != null) {
                 proprietarioId = currentUser.getProprietario().getId();
@@ -98,7 +100,8 @@ public class PrenotazioneController {
         // For regular users (ROLE_USER), verify they own this prenotazione
         if (!isStaffOrAdmin) {
             UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
-            Utente currentUser = utenteRepository.findById(userDetails.getId())
+            Long userId = Objects.requireNonNull(userDetails.getId(), "User ID cannot be null");
+            Utente currentUser = utenteRepository.findById(userId)
                     .orElseThrow(() -> new IllegalStateException("User not found"));
             Prenotazione prenotazione = prenotazioneOpt.get();
             if (currentUser.getProprietario() == null ||

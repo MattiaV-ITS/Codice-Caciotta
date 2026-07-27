@@ -5,7 +5,6 @@ import it.codicecaciotta.iltuoveterinario.dto.VisitaSchedaDTO;
 import it.codicecaciotta.iltuoveterinario.dto.VisitaSchedaUpdateDTO;
 import it.codicecaciotta.iltuoveterinario.mappers.VisitaSchedaMapper;
 import it.codicecaciotta.iltuoveterinario.models.Animale;
-import it.codicecaciotta.iltuoveterinario.models.Proprietario;
 import it.codicecaciotta.iltuoveterinario.models.Utente;
 import it.codicecaciotta.iltuoveterinario.models.Visita;
 import it.codicecaciotta.iltuoveterinario.repositories.AnimaleRepository;
@@ -32,6 +31,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @RestController
@@ -64,7 +64,8 @@ public class VisitaController {
             // For regular users (ROLE_USER), verify they own this animal
             if (!isStaffOrAdmin) {
                 UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
-                Utente currentUser = utenteRepository.findById(userDetails.getId())
+                Long userId = Objects.requireNonNull(userDetails.getId(), "User ID cannot be null");
+                Utente currentUser = utenteRepository.findById(userId)
                         .orElseThrow(() -> new IllegalStateException("User not found"));
                 Animale animale = animaleRepository.findById(animaleId)
                         .orElseThrow(() -> new EntityNotFoundException("Animale not found"));
@@ -103,7 +104,8 @@ public class VisitaController {
             // For regular users (ROLE_USER), verify they own this animal
             if (!isStaffOrAdmin) {
                 UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
-                Utente currentUser = utenteRepository.findById(userDetails.getId())
+                Long userId = Objects.requireNonNull(userDetails.getId(), "User ID cannot be null");
+                Utente currentUser = utenteRepository.findById(userId)
                         .orElseThrow(() -> new IllegalStateException("User not found"));
                 Animale animale = visita.getAnimale();
                 if (currentUser.getProprietario() == null ||
@@ -164,7 +166,7 @@ public class VisitaController {
     }
 
     @DeleteMapping("/{visitaId}")
-    @PreAuthorize("hasAuthority('ROLE_STAFF') or hasAuthority('ROLE_ADMIN')") //TODO: chi può cancellare una visita? Solo lo staff o anche l'admin? Usare flag per cancellazione staff, delete per admin?
+    @PreAuthorize("hasAuthority('ROLE_STAFF') or hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<Void> deleteVisita(@PathVariable Long visitaId) {
         if (visitaId == null) {
             return ResponseEntity.badRequest().build();

@@ -1,0 +1,9 @@
+{"properties": [{
+  "name": "app.cors.allowed-origins",
+  "type": "java.lang.String",
+  "description": "Allowed origins for CORS requests, comma-separated"
+}, {
+  "name": "app.upload-dir",
+  "type": "java.lang.String",
+  "description": "Upload directory for files"
+}]}

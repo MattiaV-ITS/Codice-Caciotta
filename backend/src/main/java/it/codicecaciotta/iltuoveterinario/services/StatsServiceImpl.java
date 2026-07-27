@@ -9,7 +9,6 @@ import it.codicecaciotta.iltuoveterinario.dto.ProprietarioStatsDTO;
 import it.codicecaciotta.iltuoveterinario.dto.VaccinazioneStatsDTO;
 import it.codicecaciotta.iltuoveterinario.dto.VisitaOggiDTO;
 import it.codicecaciotta.iltuoveterinario.models.Prenotazione;
-import it.codicecaciotta.iltuoveterinario.models.Prestazione;
 import it.codicecaciotta.iltuoveterinario.repositories.AnimaleRepository;
 import it.codicecaciotta.iltuoveterinario.repositories.FatturaRepository;
 import it.codicecaciotta.iltuoveterinario.repositories.PrenotazioneRepository;
@@ -19,6 +18,7 @@ import it.codicecaciotta.iltuoveterinario.repositories.VaccinazioneRepository;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -125,7 +125,7 @@ public class StatsServiceImpl implements StatsService {
         long inactiveCount = prestazioneRepository.countByStato("Non disponibile");
 
         BigDecimal avgCost = prestazioneRepository.averageCostoBase();
-        String averageCost = avgCost != null ? avgCost.setScale(2, BigDecimal.ROUND_HALF_UP).toPlainString() : "0.00";
+        String averageCost = avgCost != null ? avgCost.setScale(2, RoundingMode.HALF_UP).toPlainString() : "0.00";
 
         Double avgDuration = prestazioneRepository.averageDurataStimata();
         long averageDuration = avgDuration != null ? Math.round(avgDuration) : 0;

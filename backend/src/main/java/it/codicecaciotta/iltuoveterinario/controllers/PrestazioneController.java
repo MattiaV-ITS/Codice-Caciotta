@@ -1,7 +1,6 @@
 package it.codicecaciotta.iltuoveterinario.controllers;
 
 import it.codicecaciotta.iltuoveterinario.models.Prestazione;
-import it.codicecaciotta.iltuoveterinario.repositories.PrestazioneRepository;
 import it.codicecaciotta.iltuoveterinario.services.PrestazioneService;
 import it.codicecaciotta.iltuoveterinario.utils.PaginationAndSortingUtils;
 
@@ -21,14 +20,10 @@ public class PrestazioneController {
 
     private final PrestazioneService prestazioneService;
     private final PaginationAndSortingUtils paginationUtils;
-    private final PrestazioneRepository prestazioneRepository;
-
     public PrestazioneController(PrestazioneService prestazioneService,
-                                 PaginationAndSortingUtils paginationUtils,
-                                 PrestazioneRepository prestazioneRepository) {
+                                 PaginationAndSortingUtils paginationUtils) {
         this.prestazioneService = prestazioneService;
         this.paginationUtils = paginationUtils;
-        this.prestazioneRepository = prestazioneRepository;
     }
 
     @GetMapping
