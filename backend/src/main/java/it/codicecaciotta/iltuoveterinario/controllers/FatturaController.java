@@ -240,8 +240,10 @@ public class FatturaController {
             fattura.setProprietario(null);
         }
         fattura.setTipoFattura("Semplificata");
-        // Calcola importo dalle prestazioni se disponibili, altrimenti default
-        if (visita.getPrestazioni() != null && !visita.getPrestazioni().isEmpty()) {
+        // Calcola importo totale: priorità a request body, poi prestazioni, altrimenti default
+        if (fatturaData != null && fatturaData.getImportoTotale() != null) {
+            fattura.setImportoTotale(fatturaData.getImportoTotale());
+        } else if (visita.getPrestazioni() != null && !visita.getPrestazioni().isEmpty()) {
             BigDecimal importoFromPrestazioni = visita.getPrestazioni().stream()
                 .map(p -> p.getCostoBase() != null ? p.getCostoBase() : BigDecimal.ZERO)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
