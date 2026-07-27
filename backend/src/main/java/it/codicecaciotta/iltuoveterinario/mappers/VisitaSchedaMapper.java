@@ -6,6 +6,10 @@ import it.codicecaciotta.iltuoveterinario.models.Visita;
 
 public class VisitaSchedaMapper {
     public static VisitaSchedaDTO toSchedaDTO(Visita visita) {
+        return toSchedaDTO(visita, true);
+    }
+
+    public static VisitaSchedaDTO toSchedaDTO(Visita visita, boolean includePrivateNotes) {
         if (visita == null)
             return null;
 
@@ -36,7 +40,11 @@ public class VisitaSchedaMapper {
             dto.setDiagnosi(diario.getDiagnosi());
             dto.setTrattamentoTerapia(diario.getTrattamentoTerapia());
             dto.setNote(diario.getNote());
-            dto.setNotePrivate(diario.getNotePrivate());
+
+            // Note private visibili solo a staff/admin
+            if (includePrivateNotes) {
+                dto.setNotePrivate(diario.getNotePrivate());
+            }
         }
 
         return dto;

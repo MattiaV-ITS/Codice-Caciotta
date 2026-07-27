@@ -84,7 +84,8 @@ public class AnimaleController {
             }
         }
 
-        AnimaleSchedaDTO schedaDTO = AnimaleSchedaMapper.toSchedaDTO(animale);
+        // Note private visibili solo a staff/admin
+        AnimaleSchedaDTO schedaDTO = AnimaleSchedaMapper.toSchedaDTO(animale, isStaffOrAdmin);
         return ResponseEntity.ok(schedaDTO);
     }
 

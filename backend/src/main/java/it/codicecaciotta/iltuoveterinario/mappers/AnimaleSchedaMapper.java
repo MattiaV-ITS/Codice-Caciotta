@@ -6,6 +6,10 @@ import it.codicecaciotta.iltuoveterinario.models.Animale;
 public class AnimaleSchedaMapper {
     
     public static AnimaleSchedaDTO toSchedaDTO(Animale animale) {
+        return toSchedaDTO(animale, true);
+    }
+
+    public static AnimaleSchedaDTO toSchedaDTO(Animale animale, boolean includePrivateNotes) {
         if (animale == null) return null;
 
         AnimaleSchedaDTO dto = new AnimaleSchedaDTO();
@@ -32,6 +36,11 @@ public class AnimaleSchedaMapper {
         dto.setAllergie(animale.getAllergie());
         dto.setPatologie(animale.getPatologie());
         dto.setNoteGenerali(animale.getNoteGenerali());
+
+        // Note private visibili solo a staff/admin
+        if (includePrivateNotes) {
+            dto.setNotePrivate(animale.getNotePrivate());
+        }
 
         if (animale.getProprietario() != null) {
             dto.setIdProprietario(animale.getProprietario().getId().toString());

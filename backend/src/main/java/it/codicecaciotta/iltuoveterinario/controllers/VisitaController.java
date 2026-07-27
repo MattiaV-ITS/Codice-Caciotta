@@ -77,7 +77,7 @@ public class VisitaController {
 
             List<VisitaSchedaDTO> visiteDTO = visitaService.getVisiteByAnimaleId(animaleId)
                     .stream()
-                    .map(VisitaSchedaMapper::toSchedaDTO)
+                    .map(v -> VisitaSchedaMapper.toSchedaDTO(v, isStaffOrAdmin))
                     .collect(Collectors.toList());
             return ResponseEntity.ok(visiteDTO);
         } catch (EntityNotFoundException e) {
@@ -113,7 +113,8 @@ public class VisitaController {
                 }
             }
 
-            VisitaSchedaDTO visitaDTO = VisitaSchedaMapper.toSchedaDTO(visita);
+            // Note private visibili solo a staff/admin
+            VisitaSchedaDTO visitaDTO = VisitaSchedaMapper.toSchedaDTO(visita, isStaffOrAdmin);
             return ResponseEntity.ok(visitaDTO);
         } catch (EntityNotFoundException e) {
             return ResponseEntity.notFound().build();
