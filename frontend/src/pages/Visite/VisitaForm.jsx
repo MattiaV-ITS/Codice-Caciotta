@@ -4,7 +4,7 @@ import { useApi } from '../../services/apiService';
 import { formatDate, getCurrentISODatetime, parseDate, toISODatetimeFormat, toISODateFormat } from '../../utils/dateUtils';
 import { validateRequired, validatePositiveNumber } from '../../utils/validationUtils';
 import FatturaSemplificataModal from '../../components/FatturaSemplificataModal';
-import { PlusIcon, InvoiceIcon } from '../../components/icons'; // ✅ icone condivise
+import { PlusIcon, InvoiceIcon } from '../../components/icons';
 
 // Inline styles for edit mode banner
 const bannerStyles = `
@@ -32,11 +32,6 @@ const bannerStyles = `
     height: 16px;
   }
 `;
-
-// ==============================
-// ICONE RIMASTE (solo se necessarie)
-// ==============================
-// (ShareIcon e LightningIcon non erano usate nel JSX restituito, le ho rimosse)
 
 function getDefaultVisita() {
   const nowStr = getCurrentISODatetime();
@@ -193,7 +188,7 @@ function VisitaForm({ visita, animale, proprietario, onSave, onCancel, isSaving,
 
     fetchPrestazioni();
     return () => { cancelled = true; };
-  }, []); // 🔥 Fix: api rimosso dalle dipendenze (stabile, non cambia mai dopo il primo mount) — e aggiunto cleanup con cancelled flag
+  }, []);
 
   // Fetch fattura data for this visita
   useEffect(() => {
@@ -232,7 +227,7 @@ function VisitaForm({ visita, animale, proprietario, onSave, onCancel, isSaving,
 
     fetchFatturaData();
     return () => { cancelled = true; };
-  }, [visitaId]); // 🔥 Fix: api rimosso dalle dipendenze per evitare loop (api.get è stabile, memoizzato con useCallback in apiService.js)
+  }, [visitaId]);
 
   // ----- Calcolo durata -----
   const calcolaDurata = (inizio, fine) => {
@@ -592,7 +587,7 @@ function VisitaForm({ visita, animale, proprietario, onSave, onCancel, isSaving,
                 <InvoiceIcon width={18} height={18} style={{ marginRight: '8px' }} />
                 <strong>Fattura Associata</strong>
                 <span className={`fattura-status-badge ${fatturaData.pagata ? 'pagata' : 'non-pagata'}`}>
-                  {fatturaData.pagata ? '✅ Pagata' : '❌ Non Pagata'}
+                  {fatturaData.pagata ? 'Pagata' : 'Non Pagata'}
                 </span>
               </div>
               <div className="visite-fattura-details">
@@ -683,7 +678,7 @@ function VisitaForm({ visita, animale, proprietario, onSave, onCancel, isSaving,
                   onClick={setOraCorrenteInizio}
                   disabled={!editMode && formData.id}
                 >
-                  ⏱ Ora
+                  Ora
                 </button>
               </div>
               {hasError('dataOraVisita') && <div className="form-error">{errors.dataOraVisita}</div>}
@@ -720,7 +715,7 @@ function VisitaForm({ visita, animale, proprietario, onSave, onCancel, isSaving,
                   onClick={setCurrentTimeEnd}
                   disabled={!editMode && formData.id}
                 >
-                  ⏱ Ora
+                  Ora
                 </button>
               </div>
               {hasError('dataOraFine') && <div className="form-error">{errors.dataOraFine}</div>}

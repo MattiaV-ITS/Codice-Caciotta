@@ -5,7 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import SchedaAnimale from './SchedaAnimale';
 import AnimaleCreate from './AnimaleCreate';
 import { formatDateShort, formatTime } from '../../utils/dateUtils';
-import { PlusIcon } from '../../components/icons'; // ✅ Import aggiunto
+import { PlusIcon } from '../../components/icons';
 
 function AnimaleDettaglio() {
   const { id } = useParams();
