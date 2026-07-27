@@ -70,35 +70,33 @@ public class PrestazioneServiceImpl implements PrestazioneService {
 
     @Override
     public Page<Prestazione> findByFilters(String search, String stato, Pageable pageable) {
-        Specification<Prestazione> spec = Specification.where(null);
+        // Base: predicato sempre vero (nessuna condizione)
+        Specification<Prestazione> spec = (root, query, cb) -> cb.conjunction();
 
         if (search != null && !search.isBlank()) {
             String pattern = "%" + search.toLowerCase() + "%";
 
-            // Prima parte: ricerca testuale su nome e descrizione
             Specification<Prestazione> textSpec = (root, query, cb) ->
-                    cb.or(
-                            cb.like(cb.lower(root.get("nomePrestazione")), pattern),
-                            cb.like(cb.lower(root.get("descrizione")), pattern)
-                    );
+                cb.or(
+                    cb.like(cb.lower(root.get("nomePrestazione")), pattern),
+                    cb.like(cb.lower(root.get("descrizione")), pattern)
+                );
 
-            // Seconda parte: ricerca per costo esatto (se il testo è un numero valido)
+            // Tentativo di ricerca per costo esatto
             try {
                 BigDecimal costoSearched = new BigDecimal(search);
                 Specification<Prestazione> costSpec = (root, query, cb) ->
-                        cb.equal(root.get("costoBase"), costoSearched);
-                // Unisci le due condizioni in OR
+                    cb.equal(root.get("costoBase"), costoSearched);
                 spec = spec.and(textSpec.or(costSpec));
             } catch (NumberFormatException e) {
-                // Se non è un numero, applichiamo solo la ricerca testuale
                 spec = spec.and(textSpec);
             }
         }
 
         if (stato != null && !stato.isBlank()) {
-            spec = spec.and((root, query, cb) ->
-                    cb.equal(root.get("stato"), stato)
-            );
+            Specification<Prestazione> statoSpec = (root, query, cb) ->
+                cb.equal(root.get("stato"), stato);
+            spec = spec.and(statoSpec);
         }
 
         return prestazioneRepository.findAll(spec, pageable);
