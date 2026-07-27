@@ -129,20 +129,20 @@ WHERE NOT EXISTS (
 -- ------------------------------------------------------------
 INSERT INTO prestazioni (nome_prestazione, descrizione, durata_stimata, costo_base, aliquota_iva, stato, colore)
 VALUES
-  ('Controllo annuale', 'Visita di controllo annuale', 30, 45.00, 22, 'Disponibile', '#4299E1'),
-  ('Visita ortopedica', 'Visita specialistica ortopedica', 30, 85.00, 22, 'Disponibile', '#9F7AEA'),
-  ('Chirurgia', 'Intervento chirurgico', 120, 220.00, 22, 'Disponibile', '#ED8936'),
-  ('Visita urgente', 'Visita per problemi urgenti', 30, 70.00, 22, 'Disponibile', '#F56565'),
-  ('Controllo peso', 'Controllo del peso e dieta', 30, 35.00, 22, 'Disponibile', '#48BB78'),
-  ('Vaccinazione', 'Somministrazione vaccini', 30, 35.00, 22, 'Disponibile', '#48BB78'),
-  ('Dermatologia', 'Visita specialistica dermatologica', 30, 65.00, 22, 'Disponibile', '#ED64A6'),
-  ('Ecografia', 'Esame ecografico', 30, 95.00, 22, 'Disponibile', '#63B3ED'),
-  ('Visita neurologica', 'Visita specialistica neurologica', 30, 90.00, 22, 'Disponibile', '#2B6CB0'),
-  ('Controllo post-op', 'Controllo post-operatorio', 30, 50.00, 22, 'Disponibile', '#38B2AC'),
-  ('Malattia infettiva', 'Visita per malattie infettive', 30, 75.00, 22, 'Disponibile', '#EF4444'),
-  ('Controllo semestrale', 'Visita di controllo semestrale', 30, 40.00, 22, 'Disponibile', '#3182CE'),
-  ('Otorinolaringoiatria', 'Visita specialistica ORL', 30, 60.00, 22, 'Disponibile', '#805AD5'),
-  ('Prima visita', 'Prima visita per nuovo paziente', 30, 40.00, 22, 'Disponibile', '#2C7A7B')
+  ('Controllo annuale', 'Visita di controllo annuale', 30, 45.00, 22, true, '#4299E1'),
+  ('Visita ortopedica', 'Visita specialistica ortopedica', 30, 85.00, 22, true, '#9F7AEA'),
+  ('Chirurgia', 'Intervento chirurgico', 120, 220.00, 22, true, '#ED8936'),
+  ('Visita urgente', 'Visita per problemi urgenti', 30, 70.00, 22, true, '#F56565'),
+  ('Controllo peso', 'Controllo del peso e dieta', 30, 35.00, 22, true, '#48BB78'),
+  ('Vaccinazione', 'Somministrazione vaccini', 30, 35.00, 22, true, '#48BB78'),
+  ('Dermatologia', 'Visita specialistica dermatologica', 30, 65.00, 22, true, '#ED64A6'),
+  ('Ecografia', 'Esame ecografico', 30, 95.00, 22, true, '#63B3ED'),
+  ('Visita neurologica', 'Visita specialistica neurologica', 30, 90.00, 22, true, '#2B6CB0'),
+  ('Controllo post-op', 'Controllo post-operatorio', 30, 50.00, 22, true, '#38B2AC'),
+  ('Malattia infettiva', 'Visita per malattie infettive', 30, 75.00, 22, true, '#EF4444'),
+  ('Controllo semestrale', 'Visita di controllo semestrale', 30, 40.00, 22, true, '#3182CE'),
+  ('Otorinolaringoiatria', 'Visita specialistica ORL', 30, 60.00, 22, true, '#805AD5'),
+  ('Prima visita', 'Prima visita per nuovo paziente', 30, 40.00, 22, true, '#2C7A7B')
 ON CONFLICT (nome_prestazione) DO NOTHING;
 
 -- ------------------------------------------------------------
