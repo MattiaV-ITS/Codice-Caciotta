@@ -380,13 +380,10 @@ const StudioHoursAdmin = () => {
               <label className="toggle-switch">
                 <input
                   type="checkbox"
-                  checked={currentDayHours.chiuso || false}
+                  checked={!currentDayHours.chiuso}
                   onChange={handleClosedToggle}
                 />
                 <span className="slider"></span>
-                <span className="toggle-label">
-                  {currentDayHours.chiuso ? 'Chiuso' : 'Aperto'}
-                </span>
               </label>
             </div>
 
@@ -421,45 +418,42 @@ const StudioHoursAdmin = () => {
                       onChange={(e) => {
                         const hasLunchBreak = e.target.checked;
                         if (hasLunchBreak) {
-                          // Enable lunch break with default values
                           updateSelectedDay('oraInizioPausaPranzo', '13:00');
                           updateSelectedDay('oraFinePausaPranzo', '14:00');
                         } else {
-                          // Disable lunch break
                           updateSelectedDay('oraInizioPausaPranzo', null);
                           updateSelectedDay('oraFinePausaPranzo', null);
                         }
                       }}
                     />
                     <span className="slider"></span>
-                    <span className="toggle-label">
-                      {currentDayHours.oraInizioPausaPranzo !== null ? 'Attiva' : 'Disattiva'}
-                    </span>
                   </label>
                 </div>
 
                 {currentDayHours.oraInizioPausaPranzo !== null && (
-                  <>
-                    <div className="form-group">
-                      <label>Ora Inizio Pausa Pranzo:</label>
-                      <input
-                        type="time"
-                        value={currentDayHours.oraInizioPausaPranzo || '13:00'}
-                        onChange={(e) => handleTimeChange('oraInizioPausaPranzo', e.target.value)}
-                        className="time-input"
-                      />
+                  <div className="form-group">
+                    <label>Orario Pausa Pranzo:</label>
+                    <div className="lunch-break-fields">
+                      <div className="time-input-group">
+                        <span className="time-input-label">Inizio</span>
+                        <input
+                          type="time"
+                          value={currentDayHours.oraInizioPausaPranzo || '13:00'}
+                          onChange={(e) => handleTimeChange('oraInizioPausaPranzo', e.target.value)}
+                          className="time-input"
+                        />
+                      </div>
+                      <div className="time-input-group">
+                        <span className="time-input-label">Fine</span>
+                        <input
+                          type="time"
+                          value={currentDayHours.oraFinePausaPranzo || '14:00'}
+                          onChange={(e) => handleTimeChange('oraFinePausaPranzo', e.target.value)}
+                          className="time-input"
+                        />
+                      </div>
                     </div>
-
-                    <div className="form-group">
-                      <label>Ora Fine Pausa Pranzo:</label>
-                      <input
-                        type="time"
-                        value={currentDayHours.oraFinePausaPranzo || '14:00'}
-                        onChange={(e) => handleTimeChange('oraFinePausaPranzo', e.target.value)}
-                        className="time-input"
-                      />
-                    </div>
-                  </>
+                  </div>
                 )}
               </>
             )}
@@ -531,13 +525,10 @@ const StudioHoursAdmin = () => {
               <label className="toggle-switch">
                 <input
                   type="checkbox"
-                  checked={allDaysData.chiuso}
-                  onChange={(e) => setAllDaysData({...allDaysData, chiuso: e.target.checked})}
+                  checked={!allDaysData.chiuso}
+                  onChange={(e) => setAllDaysData({...allDaysData, chiuso: !e.target.checked})}
                 />
                 <span className="slider"></span>
-                <span className="toggle-label">
-                  {allDaysData.chiuso ? 'Chiuso' : 'Aperto'}
-                </span>
               </label>
             </div>
 
@@ -647,13 +638,10 @@ const StudioHoursAdmin = () => {
               <label className="toggle-switch">
                 <input
                   type="checkbox"
-                  checked={specificDateData.chiuso}
-                  onChange={(e) => setSpecificDateData({...specificDateData, chiuso: e.target.checked})}
+                  checked={!specificDateData.chiuso}
+                  onChange={(e) => setSpecificDateData({...specificDateData, chiuso: !e.target.checked})}
                 />
                 <span className="slider"></span>
-                <span className="toggle-label">
-                  {specificDateData.chiuso ? 'Chiuso' : 'Aperto'}
-                </span>
               </label>
             </div>
 

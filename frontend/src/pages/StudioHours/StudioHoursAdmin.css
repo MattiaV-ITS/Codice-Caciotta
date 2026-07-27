@@ -156,13 +156,17 @@
   padding: var(--space-4);
   border-radius: var(--radius-md);
   border: 1px solid var(--gray-200);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
 }
 
 /* Form generico */
 .form-group {
   margin-bottom: var(--space-3);
+  width: 100%;
 }
-.form-group label {
+.form-group label:not(.toggle-switch) {
   display: block;
   margin-bottom: var(--space-2);
   font-weight: 500;
@@ -198,6 +202,24 @@
   box-shadow: 0 0 0 3px rgba(42, 157, 143, 0.15);
 }
 
+/* Campi orario Pausa Pranzo (senza toggle attiva/disattiva) */
+.lunch-break-fields {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+.time-input-group {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.time-input-label {
+  font-size: 13px;
+  color: var(--gray-600);
+  white-space: nowrap;
+}
+
 /* ========================================
    TOGGLE SWITCH (corretto e ben visibile)
    ======================================== */
@@ -229,6 +251,7 @@
   width: 50px;
   height: 24px;
   box-shadow: inset 0 1px 3px rgba(0,0,0,0.12);
+  transform: translateY(7px);
 }
 
 .slider:before {
