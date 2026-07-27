@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApi } from '../../services/apiService';
 import ListPageTemplate from '../../components/ListPageTemplate/ListPageTemplate';
@@ -16,6 +16,7 @@ function PrestazioniLista() {
   const [statsLoading, setStatsLoading] = useState(true);
   const [statsError, setStatsError] = useState(null);
   const [statsRefreshIndex, setStatsRefreshIndex] = useState(0);
+  const [statoFilter, setStatoFilter] = useState('');
 
   const table = useTableControls({
     defaultSortBy: 'nomePrestazione',
@@ -23,17 +24,19 @@ function PrestazioniLista() {
     defaultPageSize: 10
   });
 
-  const { data, loading, error, totalPages, totalCount, refetch } = usePaginatedFetch(
-    '/api/prestazioni',
-    {
-      page: table.page,
-      size: table.size,
-      sortBy: table.sortBy,
-      sortDir: table.sortDir
-    }
-  );
+  const filters = useMemo(() => ({
+    stato: statoFilter
+}), [statoFilter]);
 
-  // Statistiche con fallback a 0 in caso di errore o dati mancanti
+const { data, loading, error, totalPages, totalCount, refetch } =
+usePaginatedFetch('/api/prestazioni', {
+    page: table.page,
+    size: table.size,
+    sortBy: table.sortBy,
+    sortDir: table.sortDir,
+    filters
+});
+
   useEffect(() => {
     const fetchStats = async () => {
       try {
@@ -42,7 +45,6 @@ function PrestazioniLista() {
         const response = await get('/api/stats/prestazioni');
         if (!response.ok) throw new Error('Errore nel caricamento statistiche');
         const data = await response.json();
-        // Imposta i valori, con fallback a 0 se undefined/null
         setStats({
           totalCount: data?.totalCount ?? 0,
           activeCount: data?.activeCount ?? 0,
@@ -52,7 +54,6 @@ function PrestazioniLista() {
         });
       } catch (err) {
         setStatsError(err);
-        // In caso di errore, fornisce comunque valori a zero per non lasciare vuoto
         setStats({
           totalCount: 0,
           activeCount: 0,
@@ -66,6 +67,30 @@ function PrestazioniLista() {
     };
     fetchStats();
   }, [get, statsRefreshIndex]);
+
+  const handleStatoCardFilter = (stato) => {
+  if (statoFilter === stato) {
+    setStatoFilter('');
+    return;
+  }
+
+  switch (stato) {
+    case 'ATTIVO':
+      setStatoFilter('Disponibile');
+      break;
+
+    case 'INATTIVO':
+      setStatoFilter('Non disponibile');
+      break;
+
+    default:
+      setStatoFilter(stato);
+  }
+};
+
+  const handleClearAllFilters = () => {
+    setStatoFilter('');
+  };
 
   const handleCreatePrestazione = () => navigate('/prestazioni/create');
   const handleEditPrestazione = (prestazione) => navigate(`/prestazioni/edit/${prestazione.id}`);
@@ -179,22 +204,33 @@ function PrestazioniLista() {
     }
   ];
 
-  // Contenuto statistiche: ora gestisce sia il caricamento, l'errore, e il caso di dati nulli mostrando zero
   const statsContent = (
     <div className="stats-grid" style={{ marginBottom: 'var(--space-5)' }}>
       {statsLoading ? (
         <LoadingSpinner size="small" />
       ) : stats ? (
         <>
-          <div className="stat-card">
+          <div
+            className={`stat-card ${!statoFilter ? 'stat-active' : ''}`}
+            onClick={() => setStatoFilter('')}
+            style={{ cursor: 'pointer' }}
+          >
             <div className="stat-number stat-primary">{stats.totalCount}</div>
             <div className="stat-label">Totale Prestazioni</div>
           </div>
-          <div className="stat-card">
+          <div
+            className={`stat-card ${statoFilter === 'Disponibile' ? 'stat-active' : ''}`}
+            onClick={() => handleStatoCardFilter('ATTIVO')}
+            style={{ cursor: 'pointer' }}
+          >
             <div className="stat-number stat-success">{stats.activeCount}</div>
             <div className="stat-label">Attive</div>
           </div>
-          <div className="stat-card">
+          <div
+            className={`stat-card ${statoFilter === 'Non disponibile' ? 'stat-active' : ''}`}
+            onClick={() => handleStatoCardFilter('INATTIVO')}
+            style={{ cursor: 'pointer' }}
+          >
             <div className="stat-number stat-gray">{stats.inactiveCount}</div>
             <div className="stat-label">Disabilitate</div>
           </div>
@@ -207,31 +243,7 @@ function PrestazioniLista() {
             <div className="stat-label">Durata Media</div>
           </div>
         </>
-      ) : (
-        // Fallback se stats è null (ad esempio errore non gestito) – mostra zeri
-        <>
-          <div className="stat-card">
-            <div className="stat-number stat-primary">0</div>
-            <div className="stat-label">Totale Prestazioni</div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-number stat-success">0</div>
-            <div className="stat-label">Attive</div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-number stat-gray">0</div>
-            <div className="stat-label">Disabilitate</div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-number stat-info">€0.00</div>
-            <div className="stat-label">Costo Medio</div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-number stat-info">0 min</div>
-            <div className="stat-label">Durata Media</div>
-          </div>
-        </>
-      )}
+      ) : null}
     </div>
   );
 
@@ -254,6 +266,7 @@ function PrestazioniLista() {
       onAddClick={handleCreatePrestazione}
       addIcon={<PlusIcon width={16} height={16} stroke="currentColor" />}
       statsContent={statsContent}
+      onClearAllFilters={handleClearAllFilters}
     />
   );
 }

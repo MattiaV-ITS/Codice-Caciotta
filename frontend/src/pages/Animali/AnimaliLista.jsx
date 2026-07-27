@@ -14,7 +14,6 @@ import LoadingSpinner from '../../components/common/LoadingSpinner';
 import ErrorMessage from '../../components/common/ErrorMessage';
 import { PawIcon, PlusIcon } from '../../components/icons';
 
-
 function AnimaliLista() {
   const table = useTableControls({
     defaultSortBy: 'nome',
@@ -24,6 +23,7 @@ function AnimaliLista() {
 
   const search = useSearchControls();
   const [specieFilter, setSpecieFilter] = useState('');
+  const [statoFilter, setStatoFilter] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingAnimale, setEditingAnimale] = useState(null);
@@ -33,11 +33,11 @@ function AnimaliLista() {
   const [statsRefreshIndex, setStatsRefreshIndex] = useState(0);
   const { get, patch } = useApi();
 
-  // Memoizza i filtri per evitare ricalcoli inutili e garantire stabilità dei riferimenti
   const memoizedFilters = useMemo(() => ({
-    search: search.appliedSearchTerm,
-    specie: specieFilter
-  }), [search.appliedSearchTerm, specieFilter]);
+  search: search.appliedSearchTerm,
+  specie: specieFilter,
+  stato: statoFilter
+}), [search.appliedSearchTerm, specieFilter, statoFilter]);
 
   const { data: animali, loading, error, totalPages, totalCount, refetch } =
     usePaginatedFetch('/api/animali', {
@@ -72,6 +72,7 @@ function AnimaliLista() {
   };
 
   const customColumns = [
+    // ... le tue colonne (invariate)
     {
       header: 'NOME ANIMALE',
       field: 'nome',
@@ -79,13 +80,7 @@ function AnimaliLista() {
       render: (item) => {
         const isFemale = item.sesso?.toLowerCase() === 'f';
         const isMale = item.sesso?.toLowerCase() === 'm';
-
-        const avatarClass = isFemale
-          ? 'avatar-female'
-          : isMale
-          ? 'avatar-male'
-          : 'avatar-default';
-
+        const avatarClass = isFemale ? 'avatar-female' : isMale ? 'avatar-male' : 'avatar-default';
         return (
           <div className="cell-content">
             <div className={`avatar-circle ${avatarClass}`}>
@@ -119,29 +114,29 @@ function AnimaliLista() {
       render: (item) => (
         <GearMenu
           menuItems={[
-              {
-                label: 'Modifica',
-                onClick: () => handleEditAnimale(item)
-              },
-              { divider: true },
-              {
-                label: 'Imposta come Sano',
-                onClick: () => handleStatusChange(item.id, 'SANO')
-              },
-              {
-                label: 'Imposta come Malato',
-                onClick: () => handleStatusChange(item.id, 'MALATO')
-              },
-              {
-                label: 'Imposta come In Cura',
-                onClick: () => handleStatusChange(item.id, 'IN_CURA')
-              },
-              {
-                label: 'Imposta come Deceduto',
-                className: 'danger',
-                onClick: () => handleStatusChange(item.id, 'DECEDUTO')
-              }
-            ]}
+            {
+              label: 'Modifica',
+              onClick: () => handleEditAnimale(item)
+            },
+            { divider: true },
+            {
+              label: 'Imposta come Sano',
+              onClick: () => handleStatusChange(item.id, 'SANO')
+            },
+            {
+              label: 'Imposta come Malato',
+              onClick: () => handleStatusChange(item.id, 'MALATO')
+            },
+            {
+              label: 'Imposta come In Cura',
+              onClick: () => handleStatusChange(item.id, 'IN_CURA')
+            },
+            {
+              label: 'Imposta come Deceduto',
+              className: 'danger',
+              onClick: () => handleStatusChange(item.id, 'DECEDUTO')
+            }
+          ]}
         />
       )
     }
@@ -151,27 +146,37 @@ function AnimaliLista() {
     <PawIcon width="48" height="48" style={{ color: 'var(--gray-400)', opacity: 0.5 }} />
   );
 
-  // Fetch stats from backend
   useEffect(() => {
     const fetchStats = async () => {
       try {
         setStatsLoading(true);
-        console.log('Fetching animal stats...');
         const response = await get('/api/stats/animali');
         const data = await response.json();
-        console.log('Animal stats received:', data);
         setStats(data || {});
         setStatsError(null);
       } catch (err) {
-        console.error('Failed to fetch animal stats:', err);
         setStatsError(err);
       } finally {
         setStatsLoading(false);
       }
     };
-
     fetchStats();
   }, [get, statsRefreshIndex]);
+
+  const handleStatoCardFilter = (stato) => {
+    if (statoFilter === stato) {
+      setStatoFilter('');
+    } else {
+      setStatoFilter(stato);
+    }
+    // Non cambiamo pagina perché il filtro è client
+  };
+
+  const handleClearAllFilters = () => {
+    search.clearSearch();
+    setStatoFilter('');
+    setSpecieFilter('');
+  };
 
   const statsContent = (
     <>
@@ -185,98 +190,57 @@ function AnimaliLista() {
         </div>
       ) : stats ? (
         <>
-          <div className="stat-card">
-            <div className="stat-number stat-primary">{stats?.totalCount ?? 0}</div>
+          <div
+            className={`stat-card ${!statoFilter ? 'stat-active' : ''}`}
+            onClick={() => setStatoFilter('')}
+            style={{ cursor: 'pointer' }}
+          >
+            <div className="stat-number stat-primary">{stats.totalCount ?? 0}</div>
             <div className="stat-label">Totale Animali</div>
           </div>
+          <div
+            className={`stat-card ${statoFilter === 'SANO' ? 'stat-active' : ''}`}
+            onClick={() => handleStatoCardFilter('SANO')}
+            style={{ cursor: 'pointer' }}
+          >
+            <div className="stat-number stat-success">{stats.sanoCount ?? 0}</div>
+            <div className="stat-label">Sani</div>
+          </div>
+          <div
+            className={`stat-card ${statoFilter === 'MALATO' ? 'stat-active' : ''}`}
+            onClick={() => handleStatoCardFilter('MALATO')}
+            style={{ cursor: 'pointer' }}
+          >
+            <div className="stat-number stat-warning">{stats.malatoCount ?? 0}</div>
+            <div className="stat-label">Malati</div>
+          </div>
+          <div
+            className={`stat-card ${statoFilter === 'DECEDUTO' ? 'stat-active' : ''}`}
+            onClick={() => handleStatoCardFilter('DECEDUTO')}
+            style={{ cursor: 'pointer' }}
+          >
+            <div className="stat-number stat-danger">{stats.decedutoCount ?? 0}</div>
+            <div className="stat-label">Deceduti</div>
+          </div>
           <div className="stat-card">
-            <div className="stat-number stat-info">
-              {stats.caneCount}
-            </div>
+            <div className="stat-number stat-info">{stats.caneCount ?? 0}</div>
             <div className="stat-label">Cani</div>
           </div>
           <div className="stat-card">
-            <div className="stat-number stat-info">
-              {stats.gattoCount}
-            </div>
+            <div className="stat-number stat-info">{stats.gattoCount ?? 0}</div>
             <div className="stat-label">Gatti</div>
           </div>
           <div className="stat-card">
-            <div className="stat-number stat-info">
-              {stats.altroCount}
-            </div>
+            <div className="stat-number stat-info">{stats.altroCount ?? 0}</div>
             <div className="stat-label">Altri</div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-number stat-success">
-              {stats.sanoCount}
-            </div>
-            <div className="stat-label">Sani</div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-number stat-warning">
-              {stats.malatoCount}
-            </div>
-            <div className="stat-label">Malati</div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-number stat-danger">
-              {stats.decedutoCount}
-            </div>
-            <div className="stat-label">Deceduti</div>
           </div>
         </>
       ) : null}
     </>
   );
 
-  const statsContent = (
-    <>
-      <div className="stat-card">
-        <div className="stat-number stat-primary">{animali.length}</div>
-        <div className="stat-label">Totale Animali</div>
-      </div>
-      <div className="stat-card">
-        <div className="stat-number stat-info">
-          {animali.filter(a => a.specie?.toLowerCase() === 'cane').length}
-        </div>
-        <div className="stat-label">Cani</div>
-      </div>
-      <div className="stat-card">
-        <div className="stat-number stat-info">
-          {animali.filter(a => a.specie?.toLowerCase() === 'gatto').length}
-        </div>
-        <div className="stat-label">Gatti</div>
-      </div>
-      <div className="stat-card">
-        <div className="stat-number stat-info">
-          {animali.filter(a => !['cane', 'gatto'].includes(a.specie?.toLowerCase())).length}
-        </div>
-        <div className="stat-label">Altri</div>
-      </div>
-      <div className="stat-card">
-        <div className="stat-number stat-success">
-          {animali.filter(a => a.stato === 'SANO').length}
-        </div>
-        <div className="stat-label">Sani</div>
-      </div>
-      <div className="stat-card">
-        <div className="stat-number stat-warning">
-          {animali.filter(a => a.stato === 'MALATO').length}
-        </div>
-        <div className="stat-label">Malati</div>
-      </div>
-      <div className="stat-card">
-        <div className="stat-number stat-danger">
-          {animali.filter(a => a.stato === 'DECEDUTO').length}
-        </div>
-        <div className="stat-label">Deceduti</div>
-      </div>
-    </>
-  );
-
-  const emptyMessage = search.appliedSearchTerm || specieFilter 
-    ? 'Prova a modificare i filtri.' 
+  const emptyMessage = search.appliedSearchTerm || specieFilter || statoFilter
+    ? 'Prova a modificare i filtri.'
     : 'Inizia aggiungendo il primo animale.';
 
   const navigate = useNavigate();
@@ -286,15 +250,13 @@ function AnimaliLista() {
   };
 
   const handleEditAnimale = (animale) => {
-    // Load full animale data before opening the edit modal
-    loadFullAnimaleData(animale.id, 
+    loadFullAnimaleData(animale.id,
       (fullAnimaleData) => {
         setEditingAnimale(fullAnimaleData);
         setShowEditModal(true);
       },
       (error) => {
-        console.error('Failed to load full animale data, using partial data:', error);
-        // Fallback to partial data if full data load fails
+        console.error('Failed to load full animale data:', error);
         setEditingAnimale(animale);
         setShowEditModal(true);
       }
@@ -307,7 +269,6 @@ function AnimaliLista() {
       if (!response.ok) {
         throw new Error(`Errore nell'aggiornamento dello stato: ${response.status}`);
       }
-      // Refresh the list and stats
       setStatsRefreshIndex(prev => prev + 1);
       refetch();
     } catch (err) {
@@ -320,11 +281,11 @@ function AnimaliLista() {
       {showCreateModal && (
         <AnimaleCreate
           onClose={() => setShowCreateModal(false)}
-          onSuccess={(newAnimale) => {
-            // Refresh the list and stats after successful creation
+          onSuccess={() => {
             setStatsRefreshIndex(prev => prev + 1);
             search.clearSearch();
             setSpecieFilter('');
+            setStatoFilter('');
             table.setPage(0);
             refetch();
             setShowCreateModal(false);
@@ -334,11 +295,11 @@ function AnimaliLista() {
       {showEditModal && editingAnimale && (
         <AnimaleCreate
           onClose={() => setShowEditModal(false)}
-          onSuccess={(updatedAnimale) => {
-            // Refresh the list and stats after successful update
+          onSuccess={() => {
             setStatsRefreshIndex(prev => prev + 1);
             search.clearSearch();
             setSpecieFilter('');
+            setStatoFilter('');
             table.setPage(0);
             refetch();
             setShowEditModal(false);
@@ -371,6 +332,7 @@ function AnimaliLista() {
       additionalContent={additionalContent}
       onRowClick={handleRowClick}
       statsContent={statsContent}
+      onClearAllFilters={handleClearAllFilters}
     />
   );
 }
