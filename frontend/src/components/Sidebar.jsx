@@ -127,17 +127,7 @@ function Sidebar({ isOpen, closeMenu }) {
 
             <div className="nav-label">Amministrazione</div>
 
-            <NavLink
-              to="/admin"
-              className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
-              onClick={closeMenu}
-            >
-              <span className="nav-icon">
-                <LockIcon width="20" height="20" strokeWidth="2" />
-              </span>
-              Admin
-            </NavLink>
-
+            {/* Orari Studio – viene prima di Admin */}
             <NavLink
               to="/admin/orari"
               className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
@@ -147,6 +137,19 @@ function Sidebar({ isOpen, closeMenu }) {
                 <ClockIcon width="20" height="20" />
               </span>
               Orari Studio
+            </NavLink>
+
+            {/* Admin – ora è l'ultimo elemento e usa "end" per evitare attivazione su /admin/orari */}
+            <NavLink
+              to="/admin"
+              end
+              className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+              onClick={closeMenu}
+            >
+              <span className="nav-icon">
+                <LockIcon width="20" height="20" strokeWidth="2" />
+              </span>
+              Admin
             </NavLink>
           </>
         )}

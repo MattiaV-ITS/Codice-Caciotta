@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApi } from '../../services/apiService';
 import ListPageTemplate from '../../components/ListPageTemplate/ListPageTemplate';
 import { GearMenu } from '../../components/ContextMenu/ContextMenu';
 import { useTableControls } from '../../hooks/useTableControls';
 import { usePaginatedFetch } from '../../hooks/usePaginatedFetch';
+import { useSearchControls } from '../../hooks/useSearchControls';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import ErrorMessage from '../../components/common/ErrorMessage';
 import { PlusIcon, ServicesIcon } from '../../components/icons';
@@ -23,17 +24,26 @@ function PrestazioniLista() {
     defaultPageSize: 10
   });
 
+  const search = useSearchControls();
+  const [statoFiltro, setStatoFiltro] = useState('');
+
+  // Filtri combinati
+  const filters = useMemo(() => ({
+    search: search.appliedSearchTerm,
+    stato: statoFiltro
+  }), [search.appliedSearchTerm, statoFiltro]);
+
   const { data, loading, error, totalPages, totalCount, refetch } = usePaginatedFetch(
     '/api/prestazioni',
     {
       page: table.page,
       size: table.size,
       sortBy: table.sortBy,
-      sortDir: table.sortDir
+      sortDir: table.sortDir,
+      filters
     }
   );
 
-  // Statistiche con fallback a 0 in caso di errore o dati mancanti
   useEffect(() => {
     const fetchStats = async () => {
       try {
@@ -42,7 +52,6 @@ function PrestazioniLista() {
         const response = await get('/api/stats/prestazioni');
         if (!response.ok) throw new Error('Errore nel caricamento statistiche');
         const data = await response.json();
-        // Imposta i valori, con fallback a 0 se undefined/null
         setStats({
           totalCount: data?.totalCount ?? 0,
           activeCount: data?.activeCount ?? 0,
@@ -52,14 +61,7 @@ function PrestazioniLista() {
         });
       } catch (err) {
         setStatsError(err);
-        // In caso di errore, fornisce comunque valori a zero per non lasciare vuoto
-        setStats({
-          totalCount: 0,
-          activeCount: 0,
-          inactiveCount: 0,
-          averageCost: '0.00',
-          averageDuration: 0
-        });
+        setStats(null);
       } finally {
         setStatsLoading(false);
       }
@@ -183,60 +185,94 @@ function PrestazioniLista() {
     }
   ];
 
-  // Contenuto statistiche: ora gestisce sia il caricamento, l'errore, e il caso di dati nulli mostrando zero
+  // Opzioni filtro stato
+  const statoOptions = [
+    { label: 'Tutti', value: '' },
+    { label: 'Disponibili', value: 'Disponibile', className: 'btn-filter-success' },
+    { label: 'Non disponibili', value: 'Non disponibile', className: 'btn-filter-gray' }
+  ];
+
+  const filterOptions = {
+    label: 'Stato',
+    options: statoOptions,
+    searchable: 'nome, descrizione o costo'
+  };
+
+  // Gestione click KPI card
+  const handleStatoCardFilter = (stato) => {
+    if (statoFiltro === stato) {
+      setStatoFiltro('');
+    } else {
+      setStatoFiltro(stato);
+    }
+    table.setPage(0);
+  };
+
+  const handleClearAllFilters = () => {
+    search.clearSearch();
+    setStatoFiltro('');
+  };
+
+  // Contenuto statistiche con card cliccabili
   const statsContent = (
-    <div className="stats-grid" style={{ marginBottom: 'var(--space-5)' }}>
+    <>
       {statsLoading ? (
-        <LoadingSpinner size="small" />
+        <div className="stats-loading">
+          <LoadingSpinner size="small" />
+        </div>
+      ) : statsError ? (
+        <div className="stats-error">
+          <ErrorMessage error={statsError} />
+        </div>
       ) : stats ? (
         <>
-          <div className="stat-card">
+          {/* Card Totale (reset filtri) */}
+          <div
+            className={`stat-card ${!statoFiltro ? 'stat-active' : ''}`}
+            onClick={() => {
+              setStatoFiltro('');
+              table.setPage(0);
+            }}
+            style={{ cursor: 'pointer' }}
+          >
             <div className="stat-number stat-primary">{stats.totalCount}</div>
             <div className="stat-label">Totale Prestazioni</div>
           </div>
-          <div className="stat-card">
+
+          {/* Card Attive */}
+          <div
+            className={`stat-card ${statoFiltro === 'Disponibile' ? 'stat-active' : ''}`}
+            onClick={() => handleStatoCardFilter('Disponibile')}
+            style={{ cursor: 'pointer' }}
+          >
             <div className="stat-number stat-success">{stats.activeCount}</div>
             <div className="stat-label">Attive</div>
           </div>
-          <div className="stat-card">
+
+          {/* Card Disabilitate */}
+          <div
+            className={`stat-card ${statoFiltro === 'Non disponibile' ? 'stat-active' : ''}`}
+            onClick={() => handleStatoCardFilter('Non disponibile')}
+            style={{ cursor: 'pointer' }}
+          >
             <div className="stat-number stat-gray">{stats.inactiveCount}</div>
             <div className="stat-label">Disabilitate</div>
           </div>
+
+          {/* Card Costo Medio (informativa) */}
           <div className="stat-card">
             <div className="stat-number stat-info">€{stats.averageCost}</div>
             <div className="stat-label">Costo Medio</div>
           </div>
+
+          {/* Card Durata Media (informativa) */}
           <div className="stat-card">
             <div className="stat-number stat-info">{stats.averageDuration} min</div>
             <div className="stat-label">Durata Media</div>
           </div>
         </>
-      ) : (
-        // Fallback se stats è null (ad esempio errore non gestito) – mostra zeri
-        <>
-          <div className="stat-card">
-            <div className="stat-number stat-primary">0</div>
-            <div className="stat-label">Totale Prestazioni</div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-number stat-success">0</div>
-            <div className="stat-label">Attive</div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-number stat-gray">0</div>
-            <div className="stat-label">Disabilitate</div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-number stat-info">€0.00</div>
-            <div className="stat-label">Costo Medio</div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-number stat-info">0 min</div>
-            <div className="stat-label">Durata Media</div>
-          </div>
-        </>
-      )}
-    </div>
+      ) : null}
+    </>
   );
 
   const emptyIcon = (
@@ -252,12 +288,17 @@ function PrestazioniLista() {
       loading={loading}
       error={error}
       tableControls={{ ...table, totalPages, totalCount }}
-      emptyMessage="Inizia aggiungendo la prima prestazione."
+      searchControls={search}
+      filterOptions={filterOptions}
+      activeFilter={statoFiltro}
+      onFilterSelect={setStatoFiltro}
+      emptyMessage={search.appliedSearchTerm || statoFiltro ? 'Prova a modificare i filtri.' : 'Inizia aggiungendo la prima prestazione.'}
       emptyIcon={emptyIcon}
       showAddButton={true}
       onAddClick={handleCreatePrestazione}
       addIcon={<PlusIcon width={16} height={16} stroke="currentColor" />}
       statsContent={statsContent}
+      onClearAllFilters={handleClearAllFilters}
     />
   );
 }

@@ -8,16 +8,13 @@ import FilterBar from '../common/FilterBar';
 import { PlusIcon } from '../icons';
 
 function getSingularForm(word) {
-  // Handle specific Italian plural to singular conversions
   const singularMap = {
     'Animali': 'animale',
     'Proprietari': 'proprietario',
-    'Animali': 'animale',
     'Visite': 'visita',
     'Prenotazioni': 'prenotazione',
     'Vaccinazioni': 'vaccinazione'
   };
-  
   return singularMap[word] || word.toLowerCase();
 }
 
@@ -40,7 +37,8 @@ function ListPageTemplate({
   onRowClick,
   additionalToolbarContent = null,
   additionalContent = null,
-  statsContent = null
+  statsContent = null,
+  onClearAllFilters,   // nuova prop per resettare i filtri extra (KPI card, report)
 }) {
   if (loading) return <LoadingSpinner label={`Caricamento ${title.toLowerCase()}...`} />;
   if (error) return <ErrorMessage error={error} />;
@@ -52,12 +50,12 @@ function ListPageTemplate({
           <h2>{title}</h2>
           <p className="page-subtitle">{subtitle}</p>
         </div>
-          {showAddButton && (
-            <button className="btn-add" onClick={onAddClick}>
-              <PlusIcon width={16} height={16} stroke="currentColor" />
-              Nuovo {getSingularForm(title.split(' ')[1] || 'Elemento')}
-            </button>
-          )}
+        {showAddButton && (
+          <button className="btn-add" onClick={onAddClick}>
+            <PlusIcon width={16} height={16} stroke="currentColor" />
+            Nuovo {getSingularForm(title.split(' ')[1] || 'Elemento')}
+          </button>
+        )}
       </div>
 
       {statsContent && (
@@ -96,6 +94,7 @@ function ListPageTemplate({
           if (searchControls) searchControls.clearSearch();
           if (onFilterSelect) onFilterSelect('');
           tableControls.setPage(0);
+          if (onClearAllFilters) onClearAllFilters();  // Reset KPI filters
         }}>
           Cancella Filtri
         </button>
