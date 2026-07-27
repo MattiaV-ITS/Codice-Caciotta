@@ -71,24 +71,24 @@ export function Dashboard() {
       </div>
 
       <div className="kpi-grid">
-        <div className="kpi-card border-primary">
+        <div className="kpi-card border-primary" onClick={() => navigate('/prenotazioni/programma')} style={{ cursor: 'pointer' }}>
           <div className="kpi-label">Visite Oggi</div>
           <div className="kpi-value">{visiteOggi}</div>
           <div className="kpi-change">{visiteOggi > 0 ? 'Appuntamenti in programma' : 'Nessuna visita oggi'}</div>
         </div>
-        <div className="kpi-card border-warning">
+        <div className="kpi-card border-warning" onClick={() => navigate('/prenotazioni')} style={{ cursor: 'pointer' }}>
           <div className="kpi-label">Prenotazioni Totali</div>
           <div className="kpi-value">{prenotazioniTotali}</div>
           <div className="kpi-change">Registrate nel sistema</div>
         </div>
-        <div className="kpi-card border-danger">
+        <div className="kpi-card border-danger" onClick={() => navigate('/fatture/stats')} style={{ cursor: 'pointer' }}>
           <div className="kpi-label">Fatture da pagare</div>
           <div className="kpi-value">
             {importoNonPagato ? `€ ${Number(importoNonPagato).toLocaleString('it-IT', { minimumFractionDigits: 2 })}` : '€ 0,00'}
           </div>
           <div className="kpi-change down">{fattureNonPagate} fatture scadute</div>
         </div>
-        <div className="kpi-card border-success">
+        <div className="kpi-card border-success" onClick={() => navigate('/animali')} style={{ cursor: 'pointer' }}>
           <div className="kpi-label">Animali Registrati</div>
           <div className="kpi-value">{animaliTotali}</div>
           <div className="kpi-change">Nello studio</div>

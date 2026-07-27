@@ -389,6 +389,17 @@ body {
   margin-top: 2px;
 }
 
+.stat-card-active {
+  border: 2px solid var(--primary);
+  box-shadow: 0 0 8px rgba(42, 157, 143, 0.3);
+  transform: translateY(-2px);
+}
+
+.stat-card.stat-active {
+  border: 2px solid var(--primary);
+  box-shadow: 0 0 0 1px var(--primary);
+}
+
 /* ----- Toolbar ----- */
 .toolbar-wrapper {
   display: flex;

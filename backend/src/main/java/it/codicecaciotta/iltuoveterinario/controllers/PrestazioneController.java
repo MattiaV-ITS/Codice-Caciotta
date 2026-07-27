@@ -4,11 +4,13 @@ import it.codicecaciotta.iltuoveterinario.models.Prestazione;
 import it.codicecaciotta.iltuoveterinario.repositories.PrestazioneRepository;
 import it.codicecaciotta.iltuoveterinario.services.PrestazioneService;
 import it.codicecaciotta.iltuoveterinario.utils.PaginationAndSortingUtils;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -17,12 +19,12 @@ import java.util.Optional;
 public class PrestazioneController {
 
     private final PrestazioneService prestazioneService;
-
     private final PaginationAndSortingUtils paginationUtils;
-
     private final PrestazioneRepository prestazioneRepository;
 
-    PrestazioneController(PrestazioneService prestazioneService, PaginationAndSortingUtils paginationUtils, PrestazioneRepository prestazioneRepository) {
+    public PrestazioneController(PrestazioneService prestazioneService,
+                                 PaginationAndSortingUtils paginationUtils,
+                                 PrestazioneRepository prestazioneRepository) {
         this.prestazioneService = prestazioneService;
         this.paginationUtils = paginationUtils;
         this.prestazioneRepository = prestazioneRepository;
@@ -33,12 +35,14 @@ public class PrestazioneController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "nomePrestazione") String sortBy,
-            @RequestParam(defaultValue = "asc") String sortDir) {
-
+            @RequestParam(defaultValue = "asc") String sortDir,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String stato
+    ) {
         Pageable pageable = paginationUtils.buildPageRequest(page, size, sortBy, sortDir,
-                java.util.Arrays.asList("nomePrestazione", "durataStimata", "costoBase", "stato"));
+                Arrays.asList("nomePrestazione", "durataStimata", "costoBase", "stato"));
 
-        return prestazioneRepository.findAll(pageable);
+        return prestazioneService.findByFilters(search, stato, pageable);
     }
 
     @GetMapping("/all")
@@ -61,7 +65,8 @@ public class PrestazioneController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Prestazione> updatePrestazione(@PathVariable Long id, @RequestBody Prestazione prestazione) {
+    public ResponseEntity<Prestazione> updatePrestazione(@PathVariable Long id,
+                                                         @RequestBody Prestazione prestazione) {
         Prestazione updatedPrestazione = prestazioneService.updatePrestazione(id, prestazione);
         return ResponseEntity.ok(updatedPrestazione);
     }
@@ -77,5 +82,4 @@ public class PrestazioneController {
         List<Prestazione> prestazioni = prestazioneService.getPrestazioniDisponibili();
         return ResponseEntity.ok(prestazioni);
     }
-
 }
