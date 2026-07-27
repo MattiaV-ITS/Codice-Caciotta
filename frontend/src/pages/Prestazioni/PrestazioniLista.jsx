@@ -5,6 +5,7 @@ import ListPageTemplate from '../../components/ListPageTemplate/ListPageTemplate
 import { GearMenu } from '../../components/ContextMenu/ContextMenu';
 import { useTableControls } from '../../hooks/useTableControls';
 import { usePaginatedFetch } from '../../hooks/usePaginatedFetch';
+import { useSearchControls } from '../../hooks/useSearchControls';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import ErrorMessage from '../../components/common/ErrorMessage';
 import { PlusIcon, ServicesIcon } from '../../components/icons';
@@ -16,7 +17,6 @@ function PrestazioniLista() {
   const [statsLoading, setStatsLoading] = useState(true);
   const [statsError, setStatsError] = useState(null);
   const [statsRefreshIndex, setStatsRefreshIndex] = useState(0);
-  const [statoFilter, setStatoFilter] = useState('');
 
   const table = useTableControls({
     defaultSortBy: 'nomePrestazione',
@@ -24,19 +24,26 @@ function PrestazioniLista() {
     defaultPageSize: 10
   });
 
+  const search = useSearchControls();
+  const [statoFilter, setStatoFilter] = useState('');
+
   const filters = useMemo(() => ({
+    search: search.appliedSearchTerm,
     stato: statoFilter
-}), [statoFilter]);
+  }), [search.appliedSearchTerm, statoFilter]);
 
-const { data, loading, error, totalPages, totalCount, refetch } =
-usePaginatedFetch('/api/prestazioni', {
-    page: table.page,
-    size: table.size,
-    sortBy: table.sortBy,
-    sortDir: table.sortDir,
-    filters
-});
+  const { data, loading, error, totalPages, totalCount, refetch } = usePaginatedFetch(
+    '/api/prestazioni',
+    {
+      page: table.page,
+      size: table.size,
+      sortBy: table.sortBy,
+      sortDir: table.sortDir,
+      filters
+    }
+  );
 
+  // Statistiche
   useEffect(() => {
     const fetchStats = async () => {
       try {
@@ -68,27 +75,19 @@ usePaginatedFetch('/api/prestazioni', {
     fetchStats();
   }, [get, statsRefreshIndex]);
 
+  // Gestione click sulle card delle statistiche
   const handleStatoCardFilter = (stato) => {
-  if (statoFilter === stato) {
-    setStatoFilter('');
-    return;
-  }
-
-  switch (stato) {
-    case 'ATTIVO':
-      setStatoFilter('Disponibile');
-      break;
-
-    case 'INATTIVO':
-      setStatoFilter('Non disponibile');
-      break;
-
-    default:
+    // Se è già attivo, deseleziona
+    if (statoFilter === stato) {
+      setStatoFilter('');
+    } else {
       setStatoFilter(stato);
-  }
-};
+    }
+    table.setPage(0);
+  };
 
   const handleClearAllFilters = () => {
+    search.clearSearch();
     setStatoFilter('');
   };
 
@@ -96,7 +95,13 @@ usePaginatedFetch('/api/prestazioni', {
   const handleEditPrestazione = (prestazione) => navigate(`/prestazioni/edit/${prestazione.id}`);
 
   const handleToggleStato = async (prestazione) => {
-    const nuovoStato = prestazione.stato === 'ATTIVO' || prestazione.stato === 'Disponibile' ? 'Non disponibile' : 'Disponibile';
+    const nuovoStato = prestazione.stato === 'ATTIVO' || prestazione.stato === 'Disponibile'
+      ? 'Non disponibile'
+      : 'Disponibile';
+    const azione = nuovoStato === 'Disponibile' ? 'riattivare' : 'disabilitare';
+    if (!window.confirm(`Sei sicuro di voler ${azione} la prestazione "${prestazione.nomePrestazione}"?`)) {
+      return;
+    }
     try {
       const response = await put(`/api/prestazioni/${prestazione.id}`, { ...prestazione, stato: nuovoStato });
       if (!response.ok) throw new Error(`Errore: ${response.status}`);
@@ -204,40 +209,63 @@ usePaginatedFetch('/api/prestazioni', {
     }
   ];
 
+  const statoOptions = [
+    { label: 'Tutti', value: '' },
+    { label: 'Disponibili', value: 'Disponibile', className: 'btn-filter-success' },
+    { label: 'Non disponibili', value: 'Non disponibile', className: 'btn-filter-gray' }
+  ];
+
+  const filterOptions = {
+    label: 'Stato',
+    options: statoOptions,
+    searchable: 'nome, descrizione o costo'
+  };
+
   const statsContent = (
     <div className="stats-grid" style={{ marginBottom: 'var(--space-5)' }}>
       {statsLoading ? (
-        <LoadingSpinner size="small" />
+        <div className="stats-loading">
+          <LoadingSpinner size="small" />
+        </div>
       ) : stats ? (
         <>
+          {/* Totale - reset filtro */}
           <div
             className={`stat-card ${!statoFilter ? 'stat-active' : ''}`}
-            onClick={() => setStatoFilter('')}
+            onClick={() => handleStatoCardFilter('')}
             style={{ cursor: 'pointer' }}
           >
             <div className="stat-number stat-primary">{stats.totalCount}</div>
             <div className="stat-label">Totale Prestazioni</div>
           </div>
+
+          {/* Attive */}
           <div
             className={`stat-card ${statoFilter === 'Disponibile' ? 'stat-active' : ''}`}
-            onClick={() => handleStatoCardFilter('ATTIVO')}
+            onClick={() => handleStatoCardFilter('Disponibile')}
             style={{ cursor: 'pointer' }}
           >
             <div className="stat-number stat-success">{stats.activeCount}</div>
             <div className="stat-label">Attive</div>
           </div>
+
+          {/* Disabilitate */}
           <div
             className={`stat-card ${statoFilter === 'Non disponibile' ? 'stat-active' : ''}`}
-            onClick={() => handleStatoCardFilter('INATTIVO')}
+            onClick={() => handleStatoCardFilter('Non disponibile')}
             style={{ cursor: 'pointer' }}
           >
             <div className="stat-number stat-gray">{stats.inactiveCount}</div>
             <div className="stat-label">Disabilitate</div>
           </div>
+
+          {/* Costo medio (informativo) */}
           <div className="stat-card">
             <div className="stat-number stat-info">€{stats.averageCost}</div>
             <div className="stat-label">Costo Medio</div>
           </div>
+
+          {/* Durata media (informativa) */}
           <div className="stat-card">
             <div className="stat-number stat-info">{stats.averageDuration} min</div>
             <div className="stat-label">Durata Media</div>
@@ -260,7 +288,15 @@ usePaginatedFetch('/api/prestazioni', {
       loading={loading}
       error={error}
       tableControls={{ ...table, totalPages, totalCount }}
-      emptyMessage="Inizia aggiungendo la prima prestazione."
+      searchControls={search}
+      filterOptions={filterOptions}
+      activeFilter={statoFilter}
+      onFilterSelect={setStatoFilter}
+      emptyMessage={
+        search.appliedSearchTerm || statoFilter
+          ? 'Prova a modificare i filtri.'
+          : 'Inizia aggiungendo la prima prestazione.'
+      }
       emptyIcon={emptyIcon}
       showAddButton={true}
       onAddClick={handleCreatePrestazione}

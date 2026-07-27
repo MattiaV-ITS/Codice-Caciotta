@@ -4,7 +4,6 @@ import ListPageTemplate from '../../components/ListPageTemplate/ListPageTemplate
 import { useNavigate } from 'react-router-dom';
 import { GearMenu } from '../../components/ContextMenu/ContextMenu';
 import { loadFullAnimaleData } from '../../utils/dataLoader';
-
 import { useTableControls } from '../../hooks/useTableControls';
 import { usePaginatedFetch } from '../../hooks/usePaginatedFetch';
 import { useSearchControls } from '../../hooks/useSearchControls';
@@ -16,8 +15,8 @@ import { PawIcon, PlusIcon } from '../../components/icons';
 
 function AnimaliLista() {
   const table = useTableControls({
-    defaultSortBy: 'nome',
-    defaultSortDir: 'asc',
+    defaultSortBy: 'id',
+    defaultSortDir: 'desc',
     defaultPageSize: 15
   });
 
@@ -32,12 +31,13 @@ function AnimaliLista() {
   const [statsError, setStatsError] = useState(null);
   const [statsRefreshIndex, setStatsRefreshIndex] = useState(0);
   const { get, patch } = useApi();
+  const navigate = useNavigate();
 
   const memoizedFilters = useMemo(() => ({
-  search: search.appliedSearchTerm,
-  specie: specieFilter,
-  stato: statoFilter
-}), [search.appliedSearchTerm, specieFilter, statoFilter]);
+    search: search.appliedSearchTerm,
+    specie: specieFilter,
+    stato: statoFilter
+  }), [search.appliedSearchTerm, specieFilter, statoFilter]);
 
   const { data: animali, loading, error, totalPages, totalCount, refetch } =
     usePaginatedFetch('/api/animali', {
@@ -61,18 +61,33 @@ function AnimaliLista() {
     searchable: 'nome, microchip, specie, o proprietario'
   };
 
-  const getStatusInfo = (status) => {
-    const map = {
-      SANO: { label: 'Sano', className: 'badge-sano' },
-      MALATO: { label: 'Malato', className: 'badge-malato' },
-      IN_CURA: { label: 'In cura', className: 'badge-in-cura' },
-      DECEDUTO: { label: 'Deceduto', className: 'badge-deceduto' }
-    };
-    return map[status] || { label: 'Sconosciuto', className: 'badge-sconosciuto' };
+  // Gestione click card
+  const handleSpecieFilter = (specie) => {
+    if (specieFilter === specie) {
+      setSpecieFilter('');
+    } else {
+      setSpecieFilter(specie);
+    }
+    table.setPage(0);
   };
 
+  const handleStatoFilter = (stato) => {
+    if (statoFilter === stato) {
+      setStatoFilter('');
+    } else {
+      setStatoFilter(stato);
+    }
+    table.setPage(0);
+  };
+
+  const handleClearAllFilters = () => {
+    search.clearSearch();
+    setSpecieFilter('');
+    setStatoFilter('');
+  };
+
+  // Colonne tabella
   const customColumns = [
-    // ... le tue colonne (invariate)
     {
       header: 'NOME ANIMALE',
       field: 'nome',
@@ -80,7 +95,11 @@ function AnimaliLista() {
       render: (item) => {
         const isFemale = item.sesso?.toLowerCase() === 'f';
         const isMale = item.sesso?.toLowerCase() === 'm';
-        const avatarClass = isFemale ? 'avatar-female' : isMale ? 'avatar-male' : 'avatar-default';
+        const avatarClass = isFemale
+          ? 'avatar-female'
+          : isMale
+          ? 'avatar-male'
+          : 'avatar-default';
         return (
           <div className="cell-content">
             <div className={`avatar-circle ${avatarClass}`}>
@@ -95,7 +114,7 @@ function AnimaliLista() {
     },
     { header: 'SPECIE', field: 'specie', sortable: true },
     { header: 'RAZZA', field: 'razza', sortable: true },
-    { header: 'PROPRIETARIO', field: 'proprietario', sortable: true },
+    { header: 'PROPRIETARIO', field: 'proprietario', sortable: false },
     { header: 'DATA DI NASCITA', field: 'dataNascita', type: 'date', sortable: true },
     { header: 'MICROCHIP', field: 'microchip', sortable: true },
     {
@@ -103,7 +122,13 @@ function AnimaliLista() {
       field: 'stato',
       sortable: false,
       render: (item) => {
-        const status = getStatusInfo(item.stato);
+        const map = {
+          SANO: { label: 'Sano', className: 'badge-sano' },
+          MALATO: { label: 'Malato', className: 'badge-malato' },
+          IN_CURA: { label: 'In cura', className: 'badge-in-cura' },
+          DECEDUTO: { label: 'Deceduto', className: 'badge-deceduto' }
+        };
+        const status = map[item.stato] || { label: 'Sconosciuto', className: 'badge-sconosciuto' };
         return <span className={`badge-status ${status.className}`}>{status.label}</span>;
       }
     },
@@ -146,6 +171,7 @@ function AnimaliLista() {
     <PawIcon width="48" height="48" style={{ color: 'var(--gray-400)', opacity: 0.5 }} />
   );
 
+  // Fetch stats
   useEffect(() => {
     const fetchStats = async () => {
       try {
@@ -163,21 +189,7 @@ function AnimaliLista() {
     fetchStats();
   }, [get, statsRefreshIndex]);
 
-  const handleStatoCardFilter = (stato) => {
-    if (statoFilter === stato) {
-      setStatoFilter('');
-    } else {
-      setStatoFilter(stato);
-    }
-    // Non cambiamo pagina perché il filtro è client
-  };
-
-  const handleClearAllFilters = () => {
-    search.clearSearch();
-    setStatoFilter('');
-    setSpecieFilter('');
-  };
-
+  // Stats content con card per IN_CURA
   const statsContent = (
     <>
       {statsLoading ? (
@@ -190,17 +202,50 @@ function AnimaliLista() {
         </div>
       ) : stats ? (
         <>
+          {/* Totale */}
           <div
-            className={`stat-card ${!statoFilter ? 'stat-active' : ''}`}
-            onClick={() => setStatoFilter('')}
+            className={`stat-card ${!specieFilter && !statoFilter ? 'stat-active' : ''}`}
+            onClick={() => {
+              setSpecieFilter('');
+              setStatoFilter('');
+              table.setPage(0);
+            }}
             style={{ cursor: 'pointer' }}
           >
             <div className="stat-number stat-primary">{stats.totalCount ?? 0}</div>
             <div className="stat-label">Totale Animali</div>
           </div>
+
+          {/* Specie */}
+          <div
+            className={`stat-card ${specieFilter === 'cane' ? 'stat-active' : ''}`}
+            onClick={() => handleSpecieFilter('cane')}
+            style={{ cursor: 'pointer' }}
+          >
+            <div className="stat-number stat-info">{stats.caneCount ?? 0}</div>
+            <div className="stat-label">Cani</div>
+          </div>
+          <div
+            className={`stat-card ${specieFilter === 'gatto' ? 'stat-active' : ''}`}
+            onClick={() => handleSpecieFilter('gatto')}
+            style={{ cursor: 'pointer' }}
+          >
+            <div className="stat-number stat-info">{stats.gattoCount ?? 0}</div>
+            <div className="stat-label">Gatti</div>
+          </div>
+          <div
+            className={`stat-card ${specieFilter === 'altro' ? 'stat-active' : ''}`}
+            onClick={() => handleSpecieFilter('altro')}
+            style={{ cursor: 'pointer' }}
+          >
+            <div className="stat-number stat-info">{stats.altroCount ?? 0}</div>
+            <div className="stat-label">Altri</div>
+          </div>
+
+          {/* Stato salute - ora include IN_CURA */}
           <div
             className={`stat-card ${statoFilter === 'SANO' ? 'stat-active' : ''}`}
-            onClick={() => handleStatoCardFilter('SANO')}
+            onClick={() => handleStatoFilter('SANO')}
             style={{ cursor: 'pointer' }}
           >
             <div className="stat-number stat-success">{stats.sanoCount ?? 0}</div>
@@ -208,31 +253,27 @@ function AnimaliLista() {
           </div>
           <div
             className={`stat-card ${statoFilter === 'MALATO' ? 'stat-active' : ''}`}
-            onClick={() => handleStatoCardFilter('MALATO')}
+            onClick={() => handleStatoFilter('MALATO')}
             style={{ cursor: 'pointer' }}
           >
             <div className="stat-number stat-warning">{stats.malatoCount ?? 0}</div>
             <div className="stat-label">Malati</div>
           </div>
           <div
+            className={`stat-card ${statoFilter === 'IN_CURA' ? 'stat-active' : ''}`}
+            onClick={() => handleStatoFilter('IN_CURA')}
+            style={{ cursor: 'pointer' }}
+          >
+            <div className="stat-number stat-warning">{stats.inCuraCount ?? 0}</div>
+            <div className="stat-label">In Cura</div>
+          </div>
+          <div
             className={`stat-card ${statoFilter === 'DECEDUTO' ? 'stat-active' : ''}`}
-            onClick={() => handleStatoCardFilter('DECEDUTO')}
+            onClick={() => handleStatoFilter('DECEDUTO')}
             style={{ cursor: 'pointer' }}
           >
             <div className="stat-number stat-danger">{stats.decedutoCount ?? 0}</div>
             <div className="stat-label">Deceduti</div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-number stat-info">{stats.caneCount ?? 0}</div>
-            <div className="stat-label">Cani</div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-number stat-info">{stats.gattoCount ?? 0}</div>
-            <div className="stat-label">Gatti</div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-number stat-info">{stats.altroCount ?? 0}</div>
-            <div className="stat-label">Altri</div>
           </div>
         </>
       ) : null}
@@ -243,8 +284,7 @@ function AnimaliLista() {
     ? 'Prova a modificare i filtri.'
     : 'Inizia aggiungendo il primo animale.';
 
-  const navigate = useNavigate();
-
+  // Gestione riga
   const handleRowClick = (animale) => {
     navigate(`/animali/${animale.id}`);
   };
