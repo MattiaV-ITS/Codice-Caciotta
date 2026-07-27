@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useApi } from '../services/apiService';
+import DocumentiAllegati from './Documenti/DocumentiAllegati';
 
-const FattureLista = ({ visitaId }) => {
+const FattureLista = ({ visitaId, animaleId }) => {
   const { get } = useApi();
   const [fatture, setFatture] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [expandedFatturaId, setExpandedFatturaId] = useState(null);
 
   useEffect(() => {
     if (!visitaId) return;
@@ -129,6 +131,30 @@ const FattureLista = ({ visitaId }) => {
                       <span className="fattura-value">
                         {fattura.indirizzoCliente} {fattura.cittaCliente && `, ${fattura.cittaCliente}`}
                       </span>
+                    </div>
+                  )}
+                  
+                  {/* Pulsante per mostrare/nascondere scan fattura */}
+                  {animaleId && (
+                    <div style={{ marginTop: '8px' }}>
+                      <button
+                        className="btn btn-sm btn-secondary"
+                        onClick={() => setExpandedFatturaId(expandedFatturaId === fattura.id ? null : fattura.id)}
+                        style={{ width: '100%', fontSize: '12px' }}
+                      >
+                        {expandedFatturaId === fattura.id ? '📄 Nascondi scan' : '🧾 Scan fattura'}
+                      </button>
+                      
+                      {expandedFatturaId === fattura.id && (
+                        <div style={{ marginTop: '8px', padding: '8px', background: 'var(--gray-50)', borderRadius: 'var(--radius-sm)' }}>
+                          <DocumentiAllegati
+                            animaleId={animaleId}
+                            fatturaId={fattura.id}
+                            titolo="Scan fattura"
+                            nascondiSeVuoto={true}
+                          />
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
