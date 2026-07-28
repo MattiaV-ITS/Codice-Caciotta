@@ -1,4 +1,4 @@
-import React, { useState, useCallback, lazy, Suspense } from 'react';
+﻿import React, { useState, useCallback, lazy, Suspense } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { ContextMenu } from '../ContextMenu/ContextMenu';
 import { useApi } from '../../services/apiService';
@@ -43,7 +43,7 @@ const OrarioBloccatoContextMenu = ({ children, blockedTime, onBlockedTimeUpdated
   const handleDeleteBlockedTime = useCallback(async () => {
     if (!blockedTime?.id || !isStaffOrAdmin) return;
 
-    if (!window.confirm('Sei sicuro di voler eliminare questo orario bloccato? Questa azione non può essere annullata.')) {
+    if (!window.confirm('Sei sicuro di voler eliminare questo orario bloccato? Questa azione non puÃ² essere annullata.')) {
       return;
     }
 
@@ -58,9 +58,9 @@ const OrarioBloccatoContextMenu = ({ children, blockedTime, onBlockedTimeUpdated
       }
 
       onBlockedTimeDeleted?.(blockedTime.id);
-      console.log('Blocked time deleted successfully');
+      if (process.env.NODE_ENV === 'development') console.log('Blocked time deleted successfully');
     } catch (error) {
-      console.error('Error deleting blocked time:', error);
+      logger.error('Error deleting blocked time:', error);
       alert(`Errore durante l'eliminazione dell'orario bloccato: ${error.message}`);
     } finally {
       setIsLoading(false);
@@ -104,3 +104,4 @@ const OrarioBloccatoContextMenu = ({ children, blockedTime, onBlockedTimeUpdated
 }
 
 export default OrarioBloccatoContextMenu;
+

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useApi } from '../../services/apiService';
 import '../FormModal/FormModal.css';
 
@@ -36,15 +36,15 @@ function OrarioBloccatoEditModal({ onClose, onSuccess, blockedTime }) {
     const newErrors = {};
 
     if (!formData.data) {
-      newErrors.data = 'La data è obbligatoria';
+      newErrors.data = 'La data Ã¨ obbligatoria';
     }
 
     if (!formData.oraInizio) {
-      newErrors.oraInizio = "L'orario di inizio è obbligatorio";
+      newErrors.oraInizio = "L'orario di inizio Ã¨ obbligatorio";
     }
 
     if (!formData.oraFine) {
-      newErrors.oraFine = "L'orario di fine è obbligatorio";
+      newErrors.oraFine = "L'orario di fine Ã¨ obbligatorio";
     } else if (formData.oraInizio && formData.oraFine && formData.oraInizio >= formData.oraFine) {
       newErrors.oraFine = "L'orario di fine deve essere successivo all'orario di inizio";
     }
@@ -83,10 +83,10 @@ function OrarioBloccatoEditModal({ onClose, onSuccess, blockedTime }) {
       onClose();
 
     } catch (error) {
-      console.error('Error updating blocked time slot:', error);
+      logger.error('Error updating blocked time slot:', error);
       setErrors(prev => ({
         ...prev,
-        submit: error.message || 'Si è verificato un errore durante l\'aggiornamento dell\'orario bloccato'
+        submit: error.message || 'Si Ã¨ verificato un errore durante l\'aggiornamento dell\'orario bloccato'
       }));
     } finally {
       setIsSubmitting(false);
@@ -99,7 +99,7 @@ function OrarioBloccatoEditModal({ onClose, onSuccess, blockedTime }) {
         <div className="modal-header">
           <h3>Modifica Orario Bloccato</h3>
           <button className="modal-close" onClick={onClose} disabled={isSubmitting}>
-            ×
+            Ã—
           </button>
         </div>
 

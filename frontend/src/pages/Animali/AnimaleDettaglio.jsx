@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useApi } from '../../services/apiService';
 import { useAuth } from '../../context/AuthContext';
@@ -51,11 +51,11 @@ function AnimaleDettaglio() {
             const visiteData = await visiteResponse.json();
             setVisite(Array.isArray(visiteData) ? visiteData : []);
           } else {
-            console.warn(`Failed to fetch visits for animal ${animaleId}: ${visiteResponse.status}`);
+            logger.warn(`Failed to fetch visits for animal ${animaleId}: ${visiteResponse.status}`);
             setVisite([]);
           }
         } catch (visiteError) {
-          console.error('Error fetching visits:', visiteError);
+          logger.error('Error fetching visits:', visiteError);
           setVisite([]);
         }
 
@@ -68,11 +68,11 @@ function AnimaleDettaglio() {
             setHasExpiredVaccinations(expiredIds.includes(animaleId));
           }
         } catch (vaccError) {
-          console.error('Error fetching vaccination status:', vaccError);
+          logger.error('Error fetching vaccination status:', vaccError);
         }
         
       } catch (error) {
-        console.error('Error fetching data:', error);
+        logger.error('Error fetching data:', error);
         setError(error.message || 'Failed to load animal data');
       } finally {
         setIsLoading(false);
@@ -113,7 +113,7 @@ function AnimaleDettaglio() {
   if (error) {
     return (
       <div className="error-wrapper">
-        <div className="error-icon">⚠️</div>
+        <div className="error-icon">âš ï¸</div>
         <h3>Errore di caricamento</h3>
         <p>{error}</p>
         <button className="btn btn-primary" onClick={() => window.location.reload()}>Riprova</button>
@@ -124,7 +124,7 @@ function AnimaleDettaglio() {
   if (!animale) {
     return (
       <div className="error-wrapper">
-        <div className="error-icon">❌</div>
+        <div className="error-icon">âŒ</div>
         <h3>Dati non disponibili</h3>
         <p>Impossibile caricare i dati dell'animale</p>
         <button className="btn btn-primary" onClick={() => window.location.reload()}>Riprova</button>

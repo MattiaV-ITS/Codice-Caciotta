@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../context/AuthContext";
+import logger from "../utils/logger";
 
 import { useApi } from "../services/apiService";
 
@@ -37,8 +38,6 @@ const AdminRoleManagement = () => {
       setMessage(null);
 
       try {
-        console.log('Fetching admin users...');
-        
         // Create get function inside useEffect to avoid dependency issues
         const getAuthHeaders = () => {
           if (!token) {
@@ -53,16 +52,13 @@ const AdminRoleManagement = () => {
         };
         
         const apiUrl = '/api/admin/users';
-        console.log('Admin fetch URL:', apiUrl);
         const response = await fetch(apiUrl, {
           method: 'GET',
           headers: getAuthHeaders(),
         });
-        console.log('Admin users response status:', response.status);
         const data = await response.json();
 
         if (!response.ok) {
-          console.error('Admin users fetch failed:', response.status, data);
           throw new Error(data.message || "Failed to fetch users");
         }
 
@@ -72,6 +68,7 @@ const AdminRoleManagement = () => {
           setDraftRoles(data[0].roles || []);
         }
       } catch (error) {
+        logger.error('Failed to fetch users', error);
         setMessage({
           type: "error",
           text: error.message || "Failed to fetch users. Please try again later.",
@@ -125,7 +122,6 @@ const AdminRoleManagement = () => {
       };
       
       const apiUrl = `/api/admin/users/${selectedUser.username}/roles`;
-      console.log('Admin update URL:', apiUrl);
       const response = await fetch(apiUrl, {
         method: 'PATCH',
         headers: getAuthHeaders(),
@@ -144,6 +140,7 @@ const AdminRoleManagement = () => {
       );
       setMessage({ type: "success", text: data.message || "Roles updated successfully." });
     } catch (error) {
+      logger.error('Failed to update roles', error);
       setMessage({
         type: "error",
         text: error.message || "Failed to update roles. Please try again later.",

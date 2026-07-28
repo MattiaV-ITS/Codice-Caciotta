@@ -1,4 +1,4 @@
-import React, { useState, useCallback, lazy, Suspense } from 'react';
+﻿import React, { useState, useCallback, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { ContextMenu } from '../ContextMenu/ContextMenu';
@@ -67,7 +67,7 @@ const PrenotazioneContextMenu = ({ children, prenotazione, onPrenotazioneUpdated
         navigate(`/visite/${createdVisita.visitaId}`);
       }
     } catch (error) {
-      console.error('Error handling visita action:', error);
+      logger.error('Error handling visita action:', error);
       // Fallback to simple navigation if there's an error
       navigate(`/visite?prenotazioneId=${prenotazione.id}`);
     } finally {
@@ -89,7 +89,7 @@ const PrenotazioneContextMenu = ({ children, prenotazione, onPrenotazioneUpdated
   // const handleDeletePrenotazione = useCallback(async () => {
   //   if (!prenotazione?.id || !isStaffOrAdmin) return;
   // 
-  //   if (!window.confirm('Sei sicuro di voler eliminare questa prenotazione? Questa azione non può essere annullata.')) {
+  //   if (!window.confirm('Sei sicuro di voler eliminare questa prenotazione? Questa azione non puÃ² essere annullata.')) {
   //     return;
   //   }
   // 
@@ -104,12 +104,12 @@ const PrenotazioneContextMenu = ({ children, prenotazione, onPrenotazioneUpdated
   //     }
   // 
   //     onPrenotazioneDeleted?.(prenotazione.id);
-  //     console.log('Prenotazione deleted successfully');
+  //     if (process.env.NODE_ENV === 'development') console.log('Prenotazione deleted successfully');
   //   } catch (error) {
-  //     console.error('Error deleting prenotazione:', error);
+  //     logger.error('Error deleting prenotazione:', error);
   //     // Check if the error is about having an associated visita
   //     if (error.message && error.message.includes('Cannot delete prenotazione that has an associated visita')) {
-  //       alert('Impossibile eliminare la prenotazione: esiste già una visita associata. Per eliminare la prenotazione, è necessario eliminare prima la visita.');
+  //       alert('Impossibile eliminare la prenotazione: esiste giÃ  una visita associata. Per eliminare la prenotazione, Ã¨ necessario eliminare prima la visita.');
   //     } else {
   //       alert(`Errore durante l'eliminazione della prenotazione: ${error.message}`);
   //     }
@@ -130,7 +130,7 @@ const PrenotazioneContextMenu = ({ children, prenotazione, onPrenotazioneUpdated
       const updatedPrenotazione = await response.json();
       onPrenotazioneUpdated?.(updatedPrenotazione);
     } catch (error) {
-      console.error('Error updating stato:', error);
+      logger.error('Error updating stato:', error);
       alert(`Errore aggiornando lo stato: ${error.message}`);
     } finally {
       setIsLoading(false);
@@ -220,3 +220,4 @@ const PrenotazioneContextMenu = ({ children, prenotazione, onPrenotazioneUpdated
 }
 
 export default PrenotazioneContextMenu;
+

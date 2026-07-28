@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useApi } from '../../services/apiService';
 import SchedaAnimale from './SchedaAnimale';
@@ -46,16 +46,16 @@ function AnimaleDettaglioUser() {
             const visiteData = await visiteResponse.json();
             setVisite(Array.isArray(visiteData) ? visiteData : []);
           } else {
-            console.warn(`Failed to fetch visits for animal ${animaleId}: ${visiteResponse.status}`);
+            logger.warn(`Failed to fetch visits for animal ${animaleId}: ${visiteResponse.status}`);
             setVisite([]);
           }
         } catch (visiteError) {
-          console.error('Error fetching visits:', visiteError);
+          logger.error('Error fetching visits:', visiteError);
           setVisite([]);
         }
         
       } catch (error) {
-        console.error('Error fetching data:', error);
+        logger.error('Error fetching data:', error);
         setError(error.message || 'Failed to load animal data');
       } finally {
         setIsLoading(false);
@@ -121,7 +121,7 @@ function AnimaleDettaglioUser() {
     return (
       <div className="page-container">
         <div className="empty-state">
-          <div className="empty-icon">🐾</div>
+          <div className="empty-icon">ðŸ¾</div>
           <div className="empty-title">Animale non trovato</div>
           <p className="empty-description">L'animale che stai cercando non esiste o non hai i permessi per visualizzarlo.</p>
           <button className="btn btn-primary mt-3" onClick={() => navigate('/animali')}>

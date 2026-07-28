@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import './ListaTable.css';
 import { formatDate } from '../../utils/dateUtils';
 
@@ -16,8 +16,8 @@ const ListaTable = ({
   loading, 
   error, 
   emptyMessage, 
-  emptyIcon = '🔍',
-  onRowClick // ← AGGIUNTA: callback per clic sulla riga
+  emptyIcon = 'ðŸ”',
+  onRowClick // â† AGGIUNTA: callback per clic sulla riga
 }) => {
   if (loading) {
     return (
@@ -83,14 +83,14 @@ const ListaTable = ({
                   try {
                     return <td key={`${dataKey}-${index}`} style={column.style}>{column.Cell({ value: cellValue })}</td>;
                   } catch (error) {
-                    console.error(`Error in Cell renderer for column ${column.Header || column.header}:`, error);
+                    logger.error(`Error in Cell renderer for column ${column.Header || column.header}:`, error);
                     return <td key={`${dataKey}-${index}`} style={column.style}>Error</td>;
                   }
                 } else if (column.render) {
                   try {
                     return <td key={`${dataKey}-${index}`} style={column.style}>{column.render(item)}</td>;
                   } catch (error) {
-                    console.error(`Error in render function for column ${column.Header || column.header}:`, error);
+                    logger.error(`Error in render function for column ${column.Header || column.header}:`, error);
                     return <td key={`${dataKey}-${index}`} style={column.style}>Error</td>;
                   }
                 } else if (column.type === 'date') {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
 import FormModal from '../../components/FormModal/FormModal';
 import { validateRequired, validateEmail, validatePhone, validateMicrochip, validatePositiveNumber, capitalizeFirstLetter } from '../../utils/validationUtils';
 
@@ -113,7 +113,7 @@ function AnimaleCreate({ onClose, onSuccess, animale, isEditMode = false, propri
             setSearchTerm(`${proprietarioData.nome} ${proprietarioData.cognome}`);
           }
         } catch (error) {
-          console.error('Errore nel caricamento del proprietario:', error);
+          logger.error('Errore nel caricamento del proprietario:', error);
         }
       };
       loadProprietario();
@@ -173,7 +173,7 @@ function AnimaleCreate({ onClose, onSuccess, animale, isEditMode = false, propri
                   }
                   return proprietario;
                 } catch (error) {
-                  console.error('Errore nel recupero dei dati completi del proprietario:', error);
+                  logger.error('Errore nel recupero dei dati completi del proprietario:', error);
                   return proprietario;
                 }
               })
@@ -185,7 +185,7 @@ function AnimaleCreate({ onClose, onSuccess, animale, isEditMode = false, propri
             setShowSuggestions(false);
           }
         } catch (error) {
-          console.error('Errore ricerca proprietari:', error);
+          logger.error('Errore ricerca proprietari:', error);
           setSuggestions([]);
           setShowSuggestions(false);
         } finally {
@@ -245,7 +245,7 @@ function AnimaleCreate({ onClose, onSuccess, animale, isEditMode = false, propri
       case 'nome':
         return validateRequired(value, 'Il nome');
       case 'specie':
-        if (!value) return 'La specie è obbligatoria.';
+        if (!value) return 'La specie Ã¨ obbligatoria.';
         if (isAltroSpecie(value) && !formData.specificaSpecie.trim()) {
           return 'Specifica il tipo di animale.';
         }
@@ -358,14 +358,14 @@ function AnimaleCreate({ onClose, onSuccess, animale, isEditMode = false, propri
           onClose();
         } else {
           const errorData = await response.json();
-          console.error(isEditMode ? 'Aggiornamento animale fallito:' : 'Creazione animale fallita:', errorData);
+          logger.error(isEditMode ? 'Aggiornamento animale fallito:' : 'Creazione animale fallita:', errorData);
           setErrors(prev => ({
             ...prev,
             form: (isEditMode ? 'Failed to update animale: ' : 'Failed to create animale: ') + (errorData.message || 'Unknown error')
           }));
         }
       } catch (error) {
-        console.error('Errore durante la creazione dell\'animale:', error);
+        logger.error('Errore durante la creazione dell\'animale:', error);
         setErrors(prev => ({
           ...prev,
           form: 'Error creating animale: ' + error.message
@@ -598,7 +598,7 @@ function AnimaleCreate({ onClose, onSuccess, animale, isEditMode = false, propri
                       checked={formData.sterilizzato === true}
                       onChange={() => setFormData(prev => ({ ...prev, sterilizzato: true }))}
                     />
-                    Sì
+                    SÃ¬
                   </label>
                   <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
                     <input
@@ -752,7 +752,7 @@ function AnimaleCreate({ onClose, onSuccess, animale, isEditMode = false, propri
                            >
                              <div style={{ fontWeight: 500 }}>{p.nome} {p.cognome}</div>
                              <div style={{ fontSize: '12px', color: 'var(--gray-500)' }}>
-                               {p.email} • {p.telefono}
+                               {p.email} â€¢ {p.telefono}
                              </div>
                            </div>
                          ))}

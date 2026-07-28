@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useApi } from '../../services/apiService';
 import FormModal from '../FormModal/FormModal';
@@ -46,7 +46,7 @@ const VaccinazioneEditModal = ({
           note: dettaglio.note || ''
         });
       } catch (error) {
-        console.error('Error fetching vaccinazione detail:', error);
+        logger.error('Error fetching vaccinazione detail:', error);
         setSubmitError('Impossibile caricare i dettagli della vaccinazione');
       } finally {
         setIsLoadingDettaglio(false);
@@ -60,15 +60,15 @@ const VaccinazioneEditModal = ({
     const newErrors = {};
 
     if (!formData.tipoVaccino) {
-      newErrors.tipoVaccino = 'Il tipo di vaccino è obbligatorio';
+      newErrors.tipoVaccino = 'Il tipo di vaccino Ã¨ obbligatorio';
     }
 
     if (!formData.dataSomministrazione) {
-      newErrors.dataSomministrazione = 'La data di somministrazione è obbligatoria';
+      newErrors.dataSomministrazione = 'La data di somministrazione Ã¨ obbligatoria';
     }
 
     if (!formData.dataScadenza) {
-      newErrors.dataScadenza = 'La data di scadenza è obbligatoria';
+      newErrors.dataScadenza = 'La data di scadenza Ã¨ obbligatoria';
     }
 
     if (
@@ -76,11 +76,11 @@ const VaccinazioneEditModal = ({
       formData.dataSomministrazione &&
       formData.dataScadenza < formData.dataSomministrazione
     ) {
-      newErrors.dataScadenza = 'La data di scadenza non può precedere la somministrazione';
+      newErrors.dataScadenza = 'La data di scadenza non puÃ² precedere la somministrazione';
     }
 
     if (!formData.lotto) {
-      newErrors.lotto = 'Il numero di lotto è obbligatorio';
+      newErrors.lotto = 'Il numero di lotto Ã¨ obbligatorio';
     }
 
     setErrors(newErrors);
@@ -139,7 +139,7 @@ const VaccinazioneEditModal = ({
       onClose();
 
     } catch (error) {
-      console.error('Error updating vaccinazione:', error);
+      logger.error('Error updating vaccinazione:', error);
       setSubmitError(`Errore durante l'aggiornamento della vaccinazione: ${error.message}`);
     } finally {
       setIsSubmitting(false);

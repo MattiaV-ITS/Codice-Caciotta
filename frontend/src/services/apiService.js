@@ -1,4 +1,4 @@
-// apiService.js
+﻿// apiService.js
 import { useAuth } from '../context/AuthContext';
 import { useCallback } from 'react';
 
@@ -149,7 +149,7 @@ export const useListaApi = (endpoint) => {
         number: data.number || 0,
       };
     } catch (error) {
-      console.error('API error:', error);
+      logger.error('API error:', error);
       throw error;
     }
   };

@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+﻿import React, { useState, useMemo, useEffect } from 'react';
 import AnimaleCreate from './AnimaleCreate';
 import ListPageTemplate from '../../components/ListPageTemplate/ListPageTemplate';
 import { useNavigate } from 'react-router-dom';
@@ -318,7 +318,7 @@ function AnimaliLista() {
         setShowEditModal(true);
       },
       (error) => {
-        console.error('Failed to load full animale data:', error);
+        logger.error('Failed to load full animale data:', error);
         setEditingAnimale(animale);
         setShowEditModal(true);
       }
@@ -334,7 +334,7 @@ function AnimaliLista() {
       setStatsRefreshIndex(prev => prev + 1);
       refetch();
     } catch (err) {
-      console.error('Failed to update animale status:', err);
+      logger.error('Failed to update animale status:', err);
     }
   };
 

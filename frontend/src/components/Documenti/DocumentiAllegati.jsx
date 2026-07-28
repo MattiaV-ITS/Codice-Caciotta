@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useApi } from '../../services/apiService';
+import logger from '../../utils/logger';
 import UploadDocumentoModal from './UploadDocumentoModal';
 import './DocumentiAllegati.css';
 
@@ -78,7 +79,7 @@ function DocumentiAllegati({
         }
       }
     } catch (err) {
-      console.error('Error fetching documenti:', err);
+      logger.error('Errore nel caricamento documenti:', err);
       setError(err.message);
     } finally {
       setIsLoading(false);
@@ -109,7 +110,7 @@ function DocumentiAllegati({
         throw new Error(`Errore nell'eliminazione: ${response.status}`);
       }
     } catch (err) {
-      console.error('Error deleting document:', err);
+      logger.error('Errore nell\'eliminazione del documento:', err);
       alert('Errore durante l\'eliminazione del documento');
     }
   };
@@ -129,7 +130,7 @@ function DocumentiAllegati({
         window.open(`/api/documenti/${documentoId}/download`, '_blank', 'noopener,noreferrer');
       }
     } catch (err) {
-      console.error('Error opening document:', err);
+      logger.error('Errore nell\'apertura del documento:', err);
       // Fallback
       window.open(`/api/documenti/${documentoId}/download`, '_blank', 'noopener,noreferrer');
     }

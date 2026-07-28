@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState, useRef } from 'react';
+﻿import React, { useCallback, useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useApi } from '../../services/apiService';
@@ -50,7 +50,7 @@ function DashboardUser() {
       }
       return false;
     } catch (err) {
-      console.error('Errore nel controllo del proprietario:', err);
+      logger.error('Errore nel controllo del proprietario:', err);
       return false;
     }
   }, [get, updateUser, user.id]);
@@ -98,7 +98,7 @@ function DashboardUser() {
             }
           }
         } catch (err) {
-          console.error(`Error fetching vaccinations for animal ${animale.id}:`, err);
+          logger.error(`Error fetching vaccinations for animal ${animale.id}:`, err);
         }
       }));
       
@@ -111,8 +111,8 @@ function DashboardUser() {
 
       setLoading(false);
     } catch (err) {
-      console.error('Errore caricamento dashboard utente:', err);
-      setError('Impossibile caricare i dati. Riprova più tardi.');
+      logger.error('Errore caricamento dashboard utente:', err);
+      setError('Impossibile caricare i dati. Riprova piÃ¹ tardi.');
       setLoading(false);
     }
   }, [get, user]);
@@ -251,7 +251,7 @@ function DashboardUser() {
           </div>
           <div className="kpi-change" style={{ fontSize: '13px', color: 'var(--gray-500)' }}>
             {prossimaVisita 
-              ? `${prossimaVisita.animaleNome} • ${formatTime(prossimaVisita.dataOraAppuntamento)}`
+              ? `${prossimaVisita.animaleNome} â€¢ ${formatTime(prossimaVisita.dataOraAppuntamento)}`
               : 'Nessuna visita programmata'}
           </div>
         </div>
@@ -317,7 +317,7 @@ function DashboardUser() {
                       <td>{formatDate(prenotazione.dataOraAppuntamento)}</td>
                       <td>{formatTime(prenotazione.dataOraAppuntamento)}</td>
                       <td>{prenotazione.tipoVisita}</td>
-                      <td className="actions-menu">⋯</td>
+                      <td className="actions-menu">â‹¯</td>
                     </tr>
                   ))}
                 </tbody>
@@ -396,8 +396,8 @@ function DashboardUser() {
                       </div>
                       <div className="animale-modern-meta">
                         <span>{animale.specie}</span>
-                        {animale.razza && <span>• {animale.razza}</span>}
-                        {animale.sesso && <span>• {animale.sesso === 'M' ? 'Maschio' : animale.sesso === 'F' ? 'Femmina' : ''}</span>}
+                        {animale.razza && <span>â€¢ {animale.razza}</span>}
+                        {animale.sesso && <span>â€¢ {animale.sesso === 'M' ? 'Maschio' : animale.sesso === 'F' ? 'Femmina' : ''}</span>}
                       </div>
                     </div>
 

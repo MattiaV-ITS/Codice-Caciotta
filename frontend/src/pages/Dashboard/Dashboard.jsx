@@ -1,4 +1,4 @@
-// pages/Dashboard.jsx
+﻿// pages/Dashboard.jsx
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApi } from '../../services/apiService';
@@ -22,7 +22,7 @@ export function Dashboard() {
       const data = await response.json();
       setStats(data);
     } catch (err) {
-      console.error('Errore caricamento dashboard:', err);
+      logger.error('Errore caricamento dashboard:', err);
       setError('Impossibile caricare i dati della dashboard.');
     } finally {
       setLoading(false);
@@ -44,7 +44,7 @@ export function Dashboard() {
       // Refresh dashboard data to reflect changes
       fetchDashboardData();
     } catch (error) {
-      console.error('Error updating stato:', error);
+      logger.error('Error updating stato:', error);
       alert(`Errore aggiornando lo stato: ${error.message}`);
     }
   }, [fetchDashboardData, patch]);
@@ -100,7 +100,7 @@ export function Dashboard() {
         <div className="kpi-card border-danger" onClick={() => navigate('/fatture/stats')} style={{ cursor: 'pointer' }}>
           <div className="kpi-label">Fatture da pagare</div>
           <div className="kpi-value">
-            {importoNonPagato ? `€ ${Number(importoNonPagato).toLocaleString('it-IT', { minimumFractionDigits: 2 })}` : '€ 0,00'}
+            {importoNonPagato ? `â‚¬ ${Number(importoNonPagato).toLocaleString('it-IT', { minimumFractionDigits: 2 })}` : 'â‚¬ 0,00'}
           </div>
           <div className="kpi-change down">{fattureNonPagate} fatture scadute</div>
         </div>

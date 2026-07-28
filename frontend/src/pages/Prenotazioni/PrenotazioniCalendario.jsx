@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState, useCallback, lazy, Suspense } from 'react';
+﻿import React, { useEffect, useMemo, useState, useCallback, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './PrenotazioniCalendario.css';
 import { formatDate, formatTime, parseDate } from '../../utils/dateUtils';
@@ -12,7 +12,7 @@ import {
   getPrestazioneLegenda,
   FALLBACK_COLOR
 } from './prenotazioniUtils';
-import { PlusIcon } from '../../components/icons'; // ✅ Import aggiunto
+import { PlusIcon } from '../../components/icons'; // âœ… Import aggiunto
 import OrarioBloccatoCreateModal from '../../components/OrarioBloccatoCreateModal';
 const OrarioBloccatoContextMenu = lazy(() => import('../../components/OrarioBloccatoContextMenu/OrarioBloccatoContextMenu'));
 
@@ -146,11 +146,11 @@ function PrenotazioniCalendario() {
 
   // Days of week mapping for studio hours
   const daysOfWeek = [
-    { value: 'LUNEDI', label: 'Lunedì' },
-    { value: 'MARTEDI', label: 'Martedì' },
-    { value: 'MERCOLEDI', label: 'Mercoledì' },
-    { value: 'GIOVEDI', label: 'Giovedì' },
-    { value: 'VENERDI', label: 'Venerdì' },
+    { value: 'LUNEDI', label: 'LunedÃ¬' },
+    { value: 'MARTEDI', label: 'MartedÃ¬' },
+    { value: 'MERCOLEDI', label: 'MercoledÃ¬' },
+    { value: 'GIOVEDI', label: 'GiovedÃ¬' },
+    { value: 'VENERDI', label: 'VenerdÃ¬' },
     { value: 'SABATO', label: 'Sabato' },
     { value: 'DOMENICA', label: 'Domenica' }
   ];
@@ -167,7 +167,7 @@ function PrenotazioniCalendario() {
       }
 
       const data = await response.json();
-      console.log('Raw prenotazioni data from backend:', data);
+      if (process.env.NODE_ENV === 'development') console.log('Raw prenotazioni data from backend:', data);
 
       // Transform backend data to match frontend format
       const transformedData = data.map(p => {
@@ -219,11 +219,11 @@ function PrenotazioniCalendario() {
         };
       });
 
-      console.log('Transformed prenotazioni data:', transformedData);
+      if (process.env.NODE_ENV === 'development') console.log('Transformed prenotazioni data:', transformedData);
       setPrenotazioni(transformedData);
 
     } catch (err) {
-      console.error('Error fetching prenotazioni:', err);
+      logger.error('Error fetching prenotazioni:', err);
       setError(err.message);
       setPrenotazioni([]);
     } finally {
@@ -251,7 +251,7 @@ function PrenotazioniCalendario() {
           setPrestazioni(prestazioniArray);
         }
       } catch (error) {
-        console.error('Error fetching prestazioni:', error);
+        logger.error('Error fetching prestazioni:', error);
       } finally {
         setLoadingPrestazioni(false);
       }
@@ -272,7 +272,7 @@ function PrenotazioniCalendario() {
           setSpecificOrari(data.specificOrari || []);
         }
       } catch (error) {
-        console.error('Error fetching studio hours:', error);
+        logger.error('Error fetching studio hours:', error);
       } finally {
         setLoadingStudioHours(false);
       }
@@ -298,7 +298,7 @@ function PrenotazioniCalendario() {
           }
         }
       } catch (error) {
-        console.error('Error fetching blocked times:', error);
+        logger.error('Error fetching blocked times:', error);
         setBlockedTimes([]);
       } finally {
         setLoadingBlockedTimes(false);
@@ -427,7 +427,7 @@ function PrenotazioniCalendario() {
         const endMin = startMin + realDuration;
         map[dayIdx].push({ ...p, _start: startMin, _end: endMin, _startDate: start, durataMinuti: realDuration });
       } catch (error) {
-        console.error('Error parsing date for prenotazione:', p.id, error);
+        logger.error('Error parsing date for prenotazione:', p.id, error);
       }
     });
     return map.map((dayEvents) => layoutDayEvents(dayEvents));
@@ -463,7 +463,7 @@ function PrenotazioniCalendario() {
           });
         }
       } catch (error) {
-        console.error('Error parsing blocked time:', blocked.id, error);
+        logger.error('Error parsing blocked time:', blocked.id, error);
       }
     });
     return map;
@@ -556,7 +556,7 @@ function PrenotazioniCalendario() {
         </div>
         <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
           <button className="btn-clear-filters" onClick={() => navigate('/')}>
-            ← Dashboard
+            â† Dashboard
           </button>
           <button className="btn-clear-filters" onClick={() => navigate('/prenotazioni/programma')}>
             Vista Lista
@@ -574,9 +574,9 @@ function PrenotazioniCalendario() {
 
       <div className="cal-toolbar">
         <div className="cal-nav">
-          <button className="cal-nav-btn" onClick={goToPrevWeek} aria-label="Settimana precedente">‹</button>
+          <button className="cal-nav-btn" onClick={goToPrevWeek} aria-label="Settimana precedente">â€¹</button>
           <button className="cal-today-btn" onClick={goToToday}>Oggi</button>
-          <button className="cal-nav-btn" onClick={goToNextWeek} aria-label="Settimana successiva">›</button>
+          <button className="cal-nav-btn" onClick={goToNextWeek} aria-label="Settimana successiva">â€º</button>
           <span className="cal-range-label">{formatRangeLabel(weekStart)}</span>
 
           <div className="cal-date-input">
@@ -602,13 +602,13 @@ function PrenotazioniCalendario() {
 
                   // Check if date is valid
                   if (isNaN(selectedDate.getTime())) {
-                    console.error('Invalid date selected');
+                    logger.error('Invalid date selected');
                     return;
                   }
 
                   setWeekStart(getMonday(selectedDate));
                 } catch (error) {
-                  console.error('Error handling date selection:', error);
+                  logger.error('Error handling date selection:', error);
                   // Keep current week if any error occurs
                 }
               }}
@@ -736,7 +736,7 @@ function PrenotazioniCalendario() {
                     const leftPct = ev._col * widthPct;
                     const isCompact = height < 40;
                     const endDate = new Date(ev._startDate.getTime() + ev.durataMinuti * 60000);
-                    const timeLabel = `${ev._startDate.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}–${endDate.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}`;
+                    const timeLabel = `${ev._startDate.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}â€“${endDate.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}`;
 
                     const prestazioneColor = getPrestazioneColor(ev.motivo, prestazioni);
                     const prestazioneClass = getPrestazioneClass(ev.motivo, prestazioni);
@@ -805,7 +805,7 @@ function PrenotazioniCalendario() {
                   {blockedTimesByDay[dayIdx].map((blocked) => {
                     const top = (blocked._start / SLOT_MIN) * SLOT_HEIGHT;
                     const height = Math.max(((blocked._end - blocked._start) / SLOT_MIN) * SLOT_HEIGHT - 2, 20);
-                    const timeLabel = `${blocked._startDate.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}–${blocked._endDate.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}`;
+                    const timeLabel = `${blocked._startDate.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}â€“${blocked._endDate.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}`;
 
                     return (
                       <Suspense key={`blocked-${blocked.id}`} fallback={<div className="cal-blocked-time" style={{ top, height, left: '2px', width: 'calc(100% - 4px)' }} />}>
@@ -866,7 +866,7 @@ function PrenotazioniCalendario() {
                   setBlockedTimes(data || []);
                 }
               } catch (error) {
-                console.error('Error refreshing blocked times:', error);
+                logger.error('Error refreshing blocked times:', error);
               }
             };
             fetchBlockedTimes();
@@ -881,7 +881,7 @@ function PrenotazioniCalendario() {
             <div className="cal-legend-popup-header">
               <h3>Tutte le Prestazioni</h3>
               <button className="cal-legend-popup-close" onClick={() => setShowLegendPopup(false)}>
-                ×
+                Ã—
               </button>
             </div>
             <div className="cal-legend-popup-content">
@@ -889,7 +889,7 @@ function PrenotazioniCalendario() {
                 <div key={p.id} className="cal-legend-popup-item">
                   <span className="cal-legend-popup-dot" style={{ backgroundColor: p.colore || '#6B7280' }}></span>
                   <span className="cal-legend-popup-label">{p.nomePrestazione}</span>
-                  <span className="cal-legend-popup-cost">€{p.costoBase?.toFixed(2) || '0.00'}</span>
+                  <span className="cal-legend-popup-cost">â‚¬{p.costoBase?.toFixed(2) || '0.00'}</span>
                 </div>
               ))}
             </div>

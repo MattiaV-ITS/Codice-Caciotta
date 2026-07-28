@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useApi } from '../../services/apiService';
 import { useAuth } from '../../context/AuthContext';
@@ -29,7 +29,7 @@ function VisitePagina() {
   const { user } = useAuth();
   const isStaffOrAdmin = user?.roles?.some(r => r === 'ROLE_STAFF' || r === 'ROLE_ADMIN');
 
-  // ID della visita più recente per data (per il pulsante "Torna alla visita corrente")
+  // ID della visita piÃ¹ recente per data (per il pulsante "Torna alla visita corrente")
   const visitaCorrenteId = visite.length > 0 ? Math.max(...visite.map(v => {
     const date = parseDate(v.dataOraVisita);
     return date ? date.getTime() : 0;
@@ -129,7 +129,7 @@ function VisitePagina() {
         }
 
       } catch (error) {
-        console.error('Error fetching data:', error);
+        logger.error('Error fetching data:', error);
         setError(error.message || 'Failed to load visita data');
       } finally {
         setIsLoading(false);
@@ -190,7 +190,7 @@ function VisitePagina() {
         navigate(`/visite/${createdVisita.id}`);
       }
     } catch (err) {
-      // Rilancia l'errore per farlo gestire a VisitaForm (che lo mostrerà nel form)
+      // Rilancia l'errore per farlo gestire a VisitaForm (che lo mostrerÃ  nel form)
       throw err;
     } finally {
       setIsSaving(false);
@@ -232,7 +232,7 @@ function VisitePagina() {
   if (!visita || !animale) {
     return (
       <div className="error-wrapper">
-        <div className="error-icon" style={{ color: '#C62828', fontSize: '32px', fontWeight: 'bold' }}>✕</div>
+        <div className="error-icon" style={{ color: '#C62828', fontSize: '32px', fontWeight: 'bold' }}>âœ•</div>
         <h3>Dati non disponibili</h3>
         <p>Impossibile caricare i dati della visita o dell'animale</p>
         <button className="btn btn-primary" onClick={() => window.location.reload()}>Riprova</button>
@@ -339,7 +339,7 @@ function VisitePagina() {
                       className="btn btn-primary btn-sm"
                       onClick={goToVisitaCorrente}
                     >
-                      ← Torna alla visita corrente
+                      â† Torna alla visita corrente
                     </button>
                   </div>
                 )}

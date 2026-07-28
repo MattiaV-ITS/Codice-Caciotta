@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Simple utility for loading full data without creating circular dependencies
  */
 
@@ -25,7 +25,7 @@ export function loadFullAnimaleData(animaleId, onSuccess, onError) {
   })
   .then(data => onSuccess(data))
   .catch(error => {
-    console.error('Error loading full animale data:', error);
+    logger.error('Error loading full animale data:', error);
     if (onError) onError(error);
   });
 }
@@ -53,7 +53,7 @@ export function loadFullProprietarioData(proprietarioId, onSuccess, onError) {
   })
   .then(data => onSuccess(data))
   .catch(error => {
-    console.error('Error loading full proprietario data:', error);
+    logger.error('Error loading full proprietario data:', error);
     if (onError) onError(error);
   });
 }

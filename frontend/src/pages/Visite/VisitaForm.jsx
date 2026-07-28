@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+﻿import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useApi } from '../../services/apiService';
 import { formatDate, getCurrentISODatetime, parseDate, toISODatetimeFormat, toISODateFormat } from '../../utils/dateUtils';
@@ -176,7 +176,7 @@ function VisitaForm({ visita, animale, proprietario, onSave, onCancel, isSaving,
         }
       } catch (error) {
         if (!cancelled) {
-          console.error('Error fetching prestazioni:', error);
+          logger.error('Error fetching prestazioni:', error);
           setErrorPrestazioni('Errore nel caricamento delle prestazioni');
         }
       } finally {
@@ -214,7 +214,7 @@ function VisitaForm({ visita, animale, proprietario, onSave, onCancel, isSaving,
           }
         } catch (error) {
           if (!cancelled) {
-            console.error('Error fetching fattura data:', error);
+            logger.error('Error fetching fattura data:', error);
             setFatturaEsistente(false);
             setFatturaData(null);
           }
@@ -358,12 +358,12 @@ function VisitaForm({ visita, animale, proprietario, onSave, onCancel, isSaving,
     if (formData.tipoVisita === 'Altro' && !formData.altroTipoVisita?.trim()) {
       newErrors.altroTipoVisita = 'Specifica il tipo di visita';
     }
-    // Se la fine è anteriore all'inizio → errore
+    // Se la fine Ã¨ anteriore all'inizio â†’ errore
     if (formData.dataOraVisita && formData.dataOraFine) {
       const start = new Date(formData.dataOraVisita);
       const end = new Date(formData.dataOraFine);
       if (!isNaN(start.getTime()) && !isNaN(end.getTime()) && end < start) {
-        newErrors.dataOraFine = 'La fine non può essere precedente all\'inizio';
+        newErrors.dataOraFine = 'La fine non puÃ² essere precedente all\'inizio';
       }
     }
     setErrors(newErrors);
@@ -402,7 +402,7 @@ function VisitaForm({ visita, animale, proprietario, onSave, onCancel, isSaving,
 
       await onSave(visitaData);
     } catch (error) {
-      console.error('Error saving visita:', error);
+      logger.error('Error saving visita:', error);
       setFormError(error.message || 'Errore durante il salvataggio della visita');
     }
   };
@@ -424,7 +424,7 @@ function VisitaForm({ visita, animale, proprietario, onSave, onCancel, isSaving,
     if (!formData.id && formData.dataOraFine === formData.dataOraVisita) {
       const now = new Date();
       const nowStr = now.toLocaleString('it-IT', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' });
-      const message = `La data/ora fine è uguale all'inizio. Vuoi impostarla all'ora corrente (${nowStr})?`;
+      const message = `La data/ora fine Ã¨ uguale all'inizio. Vuoi impostarla all'ora corrente (${nowStr})?`;
       setShowConfirmModal(true);
       setPendingSave(now.toISOString());
       return;
@@ -572,11 +572,11 @@ function VisitaForm({ visita, animale, proprietario, onSave, onCancel, isSaving,
             <div className={`visite-edit-mode-banner ${editMode ? 'edit-mode' : 'read-only-mode'}`}>
               {editMode ? (
                 <>
-                  <strong>Modalità Modifica</strong>
+                  <strong>ModalitÃ  Modifica</strong>
                 </>
               ) : (
                 <>
-                  <strong>Modalità Solo Lettura</strong>
+                  <strong>ModalitÃ  Solo Lettura</strong>
                 </>
               )}
             </div>
@@ -604,7 +604,7 @@ function VisitaForm({ visita, animale, proprietario, onSave, onCancel, isSaving,
                 <div className="visite-fattura-row">
                   <span className="visite-fattura-label">Importo:</span>
                   <span className="visite-fattura-value fattura-importo">
-                    {fatturaData.importoTotale ? fatturaData.importoTotale.toFixed(2) + ' €' : 'N/D'}
+                    {fatturaData.importoTotale ? fatturaData.importoTotale.toFixed(2) + ' â‚¬' : 'N/D'}
                   </span>
                 </div>
                 <div className="visite-fattura-row">
@@ -624,7 +624,7 @@ function VisitaForm({ visita, animale, proprietario, onSave, onCancel, isSaving,
                             setFatturaData(updated);
                           }
                         } catch (err) {
-                          console.error('Errore aggiornamento pagamento:', err);
+                          logger.error('Errore aggiornamento pagamento:', err);
                         } finally {
                           setTogglingPagamento(false);
                         }
@@ -721,7 +721,7 @@ function VisitaForm({ visita, animale, proprietario, onSave, onCancel, isSaving,
               {hasError('dataOraFine') && <div className="form-error">{errors.dataOraFine}</div>}
               {!formData.id && formData.dataOraFine === formData.dataOraVisita && (
                 <div className="visite-form-hint">
-                  La fine è uguale all'inizio. Al salvataggio potrai scegliere se impostarla all'ora corrente.
+                  La fine Ã¨ uguale all'inizio. Al salvataggio potrai scegliere se impostarla all'ora corrente.
                 </div>
               )}
             </div>
@@ -756,7 +756,7 @@ function VisitaForm({ visita, animale, proprietario, onSave, onCancel, isSaving,
                           value={prestazione.nomePrestazione}
                           disabled={!isAvailable}
                         >
-                          {prestazione.nomePrestazione} - €{prestazione.costoBase?.toFixed(2) || '0.00'}
+                          {prestazione.nomePrestazione} - â‚¬{prestazione.costoBase?.toFixed(2) || '0.00'}
                           {!isAvailable ? ' (Non disponibile)' : ''}
                         </option>
                       );
@@ -834,7 +834,7 @@ function VisitaForm({ visita, animale, proprietario, onSave, onCancel, isSaving,
                       type="button" 
                       className="btn btn-secondary"
                       disabled={true}
-                      title="Esiste già una fattura per questa visita"
+                      title="Esiste giÃ  una fattura per questa visita"
                     >
                       <InvoiceIcon width={16} height={16} style={{ marginRight: '6px' }} />
                       Fattura Esistente
@@ -861,7 +861,7 @@ function VisitaForm({ visita, animale, proprietario, onSave, onCancel, isSaving,
       {/* Modale di conferma */}
       <ConfirmModal
         isOpen={showConfirmModal}
-        message="La data/ora fine è uguale all'inizio. Vuoi impostarla all'ora corrente?"
+        message="La data/ora fine Ã¨ uguale all'inizio. Vuoi impostarla all'ora corrente?"
         onConfirm={handleConfirmModal}
         onCancel={handleCancelModal}
       />

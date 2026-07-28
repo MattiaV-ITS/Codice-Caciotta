@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState, useCallback, lazy, Suspense } from 'react';
+﻿import React, { useEffect, useMemo, useRef, useState, useCallback, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './PrenotazioniProgramma.css';
 import './PrenotazioniCalendario.css';
@@ -13,7 +13,7 @@ import {
   getPrestazioneLegenda,
   FALLBACK_COLOR
 } from './prenotazioniUtils';
-import { PlusIcon } from '../../components/icons'; // ✅ Aggiunto
+import { PlusIcon } from '../../components/icons'; // âœ… Aggiunto
 import OrarioBloccatoCreateModal from '../../components/OrarioBloccatoCreateModal';
 
 const GIORNI_BREVI = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
@@ -59,7 +59,7 @@ function formatGapRange(start, end) {
 function formatTimeRange(start, minutes) {
   const end = new Date(start.getTime() + (minutes || 30) * 60000);
   const opt = { hour: '2-digit', minute: '2-digit' };
-  return `${start.toLocaleTimeString('it-IT', opt)} – ${end.toLocaleTimeString('it-IT', opt)}`;
+  return `${start.toLocaleTimeString('it-IT', opt)} â€“ ${end.toLocaleTimeString('it-IT', opt)}`;
 }
 
 // ==============================
@@ -148,7 +148,7 @@ function PrenotazioniProgramma() {
       setPrenotazioni(transformedData);
       
     } catch (err) {
-      console.error('Error fetching prenotazioni:', err);
+      logger.error('Error fetching prenotazioni:', err);
       setError(err.message);
       // Show empty array on error
       setPrenotazioni([]);
@@ -183,7 +183,7 @@ function PrenotazioniProgramma() {
           setPrestazioni(prestazioniArray);
         }
       } catch (error) {
-        console.error('Error fetching prestazioni:', error);
+        logger.error('Error fetching prestazioni:', error);
       } finally {
         setLoadingPrestazioni(false);
       }
@@ -204,7 +204,7 @@ function PrenotazioniProgramma() {
           setSpecificOrari(data.specificOrari || []);
         }
       } catch (error) {
-        console.error('Error fetching studio hours:', error);
+        logger.error('Error fetching studio hours:', error);
       } finally {
         setLoadingStudioHours(false);
       }
@@ -230,7 +230,7 @@ function PrenotazioniProgramma() {
           }
         }
       } catch (error) {
-        console.error('Error fetching blocked times:', error);
+        logger.error('Error fetching blocked times:', error);
         setBlockedTimes([]);
       } finally {
         setLoadingBlockedTimes(false);
@@ -254,7 +254,7 @@ function PrenotazioniProgramma() {
         const realDuration = getPrestazioneDuration(p.motivo, prestazioni);
         map.get(key).events.push({ ...p, _start: start, durataMinuti: realDuration });
       } catch (error) {
-        console.error('Error parsing date for prenotazione:', p.id, error);
+        logger.error('Error parsing date for prenotazione:', p.id, error);
         // Skip this prenotazione if date parsing fails
       }
     });
@@ -340,7 +340,7 @@ function PrenotazioniProgramma() {
         </div>
         <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
           <button className="btn-clear-filters" onClick={() => navigate('/')}>
-            ← Dashboard
+            â† Dashboard
           </button>
           <button className="btn-clear-filters" onClick={() => navigate('/prenotazioni/calendario')}>
             Vista Calendario
@@ -495,7 +495,7 @@ function PrenotazioniProgramma() {
                   setBlockedTimes(data || []);
                 }
               } catch (error) {
-                console.error('Error refreshing blocked times:', error);
+                logger.error('Error refreshing blocked times:', error);
               }
             };
             fetchBlockedTimes();
@@ -511,7 +511,7 @@ function PrenotazioniProgramma() {
             <div className="cal-legend-popup-header">
               <h3>Tutte le Prestazioni</h3>
               <button className="cal-legend-popup-close" onClick={() => setShowLegendPopup(false)}>
-                ×
+                Ã—
               </button>
             </div>
             <div className="cal-legend-popup-content">
@@ -519,7 +519,7 @@ function PrenotazioniProgramma() {
                 <div key={p.id} className="cal-legend-popup-item">
                   <span className="cal-legend-popup-dot" style={{ backgroundColor: p.colore || '#6B7280' }}></span>
                   <span className="cal-legend-popup-label">{p.nomePrestazione}</span>
-                  <span className="cal-legend-popup-cost">€{p.costoBase?.toFixed(2) || '0.00'}</span>
+                  <span className="cal-legend-popup-cost">â‚¬{p.costoBase?.toFixed(2) || '0.00'}</span>
                 </div>
               ))}
             </div>

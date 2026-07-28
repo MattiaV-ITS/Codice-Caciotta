@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useApi } from '../../services/apiService';
 import FormModal from '../../components/FormModal/FormModal';
@@ -26,7 +26,7 @@ function PrestazioneCreate() {
   const [loading, setLoading] = useState(isEditMode);
   const [loadError, setLoadError] = useState(null);
 
-  // Carica i dati esistenti in modalità modifica
+  // Carica i dati esistenti in modalitÃ  modifica
   useEffect(() => {
     if (!isEditMode) return;
 
@@ -47,7 +47,7 @@ function PrestazioneCreate() {
           note: data.note || ''
         });
       } catch (err) {
-        console.error('Failed to load prestazione:', err);
+        logger.error('Failed to load prestazione:', err);
         setLoadError(err);
       } finally {
         setLoading(false);
@@ -81,7 +81,7 @@ function PrestazioneCreate() {
   const validateField = (name, value) => {
     switch (name) {
       case 'nomePrestazione':
-        return !value.trim() ? 'Il nome della prestazione è obbligatorio' : '';
+        return !value.trim() ? 'Il nome della prestazione Ã¨ obbligatorio' : '';
       case 'durataStimata':
         return isNaN(value) || value <= 0 ? 'La durata deve essere un numero positivo' : '';
       case 'costoBase':
@@ -134,10 +134,10 @@ function PrestazioneCreate() {
           navigate('/prestazioni');
         } else {
           const errorData = await response.json();
-          console.error(`Error ${isEditMode ? 'updating' : 'creating'} prestazione:`, errorData);
+          logger.error(`Error ${isEditMode ? 'updating' : 'creating'} prestazione:`, errorData);
         }
       } catch (error) {
-        console.error(`Error ${isEditMode ? 'updating' : 'creating'} prestazione:`, error);
+        logger.error(`Error ${isEditMode ? 'updating' : 'creating'} prestazione:`, error);
       }
     }
   };
@@ -203,7 +203,7 @@ function PrestazioneCreate() {
 
         {/* Costo Base */}
         <div className="form-group">
-          <label className="form-label">Costo Base (€) *</label>
+          <label className="form-label">Costo Base (â‚¬) *</label>
           <input
             type="number"
             name="costoBase"

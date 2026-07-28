@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useApi } from '../services/apiService';
+import logger from '../utils/logger';
 
 const FatturaSemplificataModal = ({ visitaId, proprietario, animale, onClose, onSuccess }) => {
   const { post, get } = useApi();
@@ -48,7 +49,7 @@ const FatturaSemplificataModal = ({ visitaId, proprietario, animale, onClose, on
           }
         }
       } catch (error) {
-        console.error('Error fetching importo from prestazioni:', error);
+        logger.error('Error fetching importo from prestazioni:', error);
       }
     };
 
@@ -89,15 +90,13 @@ const FatturaSemplificataModal = ({ visitaId, proprietario, animale, onClose, on
                     return;
                   }
                 } catch (error) {
-                  console.error('Failed to fetch proprietario data:', error);
+                  logger.error('Failed to fetch proprietario data:', error);
                 }
               }
             }
           } catch (error) {
-            console.error('Failed to fetch animale data:', error);
+            logger.error('Failed to fetch animale data:', error);
           }
-          
-          console.warn('Failed to fetch proprietario data');
         } else if (proprietario) {
           // Se il proprietario ha un codice fiscale, usalo come default
           if (proprietario.codiceFiscale) {
@@ -110,11 +109,9 @@ const FatturaSemplificataModal = ({ visitaId, proprietario, animale, onClose, on
           if (proprietario.citta) {
             setFormData(prev => ({ ...prev, cittaCliente: proprietario.citta }));
           }
-        } else {
-          console.log('No proprietario data available'); // Debug log
         }
       } catch (error) {
-        console.error('Error fetching proprietario data:', error);
+        logger.error('Error fetching proprietario data:', error);
       }
     };
     
@@ -185,7 +182,7 @@ const FatturaSemplificataModal = ({ visitaId, proprietario, animale, onClose, on
       }
       
     } catch (err) {
-      console.error('Error creating fattura:', err);
+      logger.error('Error creating fattura:', err);
       let errorMessage = 'Errore durante la creazione della fattura semplificata';
       
       // Handle specific error cases

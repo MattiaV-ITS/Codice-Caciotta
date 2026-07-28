@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useApi } from '../../services/apiService';
 import FormModal from '../FormModal/FormModal';
 import './VaccinazioneCreateModal.css';
@@ -30,15 +30,15 @@ const VaccinazioneCreateModal = ({
     const newErrors = {};
 
     if (!formData.tipoVaccino) {
-      newErrors.tipoVaccino = 'Il tipo di vaccino è obbligatorio';
+      newErrors.tipoVaccino = 'Il tipo di vaccino Ã¨ obbligatorio';
     }
 
     if (!formData.dataSomministrazione) {
-      newErrors.dataSomministrazione = 'La data di somministrazione è obbligatoria';
+      newErrors.dataSomministrazione = 'La data di somministrazione Ã¨ obbligatoria';
     }
 
     if (!formData.dataScadenza) {
-      newErrors.dataScadenza = 'La data di scadenza è obbligatoria';
+      newErrors.dataScadenza = 'La data di scadenza Ã¨ obbligatoria';
     }
 
     if (
@@ -46,11 +46,11 @@ const VaccinazioneCreateModal = ({
       formData.dataSomministrazione &&
       formData.dataScadenza < formData.dataSomministrazione
     ) {
-      newErrors.dataScadenza = 'La data di scadenza non può precedere la somministrazione';
+      newErrors.dataScadenza = 'La data di scadenza non puÃ² precedere la somministrazione';
     }
 
     if (!formData.lotto) {
-      newErrors.lotto = 'Il numero di lotto è obbligatorio';
+      newErrors.lotto = 'Il numero di lotto Ã¨ obbligatorio';
     }
 
     setErrors(newErrors);
@@ -119,7 +119,7 @@ const VaccinazioneCreateModal = ({
       onClose();
 
     } catch (error) {
-      console.error('Error creating vaccinazione:', error);
+      logger.error('Error creating vaccinazione:', error);
       setSubmitError(`Errore durante la creazione della vaccinazione: ${error.message}`);
     } finally {
       setIsSubmitting(false);

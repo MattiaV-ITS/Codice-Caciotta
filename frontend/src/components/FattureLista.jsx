@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useApi } from '../services/apiService';
 import DocumentiAllegati from './Documenti/DocumentiAllegati';
 
@@ -30,7 +30,7 @@ const FattureLista = ({ visitaId, animaleId }) => {
           setFatture(data);
         }
       } catch (err) {
-        console.error('Error fetching fatture:', err);
+        logger.error('Error fetching fatture:', err);
         setError(err.message || 'Errore durante il recupero delle fatture');
       } finally {
         setIsLoading(false);
@@ -62,7 +62,7 @@ const FattureLista = ({ visitaId, animaleId }) => {
         </div>
         <div className="visite-card-body">
           <div className="error-message">
-            <span className="error-icon">⚠️</span>
+            <span className="error-icon">âš ï¸</span>
             <p>{error}</p>
           </div>
         </div>
@@ -85,7 +85,7 @@ const FattureLista = ({ visitaId, animaleId }) => {
               <li key={fattura.id} className="fatture-list-item">
                 <div className="fatture-list-header">
                   <span className="fattura-tipo-badge">
-                    📄 Fattura
+                    ðŸ“„ Fattura
                   </span>
                 </div>
                 <div className="fatture-list-details">
@@ -98,7 +98,7 @@ const FattureLista = ({ visitaId, animaleId }) => {
                   <div className="fattura-info">
                     <span className="fattura-label">Importo:</span>
                     <span className="fattura-value fattura-importo">
-                      {fattura.importoTotale.toFixed(2)} €
+                      {fattura.importoTotale.toFixed(2)} â‚¬
                     </span>
                   </div>
                   {fattura.dettaglioServizi && (
@@ -142,7 +142,7 @@ const FattureLista = ({ visitaId, animaleId }) => {
                         onClick={() => setExpandedFatturaId(expandedFatturaId === fattura.id ? null : fattura.id)}
                         style={{ width: '100%', fontSize: '12px' }}
                       >
-                        {expandedFatturaId === fattura.id ? '📄 Nascondi scan' : '🧾 Scan fattura'}
+                        {expandedFatturaId === fattura.id ? 'ðŸ“„ Nascondi scan' : 'ðŸ§¾ Scan fattura'}
                       </button>
                       
                       {expandedFatturaId === fattura.id && (

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useApi } from '../../services/apiService';
 import { usePrenotazioneForm } from '../../hooks/usePrenotazioneForm';
@@ -47,7 +47,7 @@ function PrenotazioneCreateUser({ onClose, onSuccess }) {
           }
         }
       } catch (error) {
-        console.error('Error fetching user data:', error);
+        logger.error('Error fetching user data:', error);
       } finally {
         setLoadingAnimali(false);
       }
@@ -140,7 +140,7 @@ function PrenotazioneCreateUser({ onClose, onSuccess }) {
                       value={prestazione.nomePrestazione}
                       disabled={!isAvailable}
                     >
-                      {prestazione.nomePrestazione} - €{prestazione.costoBase?.toFixed(2) || '0.00'}
+                      {prestazione.nomePrestazione} - â‚¬{prestazione.costoBase?.toFixed(2) || '0.00'}
                       {!isAvailable ? ' (Non disponibile)' : ''}
                     </option>
                   );

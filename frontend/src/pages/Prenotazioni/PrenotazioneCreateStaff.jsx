@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+﻿import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useApi } from '../../services/apiService';
 import { usePrenotazioneForm } from '../../hooks/usePrenotazioneForm';
@@ -78,7 +78,7 @@ function PrenotazioneCreateStaff({ onClose, onSuccess }) {
             setShowAnimaleSuggestions(false);
           }
         } catch (error) {
-          console.error('Error searching animali:', error);
+          logger.error('Error searching animali:', error);
           setAnimaleSuggestions([]);
           setShowAnimaleSuggestions(false);
         }
@@ -134,7 +134,7 @@ function PrenotazioneCreateStaff({ onClose, onSuccess }) {
             setShowProprietarioSuggestions(false);
           }
         } catch (error) {
-          console.error('Error searching proprietari:', error);
+          logger.error('Error searching proprietari:', error);
           setProprietarioSuggestions([]);
           setShowProprietarioSuggestions(false);
         }
@@ -178,7 +178,7 @@ function PrenotazioneCreateStaff({ onClose, onSuccess }) {
           setSelectedAnimale(animale);
         }
       } catch (error) {
-        console.error('Error fetching proprietario:', error);
+        logger.error('Error fetching proprietario:', error);
         setSelectedAnimale(animale);
       }
     } else {
@@ -263,9 +263,9 @@ function PrenotazioneCreateStaff({ onClose, onSuccess }) {
                 {a.nome}
               </div>
               <div style={{ fontSize: '12px', color: 'var(--gray-500)' }}>
-                {a.specie} {a.razza ? `• ${a.razza}` : ''}
-                {a.proprietarioNome && a.proprietarioNome !== 'Sconosciuto' ? ` • ${a.proprietarioNome}` : ''}
-                {a.microchip ? ` • Microchip: ${a.microchip}` : ''}
+                {a.specie} {a.razza ? `â€¢ ${a.razza}` : ''}
+                {a.proprietarioNome && a.proprietarioNome !== 'Sconosciuto' ? ` â€¢ ${a.proprietarioNome}` : ''}
+                {a.microchip ? ` â€¢ Microchip: ${a.microchip}` : ''}
               </div>
             </div>
             <div style={{
@@ -324,7 +324,7 @@ function PrenotazioneCreateStaff({ onClose, onSuccess }) {
                 {p.nome} {p.cognome}
               </div>
               <div style={{ fontSize: '12px', color: 'var(--gray-500)' }}>
-                {p.telefono ? `Tel: ${p.telefono} • ` : ''}
+                {p.telefono ? `Tel: ${p.telefono} â€¢ ` : ''}
                 {p.email}
               </div>
             </div>
@@ -387,7 +387,7 @@ function PrenotazioneCreateStaff({ onClose, onSuccess }) {
                   transform: 'translateY(-50%)', background: 'none',
                   border: 'none', color: 'var(--gray-400)', cursor: 'pointer',
                   fontSize: '16px', padding: '0 4px',
-                }}>×</button>
+                }}>Ã—</button>
               )}
             </div>
             {hasError('proprietarioId') && <div className="form-error">{errors.proprietarioId}</div>}
@@ -400,10 +400,10 @@ function PrenotazioneCreateStaff({ onClose, onSuccess }) {
               borderRadius: 'var(--radius)', border: '1px solid rgba(42, 157, 143, 0.2)',
             }}>
               <span style={{ fontWeight: 600, color: 'var(--success)', fontSize: '13px' }}>
-                ✓ {selectedProprietario ? `${selectedProprietario.nome || ''} ${selectedProprietario.cognome || ''}`.trim() : 'Proprietario'}
+                âœ“ {selectedProprietario ? `${selectedProprietario.nome || ''} ${selectedProprietario.cognome || ''}`.trim() : 'Proprietario'}
               </span>
               <span style={{ fontSize: '12px', color: 'var(--gray-500)' }}>
-                {selectedProprietario?.telefono ? `Tel: ${selectedProprietario.telefono} • ` : ''}
+                {selectedProprietario?.telefono ? `Tel: ${selectedProprietario.telefono} â€¢ ` : ''}
                 {selectedProprietario?.email || ''}
               </span>
             </div>
@@ -447,7 +447,7 @@ function PrenotazioneCreateStaff({ onClose, onSuccess }) {
                   transform: 'translateY(-50%)', background: 'none',
                   border: 'none', color: 'var(--gray-400)', cursor: 'pointer',
                   fontSize: '16px', padding: '0 4px',
-                }}>×</button>
+                }}>Ã—</button>
               )}
             </div>
             {hasError('animaleId') && <div className="form-error">{errors.animaleId}</div>}
@@ -460,10 +460,10 @@ function PrenotazioneCreateStaff({ onClose, onSuccess }) {
               borderRadius: 'var(--radius)', border: '1px solid rgba(42, 157, 143, 0.2)',
             }}>
               <span style={{ fontWeight: 600, color: 'var(--primary)', fontSize: '13px' }}>
-                ✓ {selectedAnimale.nome}
+                âœ“ {selectedAnimale.nome}
               </span>
               <span style={{ fontSize: '12px', color: 'var(--gray-500)' }}>
-                {selectedAnimale.specie} {selectedAnimale.razza ? `• ${selectedAnimale.razza}` : ''}
+                {selectedAnimale.specie} {selectedAnimale.razza ? `â€¢ ${selectedAnimale.razza}` : ''}
               </span>
               <span style={{ fontSize: '11px', color: 'var(--gray-400)', marginLeft: 'auto' }}>
                 {selectedAnimale.proprietarioNome}
@@ -501,7 +501,7 @@ function PrenotazioneCreateStaff({ onClose, onSuccess }) {
                       value={prestazione.nomePrestazione}
                       disabled={!isAvailable}
                     >
-                      {prestazione.nomePrestazione} - €{prestazione.costoBase?.toFixed(2) || '0.00'}
+                      {prestazione.nomePrestazione} - â‚¬{prestazione.costoBase?.toFixed(2) || '0.00'}
                       {!isAvailable ? ' (Non disponibile)' : ''}
                     </option>
                   );

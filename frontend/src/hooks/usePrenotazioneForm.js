@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+﻿import { useState, useEffect, useCallback } from 'react';
 import { useApi } from '../services/apiService';
 import { toISODatetimeFormat, toISODateFormat } from '../utils/dateUtils';
 
@@ -71,7 +71,7 @@ export function usePrenotazioneForm({ onClose, onSuccess }) {
 
         setLoadingPrestazioni(false);
       } catch (error) {
-        console.error('Error fetching reference data:', error);
+        logger.error('Error fetching reference data:', error);
         setErrorPrestazioni('Errore nel caricamento dei dati');
         setLoadingPrestazioni(false);
       }
@@ -92,7 +92,7 @@ export function usePrenotazioneForm({ onClose, onSuccess }) {
             setBlockedTimes(data || []);
           }
         } catch (error) {
-          console.error('Error fetching blocked times:', error);
+          logger.error('Error fetching blocked times:', error);
         } finally {
           setLoadingBlockedTimes(false);
         }
@@ -419,7 +419,7 @@ export function usePrenotazioneForm({ onClose, onSuccess }) {
         if (onSuccess) onSuccess(createdPrenotazione);
         if (onClose) onClose();
       } catch (error) {
-        console.error('Error creating prenotazione:', error);
+        logger.error('Error creating prenotazione:', error);
         setSubmitError(error.message || 'Errore nella creazione della prenotazione');
       } finally {
         setIsSubmitting(false);

@@ -16,8 +16,6 @@ import java.util.Objects;
 import java.util.List;
 import java.util.Optional;
 import java.math.BigDecimal;
-import java.io.StringWriter;
-import java.io.PrintWriter;
 import java.util.Map;
 import java.time.Year;
 
@@ -118,11 +116,6 @@ public class FatturaController {
             FatturaDTO dto = toDTO(savedFattura);
             return ResponseEntity.ok(dto);
         } catch (Exception e) {
-            System.out.println("ERROR: Exception during fattura creation: " + e.getClass().getSimpleName() + " - " + e.getMessage());
-            StringWriter sw = new StringWriter();
-            PrintWriter pw = new PrintWriter(sw);
-            e.printStackTrace(pw);
-            System.out.println(sw.toString());
             return ResponseEntity.status(500).build();
         }
     }
@@ -324,11 +317,6 @@ public class FatturaController {
             FatturaDTO dto = toDTO(savedFattura);
             return ResponseEntity.status(201).body(dto);
         } catch (Exception e) {
-            System.out.println("ERROR: Exception during fattura semplificata creation: " + e.getClass().getSimpleName() + " - " + e.getMessage());
-            StringWriter sw = new StringWriter();
-            PrintWriter pw = new PrintWriter(sw);
-            e.printStackTrace(pw);
-            System.out.println(sw.toString());
             return ResponseEntity.status(500).body(null);
         }
     }

@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+﻿import React, { useState, useMemo, useEffect } from 'react';
 import ProprietarioCreate from './ProprietarioCreate';
 import ListPageTemplate from '../../components/ListPageTemplate/ListPageTemplate';
 import { GearMenu } from '../../components/ContextMenu/ContextMenu';
@@ -52,7 +52,7 @@ function ProprietariLista() {
   const filterOptions = {
     label: 'Stato',
     options: statoOptions,
-    searchable: 'nome, cognome, telefono, email, codice fiscale o città'
+    searchable: 'nome, cognome, telefono, email, codice fiscale o cittÃ '
   };
 
   const customColumns = [
@@ -216,7 +216,7 @@ function ProprietariLista() {
         setShowEditModal(true);
       },
       (error) => {
-        console.error('Failed to load full proprietario data:', error);
+        logger.error('Failed to load full proprietario data:', error);
         setEditingProprietario(proprietario);
         setShowEditModal(true);
       }
@@ -232,7 +232,7 @@ function ProprietariLista() {
       setStatsRefreshIndex(prev => prev + 1);
       refetch();
     } catch (err) {
-      console.error('Failed to update proprietario status:', err);
+      logger.error('Failed to update proprietario status:', err);
     }
   };
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+﻿import React, { useState, useEffect, useCallback } from 'react';
 import { useApi } from '../../services/apiService';
 import { InvoiceIcon } from '../../components/icons';
 import './FattureStats.css';
@@ -26,7 +26,7 @@ function FattureStats() {
         throw new Error('Errore nel caricamento delle statistiche');
       }
     } catch (err) {
-      console.error('Error fetching fatture stats:', err);
+      logger.error('Error fetching fatture stats:', err);
       setError(err.message || 'Errore nel caricamento delle statistiche');
     } finally {
       setLoading(false);
@@ -38,8 +38,8 @@ function FattureStats() {
   }, [fetchStats]);
 
   const formatEuro = (value) => {
-    if (value === null || value === undefined) return '€ 0,00';
-    return '€ ' + Number(value).toLocaleString('it-IT', {
+    if (value === null || value === undefined) return 'â‚¬ 0,00';
+    return 'â‚¬ ' + Number(value).toLocaleString('it-IT', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2
     });

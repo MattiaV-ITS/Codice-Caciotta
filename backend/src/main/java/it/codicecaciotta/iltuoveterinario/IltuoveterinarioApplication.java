@@ -12,6 +12,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.beans.factory.annotation.Value;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import it.codicecaciotta.iltuoveterinario.models.ERuoli;
 import it.codicecaciotta.iltuoveterinario.models.Ruolo;
@@ -21,6 +23,7 @@ import it.codicecaciotta.iltuoveterinario.repositories.UtenteRepository;
 
 @SpringBootApplication
 public class IltuoveterinarioApplication {
+	private static final Logger logger = LoggerFactory.getLogger(IltuoveterinarioApplication.class);
 
 	public static void main(String[] args) {
 		SpringApplication.run(IltuoveterinarioApplication.class, args);
@@ -31,10 +34,10 @@ public class IltuoveterinarioApplication {
 	public CommandLineRunner testDatabaseConnection(JdbcTemplate jdbcTemplate) {
 		return args -> {
 			try {
-				String result = jdbcTemplate.queryForObject("SELECT version()", String.class);
-				System.out.println("Connected to PostgreSQL, version: " + result);
+				jdbcTemplate.queryForObject("SELECT version()", String.class);
+				logger.info("Database connection successful");
 			} catch (Exception e) {
-				System.err.println("PostgreSQL connection failed; error: " + e.getMessage());
+				logger.error("Database connection failed", e);
 			}
 		};
 	}

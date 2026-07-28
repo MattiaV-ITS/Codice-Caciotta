@@ -38,7 +38,10 @@ const PrenotazioneEditModal = ({
           setAnimali(animaliData.content || animaliData);
         }
       } catch (error) {
-        console.error('Error fetching animali:', error);
+        // Log only in dev mode
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Error fetching animali:', error);
+        }
       } finally {
         setLoadingAnimali(false);
       }
@@ -63,7 +66,9 @@ const PrenotazioneEditModal = ({
           setPrestazioni(prestazioniArray);
         }
       } catch (error) {
-        console.error('Error fetching prestazioni:', error);
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Error fetching prestazioni:', error);
+        }
         setErrorPrestazioni('Errore nel caricamento delle prestazioni');
       } finally {
         setLoadingPrestazioni(false);
@@ -80,11 +85,6 @@ const PrenotazioneEditModal = ({
   // Initialize form with prenotazione data
   useEffect(() => {
     if (prenotazione) {
-      console.log('Initializing form with prenotazione:', prenotazione);
-      console.log('Prenotazione animaleId:', prenotazione.animaleId);
-      console.log('Prenotazione animale:', prenotazione.animale);
-      console.log('Prenotazione proprietarioId:', prenotazione.proprietarioId);
-      console.log('Prenotazione proprietario:', prenotazione.proprietario);
       setFormData({
         dataOraAppuntamento: prenotazione.dataOraAppuntamento || '',
         tipoVisita: prenotazione.tipoVisita || '',
@@ -157,9 +157,6 @@ const PrenotazioneEditModal = ({
       const animaleId = prenotazione?.animaleId || prenotazione?.animale?.id || formData.animaleId;
       const proprietarioId = prenotazione?.proprietarioId || prenotazione?.proprietario?.id;
 
-      console.log('Submit data - prenotazione:', prenotazione);
-      console.log('Extract animaleId:', animaleId, '| proprietarioId:', proprietarioId);
-
       if (!animaleId) {
         throw new Error('Animal ID is missing from prenotazione data');
       }
@@ -175,8 +172,6 @@ const PrenotazioneEditModal = ({
         animaleId: animaleId,
         proprietarioId: proprietarioId
       };
-
-      console.log('Final payload being sent:', payload);
       
       const response = await put(`/api/prenotazioni/${prenotazione.id}`, payload);
       
@@ -200,7 +195,9 @@ const PrenotazioneEditModal = ({
       onClose();
       
     } catch (error) {
-      console.error('Error updating prenotazione:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error updating prenotazione:', error);
+      }
       alert(`Errore durante l'aggiornamento della prenotazione: ${error.message}`);
     } finally {
       setIsSubmitting(false);

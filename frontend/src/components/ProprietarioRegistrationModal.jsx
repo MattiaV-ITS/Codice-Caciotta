@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import FormModal from './FormModal/FormModal';
 import { validateRequired, validateEmail, validatePhone, validateFiscalCode } from '../utils/validationUtils';
 import { getCurrentISODate } from '../utils/dateUtils';
@@ -35,7 +35,7 @@ function ProprietarioRegistrationModal({ onClose, onSuccess, onSkip }) {
       case 'indirizzo':
         return validateRequired(value, "L'indirizzo");
       case 'citta':
-        return validateRequired(value, 'La città');
+        return validateRequired(value, 'La cittÃ ');
       case 'codiceFiscale':
         return validateFiscalCode(value);
       default:
@@ -117,8 +117,8 @@ function ProprietarioRegistrationModal({ onClose, onSuccess, onSkip }) {
         onClose();
         
       } catch (error) {
-        console.error('Errore nella creazione del proprietario:', error);
-        setSubmitError(error.message || 'Si è verificato un errore durante la creazione del proprietario');
+        logger.error('Errore nella creazione del proprietario:', error);
+        setSubmitError(error.message || 'Si Ã¨ verificato un errore durante la creazione del proprietario');
         setIsSubmitting(false);
       }
     }
@@ -232,9 +232,9 @@ function ProprietarioRegistrationModal({ onClose, onSuccess, onSkip }) {
                 {hasError('indirizzo') && <div className="form-error">{errors.indirizzo}</div>}
               </div>
 
-              {/* Città */}
+              {/* CittÃ  */}
               <div className="form-group">
-                <label className="form-label">Città *</label>
+                <label className="form-label">CittÃ  *</label>
                 <input
                   type="text"
                   name="citta"

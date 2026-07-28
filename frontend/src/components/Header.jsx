@@ -1,6 +1,7 @@
 // components/Header.jsx
 import { useAuth } from '../context/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
+import logger from '../utils/logger';
 import logo from '../../public/icon.svg';
 import './Header.css';
 
@@ -11,12 +12,10 @@ function Header({ onMenuToggle }) {
 
   const handleLogout = () => {
     try {
-      console.log('Logout button clicked');
       logout();
-      console.log('Logout function called, navigating to login');
       navigate('/login');
     } catch (error) {
-      console.error('Logout failed:', error);
+      logger.error('Logout failed:', error);
       window.location.href = '/login';
     }
   };
