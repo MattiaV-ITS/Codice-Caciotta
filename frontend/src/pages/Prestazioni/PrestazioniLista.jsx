@@ -95,10 +95,9 @@ function PrestazioniLista() {
   const handleEditPrestazione = (prestazione) => navigate(`/prestazioni/edit/${prestazione.id}`);
 
   const handleToggleStato = async (prestazione) => {
-    const nuovoStato = prestazione.stato === 'ATTIVO' || prestazione.stato === 'Disponibile'
-      ? 'Non disponibile'
-      : 'Disponibile';
-    const azione = nuovoStato === 'Disponibile' ? 'riattivare' : 'disabilitare';
+    const isActive = prestazione.stato === true;
+    const nuovoStato = isActive ? false : true;
+    const azione = nuovoStato ? 'riattivare' : 'disabilitare';
     if (!window.confirm(`Sei sicuro di voler ${azione} la prestazione "${prestazione.nomePrestazione}"?`)) {
       return;
     }
@@ -162,7 +161,7 @@ function PrestazioniLista() {
       field: 'stato',
       sortable: true,
       render: (item) => {
-        const isActive = item.stato === 'ATTIVO' || item.stato === 'Disponibile';
+        const isActive = item.stato === true;
         const status = isActive
           ? { label: 'Attivo', className: 'badge-attivo' }
           : { label: 'Disabilitato', className: 'badge-inattivo' };
@@ -194,7 +193,7 @@ function PrestazioniLista() {
             },
             { divider: true },
             {
-              label: (item.stato === 'ATTIVO' || item.stato === 'Disponibile') ? 'Disabilita' : 'Riattiva',
+              label: (item.stato === true) ? 'Disabilita' : 'Riattiva',
               onClick: () => handleToggleStato(item)
             },
             { divider: true },
@@ -211,8 +210,8 @@ function PrestazioniLista() {
 
   const statoOptions = [
     { label: 'Tutti', value: '' },
-    { label: 'Disponibili', value: 'Disponibile', className: 'btn-filter-success' },
-    { label: 'Non disponibili', value: 'Non disponibile', className: 'btn-filter-gray' }
+    { label: 'Disponibili', value: 'true', className: 'btn-filter-success' },
+    { label: 'Non disponibili', value: 'false', className: 'btn-filter-gray' }
   ];
 
   const filterOptions = {
@@ -241,8 +240,8 @@ function PrestazioniLista() {
 
           {/* Attive */}
           <div
-            className={`stat-card ${statoFilter === 'Disponibile' ? 'stat-active' : ''}`}
-            onClick={() => handleStatoCardFilter('Disponibile')}
+            className={`stat-card ${statoFilter === 'true' ? 'stat-active' : ''}`}
+            onClick={() => handleStatoCardFilter('true')}
             style={{ cursor: 'pointer' }}
           >
             <div className="stat-number stat-success">{stats.activeCount}</div>
@@ -251,8 +250,8 @@ function PrestazioniLista() {
 
           {/* Disabilitate */}
           <div
-            className={`stat-card ${statoFilter === 'Non disponibile' ? 'stat-active' : ''}`}
-            onClick={() => handleStatoCardFilter('Non disponibile')}
+            className={`stat-card ${statoFilter === 'false' ? 'stat-active' : ''}`}
+            onClick={() => handleStatoCardFilter('false')}
             style={{ cursor: 'pointer' }}
           >
             <div className="stat-number stat-gray">{stats.inactiveCount}</div>

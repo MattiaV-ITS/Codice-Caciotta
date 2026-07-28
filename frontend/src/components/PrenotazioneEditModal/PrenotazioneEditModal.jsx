@@ -74,7 +74,7 @@ const PrenotazioneEditModal = ({
   }, [get]);
 
   const availablePrestazioni = Array.isArray(prestazioni)
-    ? prestazioni.filter(p => p.stato === 'Disponibile' || p.stato === 'ATTIVO')
+    ? prestazioni.filter(p => p.stato === true)
     : [];
 
   // Initialize form with prenotazione data

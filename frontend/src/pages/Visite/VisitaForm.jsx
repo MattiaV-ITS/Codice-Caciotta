@@ -142,7 +142,7 @@ function VisitaForm({ visita, animale, proprietario, onSave, onCancel, isSaving,
   const [togglingPagamento, setTogglingPagamento] = useState(false);
 
   const availablePrestazioni = Array.isArray(prestazioni)
-    ? prestazioni.filter(p => p.stato === 'Disponibile' || p.stato === 'ATTIVO')
+    ? prestazioni.filter(p => p.stato === true)
     : [];
 
   useEffect(() => {

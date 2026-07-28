@@ -21,7 +21,7 @@ export function usePrenotazioneForm({ onClose, onSuccess }) {
 
   // Solo prestazioni disponibili per nuove prenotazioni
   const availablePrestazioni = Array.isArray(prestazioni)
-    ? prestazioni.filter(p => p.stato === 'Disponibile' || p.stato === 'ATTIVO')
+    ? prestazioni.filter(p => p.stato === true)
     : [];
 
   // Form state

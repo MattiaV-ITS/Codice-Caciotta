@@ -16,7 +16,7 @@ function PrestazioneCreate() {
     durataStimata: 30,
     costoBase: 45.00,
     aliquotaIva: 22,
-    stato: 'Disponibile',
+    stato: true,
     colore: '#4299E1',
     note: ''
   });
@@ -42,7 +42,7 @@ function PrestazioneCreate() {
           durataStimata: data.durataStimata || 30,
           costoBase: data.costoBase || 45.00,
           aliquotaIva: data.aliquotaIva || 22,
-          stato: data.stato || 'Disponibile',
+          stato: data.stato ?? true,
           colore: data.colore || '#4299E1',
           note: data.note || ''
         });
@@ -59,10 +59,14 @@ function PrestazioneCreate() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    // Per il campo stato, converti il valore stringa in booleano
+    const newValue = name === 'stato'
+      ? (value === 'true' || value === true)
+      : value;
+    setFormData(prev => ({ ...prev, [name]: newValue }));
 
     if (touched[name]) {
-      const error = validateField(name, value);
+      const error = validateField(name, newValue);
       setErrors(prev => ({ ...prev, [name]: error }));
     }
   };
@@ -115,6 +119,8 @@ function PrestazioneCreate() {
       try {
         const payload = {
           ...formData,
+          // Assicura che stato sia un booleano
+          stato: formData.stato === true || formData.stato === 'true' ? true : false,
           costoBase: parseFloat(formData.costoBase),
           durataStimata: parseInt(formData.durataStimata),
           aliquotaIva: parseInt(formData.aliquotaIva)
@@ -236,9 +242,8 @@ function PrestazioneCreate() {
             value={formData.stato}
             onChange={handleChange}
           >
-            <option value="Disponibile">Disponibile</option>
-            <option value="Non disponibile">Non disponibile</option>
-            <option value="In revisione">In revisione</option>
+            <option value={true}>Disponibile</option>
+            <option value={false}>Non disponibile</option>
           </select>
         </div>
 
