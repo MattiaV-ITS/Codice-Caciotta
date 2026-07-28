@@ -1,7 +1,7 @@
 services:
   postgresdb:
     image: postgres:17
-    # restart: unless-stopped TODO: cambiare in prod
+    restart: unless-stopped
     env_file: ./.env
     container_name: db
     environment:
@@ -20,7 +20,7 @@ services:
 
   backend:
     build: ./backend
-    # restart: on-failure TODO: cambiare in prod
+    restart: on-failure
     container_name: backend
     depends_on:
       postgresdb:

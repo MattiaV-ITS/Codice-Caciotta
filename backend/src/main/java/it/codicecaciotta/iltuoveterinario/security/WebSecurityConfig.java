@@ -88,7 +88,6 @@ public class WebSecurityConfig {
         });
 
         if (devMode) {
-            // TODO: Dev mode bypassa le richieste di autenticazione. Solo per sviluppo locale. Rimuovere in produzione.
             logger.error("DEV MODE ENABLED - All authentication is bypassed! Only use for local development!");
             http.csrf(csrf -> csrf.disable())
                     .authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
