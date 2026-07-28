@@ -109,7 +109,7 @@ const PrenotazioneContextMenu = ({ children, prenotazione, onPrenotazioneUpdated
   //     logger.error('Error deleting prenotazione:', error);
   //     // Check if the error is about having an associated visita
   //     if (error.message && error.message.includes('Cannot delete prenotazione that has an associated visita')) {
-  //       alert('Impossibile eliminare la prenotazione: esiste giÃ  una visita associata. Per eliminare la prenotazione, è necessario eliminare prima la visita.');
+  //       alert('Impossibile eliminare la prenotazione: esiste già una visita associata. Per eliminare la prenotazione, è necessario eliminare prima la visita.');
   //     } else {
   //       alert(`Errore durante l'eliminazione della prenotazione: ${error.message}`);
   //     }

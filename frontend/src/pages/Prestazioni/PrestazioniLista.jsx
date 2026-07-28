@@ -77,7 +77,7 @@ function PrestazioniLista() {
 
   // Gestione click sulle card delle statistiche
   const handleStatoCardFilter = (stato) => {
-    // Se è giÃ  attivo, deseleziona
+    // Se è già attivo, deseleziona
     if (statoFilter === stato) {
       setStatoFilter('');
     } else {

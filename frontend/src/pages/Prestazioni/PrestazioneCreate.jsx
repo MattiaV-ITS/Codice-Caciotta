@@ -26,7 +26,7 @@ function PrestazioneCreate() {
   const [loading, setLoading] = useState(isEditMode);
   const [loadError, setLoadError] = useState(null);
 
-  // Carica i dati esistenti in modalitÃ  modifica
+  // Carica i dati esistenti in modalità modifica
   useEffect(() => {
     if (!isEditMode) return;
 

@@ -572,11 +572,11 @@ function VisitaForm({ visita, animale, proprietario, onSave, onCancel, isSaving,
             <div className={`visite-edit-mode-banner ${editMode ? 'edit-mode' : 'read-only-mode'}`}>
               {editMode ? (
                 <>
-                  <strong>ModalitÃ  Modifica</strong>
+                   <strong>Modalità Modifica</strong>
                 </>
               ) : (
                 <>
-                  <strong>ModalitÃ  Solo Lettura</strong>
+                   <strong>Modalità Solo Lettura</strong>
                 </>
               )}
             </div>
@@ -834,7 +834,7 @@ function VisitaForm({ visita, animale, proprietario, onSave, onCancel, isSaving,
                       type="button" 
                       className="btn btn-secondary"
                       disabled={true}
-                      title="Esiste giÃ  una fattura per questa visita"
+                      title="Esiste già una fattura per questa visita"
                     >
                       <InvoiceIcon width={16} height={16} style={{ marginRight: '6px' }} />
                       Fattura Esistente

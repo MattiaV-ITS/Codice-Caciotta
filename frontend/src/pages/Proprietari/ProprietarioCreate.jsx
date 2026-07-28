@@ -52,7 +52,7 @@ function ProprietarioCreate({ onClose, onSuccess, proprietario, isEditMode = fal
       case 'indirizzo':
         return validateRequired(value, "L'indirizzo");
       case 'citta':
-        return validateRequired(value, 'La cittÃ ');
+        return validateRequired(value, 'La città');
       case 'codiceFiscale':
         return validateFiscalCode(value);
       default:
@@ -243,9 +243,9 @@ function ProprietarioCreate({ onClose, onSuccess, proprietario, isEditMode = fal
                 {hasError('indirizzo') && <div className="form-error">{errors.indirizzo}</div>}
               </div>
 
-              {/* CittÃ  */}
+              {/* Città */}
               <div className="form-group">
-                <label className="form-label">CittÃ  *</label>
+                <label className="form-label">Città *</label>
                 <input
                   type="text"
                   name="citta"

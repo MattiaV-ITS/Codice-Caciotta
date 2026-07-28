@@ -52,7 +52,7 @@ function ProprietariLista() {
   const filterOptions = {
     label: 'Stato',
     options: statoOptions,
-    searchable: 'nome, cognome, telefono, email, codice fiscale o cittÃ '
+    searchable: 'nome, cognome, telefono, email, codice fiscale o città'
   };
 
   const customColumns = [

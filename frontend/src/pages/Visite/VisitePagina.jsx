@@ -190,7 +190,7 @@ function VisitePagina() {
         navigate(`/visite/${createdVisita.id}`);
       }
     } catch (err) {
-      // Rilancia l'errore per farlo gestire a VisitaForm (che lo mostrerÃ  nel form)
+      // Rilancia l'errore per farlo gestire a VisitaForm (che lo mostrerà nel form)
       throw err;
     } finally {
       setIsSaving(false);
