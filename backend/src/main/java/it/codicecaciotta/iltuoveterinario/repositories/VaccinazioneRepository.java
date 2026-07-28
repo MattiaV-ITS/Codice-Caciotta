@@ -15,7 +15,6 @@ public interface VaccinazioneRepository extends JpaRepository<Vaccinazione, Long
 
     java.util.List<Vaccinazione> findByAnimaleOrderByDataScadenzaAsc(Animale animale);
 
-    //TODO: Ricerca per dataSomministrazione
     // Ricerca completa per tipoVaccino, lotto, note e nome animale
     @Query("""
         SELECT v FROM Vaccinazione v
@@ -29,10 +28,10 @@ public interface VaccinazioneRepository extends JpaRepository<Vaccinazione, Long
         SELECT v FROM Vaccinazione v
         WHERE (
             (v.dataScadenza IS NULL AND :stato = 'SCADUTO') OR
-            (v.dataScadenza IS NOT NULL AND 
-                CASE 
+            (v.dataScadenza IS NOT NULL AND
+                CASE
                     WHEN :stato = 'SCADUTO' AND v.dataScadenza < CURRENT_DATE THEN TRUE
-                    WHEN :stato = 'PROSSIMO' AND v.dataScadenza BETWEEN CURRENT_DATE AND DATEADD(day, 30, CURRENT_DATE) THEN TRUE  
+                    WHEN :stato = 'PROSSIMO' AND v.dataScadenza BETWEEN CURRENT_DATE AND DATEADD(day, 30, CURRENT_DATE) THEN TRUE
                     WHEN :stato = 'VALIDO' AND v.dataScadenza > DATEADD(day, 30, CURRENT_DATE) THEN TRUE
                     ELSE FALSE
                 END
@@ -40,4 +39,16 @@ public interface VaccinazioneRepository extends JpaRepository<Vaccinazione, Long
         )
     """)
     Page<Vaccinazione> findByStato(@Param("stato") String stato, Pageable pageable);
+
+    // Stats methods
+    @Query("SELECT COUNT(v) FROM Vaccinazione v WHERE v.dataScadenza > DATEADD(day, 30, CURRENT_DATE)")
+    long countValide();
+
+    @Query("SELECT COUNT(v) FROM Vaccinazione v WHERE v.dataScadenza BETWEEN CURRENT_DATE AND DATEADD(day, 30, CURRENT_DATE)")
+    long countProssime();
+
+    @Query("SELECT COUNT(v) FROM Vaccinazione v WHERE v.dataScadenza < CURRENT_DATE OR v.dataScadenza IS NULL")
+    long countScadute();
+
+    Page<Vaccinazione> findByAnimaleProprietarioId(Long proprietarioId, Pageable pageable);
 }

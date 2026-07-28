@@ -316,6 +316,52 @@
   }
 }
 
+/* =========================
+   STATO ACTIONS (colored boxes)
+========================= */
+
+.stato-actions {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.stato-box {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  padding: 0;
+  display: inline-block;
+}
+
+.stato-box:hover {
+  transform: scale(1.15);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+}
+
+.stato-box.active {
+  border-color: var(--gray-800);
+  box-shadow: 0 0 0 2px var(--gray-300);
+}
+
+.stato-non-arrivato {
+  background: #E5E7EB;
+  border-color: #D1D5DB;
+}
+
+.stato-in-attesa {
+  background: #FCD34D;
+  border-color: #F59E0B;
+}
+
+.stato-completato {
+  background: #34D399;
+  border-color: #10B981;
+}
+
 @media (max-width: 480px) {
   .kpi-grid {
     grid-template-columns: 1fr;

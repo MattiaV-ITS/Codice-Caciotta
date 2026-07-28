@@ -22,10 +22,16 @@ public class Prenotazione {
     private LocalDateTime dataOraAppuntamento;
 
     @Column(nullable = false)
-    private String tipoVisita; // es. "Visita di controllo", "Vaccinazione", ecc.
+    private String tipoVisita;
 
     @Column(nullable = true)
     private String note;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "prestazione_id", nullable = true)
+    @EqualsAndHashCode.Exclude
+    @ToString.Exclude
+    private Prestazione prestazione;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "animale_id", nullable = false)
@@ -38,6 +44,10 @@ public class Prenotazione {
     @EqualsAndHashCode.Exclude
     @ToString.Exclude
     private Proprietario proprietario;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "stato", nullable = false)
+    private EStatoPrenotazione stato = EStatoPrenotazione.NON_ARRIVATO;
 
     @OneToOne(mappedBy = "prenotazione", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @EqualsAndHashCode.Exclude

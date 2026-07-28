@@ -1,4 +1,5 @@
 import { createContext, useState, useEffect, useContext } from 'react';
+import logger from '../utils/logger';
 
 const AuthContext = createContext(null);
 
@@ -30,11 +31,6 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(normalizeToken(localStorage.getItem(TOKEN_KEY)));
   const [isLoading, setIsLoading] = useState(true);
-  
-  // Debug dello stato del token
-  useEffect(() => {
-    console.log('AuthContext token state:', token ? token.substring(0, 20) + '...' : 'null');
-  }, [token]);
 
   useEffect(() => {
     const storedUser = localStorage.getItem(USER_KEY);
@@ -53,7 +49,7 @@ export function AuthProvider({ children }) {
       try {
         setUser(JSON.parse(storedUser));
       } catch (e) {
-        console.error('Failed to parse stored user:', e);
+        logger.error('Failed to parse stored user:', e);
         localStorage.removeItem(TOKEN_KEY);
         localStorage.removeItem(USER_KEY);
         setToken(null);

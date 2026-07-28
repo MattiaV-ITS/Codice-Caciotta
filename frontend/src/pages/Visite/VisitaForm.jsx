@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useApi } from '../../services/apiService';
 import { formatDate, getCurrentISODatetime, parseDate, toISODatetimeFormat, toISODateFormat } from '../../utils/dateUtils';
 import { validateRequired, validatePositiveNumber } from '../../utils/validationUtils';
+import FatturaSemplificataModal from '../../components/FatturaSemplificataModal';
+import { PlusIcon, InvoiceIcon } from '../../components/icons';
 
 // Inline styles for edit mode banner
 const bannerStyles = `
@@ -31,31 +33,55 @@ const bannerStyles = `
   }
 `;
 
-// ==============================
-// ICONE SVG (invariate)
-// ==============================
-const PlusIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="12" cy="12" r="10" stroke="var(--primary)" strokeWidth="2"/>
-    <path d="M12 8V16M8 12H16" stroke="var(--primary)" strokeWidth="2" strokeLinecap="round"/>
-  </svg>
-);
+function getDefaultVisita() {
+  const nowStr = getCurrentISODatetime();
 
-const ShareIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="18" cy="5" r="3" stroke="var(--gray-600)" strokeWidth="2"/>
-    <circle cx="6" cy="12" r="3" stroke="var(--gray-600)" strokeWidth="2"/>
-    <circle cx="18" cy="19" r="3" stroke="var(--gray-600)" strokeWidth="2"/>
-    <path d="M8.59 13.51L15.42 17.49" stroke="var(--gray-600)" strokeWidth="2"/>
-    <path d="M15.41 6.51L8.59 10.49" stroke="var(--gray-600)" strokeWidth="2"/>
-  </svg>
-);
+  return {
+    id: null,
+    dataOraVisita: nowStr,
+    dataOraFine: nowStr,
+    tipoVisita: '',
+    altroTipoVisita: '',
+    sintomi: '',
+    diagnosi: '',
+    trattamentoTerapia: '',
+    note: '',
+    notePrivate: ''
+  };
+}
 
-const LightningIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M13 2L4 14H12L11 22L20 10H12L13 2Z" stroke="var(--primary)" strokeWidth="2" strokeLinejoin="round"/>
-  </svg>
-);
+function prepareVisitaData(visitaData) {
+  if (!visitaData) return getDefaultVisita();
+  
+  const converted = { ...visitaData };
+  const normalizedStart = toISODatetimeFormat(visitaData.dataOraVisita);
+  
+  if (normalizedStart) {
+    converted.dataOraVisita = normalizedStart;
+  }
+  
+  if (visitaData.dataOraFineVisita) {
+    converted.dataOraFine = toISODatetimeFormat(visitaData.dataOraFineVisita);
+  } else if (normalizedStart && visitaData.durata && visitaData.durata > 0) {
+    const start = parseDate(normalizedStart);
+    if (start && !isNaN(start.getTime())) {
+      const end = new Date(start.getTime() + visitaData.durata * 60 * 1000);
+      if (!isNaN(end.getTime())) {
+        converted.dataOraFine = formatLocalDateTime(end);
+      } else {
+        converted.dataOraFine = normalizedStart;
+      }
+    } else {
+      converted.dataOraFine = normalizedStart;
+    }
+  } else if (normalizedStart) {
+    converted.dataOraFine = normalizedStart;
+  } else {
+    converted.dataOraFine = '';
+  }
+  
+  return converted;
+}
 
 const formatLocalDateTime = (date) => {
   if (!date || isNaN(date.getTime())) return '';
@@ -95,7 +121,8 @@ const ConfirmModal = ({ isOpen, message, onConfirm, onCancel }) => {
 // ==============================
 // COMPONENTE PRINCIPALE
 // ==============================
-function VisitaForm({ visita, animale, onSave, onCancel, isSaving, initialEditMode = false }) {
+function VisitaForm({ visita, animale, proprietario, onSave, onCancel, isSaving, initialEditMode = false }) {
+  const api = useApi();
   const [formData, setFormData] = useState(() => prepareVisitaData(visita));
   const [defaultDataPrenotazione, setDefaultDataPrenotazione] = useState('');
   const [errors, setErrors] = useState({});
@@ -104,73 +131,103 @@ function VisitaForm({ visita, animale, onSave, onCancel, isSaving, initialEditMo
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [pendingSave, setPendingSave] = useState(false);
   const [editMode, setEditMode] = useState(initialEditMode);
+  const [showFatturaModal, setShowFatturaModal] = useState(false);
+  const [fatturaSuccess, setFatturaSuccess] = useState(false);
+  const [fatturaEsistente, setFatturaEsistente] = useState(false);
+  const [fatturaData, setFatturaData] = useState(null);
+  const [prestazioni, setPrestazioni] = useState([]);
+  const [loadingPrestazioni, setLoadingPrestazioni] = useState(true);
+  const [errorPrestazioni, setErrorPrestazioni] = useState(null);
+  const [visitaId, setVisitaId] = useState(null);
+  const [togglingPagamento, setTogglingPagamento] = useState(false);
 
-  // ----- Preparazione dati (modifica) -----
-  function prepareVisitaData(visitaData) {
-    if (!visitaData) return getDefaultVisita();
-    
-    const converted = { ...visitaData };
-    const normalizedStart = toISODatetimeFormat(visitaData.dataOraVisita);
-    
-    if (normalizedStart) {
-      converted.dataOraVisita = normalizedStart;
-    }
-    
-    // Use dataOraFineVisita if available, otherwise calculate from durata for backward compatibility
-    if (visitaData.dataOraFineVisita) {
-      // Directly use the dataOraFineVisita if available
-      converted.dataOraFine = toISODatetimeFormat(visitaData.dataOraFineVisita);
-    } else if (normalizedStart && visitaData.durata && visitaData.durata > 0) {
-      // Fallback for backward compatibility: calculate from durata
-      const start = parseDate(normalizedStart);
-      if (start && !isNaN(start.getTime())) { // Validate the date is valid
-        const end = new Date(start.getTime() + visitaData.durata * 60 * 1000);
-        if (!isNaN(end.getTime())) { // Validate the end date is valid
-          converted.dataOraFine = formatLocalDateTime(end);
-        } else {
-          converted.dataOraFine = normalizedStart;
-        }
-      } else {
-        converted.dataOraFine = normalizedStart;
-      }
-    } else if (normalizedStart) {
-      // Se non c'è durata, fine = inizio (default)
-      converted.dataOraFine = normalizedStart;
-    } else {
-      converted.dataOraFine = '';
-    }
-    
-    return converted;
-  }
-
-  // ----- Valori di default per nuova visita -----
-  function getDefaultVisita() {
-    const nowStr = getCurrentISODatetime();
-
-    return {
-      id: null,
-      dataOraVisita: nowStr,   // inizio
-      dataOraFine: nowStr,     // fine = inizio (default)
-      tipoVisita: '',
-      altroTipoVisita: '',
-      sintomi: '',
-      diagnosi: '',
-      trattamentoTerapia: '',
-      note: '',
-      notePrivate: ''
-    };
-  }
+  const availablePrestazioni = Array.isArray(prestazioni)
+    ? prestazioni.filter(p => p.stato === true)
+    : [];
 
   useEffect(() => {
     if (visita) {
       const prepared = prepareVisitaData(visita);
       setFormData(prepared);
       setDefaultDataPrenotazione(prepared.dataOraVisita || '');
+      setVisitaId(visita.id || null);
     } else {
       setFormData(getDefaultVisita());
       setDefaultDataPrenotazione('');
+      setVisitaId(null);
     }
   }, [visita]);
+
+  // Fetch prestazioni for dynamic visit type options
+  useEffect(() => {
+    let cancelled = false;
+    const fetchPrestazioni = async () => {
+      try {
+        setLoadingPrestazioni(true);
+        const response = await api.get('/api/prestazioni');
+        if (!cancelled && response.ok) {
+          const data = await response.json();
+          const prestazioniArray = Array.isArray(data)
+            ? data
+            : (data.content && Array.isArray(data.content)
+                ? data.content
+                : []);
+          setPrestazioni(prestazioniArray);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          logger.error('Error fetching prestazioni:', error);
+          setErrorPrestazioni('Errore nel caricamento delle prestazioni');
+        }
+      } finally {
+        if (!cancelled) {
+          setLoadingPrestazioni(false);
+        }
+      }
+    };
+
+    fetchPrestazioni();
+    return () => { cancelled = true; };
+  }, []);
+
+  // Fetch fattura data for this visita
+  useEffect(() => {
+    let cancelled = false;
+    const fetchFatturaData = async () => {
+      if (visitaId) {
+        try {
+          const response = await api.get(`/api/fatture/visita/${visitaId}`);
+          if (!cancelled) {
+            if (response.ok) {
+              const data = await response.json();
+              if (data && data.length > 0) {
+                setFatturaEsistente(true);
+                setFatturaData(data[0]);
+              } else {
+                setFatturaEsistente(false);
+                setFatturaData(null);
+              }
+            } else {
+              setFatturaEsistente(false);
+              setFatturaData(null);
+            }
+          }
+        } catch (error) {
+          if (!cancelled) {
+            logger.error('Error fetching fattura data:', error);
+            setFatturaEsistente(false);
+            setFatturaData(null);
+          }
+        }
+      } else {
+        setFatturaEsistente(false);
+        setFatturaData(null);
+      }
+    };
+
+    fetchFatturaData();
+    return () => { cancelled = true; };
+  }, [visitaId]);
 
   // ----- Calcolo durata -----
   const calcolaDurata = (inizio, fine) => {
@@ -256,7 +313,7 @@ function VisitaForm({ visita, animale, onSave, onCancel, isSaving, initialEditMo
   };
 
   // Pulsanti "Ora"
-  const setOraCorrenteInizio = () => {
+  const setOraCorrenteInizio = useCallback(() => {
     const nowStr = getCurrentISODatetime();
     setFormData(prev => {
       const updated = { ...prev, dataOraVisita: nowStr };
@@ -265,9 +322,9 @@ function VisitaForm({ visita, animale, onSave, onCancel, isSaving, initialEditMo
       }
       return updated;
     });
-  };
+  }, []);
 
-  const setOraCorrenteFine = () => {
+  const setCurrentTimeEnd = useCallback(() => {
     const nowStr = getCurrentISODatetime();
     setFormData(prev => {
       const updated = { ...prev, dataOraFine: nowStr };
@@ -276,7 +333,7 @@ function VisitaForm({ visita, animale, onSave, onCancel, isSaving, initialEditMo
       }
       return updated;
     });
-  };
+  }, []);
 
   // Validazione
   const validateField = (name, value) => {
@@ -301,12 +358,12 @@ function VisitaForm({ visita, animale, onSave, onCancel, isSaving, initialEditMo
     if (formData.tipoVisita === 'Altro' && !formData.altroTipoVisita?.trim()) {
       newErrors.altroTipoVisita = 'Specifica il tipo di visita';
     }
-    // Se la fine è anteriore all'inizio → errore
+    // Se la fine Ã¨ anteriore all'inizio â†’ errore
     if (formData.dataOraVisita && formData.dataOraFine) {
       const start = new Date(formData.dataOraVisita);
       const end = new Date(formData.dataOraFine);
       if (!isNaN(start.getTime()) && !isNaN(end.getTime()) && end < start) {
-        newErrors.dataOraFine = 'La fine non può essere precedente all\'inizio';
+        newErrors.dataOraFine = 'La fine non puÃ² essere precedente all\'inizio';
       }
     }
     setErrors(newErrors);
@@ -335,7 +392,6 @@ function VisitaForm({ visita, animale, onSave, onCancel, isSaving, initialEditMo
         dataOraVisita: toISODatetimeFormat(finalStart),
         dataOraFineVisita: toISODatetimeFormat(finalEnd),
         tipoVisita: formData.tipoVisita === 'Altro' ? formData.altroTipoVisita : formData.tipoVisita,
-        importoTotale: 0.00,
         prenotazioneId: null,
         sintomi: formData.sintomi,
         diagnosi: formData.diagnosi,
@@ -346,7 +402,7 @@ function VisitaForm({ visita, animale, onSave, onCancel, isSaving, initialEditMo
 
       await onSave(visitaData);
     } catch (error) {
-      console.error('Error saving visita:', error);
+      logger.error('Error saving visita:', error);
       setFormError(error.message || 'Errore durante il salvataggio della visita');
     }
   };
@@ -368,7 +424,7 @@ function VisitaForm({ visita, animale, onSave, onCancel, isSaving, initialEditMo
     if (!formData.id && formData.dataOraFine === formData.dataOraVisita) {
       const now = new Date();
       const nowStr = now.toLocaleString('it-IT', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' });
-      const message = `La data/ora fine è uguale all'inizio. Vuoi impostarla all'ora corrente (${nowStr})?`;
+      const message = `La data/ora fine Ã¨ uguale all'inizio. Vuoi impostarla all'ora corrente (${nowStr})?`;
       setShowConfirmModal(true);
       setPendingSave(now.toISOString());
       return;
@@ -416,12 +472,86 @@ function VisitaForm({ visita, animale, onSave, onCancel, isSaving, initialEditMo
     .mr-2 {
       margin-right: var(--space-2);
     }
+    .visite-form-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: var(--space-2);
+    }
+    .visite-form-actions-left {
+      display: flex;
+      gap: var(--space-2);
+    }
+    .visite-form-actions-right {
+      display: flex;
+      gap: var(--space-2);
+    }
+  `;
+
+  const fatturaInfoStyles = `
+    .visite-fattura-info {
+      background-color: var(--gray-50);
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius-md);
+      padding: var(--space-3);
+      margin-bottom: var(--space-3);
+      font-size: var(--font-sm);
+    }
+    .visite-fattura-header {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      margin-bottom: var(--space-2);
+      color: var(--primary);
+      font-weight: 600;
+    }
+    .visite-fattura-icon {
+      font-size: var(--font-md);
+    }
+    .visite-fattura-details {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: var(--space-1) var(--space-3);
+      align-items: center;
+    }
+    .visite-fattura-row {
+      display: contents;
+    }
+    .visite-fattura-label {
+      color: var(--gray-600);
+      font-weight: 500;
+    }
+    .visite-fattura-value {
+      color: var(--gray-800);
+    }
+    .visite-fattura-value.fattura-importo {
+      font-weight: 600;
+      color: var(--primary);
+    }
+    .fattura-status-badge {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 9999px;
+      font-size: var(--font-xs);
+      font-weight: 600;
+      margin-left: auto;
+    }
+    .fattura-status-badge.pagata {
+      background-color: #c6f6d5;
+      color: #22543d;
+    }
+    .fattura-status-badge.non-pagata {
+      background-color: #fed7d7;
+      color: #9b2c2c;
+    }
   `;
 
   return (
     <div className="visite-colonna-center">
       <style>{bannerStyles}</style>
       <style>{actionStyles}</style>
+      <style>{fatturaInfoStyles}</style>
       <div className="visite-card">
         <div className="visite-card-header">
           <div className="visite-header-left">
@@ -442,13 +572,75 @@ function VisitaForm({ visita, animale, onSave, onCancel, isSaving, initialEditMo
             <div className={`visite-edit-mode-banner ${editMode ? 'edit-mode' : 'read-only-mode'}`}>
               {editMode ? (
                 <>
-                  <strong>Modalità Modifica</strong>
+                  <strong>ModalitÃ  Modifica</strong>
                 </>
               ) : (
                 <>
-                  <strong>Modalità Solo Lettura</strong>
+                  <strong>ModalitÃ  Solo Lettura</strong>
                 </>
               )}
+            </div>
+          )}
+          {fatturaEsistente && fatturaData && (
+            <div className="visite-fattura-info">
+              <div className="visite-fattura-header">
+                <InvoiceIcon width={18} height={18} style={{ marginRight: '8px' }} />
+                <strong>Fattura Associata</strong>
+                <span className={`fattura-status-badge ${fatturaData.pagata ? 'pagata' : 'non-pagata'}`}>
+                  {fatturaData.pagata ? 'Pagata' : 'Non Pagata'}
+                </span>
+              </div>
+              <div className="visite-fattura-details">
+                <div className="visite-fattura-row">
+                  <span className="visite-fattura-label">Numero:</span>
+                  <span className="visite-fattura-value">{fatturaData.numeroFattura}</span>
+                </div>
+                <div className="visite-fattura-row">
+                  <span className="visite-fattura-label">Data:</span>
+                  <span className="visite-fattura-value">
+                    {fatturaData.dataEmissione ? new Date(fatturaData.dataEmissione).toLocaleDateString('it-IT') : 'N/D'}
+                  </span>
+                </div>
+                <div className="visite-fattura-row">
+                  <span className="visite-fattura-label">Importo:</span>
+                  <span className="visite-fattura-value fattura-importo">
+                    {fatturaData.importoTotale ? fatturaData.importoTotale.toFixed(2) + ' â‚¬' : 'N/D'}
+                  </span>
+                </div>
+                <div className="visite-fattura-row">
+                  <span className="visite-fattura-label">Stato:</span>
+                  <span className="visite-fattura-value">
+                    <button
+                      type="button"
+                      className={`btn btn-sm ${fatturaData.pagata ? 'btn-warning' : 'btn-success'}`}
+                      onClick={async () => {
+                        setTogglingPagamento(true);
+                        try {
+                          const response = await api.patch(`/api/fatture/${fatturaData.id}/pagamento`, {
+                            pagata: !fatturaData.pagata
+                          });
+                          if (response.ok) {
+                            const updated = await response.json();
+                            setFatturaData(updated);
+                          }
+                        } catch (err) {
+                          logger.error('Errore aggiornamento pagamento:', err);
+                        } finally {
+                          setTogglingPagamento(false);
+                        }
+                      }}
+                      disabled={togglingPagamento}
+                    >
+                      {togglingPagamento
+                        ? '...'
+                        : fatturaData.pagata
+                          ? 'Segna come Non Pagata'
+                          : 'Segna come Pagata'
+                      }
+                    </button>
+                  </span>
+                </div>
+              </div>
             </div>
           )}
           <form onSubmit={handleSubmit} className="visite-form">
@@ -486,7 +678,7 @@ function VisitaForm({ visita, animale, onSave, onCancel, isSaving, initialEditMo
                   onClick={setOraCorrenteInizio}
                   disabled={!editMode && formData.id}
                 >
-                  ⏱ Ora
+                  Ora
                 </button>
               </div>
               {hasError('dataOraVisita') && <div className="form-error">{errors.dataOraVisita}</div>}
@@ -520,16 +712,16 @@ function VisitaForm({ visita, animale, onSave, onCancel, isSaving, initialEditMo
                 <button
                   type="button"
                   className="btn btn-sm btn-secondary"
-                  onClick={setOraCorrenteFine}
+                  onClick={setCurrentTimeEnd}
                   disabled={!editMode && formData.id}
                 >
-                  ⏱ Ora
+                  Ora
                 </button>
               </div>
               {hasError('dataOraFine') && <div className="form-error">{errors.dataOraFine}</div>}
               {!formData.id && formData.dataOraFine === formData.dataOraVisita && (
                 <div className="visite-form-hint">
-                  La fine è uguale all'inizio. Al salvataggio potrai scegliere se impostarla all'ora corrente.
+                  La fine Ã¨ uguale all'inizio. Al salvataggio potrai scegliere se impostarla all'ora corrente.
                 </div>
               )}
             </div>
@@ -537,23 +729,43 @@ function VisitaForm({ visita, animale, onSave, onCancel, isSaving, initialEditMo
             {/* ===== TIPO VISITA ===== */}
             <div className="visite-form-group" style={{ marginTop: 'var(--space-3)' }}>
               <label className="visite-form-label">Tipo Visita</label>
-              <select
-                name="tipoVisita"
-                className={`visite-form-control ${hasError('tipoVisita') ? 'is-invalid' : ''}`}
-                value={formData.tipoVisita || ''}
-                onChange={handleChange}
-                onBlur={() => setTouched(prev => ({ ...prev, tipoVisita: true }))}
-                disabled={!editMode && formData.id}
-              >
-                <option value="">Seleziona tipo</option>
-                <option value="Visita di controllo">Visita di controllo</option>
-                <option value="Vaccinazione">Vaccinazione</option>
-                <option value="Visita d'urgenza">Visita d'urgenza</option>
-                <option value="Chirurgia">Chirurgia</option>
-                <option value="Visita specialistica">Visita specialistica</option>
-                <option value="Altro">Altro</option>
-              </select>
-              {hasError('tipoVisita') && <div className="form-error">{errors.tipoVisita}</div>}
+              {loadingPrestazioni ? (
+                <div style={{ color: 'var(--gray-500)', fontSize: '14px', padding: '8px' }}>
+                  Caricamento prestazioni...
+                </div>
+              ) : errorPrestazioni ? (
+                <div style={{ color: 'var(--danger)', fontSize: '14px', padding: '8px' }}>
+                  {errorPrestazioni}
+                </div>
+              ) : (
+                <>
+                  <select
+                    name="tipoVisita"
+                    className={`visite-form-control ${hasError('tipoVisita') ? 'is-invalid' : ''}`}
+                    value={formData.tipoVisita || ''}
+                    onChange={handleChange}
+                    onBlur={() => setTouched(prev => ({ ...prev, tipoVisita: true }))}
+                    disabled={!editMode && formData.id}
+                  >
+                    <option value="">Seleziona tipo</option>
+                    {prestazioni.map((prestazione) => {
+                      const isAvailable = availablePrestazioni.some(p => p.id === prestazione.id);
+                      return (
+                        <option 
+                          key={prestazione.id} 
+                          value={prestazione.nomePrestazione}
+                          disabled={!isAvailable}
+                        >
+                          {prestazione.nomePrestazione} - â‚¬{prestazione.costoBase?.toFixed(2) || '0.00'}
+                          {!isAvailable ? ' (Non disponibile)' : ''}
+                        </option>
+                      );
+                    })}
+                    <option value="Altro">Altro (specifica)</option>
+                  </select>
+                  {hasError('tipoVisita') && <div className="form-error">{errors.tipoVisita}</div>}
+                </>
+              )}
             </div>
 
             {showAltroTipo && (
@@ -615,6 +827,31 @@ function VisitaForm({ visita, animale, onSave, onCancel, isSaving, initialEditMo
                   {getButtonText()}
                 </button>
               </div>
+              {formData.id && (
+                <div className="visite-form-actions-right">
+                  {fatturaEsistente ? (
+                    <button 
+                      type="button" 
+                      className="btn btn-secondary"
+                      disabled={true}
+                      title="Esiste giÃ  una fattura per questa visita"
+                    >
+                      <InvoiceIcon width={16} height={16} style={{ marginRight: '6px' }} />
+                      Fattura Esistente
+                    </button>
+                  ) : (
+                    <button 
+                      type="button" 
+                      className="btn btn-success"
+                      onClick={() => setShowFatturaModal(true)}
+                      disabled={isSaving}
+                    >
+                      <InvoiceIcon width={16} height={16} style={{ marginRight: '6px' }} />
+                      Crea Fattura Semplificata
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
 
           </form>
@@ -624,10 +861,28 @@ function VisitaForm({ visita, animale, onSave, onCancel, isSaving, initialEditMo
       {/* Modale di conferma */}
       <ConfirmModal
         isOpen={showConfirmModal}
-        message="La data/ora fine è uguale all'inizio. Vuoi impostarla all'ora corrente?"
+        message="La data/ora fine Ã¨ uguale all'inizio. Vuoi impostarla all'ora corrente?"
         onConfirm={handleConfirmModal}
         onCancel={handleCancelModal}
       />
+      
+      {/* Modale fattura semplificata */}
+      {showFatturaModal && (
+        <FatturaSemplificataModal
+          visitaId={formData.id}
+          proprietario={proprietario}
+          animale={animale}
+          onClose={() => {
+            setShowFatturaModal(false);
+            if (fatturaSuccess) {
+              window.location.reload(); // Ricarica per vedere la fattura creata
+            }
+          }}
+          onSuccess={() => {
+            setFatturaSuccess(true);
+          }}
+        />
+      )}
     </div>
   );
 }

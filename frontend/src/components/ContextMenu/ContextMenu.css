@@ -67,3 +67,9 @@
   align-items: center;
   justify-content: center;
 }
+
+.context-menu-divider {
+  height: 1px;
+  background-color: var(--gray-200);
+  margin: 4px 8px;
+}

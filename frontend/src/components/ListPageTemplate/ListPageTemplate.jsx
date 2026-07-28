@@ -5,18 +5,16 @@ import ErrorMessage from '../common/ErrorMessage';
 import PaginationFooter from '../common/PaginationFooter';
 import SearchBox from '../common/SearchBox';
 import FilterBar from '../common/FilterBar';
+import { PlusIcon } from '../icons';
 
 function getSingularForm(word) {
-  // Handle specific Italian plural to singular conversions
   const singularMap = {
     'Animali': 'animale',
     'Proprietari': 'proprietario',
-    'Animali': 'animale',
     'Visite': 'visita',
     'Prenotazioni': 'prenotazione',
     'Vaccinazioni': 'vaccinazione'
   };
-  
   return singularMap[word] || word.toLowerCase();
 }
 
@@ -39,7 +37,8 @@ function ListPageTemplate({
   onRowClick,
   additionalToolbarContent = null,
   additionalContent = null,
-  statsContent = null
+  statsContent = null,
+  onClearAllFilters,   // nuova prop per resettare i filtri extra (KPI card, report)
 }) {
   if (loading) return <LoadingSpinner label={`Caricamento ${title.toLowerCase()}...`} />;
   if (error) return <ErrorMessage error={error} />;
@@ -52,12 +51,15 @@ function ListPageTemplate({
           <p className="page-subtitle">{subtitle}</p>
         </div>
         {showAddButton && (
-          <button className="btn-add" onClick={onAddClick}>+ Nuovo {getSingularForm(title.split(' ')[1] || 'Elemento')}</button>
+          <button className="btn-add" onClick={onAddClick}>
+            <PlusIcon width={16} height={16} stroke="currentColor" />
+            Nuovo {getSingularForm(title.split(' ')[1] || 'Elemento')}
+          </button>
         )}
       </div>
 
       {statsContent && (
-        <div className="stats-grid">
+        <div className="stats-grid stats-box">
           {statsContent}
         </div>
       )}
@@ -69,27 +71,30 @@ function ListPageTemplate({
           active={activeFilter}
           onSelect={(v) => {
             onFilterSelect(v);
-            searchControls.clearSearch();
+            if (searchControls) searchControls.clearSearch();
             tableControls.setPage(0);
           }}
         />
       )}
 
       <div className="toolbar-actions">
-        <SearchBox
-          searchTerm={searchControls.searchTerm}
-          setSearchTerm={searchControls.setSearchTerm}
-          searchable={filterOptions?.searchable || "nome, cognome, o altri campi"}
-          onEnter={() => {
-            searchControls.applySearch();
-            tableControls.setPage(0);
-          }}
-        />
+        {searchControls && (
+          <SearchBox
+            searchTerm={searchControls.searchTerm}
+            setSearchTerm={searchControls.setSearchTerm}
+            searchable={filterOptions?.searchable || "nome, cognome, o altri campi"}
+            onEnter={() => {
+              searchControls.applySearch();
+              tableControls.setPage(0);
+            }}
+          />
+        )}
 
         <button className="btn-clear-filters" onClick={() => {
-          searchControls.clearSearch();
+          if (searchControls) searchControls.clearSearch();
           if (onFilterSelect) onFilterSelect('');
           tableControls.setPage(0);
+          if (onClearAllFilters) onClearAllFilters();  // Reset KPI filters
         }}>
           Cancella Filtri
         </button>

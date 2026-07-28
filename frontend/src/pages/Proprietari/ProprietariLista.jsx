@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+﻿import React, { useState, useMemo, useEffect } from 'react';
 import ProprietarioCreate from './ProprietarioCreate';
 import ListPageTemplate from '../../components/ListPageTemplate/ListPageTemplate';
 import { GearMenu } from '../../components/ContextMenu/ContextMenu';
@@ -7,6 +7,9 @@ import { loadFullProprietarioData } from '../../utils/dataLoader';
 import { useTableControls } from '../../hooks/useTableControls';
 import { usePaginatedFetch } from '../../hooks/usePaginatedFetch';
 import { useSearchControls } from '../../hooks/useSearchControls';
+import { useApi } from '../../services/apiService';
+import LoadingSpinner from '../../components/common/LoadingSpinner';
+import ErrorMessage from '../../components/common/ErrorMessage';
 
 function ProprietariLista() {
   const table = useTableControls({
@@ -20,14 +23,18 @@ function ProprietariLista() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingProprietario, setEditingProprietario] = useState(null);
+  const [stats, setStats] = useState(null);
+  const [statsLoading, setStatsLoading] = useState(true);
+  const [statsError, setStatsError] = useState(null);
+  const [statsRefreshIndex, setStatsRefreshIndex] = useState(0);
+  const { get, patch } = useApi();
 
-  // Memoizza i filtri per evitare ricalcoli inutili e garantire stabilità dei riferimenti
   const memoizedFilters = useMemo(() => ({
     search: search.appliedSearchTerm,
     stato: statoFiltro
   }), [search.appliedSearchTerm, statoFiltro]);
 
-  const { data: proprietari, loading, error, totalPages, totalCount } =
+  const { data: proprietari, loading, error, totalPages, totalCount, refetch } =
     usePaginatedFetch('/api/proprietari', {
       page: table.page,
       size: table.size,
@@ -45,7 +52,7 @@ function ProprietariLista() {
   const filterOptions = {
     label: 'Stato',
     options: statoOptions,
-    searchable: 'nome, cognome, telefono, email, codice fiscale o città'
+    searchable: 'nome, cognome, telefono, email, codice fiscale o cittÃ '
   };
 
   const customColumns = [
@@ -91,12 +98,105 @@ function ProprietariLista() {
             {
               label: 'Modifica',
               onClick: () => handleEditProprietario(item)
+            },
+            { divider: true },
+            {
+              label: 'Imposta come Attivo',
+              onClick: () => handleStatusChange(item.id, true)
+            },
+            {
+              label: 'Imposta come Inattivo',
+              onClick: () => handleStatusChange(item.id, false)
             }
           ]}
         />
       )
     }
   ];
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        setStatsLoading(true);
+        const response = await get('/api/stats/proprietari');
+        const data = await response.json();
+        setStats(data || {});
+        setStatsError(null);
+      } catch (err) {
+        setStatsError(err);
+      } finally {
+        setStatsLoading(false);
+      }
+    };
+    fetchStats();
+  }, [get, statsRefreshIndex]);
+
+  const handleStatoCardFilter = (stato) => {
+    if (statoFiltro === stato) {
+      setStatoFiltro('');
+    } else {
+      setStatoFiltro(stato);
+    }
+    table.setPage(0);
+  };
+
+  const handleClearAllFilters = () => {
+    search.clearSearch();
+    setStatoFiltro('');
+  };
+
+  const statsContent = (
+    <>
+      {statsLoading ? (
+        <div className="stats-loading">
+          <LoadingSpinner size="small" />
+        </div>
+      ) : statsError ? (
+        <div className="stats-error">
+          <ErrorMessage error={statsError} />
+        </div>
+      ) : stats ? (
+        <>
+          <div
+            className={`stat-card ${!statoFiltro ? 'stat-active' : ''}`}
+            onClick={() => {
+              setStatoFiltro('');
+              table.setPage(0);
+            }}
+            style={{ cursor: 'pointer' }}
+          >
+            <div className="stat-number stat-primary">{stats.totalCount}</div>
+            <div className="stat-label">Totale Proprietari</div>
+          </div>
+
+          <div
+            className={`stat-card ${statoFiltro === 'true' ? 'stat-active' : ''}`}
+            onClick={() => handleStatoCardFilter('true')}
+            style={{ cursor: 'pointer' }}
+          >
+            <div className="stat-number stat-success">{stats.attiviCount}</div>
+            <div className="stat-label">Attivi</div>
+          </div>
+
+          <div
+            className={`stat-card ${statoFiltro === 'false' ? 'stat-active' : ''}`}
+            onClick={() => handleStatoCardFilter('false')}
+            style={{ cursor: 'pointer' }}
+          >
+            <div className="stat-number stat-gray">{stats.inattiviCount}</div>
+            <div className="stat-label">Inattivi</div>
+          </div>
+
+          <div className="stat-card">
+            <div className="stat-number stat-info">
+              {stats.averageAnimaliPerProprietario?.toFixed(1) ?? '0.0'}
+            </div>
+            <div className="stat-label">Media Animali</div>
+          </div>
+        </>
+      ) : null}
+    </>
+  );
 
   const emptyIcon = (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -105,24 +205,35 @@ function ProprietariLista() {
     </svg>
   );
 
-  const emptyMessage = search.appliedSearchTerm || statoFiltro 
-    ? 'Prova a modificare i filtri.' 
-    : 'Inizia aggiungendo primo proprietario.';
+  const emptyMessage = search.appliedSearchTerm || statoFiltro
+    ? 'Prova a modificare i filtri.'
+    : 'Inizia aggiungendo il primo proprietario.';
 
   const handleEditProprietario = (proprietario) => {
-    // Load full proprietario data before opening the edit modal
     loadFullProprietarioData(proprietario.id,
       (fullProprietarioData) => {
         setEditingProprietario(fullProprietarioData);
         setShowEditModal(true);
       },
       (error) => {
-        console.error('Failed to load full proprietario data, using partial data:', error);
-        // Fallback to partial data if full data load fails
+        logger.error('Failed to load full proprietario data:', error);
         setEditingProprietario(proprietario);
         setShowEditModal(true);
       }
     );
+  };
+
+  const handleStatusChange = async (id, newStatus) => {
+    try {
+      const response = await patch(`/api/proprietari/${id}`, { stato: newStatus });
+      if (!response.ok) {
+        throw new Error(`Errore nell'aggiornamento dello stato: ${response.status}`);
+      }
+      setStatsRefreshIndex(prev => prev + 1);
+      refetch();
+    } catch (err) {
+      logger.error('Failed to update proprietario status:', err);
+    }
   };
 
   const additionalContent = (
@@ -130,9 +241,8 @@ function ProprietariLista() {
       {showCreateModal && (
         <ProprietarioCreate
           onClose={() => setShowCreateModal(false)}
-          onSuccess={(newProprietario) => {
-            // Ricarica i dati dopo la creazione
-            // Questo triggererà un nuovo fetch dei dati
+          onSuccess={() => {
+            setStatsRefreshIndex(prev => prev + 1);
             table.setPage(0);
             search.clearSearch();
             setStatoFiltro('');
@@ -142,8 +252,8 @@ function ProprietariLista() {
       {showEditModal && editingProprietario && (
         <ProprietarioCreate
           onClose={() => setShowEditModal(false)}
-          onSuccess={(updatedProprietario) => {
-            // Ricarica i dati dopo l'aggiornamento
+          onSuccess={() => {
+            setStatsRefreshIndex(prev => prev + 1);
             table.setPage(0);
             search.clearSearch();
             setStatoFiltro('');
@@ -174,6 +284,8 @@ function ProprietariLista() {
       emptyIcon={emptyIcon}
       onAddClick={() => setShowCreateModal(true)}
       additionalContent={additionalContent}
+      statsContent={statsContent}
+      onClearAllFilters={handleClearAllFilters}
     />
   );
 }

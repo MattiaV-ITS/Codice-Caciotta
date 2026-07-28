@@ -1,28 +1,20 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+﻿import React, { useEffect, useMemo, useRef, useState, useCallback, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './PrenotazioniProgramma.css';
+import './PrenotazioniCalendario.css';
 import { formatDate, formatTime, parseDate } from '../../utils/dateUtils';
 import { useApi } from '../../services/apiService';
 import PrenotazioneCreateStaff from './PrenotazioneCreateStaff';
-import PrenotazioneContextMenu from '../../components/PrenotazioneContextMenu/PrenotazioneContextMenu';
-
-
-
-const MOTIVO_CLASS = {
-  'Visita di controllo': 'tipo-controllo',
-  'Vaccinazione': 'tipo-vaccinazione',
-  'Visita specialistica': 'tipo-specialistica',
-  "Visita d'urgenza": 'tipo-urgenza',
-  'Controllo post-operatorio': 'tipo-post-operatorio'
-};
-
-const MOTIVO_LEGENDA = [
-  { label: 'Controllo', color: '#3B82F6' },
-  { label: 'Vaccinazione', color: '#8B5CF6' },
-  { label: 'Specialistica', color: '#2A9D8F' },
-  { label: 'Urgenza', color: '#EF4444' },
-  { label: 'Post-operatorio', color: '#F59E0B' }
-];
+const PrenotazioneContextMenu = lazy(() => import('../../components/PrenotazioneContextMenu/PrenotazioneContextMenu'));
+import {
+  getPrestazioneClass,
+  getPrestazioneColor,
+  getPrestazioneDuration,
+  getPrestazioneLegenda,
+  FALLBACK_COLOR
+} from './prenotazioniUtils';
+import { PlusIcon } from '../../components/icons'; // âœ… Aggiunto
+import OrarioBloccatoCreateModal from '../../components/OrarioBloccatoCreateModal';
 
 const GIORNI_BREVI = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
 
@@ -67,7 +59,7 @@ function formatGapRange(start, end) {
 function formatTimeRange(start, minutes) {
   const end = new Date(start.getTime() + (minutes || 30) * 60000);
   const opt = { hour: '2-digit', minute: '2-digit' };
-  return `${start.toLocaleTimeString('it-IT', opt)} – ${end.toLocaleTimeString('it-IT', opt)}`;
+  return `${start.toLocaleTimeString('it-IT', opt)} â€“ ${end.toLocaleTimeString('it-IT', opt)}`;
 }
 
 // ==============================
@@ -82,8 +74,17 @@ function PrenotazioniProgramma() {
   const [now, setNow] = useState(new Date());
   const todayRef = useRef(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [prestazioni, setPrestazioni] = useState([]);
+  const [loadingPrestazioni, setLoadingPrestazioni] = useState(true);
+  const [showLegendPopup, setShowLegendPopup] = useState(false);
+  const [studioHours, setStudioHours] = useState([]);
+  const [specificOrari, setSpecificOrari] = useState([]);
+  const [loadingStudioHours, setLoadingStudioHours] = useState(true);
+  const [blockedTimes, setBlockedTimes] = useState([]);
+  const [loadingBlockedTimes, setLoadingBlockedTimes] = useState(true);
+  const [showBlockedSpotModal, setShowBlockedSpotModal] = useState(false);
 
-  const fetchPrenotazioni = async () => {
+  const fetchPrenotazioni = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -134,36 +135,110 @@ function PrenotazioniProgramma() {
           id: p.id,
           dataOraAppuntamento: dataOraAppuntamento,
           motivo: p.tipoVisita,
-          statoPrenotazione: 'Confermata', // Default status
+          stato: p.stato || 'NON_ARRIVATO',
           priorita: 'Media', // Default priority
           note: p.note || '',
           animaleNome: animaleNome,
           specie: specie,
           proprietarioNome: proprietarioNome,
-          durataMinuti: 30 // Default duration
+          durataMinuti: 30 // Will be overridden in dayGroups with real prestazione duration
         };
       });
       
       setPrenotazioni(transformedData);
       
     } catch (err) {
-      console.error('Error fetching prenotazioni:', err);
+      logger.error('Error fetching prenotazioni:', err);
       setError(err.message);
       // Show empty array on error
       setPrenotazioni([]);
     } finally {
       setLoading(false);
     }
-  };
+  }, [get]);
 
   useEffect(() => {
     fetchPrenotazioni();
-  }, [get]);
+  }, [fetchPrenotazioni]);
 
   useEffect(() => {
     const tick = setInterval(() => setNow(new Date()), 60000);
     return () => clearInterval(tick);
   }, []);
+
+  // Fetch prestazioni for color mapping
+  useEffect(() => {
+    const fetchPrestazioni = async () => {
+      try {
+        setLoadingPrestazioni(true);
+        const response = await get('/api/prestazioni');
+        if (response.ok) {
+          // Handle both array and Spring Page response formats
+          const data = await response.json();
+          const prestazioniArray = Array.isArray(data)
+            ? data
+            : (data.content && Array.isArray(data.content)
+                ? data.content
+                : []);
+          setPrestazioni(prestazioniArray);
+        }
+      } catch (error) {
+        logger.error('Error fetching prestazioni:', error);
+      } finally {
+        setLoadingPrestazioni(false);
+      }
+    };
+
+    fetchPrestazioni();
+  }, [get]);
+
+  // Fetch studio hours (default + specific date overrides)
+  useEffect(() => {
+    const fetchStudioHours = async () => {
+      try {
+        setLoadingStudioHours(true);
+        const response = await get('/api/admin/orari');
+        if (response.ok) {
+          const data = await response.json();
+          setStudioHours(data.defaultOrari || []);
+          setSpecificOrari(data.specificOrari || []);
+        }
+      } catch (error) {
+        logger.error('Error fetching studio hours:', error);
+      } finally {
+        setLoadingStudioHours(false);
+      }
+    };
+
+    fetchStudioHours();
+  }, [get]);
+
+  // Fetch blocked times
+  useEffect(() => {
+    const fetchBlockedTimes = async () => {
+      try {
+        setLoadingBlockedTimes(true);
+        const response = await get('/api/admin/orari/bloccati');
+        if (response.ok) {
+          const data = await response.json();
+          setBlockedTimes(data || []);
+        } else if (response.status === 403) {
+          const publicResponse = await get('/api/orari/bloccati');
+          if (publicResponse.ok) {
+            const publicData = await publicResponse.json();
+            setBlockedTimes(publicData || []);
+          }
+        }
+      } catch (error) {
+        logger.error('Error fetching blocked times:', error);
+        setBlockedTimes([]);
+      } finally {
+        setLoadingBlockedTimes(false);
+      }
+    };
+
+    fetchBlockedTimes();
+  }, [get]);
 
   // Raggruppa le prenotazioni per giorno e garantisce sempre la presenza
   // del giorno odierno (anche se vuoto), cosi' la barra "Ora" e' sempre visibile.
@@ -175,9 +250,11 @@ function PrenotazioniProgramma() {
         const start = parseDate(p.dataOraAppuntamento) || new Date();
         const key = dateKey(start);
         if (!map.has(key)) map.set(key, { date: startOfDay(start), events: [] });
-        map.get(key).events.push({ ...p, _start: start });
+        // Use real prestazione duration instead of hardcoded 30
+        const realDuration = getPrestazioneDuration(p.motivo, prestazioni);
+        map.get(key).events.push({ ...p, _start: start, durataMinuti: realDuration });
       } catch (error) {
-        console.error('Error parsing date for prenotazione:', p.id, error);
+        logger.error('Error parsing date for prenotazione:', p.id, error);
         // Skip this prenotazione if date parsing fails
       }
     });
@@ -190,7 +267,7 @@ function PrenotazioniProgramma() {
     const groups = Array.from(map.values()).sort((a, b) => a.date - b.date);
     groups.forEach((g) => g.events.sort((a, b) => a._start - b._start));
     return groups;
-  }, [prenotazioni, now]);
+  }, [prenotazioni, now, prestazioni]);
 
   // Costruisce la lista finale intervallando etichette per gli intervalli di
   // giorni senza prenotazioni (come fa Google Calendar nella vista Programma).
@@ -222,10 +299,13 @@ function PrenotazioniProgramma() {
         ...p,
         dataOraAppuntamento: updatedPrenotazione.dataOraAppuntamento,
         motivo: updatedPrenotazione.tipoVisita,
+        stato: updatedPrenotazione.stato || p.stato,
         note: updatedPrenotazione.note,
-        animaleNome: updatedPrenotazione.animale?.nome || p.animaleNome,
+        animaleNome: updatedPrenotazione.animale?.nome || updatedPrenotazione.animaleNome || p.animaleNome,
         specie: updatedPrenotazione.animale?.specie || p.specie,
-        proprietarioNome: updatedPrenotazione.proprietarioNome || p.proprietarioNome
+        proprietarioNome: updatedPrenotazione.proprietarioNome 
+          ? `${updatedPrenotazione.proprietarioNome} ${updatedPrenotazione.proprietarioCognome || ''}`.trim() 
+          : p.proprietarioNome
       } : p)
     );
   };
@@ -260,24 +340,41 @@ function PrenotazioniProgramma() {
         </div>
         <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
           <button className="btn-clear-filters" onClick={() => navigate('/')}>
-            ← Dashboard
+            â† Dashboard
           </button>
           <button className="btn-clear-filters" onClick={() => navigate('/prenotazioni/calendario')}>
             Vista Calendario
           </button>
-          <button className="btn-add" onClick={() => setShowCreateModal(true)}>+ Nuova Prenotazione</button>
+          <button className="btn-add" onClick={() => setShowCreateModal(true)}>
+            <PlusIcon width={16} height={16} stroke="currentColor" />
+            Nuova Prenotazione
+          </button>
+          <button className="btn-secondary" onClick={() => setShowBlockedSpotModal(true)}>
+            <PlusIcon width={16} height={16} stroke="currentColor" />
+            Crea Orario Bloccato
+          </button>
         </div>
       </div>
 
       <div className="prog-toolbar">
         <button className="cal-today-btn" onClick={scrollToToday}>Vai a oggi</button>
-        <div className="cal-legend">
-          {MOTIVO_LEGENDA.map((m) => (
-            <span className="cal-legend-item" key={m.label}>
-              <span className="cal-legend-dot" style={{ background: m.color }}></span>{m.label}
-            </span>
-          ))}
-        </div>
+          <div className="cal-legend">
+            {getPrestazioneLegenda(prestazioni).map((m) => (
+              <span className="cal-legend-item" key={m.label}>
+                <span className="cal-legend-dot" style={{ background: m.color }}></span>{m.label}
+              </span>
+            ))}
+            {prestazioni.length > 5 && (
+              <button
+                className="cal-legend-more"
+                onClick={() => setShowLegendPopup(!showLegendPopup)}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+              >
+                <PlusIcon width={12} height={12} stroke="currentColor" />
+                {prestazioni.length - 5} altre
+              </button>
+            )}
+          </div>
       </div>
 
       <div className="prog-list">
@@ -323,23 +420,35 @@ function PrenotazioniProgramma() {
                         <span className="prog-now-rule"></span>
                       </div>
                     )}
-                    <PrenotazioneContextMenu
-                      prenotazione={ev}
-                      onPrenotazioneDeleted={handlePrenotazioneDeleted}
-                      onPrenotazioneUpdated={handlePrenotazioneUpdated}
-                    >
-                      <div
-                        className={`prog-event ${MOTIVO_CLASS[ev.motivo] || 'tipo-altro'} ${
-                          ev.statoPrenotazione === 'Annullata' ? 'is-annullata' :
-                          ev.statoPrenotazione === 'Attesa' ? 'is-attesa' : ''
-                        }`}
+                    <Suspense fallback={<div className="prog-event prog-event-loading">Caricamento...</div>}>
+                      <PrenotazioneContextMenu
+                        prenotazione={ev}
+                        onPrenotazioneDeleted={handlePrenotazioneDeleted}
+                        onPrenotazioneUpdated={handlePrenotazioneUpdated}
                       >
-                        <div className="prog-event-title">{ev.animaleNome}</div>
-                        <div className="prog-event-time">{formatTimeRange(ev._start, ev.durataMinuti)}</div>
-                        <div className="prog-event-owner">{ev.proprietarioNome || 'Proprietario sconosciuto'}</div>
-                        <div className="prog-event-motivo">{ev.motivo}</div>
-                      </div>
-                    </PrenotazioneContextMenu>
+                        <div
+                          className={`prog-event ${getPrestazioneClass(ev.motivo, prestazioni)} ${
+                            ev.stato === 'COMPLETATO' ? 'is-completato' :
+                            ev.stato === 'IN_ATTESA' ? 'is-in-attesa' :
+                            ev.stato === 'NON_ARRIVATO' ? 'is-non-arrivato' : ''
+                          }`}
+                          style={{
+                            ...(getPrestazioneColor(ev.motivo, prestazioni) !== FALLBACK_COLOR && getPrestazioneColor(ev.motivo, prestazioni)
+                              ? {
+                                  background: `${getPrestazioneColor(ev.motivo, prestazioni)}22`,
+                                  borderLeftColor: getPrestazioneColor(ev.motivo, prestazioni),
+                                  color: getPrestazioneColor(ev.motivo, prestazioni)
+                                }
+                              : {})
+                          }}
+                        >
+                          <div className="prog-event-title">{ev.animaleNome}</div>
+                          <div className="prog-event-time">{formatTimeRange(ev._start, ev.durataMinuti)}</div>
+                          <div className="prog-event-owner">{ev.proprietarioNome || 'Proprietario sconosciuto'}</div>
+                          <div className="prog-event-motivo">{ev.motivo}</div>
+                        </div>
+                      </PrenotazioneContextMenu>
+                    </Suspense>
                   </React.Fragment>
                 ))}
 
@@ -358,7 +467,9 @@ function PrenotazioniProgramma() {
         })}
       </div>
 
-      <button className="prog-fab" onClick={() => setShowCreateModal(true)} aria-label="Nuova prenotazione">+</button>
+      <button className="prog-fab" onClick={() => setShowCreateModal(true)} aria-label="Nuova prenotazione">
+        <PlusIcon width={24} height={24} stroke="currentColor" />
+      </button>
       {showCreateModal && (
         <PrenotazioneCreateStaff 
           onClose={() => setShowCreateModal(false)}
@@ -368,6 +479,52 @@ function PrenotazioniProgramma() {
             fetchPrenotazioni();
           }}
         />
+      )}
+
+      {showBlockedSpotModal && (
+        <OrarioBloccatoCreateModal
+          onClose={() => setShowBlockedSpotModal(false)}
+          onSuccess={() => {
+            setShowBlockedSpotModal(false);
+            // Refresh blocked times
+            const fetchBlockedTimes = async () => {
+              try {
+                const response = await get('/api/admin/orari/bloccati');
+                if (response.ok) {
+                  const data = await response.json();
+                  setBlockedTimes(data || []);
+                }
+              } catch (error) {
+                logger.error('Error refreshing blocked times:', error);
+              }
+            };
+            fetchBlockedTimes();
+          }}
+          selectedDate={new Date().toISOString().split('T')[0]}
+        />
+      )}
+
+      {/* Legend Popup */}
+      {showLegendPopup && (
+        <div className="cal-legend-popup-overlay" onClick={() => setShowLegendPopup(false)}>
+          <div className="cal-legend-popup" onClick={e => e.stopPropagation()}>
+            <div className="cal-legend-popup-header">
+              <h3>Tutte le Prestazioni</h3>
+              <button className="cal-legend-popup-close" onClick={() => setShowLegendPopup(false)}>
+                Ã—
+              </button>
+            </div>
+            <div className="cal-legend-popup-content">
+              {prestazioni.map((p) => (
+                <div key={p.id} className="cal-legend-popup-item">
+                  <span className="cal-legend-popup-dot" style={{ backgroundColor: p.colore || '#6B7280' }}></span>
+                  <span className="cal-legend-popup-label">{p.nomePrestazione}</span>
+                  <span className="cal-legend-popup-cost">â‚¬{p.costoBase?.toFixed(2) || '0.00'}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

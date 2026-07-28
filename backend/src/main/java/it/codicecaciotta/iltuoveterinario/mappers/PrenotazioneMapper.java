@@ -2,7 +2,9 @@ package it.codicecaciotta.iltuoveterinario.mappers;
 
 import it.codicecaciotta.iltuoveterinario.dto.PrenotazioneDTO;
 import it.codicecaciotta.iltuoveterinario.dto.PrenotazioneCreateDTO;
+import it.codicecaciotta.iltuoveterinario.dto.PrenotazioneUpdateDTO;
 import it.codicecaciotta.iltuoveterinario.models.Prenotazione;
+import it.codicecaciotta.iltuoveterinario.models.EStatoPrenotazione;
 import it.codicecaciotta.iltuoveterinario.models.Animale;
 import it.codicecaciotta.iltuoveterinario.models.Proprietario;
 import it.codicecaciotta.iltuoveterinario.repositories.AnimaleRepository;
@@ -21,6 +23,7 @@ public class PrenotazioneMapper {
         dto.setDataOraAppuntamento(prenotazione.getDataOraAppuntamento());
         dto.setTipoVisita(prenotazione.getTipoVisita());
         dto.setNote(prenotazione.getNote());
+        dto.setStato(prenotazione.getStato() != null ? prenotazione.getStato().name() : "NON_ARRIVATO");
         
         // Handle animale relationship safely
         if (prenotazione.getAnimale() != null) {
@@ -56,6 +59,7 @@ public class PrenotazioneMapper {
         prenotazione.setDataOraAppuntamento(dto.getDataOraAppuntamento());
         prenotazione.setTipoVisita(dto.getTipoVisita());
         prenotazione.setNote(dto.getNote());
+        prenotazione.setStato(dto.getStato() != null ? EStatoPrenotazione.valueOf(dto.getStato()) : EStatoPrenotazione.NON_ARRIVATO);
         
         // Fetch and set Animale entity
         if (dto.getAnimaleId() != null) {
@@ -80,6 +84,44 @@ public class PrenotazioneMapper {
         return prenotazione;
     }
 
+    public static Prenotazione toEntity(PrenotazioneUpdateDTO dto, AnimaleRepository animaleRepository, ProprietarioRepository proprietarioRepository) {
+        if (dto == null)
+            return null;
+
+        // Validate repositories
+        if (animaleRepository == null || proprietarioRepository == null) {
+            throw new IllegalArgumentException("Repositories cannot be null");
+        }
+
+        Prenotazione prenotazione = new Prenotazione();
+        prenotazione.setDataOraAppuntamento(dto.getDataOraAppuntamento());
+        prenotazione.setTipoVisita(dto.getTipoVisita());
+        prenotazione.setNote(dto.getNote());
+        prenotazione.setStato(dto.getStato() != null ? EStatoPrenotazione.valueOf(dto.getStato()) : EStatoPrenotazione.NON_ARRIVATO);
+        
+        // Fetch and set Animale entity
+        if (dto.getAnimaleId() != null) {
+            Long animaleId = java.util.Objects.requireNonNull(dto.getAnimaleId(), "animaleId cannot be null");
+            Animale animale = animaleRepository.findById(animaleId)
+                    .orElseThrow(() -> new RuntimeException("Animale not found with id: " + animaleId));
+            prenotazione.setAnimale(animale);
+        } else {
+            throw new RuntimeException("animaleId cannot be null");
+        }
+        
+        // Fetch and set Proprietario entity
+        if (dto.getProprietarioId() != null) {
+            Long proprietarioId = java.util.Objects.requireNonNull(dto.getProprietarioId(), "proprietarioId cannot be null");
+            Proprietario proprietario = proprietarioRepository.findById(proprietarioId)
+                    .orElseThrow(() -> new RuntimeException("Proprietario not found with id: " + proprietarioId));
+            prenotazione.setProprietario(proprietario);
+        } else {
+            throw new RuntimeException("proprietarioId cannot be null");
+        }
+
+        return prenotazione;
+    }
+
     public static Prenotazione toEntity(PrenotazioneCreateDTO dto, AnimaleRepository animaleRepository, ProprietarioRepository proprietarioRepository) {
         if (dto == null)
             return null;
@@ -93,6 +135,7 @@ public class PrenotazioneMapper {
         prenotazione.setDataOraAppuntamento(dto.getDataOraAppuntamento());
         prenotazione.setTipoVisita(dto.getTipoVisita());
         prenotazione.setNote(dto.getNote());
+        prenotazione.setStato(dto.getStato() != null ? EStatoPrenotazione.valueOf(dto.getStato()) : EStatoPrenotazione.NON_ARRIVATO);
         
         // Fetch and set Animale entity
         if (dto.getAnimaleId() != null) {

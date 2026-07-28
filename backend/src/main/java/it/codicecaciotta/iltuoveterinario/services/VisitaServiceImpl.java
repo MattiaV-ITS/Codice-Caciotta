@@ -6,7 +6,6 @@ import it.codicecaciotta.iltuoveterinario.models.Animale;
 import it.codicecaciotta.iltuoveterinario.models.DiarioClinico;
 import it.codicecaciotta.iltuoveterinario.models.Visita;
 import it.codicecaciotta.iltuoveterinario.repositories.AnimaleRepository;
-import java.math.BigDecimal;
 import it.codicecaciotta.iltuoveterinario.repositories.VisitaRepository;
 import jakarta.persistence.EntityNotFoundException;
 
@@ -39,7 +38,6 @@ public class VisitaServiceImpl implements VisitaService {
         visita.setDataOraVisita(dto.getDataOraVisita());
         visita.setTipoVisita(dto.getTipoVisita());
         visita.setDataOraFineVisita(dto.getDataOraFineVisita());
-        visita.setImportoTotale(dto.getImportoTotale() != null ? dto.getImportoTotale() : BigDecimal.ZERO);
 
         Animale animale = animaleRepository.findById(animaleId)
                 .orElseThrow(() -> new EntityNotFoundException(
@@ -80,9 +78,6 @@ public class VisitaServiceImpl implements VisitaService {
         }
         if (dto.getTipoVisita() != null) {
             visita.setTipoVisita(dto.getTipoVisita());
-        }
-        if (dto.getImportoTotale() != null) {
-            visita.setImportoTotale(dto.getImportoTotale());
         }
         
         Visita savedVisita = visitaRepository.save(Objects.requireNonNull(visita));
@@ -130,13 +125,33 @@ public class VisitaServiceImpl implements VisitaService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Visita getVisitaById(@NonNull Long visitaId) {
-        return visitaRepository.findById(visitaId)
+        Visita visita = visitaRepository.findById(visitaId)
                 .orElseThrow(() -> new EntityNotFoundException("Visita not found with id: " + visitaId));
+        // Inizializza le prestazioni lazy per il mapper
+        if (visita.getPrestazioni() != null) {
+            visita.getPrestazioni().size();
+        }
+        // Inizializza anche la prenotazione lazy
+        if (visita.getPrenotazione() != null) {
+            visita.getPrenotazione().getTipoVisita();
+        }
+        return visita;
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Visita> getVisiteByAnimaleId(@NonNull Long animaleId) {
-        return visitaRepository.findByAnimaleId(animaleId);
+        List<Visita> visite = visitaRepository.findByAnimaleId(animaleId);
+        for (Visita visita : visite) {
+            if (visita.getPrestazioni() != null) {
+                visita.getPrestazioni().size();
+            }
+            if (visita.getPrenotazione() != null) {
+                visita.getPrenotazione().getTipoVisita();
+            }
+        }
+        return visite;
     }
 }

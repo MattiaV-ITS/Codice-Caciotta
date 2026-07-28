@@ -14,4 +14,6 @@ public interface VaccinazioneListaService {
     Page<VaccinazioneListaDTO> getVaccinazioniByStato(String stato, @NonNull Pageable pageable);
 
     Page<VaccinazioneListaDTO> getVaccinazioniByAnimale(Long animaleId, @NonNull Pageable pageable);
+
+    Page<VaccinazioneListaDTO> getVaccinazioniByProprietario(Long proprietarioId, @NonNull Pageable pageable);
 }

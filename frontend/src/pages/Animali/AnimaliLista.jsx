@@ -1,15 +1,17 @@
-import React, { useState, useMemo } from 'react';
+﻿import React, { useState, useMemo, useEffect } from 'react';
 import AnimaleCreate from './AnimaleCreate';
 import ListPageTemplate from '../../components/ListPageTemplate/ListPageTemplate';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { GearMenu } from '../../components/ContextMenu/ContextMenu';
 import { loadFullAnimaleData } from '../../utils/dataLoader';
-
 import { useTableControls } from '../../hooks/useTableControls';
 import { usePaginatedFetch } from '../../hooks/usePaginatedFetch';
 import { useSearchControls } from '../../hooks/useSearchControls';
 import { getIconLetter } from "../../utils";
-
+import { useApi } from '../../services/apiService';
+import LoadingSpinner from '../../components/common/LoadingSpinner';
+import ErrorMessage from '../../components/common/ErrorMessage';
+import { PawIcon, PlusIcon, SyringeIcon } from '../../components/icons';
 
 function AnimaliLista() {
   const table = useTableControls({
@@ -20,17 +22,25 @@ function AnimaliLista() {
 
   const search = useSearchControls();
   const [specieFilter, setSpecieFilter] = useState('');
+  const [statoFilter, setStatoFilter] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingAnimale, setEditingAnimale] = useState(null);
+  const [stats, setStats] = useState(null);
+  const [statsLoading, setStatsLoading] = useState(true);
+  const [statsError, setStatsError] = useState(null);
+  const [statsRefreshIndex, setStatsRefreshIndex] = useState(0);
+  const [animaliVaccinazioniScadute, setAnimaliVaccinazioniScadute] = useState([]);
+  const { get, patch } = useApi();
+  const navigate = useNavigate();
 
-  // Memoizza i filtri per evitare ricalcoli inutili e garantire stabilità dei riferimenti
   const memoizedFilters = useMemo(() => ({
     search: search.appliedSearchTerm,
-    specie: specieFilter
-  }), [search.appliedSearchTerm, specieFilter]);
+    specie: specieFilter,
+    stato: statoFilter
+  }), [search.appliedSearchTerm, specieFilter, statoFilter]);
 
-  const { data: animali, loading, error, totalPages, totalCount } =
+  const { data: animali, loading, error, totalPages, totalCount, refetch } =
     usePaginatedFetch('/api/animali', {
       page: table.page,
       size: table.size,
@@ -52,6 +62,32 @@ function AnimaliLista() {
     searchable: 'nome, microchip, specie, o proprietario'
   };
 
+  // Gestione click card
+  const handleSpecieFilter = (specie) => {
+    if (specieFilter === specie) {
+      setSpecieFilter('');
+    } else {
+      setSpecieFilter(specie);
+    }
+    table.setPage(0);
+  };
+
+  const handleStatoFilter = (stato) => {
+    if (statoFilter === stato) {
+      setStatoFilter('');
+    } else {
+      setStatoFilter(stato);
+    }
+    table.setPage(0);
+  };
+
+  const handleClearAllFilters = () => {
+    search.clearSearch();
+    setSpecieFilter('');
+    setStatoFilter('');
+  };
+
+  // Colonne tabella
   const customColumns = [
     {
       header: 'NOME ANIMALE',
@@ -60,13 +96,11 @@ function AnimaliLista() {
       render: (item) => {
         const isFemale = item.sesso?.toLowerCase() === 'f';
         const isMale = item.sesso?.toLowerCase() === 'm';
-
         const avatarClass = isFemale
           ? 'avatar-female'
           : isMale
           ? 'avatar-male'
           : 'avatar-default';
-
         return (
           <div className="cell-content">
             <div className={`avatar-circle ${avatarClass}`}>
@@ -81,9 +115,25 @@ function AnimaliLista() {
     },
     { header: 'SPECIE', field: 'specie', sortable: true },
     { header: 'RAZZA', field: 'razza', sortable: true },
-    { header: 'PROPRIETARIO', field: 'proprietario', sortable: false }, // TODO: Implementare sorting per proprietario non basta il true ma handling specifico
+    { header: 'PROPRIETARIO', field: 'proprietario', sortable: false },
     { header: 'DATA DI NASCITA', field: 'dataNascita', type: 'date', sortable: true },
     { header: 'MICROCHIP', field: 'microchip', sortable: true },
+    {
+      header: 'VACCINAZIONI',
+      field: 'vaccinazioni',
+      sortable: false,
+      render: (item) => {
+        const hasExpired = animaliVaccinazioniScadute.includes(item.id);
+        return hasExpired ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#e53e3e' }}>
+            <SyringeIcon width={16} height={16} fill="#e53e3e" />
+            <span style={{ fontSize: '12px', fontWeight: 600 }}>Scadute</span>
+          </div>
+        ) : (
+          <span style={{ color: '#38a169', fontSize: '12px' }}>Valide</span>
+        );
+      }
+    },
     {
       header: 'STATO',
       field: 'stato',
@@ -109,6 +159,24 @@ function AnimaliLista() {
             {
               label: 'Modifica',
               onClick: () => handleEditAnimale(item)
+            },
+            { divider: true },
+            {
+              label: 'Imposta come Sano',
+              onClick: () => handleStatusChange(item.id, 'SANO')
+            },
+            {
+              label: 'Imposta come Malato',
+              onClick: () => handleStatusChange(item.id, 'MALATO')
+            },
+            {
+              label: 'Imposta come In Cura',
+              onClick: () => handleStatusChange(item.id, 'IN_CURA')
+            },
+            {
+              label: 'Imposta come Deceduto',
+              className: 'danger',
+              onClick: () => handleStatusChange(item.id, 'DECEDUTO')
             }
           ]}
         />
@@ -117,47 +185,157 @@ function AnimaliLista() {
   ];
 
   const emptyIcon = (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="48" height="48">
-      <g fill="var(--gray-400)" opacity="0.5">
-        <ellipse cx="110" cy="235" rx="43" ry="58" transform="rotate(-30 110 235)" />
-        <ellipse cx="195" cy="144" rx="43" ry="68" transform="rotate(-8 195 144)" />
-        <ellipse cx="317" cy="144" rx="43" ry="68" transform="rotate(8 317 144)" />
-        <ellipse cx="402" cy="235" rx="43" ry="58" transform="rotate(30 402 235)" />
-        <path d="M 256, 240 
-                C 214, 240 148, 275 128, 332 
-                C 105, 396 150, 436 210, 436 
-                C 230, 436 244, 424 256, 419
-                C 268, 424 282, 436 302, 436 
-                C 362, 436 407, 396 384, 332 
-                C 364, 275 298, 240 256, 240 Z" />
-        </g>
-      </svg>
+    <PawIcon width="48" height="48" style={{ color: 'var(--gray-400)', opacity: 0.5 }} />
   );
 
-  const emptyMessage = search.appliedSearchTerm || specieFilter 
-    ? 'Prova a modificare i filtri.' 
-    : 'Inizia aggiungendo primo animale.';
+  // Fetch stats and expired vaccinations
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        setStatsLoading(true);
+        const [animaliRes, vaccRes] = await Promise.all([
+          get('/api/stats/animali'),
+          get('/api/stats/animali-vaccinazioni-scadute')
+        ]);
+        const animaliData = await animaliRes.json();
+        const vaccData = await vaccRes.json();
+        setStats(animaliData || {});
+        setAnimaliVaccinazioniScadute(Array.isArray(vaccData) ? vaccData : []);
+        setStatsError(null);
+      } catch (err) {
+        setStatsError(err);
+      } finally {
+        setStatsLoading(false);
+      }
+    };
+    fetchStats();
+  }, [get, statsRefreshIndex]);
 
-  const navigate = useNavigate();
+  // Stats content con card per IN_CURA
+  const statsContent = (
+    <>
+      {statsLoading ? (
+        <div className="stats-loading">
+          <LoadingSpinner size="small" />
+        </div>
+      ) : statsError ? (
+        <div className="stats-error">
+          <ErrorMessage error={statsError} />
+        </div>
+      ) : stats ? (
+        <>
+          {/* Totale */}
+          <div
+            className={`stat-card ${!specieFilter && !statoFilter ? 'stat-active' : ''}`}
+            onClick={() => {
+              setSpecieFilter('');
+              setStatoFilter('');
+              table.setPage(0);
+            }}
+            style={{ cursor: 'pointer' }}
+          >
+            <div className="stat-number stat-primary">{stats.totalCount ?? 0}</div>
+            <div className="stat-label">Totale Animali</div>
+          </div>
 
+          {/* Specie */}
+          <div
+            className={`stat-card ${specieFilter === 'cane' ? 'stat-active' : ''}`}
+            onClick={() => handleSpecieFilter('cane')}
+            style={{ cursor: 'pointer' }}
+          >
+            <div className="stat-number stat-info">{stats.caneCount ?? 0}</div>
+            <div className="stat-label">Cani</div>
+          </div>
+          <div
+            className={`stat-card ${specieFilter === 'gatto' ? 'stat-active' : ''}`}
+            onClick={() => handleSpecieFilter('gatto')}
+            style={{ cursor: 'pointer' }}
+          >
+            <div className="stat-number stat-info">{stats.gattoCount ?? 0}</div>
+            <div className="stat-label">Gatti</div>
+          </div>
+          <div
+            className={`stat-card ${specieFilter === 'altro' ? 'stat-active' : ''}`}
+            onClick={() => handleSpecieFilter('altro')}
+            style={{ cursor: 'pointer' }}
+          >
+            <div className="stat-number stat-info">{stats.altroCount ?? 0}</div>
+            <div className="stat-label">Altri</div>
+          </div>
+
+          {/* Stato salute - ora include IN_CURA */}
+          <div
+            className={`stat-card ${statoFilter === 'SANO' ? 'stat-active' : ''}`}
+            onClick={() => handleStatoFilter('SANO')}
+            style={{ cursor: 'pointer' }}
+          >
+            <div className="stat-number stat-success">{stats.sanoCount ?? 0}</div>
+            <div className="stat-label">Sani</div>
+          </div>
+          <div
+            className={`stat-card ${statoFilter === 'MALATO' ? 'stat-active' : ''}`}
+            onClick={() => handleStatoFilter('MALATO')}
+            style={{ cursor: 'pointer' }}
+          >
+            <div className="stat-number stat-warning">{stats.malatoCount ?? 0}</div>
+            <div className="stat-label">Malati</div>
+          </div>
+          <div
+            className={`stat-card ${statoFilter === 'IN_CURA' ? 'stat-active' : ''}`}
+            onClick={() => handleStatoFilter('IN_CURA')}
+            style={{ cursor: 'pointer' }}
+          >
+            <div className="stat-number stat-warning">{stats.inCuraCount ?? 0}</div>
+            <div className="stat-label">In Cura</div>
+          </div>
+          <div
+            className={`stat-card ${statoFilter === 'DECEDUTO' ? 'stat-active' : ''}`}
+            onClick={() => handleStatoFilter('DECEDUTO')}
+            style={{ cursor: 'pointer' }}
+          >
+            <div className="stat-number stat-danger">{stats.decedutoCount ?? 0}</div>
+            <div className="stat-label">Deceduti</div>
+          </div>
+        </>
+      ) : null}
+    </>
+  );
+
+  const emptyMessage = search.appliedSearchTerm || specieFilter || statoFilter
+    ? 'Prova a modificare i filtri.'
+    : 'Inizia aggiungendo il primo animale.';
+
+  // Gestione riga
   const handleRowClick = (animale) => {
     navigate(`/animali/${animale.id}`);
   };
 
   const handleEditAnimale = (animale) => {
-    // Load full animale data before opening the edit modal
-    loadFullAnimaleData(animale.id, 
+    loadFullAnimaleData(animale.id,
       (fullAnimaleData) => {
         setEditingAnimale(fullAnimaleData);
         setShowEditModal(true);
       },
       (error) => {
-        console.error('Failed to load full animale data, using partial data:', error);
-        // Fallback to partial data if full data load fails
+        logger.error('Failed to load full animale data:', error);
         setEditingAnimale(animale);
         setShowEditModal(true);
       }
     );
+  };
+
+  const handleStatusChange = async (id, newStatus) => {
+    try {
+      const response = await patch(`/api/animali/${id}`, { stato: newStatus });
+      if (!response.ok) {
+        throw new Error(`Errore nell'aggiornamento dello stato: ${response.status}`);
+      }
+      setStatsRefreshIndex(prev => prev + 1);
+      refetch();
+    } catch (err) {
+      logger.error('Failed to update animale status:', err);
+    }
   };
 
   const additionalContent = (
@@ -165,11 +343,13 @@ function AnimaliLista() {
       {showCreateModal && (
         <AnimaleCreate
           onClose={() => setShowCreateModal(false)}
-          onSuccess={(newAnimale) => {
-            // Refresh the list after successful creation
+          onSuccess={() => {
+            setStatsRefreshIndex(prev => prev + 1);
             search.clearSearch();
             setSpecieFilter('');
+            setStatoFilter('');
             table.setPage(0);
+            refetch();
             setShowCreateModal(false);
           }}
         />
@@ -177,11 +357,13 @@ function AnimaliLista() {
       {showEditModal && editingAnimale && (
         <AnimaleCreate
           onClose={() => setShowEditModal(false)}
-          onSuccess={(updatedAnimale) => {
-            // Refresh the list after successful update
+          onSuccess={() => {
+            setStatsRefreshIndex(prev => prev + 1);
             search.clearSearch();
             setSpecieFilter('');
+            setStatoFilter('');
             table.setPage(0);
+            refetch();
             setShowEditModal(false);
             setEditingAnimale(null);
           }}
@@ -208,8 +390,11 @@ function AnimaliLista() {
       emptyMessage={emptyMessage}
       emptyIcon={emptyIcon}
       onAddClick={() => setShowCreateModal(true)}
+      addIcon={<PlusIcon width={16} height={16} />}
       additionalContent={additionalContent}
       onRowClick={handleRowClick}
+      statsContent={statsContent}
+      onClearAllFilters={handleClearAllFilters}
     />
   );
 }

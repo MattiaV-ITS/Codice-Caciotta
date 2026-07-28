@@ -6,10 +6,10 @@ import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import java.math.BigDecimal;
 import java.time.Duration;
 
 @Entity
@@ -27,9 +27,6 @@ public class Visita {
     @Column(name = "data_ora_fine_visita", nullable = true) // puo essere null se non ancora terminata
     private LocalDateTime dataOraFineVisita;
 
-    @Column(name = "importo_totale", nullable = false, precision = 10, scale = 2)
-    private BigDecimal importoTotale;
-
     @Column(name = "tipo_visita", nullable = true)
     private String tipoVisita;
 
@@ -44,6 +41,16 @@ public class Visita {
     @ToString.Exclude
     @JsonIgnore
     private DiarioClinico diarioClinico;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+        name = "visita_prestazioni",
+        joinColumns = @JoinColumn(name = "visita_id"),
+        inverseJoinColumns = @JoinColumn(name = "prestazione_id")
+    )
+    @EqualsAndHashCode.Exclude
+    @ToString.Exclude
+    private List<Prestazione> prestazioni;
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "prenotazione_id", nullable = true)

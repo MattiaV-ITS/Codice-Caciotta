@@ -5,7 +5,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.web.config.EnableSpringDataWebSupport;
 import org.springframework.data.web.config.EnableSpringDataWebSupport.PageSerializationMode;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -50,18 +49,6 @@ public class WebSecurityConfig {
     }
 
     @Bean
-    @SuppressWarnings("deprecation") // TODO: Valutare se è possibile rimuovere l'uso di DaoAuthenticationProvider in
-                                     // futuro
-    public DaoAuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-
-        authProvider.setUserDetailsService(userDetailsService);
-        authProvider.setPasswordEncoder(passwordEncoder());
-
-        return authProvider;
-    }
-
-    @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
         return authConfig.getAuthenticationManager();
     }
@@ -101,7 +88,6 @@ public class WebSecurityConfig {
         });
 
         if (devMode) {
-            // TODO: Dev mode bypassa le richieste di autenticazione. Solo per sviluppo locale. Rimuovere in produzione.
             logger.error("DEV MODE ENABLED - All authentication is bypassed! Only use for local development!");
             http.csrf(csrf -> csrf.disable())
                     .authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
@@ -113,8 +99,6 @@ public class WebSecurityConfig {
                     .authorizeHttpRequests(auth -> auth.requestMatchers("/api/auth/**").permitAll()
                             .requestMatchers("/api/test/**").permitAll()
                             .anyRequest().authenticated());
-
-            http.authenticationProvider(authenticationProvider());
 
             http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
         }

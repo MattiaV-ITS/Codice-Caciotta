@@ -1,9 +1,7 @@
 package it.codicecaciotta.iltuoveterinario.dto;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
@@ -19,9 +17,6 @@ public class VisitaSchedaCreateDTO {
     private LocalDateTime dataOraFineVisita;
 
     private String tipoVisita;
-
-    @DecimalMin(value = "0.00", inclusive = true, message = "Importo totale deve essere maggiore o uguale a zero")
-    private BigDecimal importoTotale;
 
     private Long prenotazioneId;
 

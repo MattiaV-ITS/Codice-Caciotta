@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import FormModal from '../../components/FormModal/FormModal';
 import { validateRequired, validateEmail, validatePhone, validateFiscalCode } from '../../utils/validationUtils';
 import { getCurrentISODate } from '../../utils/dateUtils';
@@ -52,7 +52,7 @@ function ProprietarioCreate({ onClose, onSuccess, proprietario, isEditMode = fal
       case 'indirizzo':
         return validateRequired(value, "L'indirizzo");
       case 'citta':
-        return validateRequired(value, 'La città');
+        return validateRequired(value, 'La cittÃ ');
       case 'codiceFiscale':
         return validateFiscalCode(value);
       default:
@@ -137,8 +137,8 @@ function ProprietarioCreate({ onClose, onSuccess, proprietario, isEditMode = fal
         onClose();
         
       } catch (error) {
-        console.error(isEditMode ? 'Errore nell\'aggiornamento del proprietario:' : 'Errore nella creazione del proprietario:', error);
-        setSubmitError(error.message || (isEditMode ? 'Si è verificato un errore durante l\'aggiornamento del proprietario' : 'Si è verificato un errore durante la creazione del proprietario'));
+        logger.error(isEditMode ? 'Errore nell\'aggiornamento del proprietario:' : 'Errore nella creazione del proprietario:', error);
+        setSubmitError(error.message || (isEditMode ? 'Si Ã¨ verificato un errore durante l\'aggiornamento del proprietario' : 'Si Ã¨ verificato un errore durante la creazione del proprietario'));
         setIsSubmitting(false);
       }
     }
@@ -149,6 +149,7 @@ function ProprietarioCreate({ onClose, onSuccess, proprietario, isEditMode = fal
   return (
     <FormModal
       title={isEditMode ? "Modifica Proprietario" : "Nuovo Proprietario"}
+      submitLabel={isEditMode ? "Salva" : "Aggiungi"}
       onClose={onClose}
       isSubmitting={isSubmitting}
       submitError={submitError}
@@ -242,9 +243,9 @@ function ProprietarioCreate({ onClose, onSuccess, proprietario, isEditMode = fal
                 {hasError('indirizzo') && <div className="form-error">{errors.indirizzo}</div>}
               </div>
 
-              {/* Città */}
+              {/* CittÃ  */}
               <div className="form-group">
-                <label className="form-label">Città *</label>
+                <label className="form-label">CittÃ  *</label>
                 <input
                   type="text"
                   name="citta"

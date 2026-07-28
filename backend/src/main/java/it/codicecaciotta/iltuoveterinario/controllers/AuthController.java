@@ -42,8 +42,7 @@ import it.codicecaciotta.iltuoveterinario.dto.ProprietarioCreateDTO;
 
 @RestController
 @RequestMapping("/api/auth")
-// TODO: Esternalizzare l'origine consentita in un file di configurazione o variabile d'ambiente
-@CrossOrigin(origins = "${app.cors.allowedOrigins:http://localhost:5173}", maxAge = 3600)
+@CrossOrigin(origins = "${app.cors.allowed-origins}", maxAge = 3600)
 public class AuthController {
 
   private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
@@ -138,7 +137,11 @@ public class AuthController {
   public ResponseEntity<?> createProprietarioForUser(@Valid @RequestBody ProprietarioCreateDTO proprietarioCreateDTO) {
     try {
       // Get current user from security context
-      UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+      Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+      if (authentication == null || !(authentication.getPrincipal() instanceof UserDetailsImpl)) {
+        return ResponseEntity.status(401).body(new MessageResponse("Error: Authentication required"));
+      }
+      UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
       Long userId = Objects.requireNonNull(userDetails.getId(), "Authenticated user ID must not be null");
       Utente currentUser = userRepository.findById(userId)
           .orElseThrow(() -> new IllegalStateException("User not found"));
@@ -155,7 +158,11 @@ public class AuthController {
   @GetMapping("/me")
   public ResponseEntity<?> getCurrentUser() {
     try {
-      UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+      Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+      if (authentication == null || !(authentication.getPrincipal() instanceof UserDetailsImpl)) {
+        return ResponseEntity.status(401).body(new MessageResponse("Error: Authentication required"));
+      }
+      UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
       Long userId = Objects.requireNonNull(userDetails.getId(), "Authenticated user ID must not be null");
       Utente user = userRepository.findById(userId)
           .orElseThrow(() -> new IllegalStateException("User not found"));

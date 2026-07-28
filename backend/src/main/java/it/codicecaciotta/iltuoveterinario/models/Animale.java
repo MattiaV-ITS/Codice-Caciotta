@@ -33,7 +33,7 @@ public class Animale {
     @Column(nullable = true) // Razza puo essere null per alcune specie, quindi non è obbligatorio
     private String razza;
 
-    @Column(name = "data_di_nascita", nullable = false) // TODO: Data di nascita sconosciuta?
+    @Column(name = "data_di_nascita", nullable = false)
     private LocalDate dataNascita;
 
     @Column(nullable = true)
@@ -66,7 +66,6 @@ public class Animale {
     @Column(nullable = true) // Patologie opzionali
     private String patologie;
 
-    //TODO: Stato di salute da cambiare nell'analisi
     @Column(name = "stato", nullable = false) // indica lo stato di salute dell'animale, sano, deceduto, vaccino scaduto, in cura,...
     @Enumerated(EnumType.STRING)
     private EStatoAnimale stato = EStatoAnimale.SANO; // sano di default

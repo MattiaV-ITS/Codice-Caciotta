@@ -8,6 +8,8 @@ export function usePaginatedFetch(endpoint, { page, size, sortBy, sortDir, filte
   const [error, setError] = useState(null);
   const [totalPages, setTotalPages] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
+  const [refreshIndex, setRefreshIndex] = useState(0);
+  const refetch = () => setRefreshIndex(prev => prev + 1);
 
   // Crea filtri memoizzati con riferimento stabile quando il contenuto non cambia
   const memoizedFilters = useMemo(() => {
@@ -18,18 +20,11 @@ export function usePaginatedFetch(endpoint, { page, size, sortBy, sortDir, filte
       }
     });
     return filtered;
-  }, [
-    // Dipendenze individuali per la massima stabilità
-    filters?.search,
-    filters?.stato,
-    filters?.specie, 
-    filters?.citta,
-    filters?.animaleId // Aggiungi altri campi filtro potenziali
-  ]);
+  }, [filters]);
 
   useEffect(() => {
     let isMounted = true;
-    
+
     const fetchData = async () => {
       setLoading(true);
       setError(null);
@@ -45,7 +40,7 @@ export function usePaginatedFetch(endpoint, { page, size, sortBy, sortDir, filte
 
         const response = await get(`${endpoint}?${params.toString()}`);
         const json = await response.json();
-        
+
         if (isMounted) {
           setData(json.content || []);
           setTotalPages(json.page?.totalPages || 0);
@@ -65,7 +60,7 @@ export function usePaginatedFetch(endpoint, { page, size, sortBy, sortDir, filte
     return () => {
       isMounted = false;
     };
-  }, [endpoint, page, size, sortBy, sortDir, memoizedFilters, get]);
+  }, [endpoint, page, size, sortBy, sortDir, memoizedFilters, get, refreshIndex]);
 
-  return { data, loading, error, totalPages, totalCount };
+  return { data, loading, error, totalPages, totalCount, refetch };
 }

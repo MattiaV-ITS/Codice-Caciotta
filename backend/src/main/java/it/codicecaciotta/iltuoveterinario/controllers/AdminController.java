@@ -1,30 +1,32 @@
 package it.codicecaciotta.iltuoveterinario.controllers;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.transaction.annotation.Transactional;
 
 import it.codicecaciotta.iltuoveterinario.models.ERuoli;
+import it.codicecaciotta.iltuoveterinario.models.OrarioBloccato;
 import it.codicecaciotta.iltuoveterinario.models.Ruolo;
 import it.codicecaciotta.iltuoveterinario.models.Utente;
 import it.codicecaciotta.iltuoveterinario.payload.response.MessageResponse;
 import it.codicecaciotta.iltuoveterinario.repositories.RuoloRepository;
 import it.codicecaciotta.iltuoveterinario.repositories.UtenteRepository;
+import it.codicecaciotta.iltuoveterinario.services.OrarioBloccatoService;
 
 @RestController
 @RequestMapping("/api/admin")
@@ -34,10 +36,13 @@ public class AdminController {
 
 	private final UtenteRepository userRepository;
 	private final RuoloRepository roleRepository;
+	private final OrarioBloccatoService orarioBloccatoService;
 
-	public AdminController(UtenteRepository userRepository, RuoloRepository roleRepository) {
+	public AdminController(UtenteRepository userRepository, RuoloRepository roleRepository,
+						 OrarioBloccatoService orarioBloccatoService) {
 		this.userRepository = userRepository;
 		this.roleRepository = roleRepository;
+		this.orarioBloccatoService = orarioBloccatoService;
 	}
 
 	@PreAuthorize("hasAuthority('ROLE_ADMIN')")
@@ -145,6 +150,174 @@ public class AdminController {
 
 		public void setRoles(Set<String> roles) {
 			this.roles = roles;
+		}
+	}
+
+	// =======================================
+	// BLOCKED TIME SLOTS MANAGEMENT ENDPOINTS
+	// =======================================
+
+	@PreAuthorize("hasAuthority('ROLE_USER') or hasAuthority('ROLE_STAFF') or hasAuthority('ROLE_ADMIN')")
+	@Transactional(readOnly = true)
+	@GetMapping("/orari/bloccati")
+	public ResponseEntity<List<OrarioBloccato>> getAllBlockedTimes() {
+		List<OrarioBloccato> blockedTimes = orarioBloccatoService.getAllOrariBloccati();
+		return ResponseEntity.ok(blockedTimes);
+	}
+
+	@PreAuthorize("hasAuthority('ROLE_USER') or hasAuthority('ROLE_STAFF') or hasAuthority('ROLE_ADMIN')")
+	@Transactional(readOnly = true)
+	@GetMapping("/orari/bloccati/{data}")
+	public ResponseEntity<List<OrarioBloccato>> getBlockedTimesByDate(@PathVariable LocalDate data) {
+		List<OrarioBloccato> blockedTimes = orarioBloccatoService.getOrariBloccatiByData(data);
+		return ResponseEntity.ok(blockedTimes);
+	}
+
+	@PreAuthorize("hasAuthority('ROLE_ADMIN')")
+	@PostMapping("/orari/bloccati")
+	public ResponseEntity<?> createBlockedTimeSlot(@Valid @RequestBody CreateBlockedTimeRequest request) {
+		try {
+			Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+			String currentUsername = authentication != null ? authentication.getName() : "admin";
+
+			OrarioBloccato created = orarioBloccatoService.createOrarioBloccato(
+					request.getData(),
+					request.getOraInizio(),
+					request.getOraFine(),
+					request.getMotivo(),
+					currentUsername
+			);
+
+			logger.info("Created blocked time slot: {} {}-{}",
+					created.getData(), created.getOraInizio(), created.getOraFine());
+
+			return ResponseEntity.ok(new MessageResponse("Orario bloccato creato con successo"));
+		} catch (IllegalArgumentException e) {
+			return ResponseEntity.badRequest().body(new MessageResponse(e.getMessage()));
+		}
+	}
+
+	@PreAuthorize("hasAuthority('ROLE_ADMIN')")
+	@PutMapping("/orari/bloccati/{id}")
+	public ResponseEntity<?> updateBlockedTimeSlot(@PathVariable Long id, @Valid @RequestBody UpdateBlockedTimeRequest request) {
+		try {
+			OrarioBloccato updated = orarioBloccatoService.updateOrarioBloccato(
+					id,
+					request.getData(),
+					request.getOraInizio(),
+					request.getOraFine(),
+					request.getMotivo()
+			);
+			logger.info("Updated blocked time slot: {} {}-{}",
+					updated.getData(), updated.getOraInizio(), updated.getOraFine());
+			return ResponseEntity.ok(updated);
+		} catch (IllegalArgumentException e) {
+			return ResponseEntity.badRequest().body(new MessageResponse(e.getMessage()));
+		}
+	}
+
+	@PreAuthorize("hasAuthority('ROLE_ADMIN')")
+	@DeleteMapping("/orari/bloccati/{id}")
+	public ResponseEntity<?> deleteBlockedTimeSlot(@PathVariable Long id) {
+		try {
+			orarioBloccatoService.deleteOrarioBloccato(id);
+			logger.info("Deleted blocked time slot with ID: {}", id);
+			return ResponseEntity.ok(new MessageResponse("Orario bloccato rimosso con successo"));
+		} catch (IllegalArgumentException e) {
+			return ResponseEntity.badRequest().body(new MessageResponse(e.getMessage()));
+		}
+	}
+
+
+	public static class CreateBlockedTimeRequest {
+		@NotNull
+		private LocalDate data;
+
+		@NotNull
+		private LocalTime oraInizio;
+
+		@NotNull
+		private LocalTime oraFine;
+
+		private String motivo;
+
+		// Getters and setters
+		public LocalDate getData() {
+			return data;
+		}
+
+		public void setData(LocalDate data) {
+			this.data = data;
+		}
+
+		public LocalTime getOraInizio() {
+			return oraInizio;
+		}
+
+		public void setOraInizio(LocalTime oraInizio) {
+			this.oraInizio = oraInizio;
+		}
+
+		public LocalTime getOraFine() {
+			return oraFine;
+		}
+
+		public void setOraFine(LocalTime oraFine) {
+			this.oraFine = oraFine;
+		}
+
+		public String getMotivo() {
+			return motivo;
+		}
+
+		public void setMotivo(String motivo) {
+			this.motivo = motivo;
+		}
+	}
+
+	public static class UpdateBlockedTimeRequest {
+		@NotNull
+		private LocalDate data;
+
+		@NotNull
+		private LocalTime oraInizio;
+
+		@NotNull
+		private LocalTime oraFine;
+
+		private String motivo;
+
+		// Getters and setters
+		public LocalDate getData() {
+			return data;
+		}
+
+		public void setData(LocalDate data) {
+			this.data = data;
+		}
+
+		public LocalTime getOraInizio() {
+			return oraInizio;
+		}
+
+		public void setOraInizio(LocalTime oraInizio) {
+			this.oraInizio = oraInizio;
+		}
+
+		public LocalTime getOraFine() {
+			return oraFine;
+		}
+
+		public void setOraFine(LocalTime oraFine) {
+			this.oraFine = oraFine;
+		}
+
+		public String getMotivo() {
+			return motivo;
+		}
+
+		public void setMotivo(String motivo) {
+			this.motivo = motivo;
 		}
 	}
 

@@ -6,13 +6,12 @@ import it.codicecaciotta.iltuoveterinario.models.ESesso;
 import lombok.Data;
 
 // DTO per la visualizzazione degli animali nella lista
-// TODO: Scegliere quali campi mostrare nella lista, per ora mostro i campi principali
 @Data
 public class AnimaleListaDTO {
 
     private Long id;
     private String nome;
-    private String specie; // TODO: Considerare se mostrare la razza e la specie unite
+    private String specie;
     private String razza;
     private LocalDate dataNascita;
     private ESesso sesso;

@@ -1,0 +1,296 @@
+/* =========================
+   MAIN LAYOUT (con sidebar)
+========================= */
+
+.main-layout {
+  display: flex;
+  flex: 1;
+  position: relative;
+  background: var(--gray-50);
+}
+
+/* =========================
+   SIDEBAR
+========================= */
+
+.sidebar {
+  width: 260px;
+  background: #ffffff;
+  border-right: 1px solid rgba(226, 232, 240, 0.6);
+  padding: var(--space-4) 0;
+  flex-shrink: 0;
+  height: calc(100vh - 64px);
+  position: sticky;
+  top: 64px;
+  overflow-y: auto;
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), width 0.2s ease;
+  z-index: 10;
+}
+
+/* Scrollbar personalizzata */
+.sidebar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+  background: var(--gray-300);
+  border-radius: 10px;
+  transition: background 0.2s;
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover {
+  background: var(--gray-400);
+}
+
+/* =========================
+   SIDEBAR NAV
+========================= */
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 0 var(--space-3);
+}
+
+.sidebar-nav .nav-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--gray-400);
+  padding: var(--space-3) var(--space-2) var(--space-1);
+  margin-top: var(--space-2);
+  opacity: 0.7;
+}
+
+/* =========================
+   NAV ITEMS
+========================= */
+
+.sidebar-nav .nav-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 10px 14px;
+  color: var(--gray-600);
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: var(--radius);
+  border-left: 3px solid transparent;
+  text-decoration: none;
+  cursor: pointer;
+  position: relative;
+  background: transparent;
+}
+
+/* Hover - solo trasformazione, il colore rimane grigio */
+.sidebar-nav .nav-item:hover {
+  background: var(--gray-50);
+  color: var(--gray-700);
+  transform: translateX(3px);
+}
+
+.sidebar-nav .nav-item:hover .nav-icon svg {
+  transform: scale(1.08);
+}
+
+/* Active - diventa verde */
+.sidebar-nav .nav-item.active {
+  color: var(--primary);
+  background: linear-gradient(135deg, var(--primary-light), rgba(42, 157, 143, 0.06));
+  border-left-color: var(--primary);
+  box-shadow: 
+    inset 0 1px 2px rgba(42, 157, 143, 0.06),
+    0 2px 4px rgba(42, 157, 143, 0.04);
+  transform: translateX(2px);
+}
+
+/* Glow effect per l'item attivo */
+.sidebar-nav .nav-item.active::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 20%;
+  width: 3px;
+  height: 60%;
+  background: var(--primary);
+  border-radius: 3px 0 0 3px;
+  opacity: 0.4;
+  animation: pulseGlow 2s ease-in-out infinite;
+}
+
+@keyframes pulseGlow {
+  0%, 100% { opacity: 0.3; transform: scaleY(1); }
+  50% { opacity: 0.7; transform: scaleY(1.1); }
+}
+
+/* =========================
+   NAV ICONS
+========================= */
+
+.sidebar-nav .nav-item .nav-icon {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Icone: default grigie */
+.sidebar-nav .nav-item .nav-icon svg {
+  color: var(--gray-500);
+  stroke: var(--gray-500);
+  transition: color 0.25s ease, stroke 0.25s ease, transform 0.25s ease;
+  width: 20px;
+  height: 20px;
+}
+
+/* Supporto per icone con fill="currentColor" */
+.sidebar-nav .nav-item .nav-icon svg[fill="currentColor"] {
+  fill: var(--gray-500);
+}
+
+/* Hover: stesso colore grigio, nessun cambio */
+.sidebar-nav .nav-item:hover .nav-icon svg {
+  color: var(--gray-500);
+  stroke: var(--gray-500);
+}
+
+.sidebar-nav .nav-item:hover .nav-icon svg[fill="currentColor"] {
+  fill: var(--gray-500);
+}
+
+/* Stato attivo: colore primario */
+.sidebar-nav .nav-item.active .nav-icon svg {
+  color: var(--primary) !important;
+  stroke: var(--primary) !important;
+}
+
+.sidebar-nav .nav-item.active .nav-icon svg[fill="currentColor"] {
+  fill: var(--primary) !important;
+}
+
+/* =========================
+   DIVIDER
+========================= */
+
+.sidebar-nav .nav-divider {
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--gray-200) 20%, var(--gray-200) 80%, transparent);
+  margin: var(--space-3) var(--space-2);
+  opacity: 0.5;
+}
+
+/* =========================
+   SIDEBAR OVERLAY (mobile)
+========================= */
+
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  top: 64px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(15, 23, 42, 0.5);
+  backdrop-filter: blur(6px) saturate(1.1);
+  z-index: 999;
+  opacity: 0;
+  transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebar-overlay.open {
+  display: block;
+  opacity: 1;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 1024px) {
+  .sidebar {
+    width: 220px;
+  }
+
+  .sidebar-nav .nav-item {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+
+  .sidebar-nav .nav-item .nav-icon svg {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    top: 64px;
+    left: 0;
+    bottom: 0;
+    width: 280px;
+    transform: translateX(-105%);
+    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease;
+    z-index: 1000;
+    background: #ffffff;
+    border-right: none;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+    padding-top: var(--space-2);
+    height: calc(100vh - 64px);
+    overflow-y: auto;
+    border-radius: 0 16px 16px 0;
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+  .sidebar-nav .nav-item {
+    padding: 12px 16px;
+    font-size: 14px;
+  }
+
+  .sidebar-nav .nav-item .nav-icon svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .sidebar-nav .nav-item:hover {
+    transform: translateX(0);
+  }
+
+  .sidebar-nav .nav-item.active::after {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .sidebar {
+    width: 250px;
+  }
+
+  .sidebar-nav .nav-item {
+    padding: 10px 14px;
+    font-size: 13px;
+  }
+
+  .sidebar-nav .nav-item .nav-icon svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .sidebar-nav .nav-label {
+    font-size: 9px;
+    padding: var(--space-2) var(--space-2) var(--space-1);
+  }
+}

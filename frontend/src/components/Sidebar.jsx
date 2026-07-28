@@ -1,5 +1,18 @@
+import './Sidebar.css';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import {
+  HomeIcon,
+  ChartIcon,
+  UserIcon,
+  PawIcon,
+  CalendarIcon,
+  SyringeIcon,
+  LockIcon,
+  ServicesIcon,
+  ClockIcon,
+  InvoiceIcon
+} from '../components/icons';
 
 function Sidebar({ isOpen, closeMenu }) {
   const { user } = useAuth();
@@ -11,15 +24,17 @@ function Sidebar({ isOpen, closeMenu }) {
       <nav className="sidebar-nav">
         <div className="nav-label">Menu</div>
 
-        {/* Dashboard Utente - solo per USER */}
-        {user?.roles?.includes('ROLE_USER') && (
+        {/* Dashboard Utente - solo per USER (e non staff/admin) */}
+        {user?.roles?.includes('ROLE_USER') && !isStaff && (
           <NavLink
             to="/dashboard/user"
             className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
             end
             onClick={closeMenu}
           >
-            <span className="nav-icon">🏠</span>
+            <span className="nav-icon">
+              <HomeIcon width="20" height="20" strokeWidth="2" />
+            </span>
             Dashboard
           </NavLink>
         )}
@@ -32,7 +47,9 @@ function Sidebar({ isOpen, closeMenu }) {
             end
             onClick={closeMenu}
           >
-            <span className="nav-icon">📊</span>
+            <span className="nav-icon">
+              <ChartIcon width="20" height="20" strokeWidth="2" />
+            </span>
             Dashboard
           </NavLink>
         )}
@@ -45,7 +62,9 @@ function Sidebar({ isOpen, closeMenu }) {
               className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
               onClick={closeMenu}
             >
-              <span className="nav-icon">🐕</span>
+              <span className="nav-icon">
+                <PawIcon width="20" height="20" />
+              </span>
               Animali
             </NavLink>
 
@@ -54,7 +73,9 @@ function Sidebar({ isOpen, closeMenu }) {
               className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
               onClick={closeMenu}
             >
-              <span className="nav-icon">👥</span>
+              <span className="nav-icon">
+                <UserIcon width="20" height="20" strokeWidth="2" />
+              </span>
               Proprietari
             </NavLink>
 
@@ -63,8 +84,21 @@ function Sidebar({ isOpen, closeMenu }) {
               className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
               onClick={closeMenu}
             >
-              <span className="nav-icon">📅</span>
+              <span className="nav-icon">
+                <CalendarIcon width="20" height="20" strokeWidth="2" />
+              </span>
               Prenotazioni
+            </NavLink>
+
+            <NavLink
+              to="/prestazioni"
+              className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+              onClick={closeMenu}
+            >
+              <span className="nav-icon">
+                <ServicesIcon width="20" height="20" />
+              </span>
+              Prestazioni
             </NavLink>
 
             <NavLink
@@ -72,20 +106,49 @@ function Sidebar({ isOpen, closeMenu }) {
               className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
               onClick={closeMenu}
             >
-              <span className="nav-icon">💉</span>
+              <span className="nav-icon">
+                <SyringeIcon width="20" height="20" />
+              </span>
               Vaccinazioni
+            </NavLink>
+
+            <NavLink
+              to="/fatture/stats"
+              className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+              onClick={closeMenu}
+            >
+              <span className="nav-icon">
+                <InvoiceIcon width="20" height="20" />
+              </span>
+              Fatture
             </NavLink>
 
             <div className="nav-divider" />
 
             <div className="nav-label">Amministrazione</div>
 
+            {/* Orari Studio – viene prima di Admin */}
             <NavLink
-              to="/admin"
+              to="/admin/orari"
               className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
               onClick={closeMenu}
             >
-              <span className="nav-icon">⚙️</span>
+              <span className="nav-icon">
+                <ClockIcon width="20" height="20" />
+              </span>
+              Orari Studio
+            </NavLink>
+
+            {/* Admin – ora è l'ultimo elemento e usa "end" per evitare attivazione su /admin/orari */}
+            <NavLink
+              to="/admin"
+              end
+              className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+              onClick={closeMenu}
+            >
+              <span className="nav-icon">
+                <LockIcon width="20" height="20" strokeWidth="2" />
+              </span>
               Admin
             </NavLink>
           </>

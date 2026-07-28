@@ -1,35 +1,14 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useApi } from '../../services/apiService';
+import { useAuth } from '../../context/AuthContext';
 import SchedaAnimale from '../Animali/SchedaAnimale';
 import VisitaForm from './VisitaForm';
+import FattureLista from '../../components/FattureLista';
+import DocumentiAllegati from '../../components/Documenti/DocumentiAllegati';
 import { getCurrentISODatetime, toISODatetimeFormat, toISODateFormat, formatDate, formatDateShort, formatTime, parseDate } from '../../utils/dateUtils';
-
-// ==============================
-// ICONE SVG
-// ==============================
-const PlusIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="12" cy="12" r="10" stroke="var(--primary)" strokeWidth="2"/>
-    <path d="M12 8V16M8 12H16" stroke="var(--primary)" strokeWidth="2" strokeLinecap="round"/>
-  </svg>
-);
-
-const ShareIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="18" cy="5" r="3" stroke="var(--gray-600)" strokeWidth="2"/>
-    <circle cx="6" cy="12" r="3" stroke="var(--gray-600)" strokeWidth="2"/>
-    <circle cx="18" cy="19" r="3" stroke="var(--gray-600)" strokeWidth="2"/>
-    <path d="M8.59 13.51L15.42 17.49" stroke="var(--gray-600)" strokeWidth="2"/>
-    <path d="M15.41 6.51L8.59 10.49" stroke="var(--gray-600)" strokeWidth="2"/>
-  </svg>
-);
-
-const LightningIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M13 2L4 14H12L11 22L20 10H12L13 2Z" stroke="var(--primary)" strokeWidth="2" strokeLinejoin="round"/>
-  </svg>
-);
+import { PlusIcon, DangerIcon } from '../../components/icons';
+import VaccinazioniSidebar from '../../components/VaccinazioniSidebar/VaccinazioniSidebar';
 
 // ==============================
 // COMPONENTE
@@ -38,7 +17,8 @@ function VisitePagina() {
   const { id } = useParams();
   const navigate = useNavigate();
   const visitaId = parseInt(id);
-  const { get, post, patch } = useApi();
+  const api = useApi();
+  const { get } = api;
 
   const [visita, setVisita] = useState(null);
   const [animale, setAnimale] = useState(null);
@@ -46,8 +26,10 @@ function VisitePagina() {
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { user } = useAuth();
+  const isStaffOrAdmin = user?.roles?.some(r => r === 'ROLE_STAFF' || r === 'ROLE_ADMIN');
 
-  // ID della visita più recente per data (per il pulsante "Torna alla visita corrente")
+  // ID della visita piÃ¹ recente per data (per il pulsante "Torna alla visita corrente")
   const visitaCorrenteId = visite.length > 0 ? Math.max(...visite.map(v => {
     const date = parseDate(v.dataOraVisita);
     return date ? date.getTime() : 0;
@@ -64,19 +46,19 @@ function VisitePagina() {
       try {
         setIsLoading(true);
         setError(null);
-        
+
         if (visitaId) {
           // Fetch visita details
-          const visitaResponse = await get(`/api/visite/${visitaId}`);
+          const visitaResponse = await api.get(`/api/visite/${visitaId}`);
           if (!visitaResponse.ok) {
             throw new Error(`Failed to fetch visita: ${visitaResponse.status}`);
           }
           const visitaData = await visitaResponse.json();
-          
+
           // Fetch animal details using the visita data
           let animaleData;
           if (visitaData.animaleId) {
-            const animaleResponse = await get(`/api/animali/${visitaData.animaleId}`);
+            const animaleResponse = await api.get(`/api/animali/${visitaData.animaleId}`);
             if (!animaleResponse.ok) {
               throw new Error(`Failed to fetch animale: ${animaleResponse.status}`);
             }
@@ -84,11 +66,11 @@ function VisitePagina() {
           } else {
             throw new Error('Animal ID is missing from visita data');
           }
-          
+
           // Fetch previous visits for this animal
-          const visiteResponse = await get(`/api/visite/animale/${animaleData.id}`);
+          const visiteResponse = await api.get(`/api/visite/animale/${animaleData.id}`);
           const visiteData = await visiteResponse.json();
-          
+
           setVisita({
             id: visitaData.id,
             visitStart: visitaData.visitStart || visitaData.dataOraVisita,
@@ -103,17 +85,17 @@ function VisitePagina() {
             note: visitaData.note || '',
             notePrivate: visitaData.notePrivate || ''
           });
-          
+
           setAnimale(animaleData);
           setvisite(visiteData);
-          
+
         } else {
           // New visita - we need to know the animal ID from URL params or context
           // For now, let's assume it comes from URL params like /visite/new/:animaleId
           const animalId = parseInt(new URLSearchParams(window.location.search).get('animaleId'));
-          
+
           if (animalId && !isNaN(animalId)) {
-            const animaleResponse = await get(`/api/animali/${animalId}`);
+            const animaleResponse = await api.get(`/api/animali/${animalId}`);
             if (!animaleResponse.ok) {
               if (animaleResponse.status === 400) {
                 throw new Error('Invalid animal ID provided');
@@ -122,16 +104,16 @@ function VisitePagina() {
             }
             const animaleData = await animaleResponse.json();
             setAnimale(animaleData);
-            
+
             // Fetch previous visits for this animal
-            const visiteResponse = await get(`/api/visite/animale/${animalId}`);
+            const visiteResponse = await api.get(`/api/visite/animale/${animalId}`);
             const visiteData = await visiteResponse.json();
             setvisite(visiteData);
           }
-          
+
           // Set default values for new visita
           const nowStr = getCurrentISODatetime();
-          
+
           setVisita({
             id: null,
             visitStart: nowStr,
@@ -145,17 +127,17 @@ function VisitePagina() {
             notePrivate: ''
           });
         }
-        
+
       } catch (error) {
-        console.error('Error fetching data:', error);
+        logger.error('Error fetching data:', error);
         setError(error.message || 'Failed to load visita data');
       } finally {
         setIsLoading(false);
       }
     };
-    
+
     fetchData();
-  }, [visitaId, get]);
+  }, [visitaId]);
 
   // ----- SALVATAGGIO (senza popup) -----
   const saveVisita = async (visitaData) => {
@@ -163,7 +145,7 @@ function VisitePagina() {
     try {
       if (visita.id) {
         // Aggiornamento visita esistente
-        const response = await patch(`/api/visite/${visita.id}`, visitaData);
+        const response = await api.patch(`/api/visite/${visita.id}`, visitaData);
         if (!response.ok) {
           throw new Error(`Errore durante l'aggiornamento: ${response.status}`);
         }
@@ -187,7 +169,7 @@ function VisitePagina() {
         
         // Force refresh of the visits list to ensure right panel updates
         if (animale?.id) {
-          const visiteResponse = await get(`/api/visite/animale/${animale.id}`);
+          const visiteResponse = await api.get(`/api/visite/animale/${animale.id}`);
           if (visiteResponse.ok) {
             const visiteData = await visiteResponse.json();
             setvisite(visiteData);
@@ -199,7 +181,7 @@ function VisitePagina() {
         if (!animalId) {
           throw new Error('ID animale mancante');
         }
-        const response = await post(`/api/visite/animale/${animalId}`, visitaData);
+        const response = await api.post(`/api/visite/animale/${animalId}`, visitaData);
         if (!response.ok) {
           throw new Error(`Errore durante la creazione: ${response.status}`);
         }
@@ -208,7 +190,7 @@ function VisitePagina() {
         navigate(`/visite/${createdVisita.id}`);
       }
     } catch (err) {
-      // Rilancia l'errore per farlo gestire a VisitaForm (che lo mostrerà nel form)
+      // Rilancia l'errore per farlo gestire a VisitaForm (che lo mostrerÃ  nel form)
       throw err;
     } finally {
       setIsSaving(false);
@@ -237,7 +219,9 @@ function VisitePagina() {
   if (error) {
     return (
       <div className="error-wrapper">
-        <div className="error-icon">⚠️</div>
+        <div className="error-icon">
+          <DangerIcon width={32} height={32} style={{ color: '#C62828' }} />
+        </div>
         <h3>Errore di caricamento</h3>
         <p>{error}</p>
         <button className="btn btn-primary" onClick={() => window.location.reload()}>Riprova</button>
@@ -248,7 +232,7 @@ function VisitePagina() {
   if (!visita || !animale) {
     return (
       <div className="error-wrapper">
-        <div className="error-icon">❌</div>
+        <div className="error-icon" style={{ color: '#C62828', fontSize: '32px', fontWeight: 'bold' }}>âœ•</div>
         <h3>Dati non disponibili</h3>
         <p>Impossibile caricare i dati della visita o dell'animale</p>
         <button className="btn btn-primary" onClick={() => window.location.reload()}>Riprova</button>
@@ -257,13 +241,6 @@ function VisitePagina() {
   }
 
   const isVisitaCorrente = visitaId === visitaCorrente || !visita.id;
-  
-  // Funzioni per la struttura cartella
-  const handleFolderClick = (folderName) => {
-    console.log(`Apertura cartella: ${folderName}`);
-    // In una implementazione reale, questo navigherebbe alla pagina appropriata
-    // o aprirebbe un modal con i contenuti della cartella
-  };
 
   return (
     <div className="visite-pagina">
@@ -275,6 +252,7 @@ function VisitePagina() {
       <VisitaForm
         visita={visita}
         animale={animale}
+        proprietario={animale?.proprietario}
         onSave={saveVisita}
         onCancel={() => navigate('/visite')}
         isSaving={isSaving}
@@ -284,68 +262,48 @@ function VisitePagina() {
       {/* ==================== COLONNA DESTRA ==================== */}
       <div className="visite-colonna-destra">
 
-        {/* 1. BLOCCO "STRUTTURA CARTELLA" */}
-        <div className="visite-card">
-          <div className="visite-card-header">
-            <h3>Struttura Cartella</h3>
-          </div>
-          <div className="visite-card-body" style={{ paddingBottom: 'var(--space-3)' }}>
-            <div className="folder-tree">
-              <div 
-                className="folder-tree-item folder-main"
-                onClick={() => handleFolderClick('Cartella clinica')}
-                style={{ cursor: 'pointer' }}
-              >
-                <span className="folder-icon">📁</span>
-                <span className="folder-name">Cartella clinica</span>
-              </div>
-              <div className="folder-tree-children">
-                <div 
-                  className="folder-tree-item"
-                  onClick={() => handleFolderClick('Cronologia visite')}
-                  style={{ cursor: 'pointer' }}
-                >
-                  <span className="folder-icon">📁</span>
-                  <span className="folder-name">Cronologia visite</span>
-                </div>
-                <div 
-                  className="folder-tree-item"
-                  onClick={() => handleFolderClick('Ricette')}
-                  style={{ cursor: 'pointer' }}
-                >
-                  <span className="folder-icon">📁</span>
-                  <span className="folder-name">Ricette</span>
-                </div>
-                <div 
-                  className="folder-tree-item"
-                  onClick={() => handleFolderClick('Libretto vaccini')}
-                  style={{ cursor: 'pointer' }}
-                >
-                  <span className="folder-icon">📁</span>
-                  <span className="folder-name">Libretto vaccini</span>
-                </div>
-                <div 
-                  className="folder-tree-item"
-                  onClick={() => handleFolderClick('Documenti e allegati')}
-                  style={{ cursor: 'pointer' }}
-                >
-                  <span className="folder-icon">📁</span>
-                  <span className="folder-name">Documenti e allegati</span>
-                </div>
-                <div 
-                  className="folder-tree-item"
-                  onClick={() => handleFolderClick('Referti')}
-                  style={{ cursor: 'pointer' }}
-                >
-                  <span className="folder-icon">📁</span>
-                  <span className="folder-name">Referti</span>
-                </div>
-              </div>
+        {/* 1. BLOCCO "DOCUMENTI DELLA VISITA" */}
+        {visita.id && animale && (
+          <div className="visite-card">
+            <div className="visite-card-header">
+              <h3>Documenti Visita</h3>
+            </div>
+            <div className="visite-card-body" style={{ padding: 'var(--space-2)' }}>
+              <DocumentiAllegati
+                animaleId={animale.id}
+                visitaId={visita.id}
+                titolo="Documenti visita"
+                nascondiSeVuoto={false}
+              />
             </div>
           </div>
-        </div>
+        )}
 
-        {/* 2. BLOCCO "VISITE" */}
+        {/* 1b. BLOCCO "DOCUMENTI DELL'ANIMALE" (sempre visibili) */}
+        {animale && (
+          <div className="visite-card">
+            <div className="visite-card-header">
+              <h3>Documenti Animale</h3>
+            </div>
+            <div className="visite-card-body" style={{ padding: 'var(--space-2)' }}>
+              <DocumentiAllegati
+                animaleId={animale.id}
+                titolo="Tutti i documenti"
+                nascondiSeVuoto={false}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* 2. BLOCCO "FATTURE" */}
+        {visita.id && (
+          <FattureLista visitaId={visita.id} animaleId={animale.id} />
+        )}
+
+        {/* 3. BLOCCO "VACCINAZIONI" */}
+        <VaccinazioniSidebar animaleId={animale.id} animaleNome={animale.nome} isStaffOrAdmin={isStaffOrAdmin} />
+
+        {/* 4. BLOCCO "VISITE" */}
         <div className="visite-card visite-card-precedenti">
           <div className="visite-card-header">
             <h3>Visite</h3>
@@ -381,7 +339,7 @@ function VisitePagina() {
                       className="btn btn-primary btn-sm"
                       onClick={goToVisitaCorrente}
                     >
-                      ← Torna alla visita corrente
+                      â† Torna alla visita corrente
                     </button>
                   </div>
                 )}
@@ -392,9 +350,10 @@ function VisitePagina() {
             <button
               className="btn btn-primary btn-sm"
               onClick={() => navigate(`/visite/new?animaleId=${animale.id}`)}
-              style={{ width: '100%' }}
+              style={{ width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
             >
-              <PlusIcon /> Nuova Visita
+              <PlusIcon width={16} height={16} stroke="currentColor" />
+              Nuova Visita
             </button>
           </div>
         </div>

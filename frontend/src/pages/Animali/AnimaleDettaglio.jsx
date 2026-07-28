@@ -1,19 +1,31 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useApi } from '../../services/apiService';
+import { useAuth } from '../../context/AuthContext';
 import SchedaAnimale from './SchedaAnimale';
+import AnimaleCreate from './AnimaleCreate';
+import DocumentiAllegati from '../../components/Documenti/DocumentiAllegati';
 import { formatDateShort, formatTime } from '../../utils/dateUtils';
+import { PlusIcon } from '../../components/icons';
+import VaccinazioniSidebar from '../../components/VaccinazioniSidebar/VaccinazioniSidebar';
 
 function AnimaleDettaglio() {
   const { id } = useParams();
   const navigate = useNavigate();
   const animaleId = parseInt(id);
-  const { get } = useApi();
+  const api = useApi();
+  const { get, post, put, patch, remove } = api;
+  const { user } = useAuth();
 
   const [animale, setAnimale] = useState(null);
   const [visite, setVisite] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingAnimale, setEditingAnimale] = useState(null);
+  const [hasExpiredVaccinations, setHasExpiredVaccinations] = useState(false);
+
+  const isStaffOrAdmin = user?.roles?.some(r => r === 'ROLE_STAFF' || r === 'ROLE_ADMIN');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -21,8 +33,7 @@ function AnimaleDettaglio() {
         setIsLoading(true);
         setError(null);
         
-        // Fetch animal details
-        const animaleResponse = await get(`/api/animali/${animaleId}`);
+        const animaleResponse = await api.get(`/api/animali/${animaleId}`);
         if (!animaleResponse.ok) {
           throw new Error(`Failed to fetch animale: ${animaleResponse.status}`);
         }
@@ -34,23 +45,34 @@ function AnimaleDettaglio() {
         
         setAnimale(animaleData);
         
-        // Fetch visits for this animal
         try {
-          const visiteResponse = await get(`/api/visite/animale/${animaleId}`);
+          const visiteResponse = await api.get(`/api/visite/animale/${animaleId}`);
           if (visiteResponse.ok) {
             const visiteData = await visiteResponse.json();
             setVisite(Array.isArray(visiteData) ? visiteData : []);
           } else {
-            console.warn(`Failed to fetch visits for animal ${animaleId}: ${visiteResponse.status}`);
+            logger.warn(`Failed to fetch visits for animal ${animaleId}: ${visiteResponse.status}`);
             setVisite([]);
           }
         } catch (visiteError) {
-          console.error('Error fetching visits:', visiteError);
+          logger.error('Error fetching visits:', visiteError);
           setVisite([]);
+        }
+
+        // Check if animal has expired vaccinations
+        try {
+          const vaccRes = await api.get(`/api/stats/animali-vaccinazioni-scadute`);
+          if (vaccRes.ok) {
+            const vaccData = await vaccRes.json();
+            const expiredIds = Array.isArray(vaccData) ? vaccData : [];
+            setHasExpiredVaccinations(expiredIds.includes(animaleId));
+          }
+        } catch (vaccError) {
+          logger.error('Error fetching vaccination status:', vaccError);
         }
         
       } catch (error) {
-        console.error('Error fetching data:', error);
+        logger.error('Error fetching data:', error);
         setError(error.message || 'Failed to load animal data');
       } finally {
         setIsLoading(false);
@@ -60,6 +82,17 @@ function AnimaleDettaglio() {
     fetchData();
   }, [animaleId, get]);
 
+  const handleEditAnimale = (animaleData) => {
+    setEditingAnimale(animaleData);
+    setShowEditModal(true);
+  };
+
+  const handleEditSuccess = (updatedAnimale) => {
+    setAnimale(updatedAnimale);
+    setShowEditModal(false);
+    setEditingAnimale(null);
+  };
+
   const goToVisita = (visitaId) => {
     navigate(`/visite/${visitaId}`);
   };
@@ -67,8 +100,6 @@ function AnimaleDettaglio() {
   const goToNuovaVisita = () => {
     navigate(`/visite/new?animaleId=${animaleId}`);
   };
-
-
 
   if (isLoading) {
     return (
@@ -82,7 +113,7 @@ function AnimaleDettaglio() {
   if (error) {
     return (
       <div className="error-wrapper">
-        <div className="error-icon">⚠️</div>
+        <div className="error-icon">âš ï¸</div>
         <h3>Errore di caricamento</h3>
         <p>{error}</p>
         <button className="btn btn-primary" onClick={() => window.location.reload()}>Riprova</button>
@@ -93,7 +124,7 @@ function AnimaleDettaglio() {
   if (!animale) {
     return (
       <div className="error-wrapper">
-        <div className="error-icon">❌</div>
+        <div className="error-icon">âŒ</div>
         <h3>Dati non disponibili</h3>
         <p>Impossibile caricare i dati dell'animale</p>
         <button className="btn btn-primary" onClick={() => window.location.reload()}>Riprova</button>
@@ -104,10 +135,12 @@ function AnimaleDettaglio() {
   return (
     <div className="visite-pagina">
 
-      {/* ==================== COLONNA SINISTRA - DATI ANIMALE ==================== */}
-      <SchedaAnimale animale={animale} />
+      <SchedaAnimale 
+        animale={animale} 
+        hasExpiredVaccinations={hasExpiredVaccinations}
+        onEditClick={isStaffOrAdmin ? handleEditAnimale : undefined}
+      />
 
-      {/* ==================== COLONNA CENTRALE - SPAZIO VUOTO ==================== */}
       <div className="visite-colonna-center">
         <div className="visite-card">
           <div className="visite-card-header">
@@ -120,16 +153,33 @@ function AnimaleDettaglio() {
             <button 
               className="btn btn-primary"
               onClick={goToNuovaVisita}
-              style={{ marginTop: '20px' }}
+              style={{ marginTop: '20px', display: 'inline-flex', alignItems: 'center', gap: '8px' }}
             >
-              + Crea Nuova Visita
+              <PlusIcon width={16} height={16} stroke="currentColor" />
+              Crea Nuova Visita
             </button>
           </div>
         </div>
       </div>
 
-      {/* ==================== COLONNA DESTRA - VISITE ==================== */}
       <div className="visite-colonna-destra">
+        {/* DOCUMENTI DELL'ANIMALE */}
+        <div className="visite-card">
+          <div className="visite-card-header">
+            <h3>Documenti</h3>
+          </div>
+          <div className="visite-card-body" style={{ padding: 'var(--space-2)' }}>
+            <DocumentiAllegati
+              animaleId={animaleId}
+              titolo="Documenti"
+              nascondiSeVuoto={false}
+            />
+          </div>
+        </div>
+
+        {/* VACCINAZIONI */}
+        <VaccinazioniSidebar animaleId={animale.id} animaleNome={animale.nome} isStaffOrAdmin={isStaffOrAdmin} />
+
         <div className="visite-card visite-card-precedenti">
           <div className="visite-card-header">
             <h3>Visite dell'Animale</h3>
@@ -162,6 +212,14 @@ function AnimaleDettaglio() {
         </div>
       </div>
 
+      {showEditModal && editingAnimale && (
+        <AnimaleCreate
+          animale={editingAnimale}
+          isEditMode={true}
+          onClose={() => setShowEditModal(false)}
+          onSuccess={handleEditSuccess}
+        />
+      )}
     </div>
   );
 }

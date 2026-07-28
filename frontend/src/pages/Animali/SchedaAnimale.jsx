@@ -2,8 +2,11 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApi } from '../../services/apiService';
 import { formatDate } from '../../utils/dateUtils';
+import EditIcon from '../../components/icons/EditIcon';
+import DangerIcon from '../../components/icons/DangerIcon';
+import { SyringeIcon } from '../../components/icons';
 
-function SchedaAnimale({ animale, onVisitaClick }) {
+function SchedaAnimale({ animale, onEditClick, hasExpiredVaccinations }) {
   const navigate = useNavigate();
   const { get } = useApi();
 
@@ -25,7 +28,33 @@ function SchedaAnimale({ animale, onVisitaClick }) {
             {animale.stato || 'Sconosciuto'}
           </span>
         </div>
+
         <div className="visite-card-body">
+          {/* AVVISO VACCINAZIONI SCADUTE */}
+          {hasExpiredVaccinations && (
+            <div style={{
+              backgroundColor: '#fff5f5',
+              border: '1px solid #e53e3e',
+              borderRadius: '6px',
+              padding: '12px',
+              marginBottom: '16px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}>
+              <SyringeIcon width={20} height={20} fill="#e53e3e" />
+              <div>
+                <div style={{ color: '#c53030', fontWeight: 600, fontSize: '14px' }}>
+                  Vaccinazioni Scadute
+                </div>
+                <div style={{ color: '#c53030', fontSize: '12px', marginTop: '2px' }}>
+                  Questo animale ha vaccinazioni che richiedono rinnovo
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ANAGRAFICA */}
           <div className="visite-detail-section">
             <span className="visite-section-title">Anagrafica</span>
             <div className="visite-detail-item">
@@ -56,9 +85,11 @@ function SchedaAnimale({ animale, onVisitaClick }) {
             </div>
           </div>
 
+          {/* ALLERGIE E PATOLOGIE */}
           <div className="visite-detail-section">
             <span className="visite-section-title" style={{ color: '#C62828', fontWeight: 700 }}>
-              ⚠️ Allergie e Patologie
+              <DangerIcon width={16} height={16} style={{ marginRight: '4px', verticalAlign: 'middle' }} />
+              Allergie e Patologie
             </span>
             <div className="visite-detail-item">
               <span className="visite-detail-label" style={{ color: '#C62828' }}>Allergie</span>
@@ -74,6 +105,7 @@ function SchedaAnimale({ animale, onVisitaClick }) {
             </div>
           </div>
 
+          {/* DATI CLINICI */}
           <div className="visite-detail-section">
             <span className="visite-section-title">Dati Clinici</span>
             <div className="visite-detail-item">
@@ -102,6 +134,7 @@ function SchedaAnimale({ animale, onVisitaClick }) {
             </div>
           </div>
 
+          {/* PROPRIETARIO */}
           <div className="visite-detail-section">
             <span className="visite-section-title">Proprietario</span>
             <div className="visite-detail-item">
@@ -114,6 +147,7 @@ function SchedaAnimale({ animale, onVisitaClick }) {
             </div>
           </div>
 
+          {/* NOTE GENERALI */}
           <div className="visite-detail-section">
             <span className="visite-section-title">Note Generali</span>
             <div className="visite-detail-item">
@@ -121,6 +155,53 @@ function SchedaAnimale({ animale, onVisitaClick }) {
               <span className="visite-detail-value">{animale.noteGenerali || '-'}</span>
             </div>
           </div>
+
+          {/* PULSANTE MODIFICA */}
+          {onEditClick && (
+            <div 
+              className="visite-detail-section" 
+              style={{ 
+                marginTop: 'var(--space-4)', 
+                borderTop: '1px solid var(--gray-200)', 
+                paddingTop: 'var(--space-4)' 
+              }}
+            >
+              <button
+                type="button"
+                className="btn btn-outline btn-block"
+                onClick={() => onEditClick(animale)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  width: '100%',
+                  padding: '10px',
+                  borderRadius: 'var(--radius)',
+                  border: '1px solid var(--gray-300)',
+                  background: 'transparent',
+                  color: 'var(--gray-700)',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  fontSize: '14px',
+                  fontWeight: 500,
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'var(--primary-light)';
+                  e.currentTarget.style.borderColor = 'var(--primary)';
+                  e.currentTarget.style.color = 'var(--primary)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'transparent';
+                  e.currentTarget.style.borderColor = 'var(--gray-300)';
+                  e.currentTarget.style.color = 'var(--gray-700)';
+                }}
+              >
+                <EditIcon size={18} />
+                Modifica Animale
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

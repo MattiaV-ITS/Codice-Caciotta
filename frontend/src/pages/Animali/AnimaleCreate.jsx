@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
 import FormModal from '../../components/FormModal/FormModal';
 import { validateRequired, validateEmail, validatePhone, validateMicrochip, validatePositiveNumber, capitalizeFirstLetter } from '../../utils/validationUtils';
 
-function AnimaleCreate({ onClose, onSuccess, animale, isEditMode = false }) {
+function AnimaleCreate({ onClose, onSuccess, animale, isEditMode = false, proprietarioPrecompilatoId }) {
   const ALTRO_SESSO_VALUE = 'ALTRO_SCONOSCIUTO';
   const ALTRO_TAGLIA_VALUE = 'ALTRO_SCONOSCIUTA';
   const SPECIE_BASE_VALUES = ['cane', 'gatto', 'altro'];
@@ -26,6 +26,8 @@ function AnimaleCreate({ onClose, onSuccess, animale, isEditMode = false }) {
       specificaSpecie: value
     };
   };
+
+  const precompilatoId = proprietarioPrecompilatoId || (isEditMode && animale ? (animale.idProprietario || animale.proprietarioId) : null);
 
   const [formData, setFormData] = useState(() => {
     if (isEditMode && animale) {
@@ -70,7 +72,7 @@ function AnimaleCreate({ onClose, onSuccess, animale, isEditMode = false }) {
       stato: 'SANO',
       noteGenerali: '',
       notePrivate: '',
-      proprietarioId: ''
+      proprietarioId: precompilatoId ? String(precompilatoId) : ''
     };
   });
 
@@ -84,34 +86,39 @@ function AnimaleCreate({ onClose, onSuccess, animale, isEditMode = false }) {
   const [isLoading, setIsLoading] = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
 
+  
+
+  const isProprietarioPrecompilato = Boolean(proprietarioPrecompilatoId);
+
   const searchRef = useRef(null);
   
 
-  // Load proprietario data when in edit mode and animale has a proprietario
+  // Load proprietario data when in edit mode or when precompiled
   useEffect(() => {
-  if (isEditMode && animale && (animale.idProprietario || animale.proprietarioId) && !selectedProprietario) {
-    const proprietarioId = animale.idProprietario || animale.proprietarioId;
-    const loadProprietario = async () => {
-      try {
-        const token = localStorage.getItem('jwtToken');
-        const response = await fetch(`/api/proprietari/${proprietarioId}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
+    const proprietarioId = precompilatoId || (isEditMode && animale ? (animale.idProprietario || animale.proprietarioId) : null);
+    
+    if (proprietarioId && !selectedProprietario) {
+      const loadProprietario = async () => {
+        try {
+          const token = localStorage.getItem('jwtToken');
+          const response = await fetch(`/api/proprietari/${proprietarioId}`, {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          });
+          if (response.ok) {
+            const proprietarioData = await response.json();
+            setSelectedProprietario(proprietarioData);
+            setSearchTerm(`${proprietarioData.nome} ${proprietarioData.cognome}`);
           }
-        });
-        if (response.ok) {
-          const proprietarioData = await response.json();
-          setSelectedProprietario(proprietarioData);
-          setSearchTerm(`${proprietarioData.nome} ${proprietarioData.cognome}`);
+        } catch (error) {
+          logger.error('Errore nel caricamento del proprietario:', error);
         }
-      } catch (error) {
-        console.error('Errore nel caricamento del proprietario:', error);
-      }
-    };
-    loadProprietario();
-  }
-}, [isEditMode, animale, selectedProprietario]);
+      };
+      loadProprietario();
+    }
+  }, [isEditMode, animale, precompilatoId, selectedProprietario]);
 
 
 
@@ -166,7 +173,7 @@ function AnimaleCreate({ onClose, onSuccess, animale, isEditMode = false }) {
                   }
                   return proprietario;
                 } catch (error) {
-                  console.error('Errore nel recupero dei dati completi del proprietario:', error);
+                  logger.error('Errore nel recupero dei dati completi del proprietario:', error);
                   return proprietario;
                 }
               })
@@ -178,7 +185,7 @@ function AnimaleCreate({ onClose, onSuccess, animale, isEditMode = false }) {
             setShowSuggestions(false);
           }
         } catch (error) {
-          console.error('Errore ricerca proprietari:', error);
+          logger.error('Errore ricerca proprietari:', error);
           setSuggestions([]);
           setShowSuggestions(false);
         } finally {
@@ -238,7 +245,7 @@ function AnimaleCreate({ onClose, onSuccess, animale, isEditMode = false }) {
       case 'nome':
         return validateRequired(value, 'Il nome');
       case 'specie':
-        if (!value) return 'La specie è obbligatoria.';
+        if (!value) return 'La specie Ã¨ obbligatoria.';
         if (isAltroSpecie(value) && !formData.specificaSpecie.trim()) {
           return 'Specifica il tipo di animale.';
         }
@@ -351,14 +358,14 @@ function AnimaleCreate({ onClose, onSuccess, animale, isEditMode = false }) {
           onClose();
         } else {
           const errorData = await response.json();
-          console.error(isEditMode ? 'Aggiornamento animale fallito:' : 'Creazione animale fallita:', errorData);
+          logger.error(isEditMode ? 'Aggiornamento animale fallito:' : 'Creazione animale fallita:', errorData);
           setErrors(prev => ({
             ...prev,
             form: (isEditMode ? 'Failed to update animale: ' : 'Failed to create animale: ') + (errorData.message || 'Unknown error')
           }));
         }
       } catch (error) {
-        console.error('Errore durante la creazione dell\'animale:', error);
+        logger.error('Errore durante la creazione dell\'animale:', error);
         setErrors(prev => ({
           ...prev,
           form: 'Error creating animale: ' + error.message
@@ -384,6 +391,7 @@ function AnimaleCreate({ onClose, onSuccess, animale, isEditMode = false }) {
   return (
     <FormModal
       title={isEditMode ? "Modifica Animale" : "Nuovo Animale"}
+      submitLabel={isEditMode ? "Salva" : "Aggiungi"}
       onClose={onClose}
       isSubmitting={isLoading}
       submitError={errors.form}
@@ -590,7 +598,7 @@ function AnimaleCreate({ onClose, onSuccess, animale, isEditMode = false }) {
                       checked={formData.sterilizzato === true}
                       onChange={() => setFormData(prev => ({ ...prev, sterilizzato: true }))}
                     />
-                    Sì
+                    SÃ¬
                   </label>
                   <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
                     <input
@@ -680,82 +688,100 @@ function AnimaleCreate({ onClose, onSuccess, animale, isEditMode = false }) {
                 />
               </div>
 
-              {/* Proprietario con ricerca */}
-              <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                <label className="form-label">Proprietario</label>
-                <div ref={searchRef} style={{ position: 'relative' }}>
-                  <div style={{ position: 'relative' }}>
-                    <input
-                      type="text"
-                      className={`form-control ${hasError('proprietarioId') ? 'is-invalid' : ''}`}
-                      placeholder="Cerca per nome o cognome..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      onFocus={() => {
-                        if (searchTerm.length >= 1) {
-                          setShowSuggestions(suggestions.length > 0);
-                        }
-                      }}
-                    />
-                    {searchLoading && (
-                      <div style={{ 
-                        position: 'absolute', 
-                        right: '10px', 
-                        top: '50%', 
-                        transform: 'translateY(-50%)',
-                        fontSize: '12px',
-                        color: 'var(--gray-500)' 
-                      }}>
-                        Cercando...
-                      </div>
-                    )}
-                  </div>
-                  {hasError('proprietarioId') && <div className="form-error">{errors.proprietarioId}</div>}
-                  
-                  {/* Dropdown suggerimenti */}
-                  {showSuggestions && (
-                    <div style={{
-                      position: 'absolute',
-                      top: '100%',
-                      left: 0,
-                      right: 0,
-                      background: 'var(--white)',
-                      border: '1px solid var(--gray-200)',
-                      borderRadius: 'var(--radius)',
-                      maxHeight: '200px',
-                      overflowY: 'auto',
-                      zIndex: 10,
-                      boxShadow: 'var(--shadow-md)',
-                      marginTop: '2px'
-                    }}>
-                      {suggestions.map(p => (
-                        <div
-                          key={p.id}
-                          style={{
-                            padding: '8px 14px',
-                            cursor: 'pointer',
-                            transition: 'background 0.15s',
-                            borderBottom: '1px solid var(--gray-100)'
-                          }}
-                          onClick={() => selectProprietario(p)}
-                          onMouseEnter={(e) => e.target.style.background = 'var(--gray-50)'}
-                          onMouseLeave={(e) => e.target.style.background = 'transparent'}
-                        >
-                          <div style={{ fontWeight: 500 }}>{p.nome} {p.cognome}</div>
-                          <div style={{ fontSize: '12px', color: 'var(--gray-500)' }}>
-                            {p.email} • {p.telefono}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                {selectedProprietario && (
-                  <div style={{ marginTop: '4px', fontSize: '13px', color: 'var(--gray-500)' }}>
-                    Proprietario selezionato: <strong>{selectedProprietario.nome} {selectedProprietario.cognome}</strong>
-                  </div>
-                )}
-              </div>
+               {/* Proprietario con ricerca - nascosto se precompilato */}
+               {!isProprietarioPrecompilato && (
+                 <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                   <label className="form-label">Proprietario</label>
+                   <div ref={searchRef} style={{ position: 'relative' }}>
+                     <div style={{ position: 'relative' }}>
+                       <input
+                         type="text"
+                         className={`form-control ${hasError('proprietarioId') ? 'is-invalid' : ''}`}
+                         placeholder="Cerca per nome o cognome..."
+                         value={searchTerm}
+                         onChange={(e) => setSearchTerm(e.target.value)}
+                         onFocus={() => {
+                           if (searchTerm.length >= 1) {
+                             setShowSuggestions(suggestions.length > 0);
+                           }
+                         }}
+                       />
+                       {searchLoading && (
+                         <div style={{ 
+                           position: 'absolute', 
+                           right: '10px', 
+                           top: '50%', 
+                           transform: 'translateY(-50%)',
+                           fontSize: '12px',
+                           color: 'var(--gray-500)' 
+                         }}>
+                           Cercando...
+                         </div>
+                       )}
+                     </div>
+                     {hasError('proprietarioId') && <div className="form-error">{errors.proprietarioId}</div>}
+                     
+                     {/* Dropdown suggerimenti */}
+                     {showSuggestions && (
+                       <div style={{
+                         position: 'absolute',
+                         top: '100%',
+                         left: 0,
+                         right: 0,
+                         background: 'var(--white)',
+                         border: '1px solid var(--gray-200)',
+                         borderRadius: 'var(--radius)',
+                         maxHeight: '200px',
+                         overflowY: 'auto',
+                         zIndex: 10,
+                         boxShadow: 'var(--shadow-md)',
+                         marginTop: '2px'
+                       }}>
+                         {suggestions.map(p => (
+                           <div
+                             key={p.id}
+                             style={{
+                               padding: '8px 14px',
+                               cursor: 'pointer',
+                               transition: 'background 0.15s',
+                               borderBottom: '1px solid var(--gray-100)'
+                             }}
+                             onClick={() => selectProprietario(p)}
+                             onMouseEnter={(e) => e.target.style.background = 'var(--gray-50)'}
+                             onMouseLeave={(e) => e.target.style.background = 'transparent'}
+                           >
+                             <div style={{ fontWeight: 500 }}>{p.nome} {p.cognome}</div>
+                             <div style={{ fontSize: '12px', color: 'var(--gray-500)' }}>
+                               {p.email} â€¢ {p.telefono}
+                             </div>
+                           </div>
+                         ))}
+                       </div>
+                     )}
+                   </div>
+                   {selectedProprietario && (
+                     <div style={{ marginTop: '4px', fontSize: '13px', color: 'var(--gray-500)' }}>
+                       Proprietario selezionato: <strong>{selectedProprietario.nome} {selectedProprietario.cognome}</strong>
+                     </div>
+                   )}
+                 </div>
+               )}
+               
+               {/* Mostra il proprietario precompilato */}
+               {isProprietarioPrecompilato && selectedProprietario && (
+                 <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                   <label className="form-label">Proprietario</label>
+                   <div style={{ 
+                     padding: '8px 12px', 
+                     background: 'var(--gray-50)', 
+                     borderRadius: 'var(--radius)',
+                     border: '1px solid var(--gray-200)',
+                     fontSize: '14px'
+                   }}>
+                     <strong>{selectedProprietario.nome} {selectedProprietario.cognome}</strong>
+                   </div>
+                 </div>
+               )}
             </div>
           </FormModal>
   );

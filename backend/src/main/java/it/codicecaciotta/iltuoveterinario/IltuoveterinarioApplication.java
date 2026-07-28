@@ -12,6 +12,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.beans.factory.annotation.Value;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import it.codicecaciotta.iltuoveterinario.models.ERuoli;
 import it.codicecaciotta.iltuoveterinario.models.Ruolo;
@@ -21,6 +23,7 @@ import it.codicecaciotta.iltuoveterinario.repositories.UtenteRepository;
 
 @SpringBootApplication
 public class IltuoveterinarioApplication {
+	private static final Logger logger = LoggerFactory.getLogger(IltuoveterinarioApplication.class);
 
 	public static void main(String[] args) {
 		SpringApplication.run(IltuoveterinarioApplication.class, args);
@@ -31,23 +34,22 @@ public class IltuoveterinarioApplication {
 	public CommandLineRunner testDatabaseConnection(JdbcTemplate jdbcTemplate) {
 		return args -> {
 			try {
-				String result = jdbcTemplate.queryForObject("SELECT version()", String.class);
-				System.out.println("Connected to PostgreSQL, version: " + result);
+				jdbcTemplate.queryForObject("SELECT version()", String.class);
+				logger.info("Database connection successful");
 			} catch (Exception e) {
-				System.err.println("PostgreSQL connection failed; error: " + e.getMessage());
+				logger.error("Database connection failed", e);
 			}
 		};
 	}
 
-	//TODO: aggiungere a .env le credenziali di default per l'utente admin
 	@Bean
 	public CommandLineRunner seedSecurityData(
 			RuoloRepository roleRepository,
 			UtenteRepository userRepository,
 			PasswordEncoder passwordEncoder,
-			@Value("${app.admin.username:admin}") String adminUsername,
-			@Value("${app.admin.email:admin@example.com}") String adminEmail,
-			@Value("${app.admin.password:Admin123!}") String adminPassword) {
+			@Value("${APP_ADMIN_USERNAME:admin}") String adminUsername,
+			@Value("${APP_ADMIN_EMAIL:admin@example.com}") String adminEmail,
+			@Value("${APP_ADMIN_PASSWORD:Admin123!}") String adminPassword) {
 		return args -> {
 			Set<Ruolo> roles = EnumSet.allOf(ERuoli.class).stream()
 					.map(roleName -> roleRepository.findByNome(roleName)

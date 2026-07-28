@@ -24,4 +24,6 @@ public class PrenotazioneCreateDTO {
     
     @NotNull(message = "ID proprietario non può essere nullo")
     private Long proprietarioId;
+    
+    private String stato;
 }
