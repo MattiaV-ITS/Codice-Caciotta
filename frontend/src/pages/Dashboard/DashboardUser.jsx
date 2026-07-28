@@ -112,7 +112,7 @@ function DashboardUser() {
       setLoading(false);
     } catch (err) {
       logger.error('Errore caricamento dashboard utente:', err);
-      setError('Impossibile caricare i dati. Riprova piÃ¹ tardi.');
+      setError('Impossibile caricare i dati. Riprova pi\u00F9 tardi.');
       setLoading(false);
     }
   }, [get, user]);
@@ -251,7 +251,7 @@ function DashboardUser() {
           </div>
           <div className="kpi-change" style={{ fontSize: '13px', color: 'var(--gray-500)' }}>
             {prossimaVisita 
-              ? `${prossimaVisita.animaleNome} â€¢ ${formatTime(prossimaVisita.dataOraAppuntamento)}`
+              ? `${prossimaVisita.animaleNome} \u2022 ${formatTime(prossimaVisita.dataOraAppuntamento)}`
               : 'Nessuna visita programmata'}
           </div>
         </div>
@@ -317,7 +317,7 @@ function DashboardUser() {
                       <td>{formatDate(prenotazione.dataOraAppuntamento)}</td>
                       <td>{formatTime(prenotazione.dataOraAppuntamento)}</td>
                       <td>{prenotazione.tipoVisita}</td>
-                      <td className="actions-menu">â‹¯</td>
+                      <td className="actions-menu">\u22EF</td>
                     </tr>
                   ))}
                 </tbody>
@@ -396,8 +396,8 @@ function DashboardUser() {
                       </div>
                       <div className="animale-modern-meta">
                         <span>{animale.specie}</span>
-                        {animale.razza && <span>â€¢ {animale.razza}</span>}
-                        {animale.sesso && <span>â€¢ {animale.sesso === 'M' ? 'Maschio' : animale.sesso === 'F' ? 'Femmina' : ''}</span>}
+                        {animale.razza && <span> \u2022 {animale.razza}</span>}
+                        {animale.sesso && <span> \u2022 {animale.sesso === 'M' ? 'Maschio' : animale.sesso === 'F' ? 'Femmina' : ''}</span>}
                       </div>
                     </div>
 

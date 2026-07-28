@@ -1,15 +1,15 @@
-﻿import React, { useState, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import { useApi } from '../../services/apiService';
 
 const TIPI_DOCUMENTO = [
-  { value: 'REFERTO', label: 'Referto', icon: 'ðŸ“‹' },
-  { value: 'RICETTA', label: 'Ricetta', icon: 'ðŸ’Š' },
-  { value: 'ANALISI', label: 'Analisi', icon: 'ðŸ”¬' },
-  { value: 'LIBRETTO_VACCINALE', label: 'Libretto vaccinale', icon: 'ðŸ’‰' },
-  { value: 'CERTIFICATO', label: 'Certificato', icon: 'ðŸ“œ' },
-  { value: 'SCAN_FATTURA', label: 'Scan fattura', icon: 'ðŸ§¾' },
-  { value: 'DOCUMENTO_GENERICO', label: 'Documento generico', icon: 'ðŸ“„' },
-  { value: 'ALTRO', label: 'Altro', icon: 'ðŸ“' },
+  { value: 'REFERTO', label: 'Referto', icon: '📋' },
+  { value: 'RICETTA', label: 'Ricetta', icon: '💊' },
+  { value: 'ANALISI', label: 'Analisi', icon: '🔬' },
+  { value: 'LIBRETTO_VACCINALE', label: 'Libretto vaccinale', icon: '💉' },
+  { value: 'CERTIFICATO', label: 'Certificato', icon: '📜' },
+  { value: 'SCAN_FATTURA', label: 'Scan fattura', icon: '🧾' },
+  { value: 'DOCUMENTO_GENERICO', label: 'Documento generico', icon: '📄' },
+  { value: 'ALTRO', label: 'Altro', icon: '📁' },
 ];
 
 function UploadDocumentoModal({ animaleId, visitaId, fatturaId, filtroTipo, onClose, onSuccess }) {
@@ -48,7 +48,7 @@ function UploadDocumentoModal({ animaleId, visitaId, fatturaId, filtroTipo, onCl
 
     // Validazione dimensione max 20MB
     if (selectedFile.size > 20 * 1024 * 1024) {
-      setError('Il file Ã¨ troppo grande. Dimensione massima: 20MB.');
+      setError('Il file è troppo grande. Dimensione massima: 20MB.');
       return;
     }
 
@@ -128,7 +128,7 @@ function UploadDocumentoModal({ animaleId, visitaId, fatturaId, filtroTipo, onCl
 
       if (onSuccess) onSuccess();
     } catch (err) {
-      logger.error('Upload error:', err);
+      console.error('Upload error:', err);
       setError(err.message || 'Errore durante il caricamento del file');
     } finally {
       setIsUploading(false);
@@ -141,7 +141,7 @@ function UploadDocumentoModal({ animaleId, visitaId, fatturaId, filtroTipo, onCl
         <div className="modal-header">
           <h3>Carica Documento</h3>
           <button className="modal-close" onClick={onClose} disabled={isUploading}>
-            Ã—
+            ×
           </button>
         </div>
 
@@ -164,7 +164,7 @@ function UploadDocumentoModal({ animaleId, visitaId, fatturaId, filtroTipo, onCl
               {file ? (
                 <div className="upload-file-selezionato">
                   <span className="upload-file-icona">
-                    {file.type === 'application/pdf' ? 'ðŸ“„' : 'ðŸ–¼ï¸'}
+                    {file.type === 'application/pdf' ? '📄' : '🖼️'}
                   </span>
                   <div className="upload-file-info">
                     <strong>{file.name}</strong>
@@ -185,7 +185,7 @@ function UploadDocumentoModal({ animaleId, visitaId, fatturaId, filtroTipo, onCl
                 </div>
               ) : (
                 <div className="upload-dropzone-placeholder">
-                  <span className="upload-dropzone-icona">ðŸ“„</span>
+                  <span className="upload-dropzone-icona">📄</span>
                   <p>Trascina il file qui o clicca per selezionarlo</p>
                   <small>PDF, JPEG, PNG, TIFF o BMP (max 20MB)</small>
                 </div>

@@ -16,8 +16,8 @@ const ListaTable = ({
   loading, 
   error, 
   emptyMessage, 
-  emptyIcon = 'ðŸ”',
-  onRowClick // â† AGGIUNTA: callback per clic sulla riga
+  emptyIcon = '🔍',
+  onRowClick // ← AGGIUNTA: callback per clic sulla riga
 }) => {
   if (loading) {
     return (

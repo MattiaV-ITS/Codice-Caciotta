@@ -26,15 +26,15 @@ function OrarioBloccatoCreateModal({ onClose, onSuccess, selectedDate }) {
     const newErrors = {};
 
     if (!formData.data) {
-      newErrors.data = 'La data Ã¨ obbligatoria';
+      newErrors.data = 'La data è obbligatoria';
     }
 
     if (!formData.oraInizio) {
-      newErrors.oraInizio = "L'orario di inizio Ã¨ obbligatorio";
+      newErrors.oraInizio = "L'orario di inizio è obbligatorio";
     }
 
     if (!formData.oraFine) {
-      newErrors.oraFine = "L'orario di fine Ã¨ obbligatorio";
+      newErrors.oraFine = "L'orario di fine è obbligatorio";
     } else if (formData.oraInizio && formData.oraFine && formData.oraInizio >= formData.oraFine) {
       newErrors.oraFine = "L'orario di fine deve essere successivo all'orario di inizio";
     }
@@ -75,7 +75,7 @@ function OrarioBloccatoCreateModal({ onClose, onSuccess, selectedDate }) {
       logger.error('Error creating blocked time slot:', error);
       setErrors(prev => ({
         ...prev,
-        submit: error.message || 'Si Ã¨ verificato un errore durante la creazione dell\'orario bloccato'
+        submit: error.message || 'Si è verificato un errore durante la creazione dell\'orario bloccato'
       }));
     } finally {
       setIsSubmitting(false);
@@ -88,7 +88,7 @@ function OrarioBloccatoCreateModal({ onClose, onSuccess, selectedDate }) {
         <div className="modal-header">
           <h3>Crea Nuovo Orario Bloccato</h3>
           <button className="modal-close" onClick={onClose} disabled={isSubmitting}>
-            Ã—
+            ×
           </button>
         </div>
 

@@ -59,7 +59,7 @@ function formatGapRange(start, end) {
 function formatTimeRange(start, minutes) {
   const end = new Date(start.getTime() + (minutes || 30) * 60000);
   const opt = { hour: '2-digit', minute: '2-digit' };
-  return `${start.toLocaleTimeString('it-IT', opt)} â€“ ${end.toLocaleTimeString('it-IT', opt)}`;
+  return `${start.toLocaleTimeString('it-IT', opt)} – ${end.toLocaleTimeString('it-IT', opt)}`;
 }
 
 // ==============================
@@ -340,7 +340,7 @@ function PrenotazioniProgramma() {
         </div>
         <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
           <button className="btn-clear-filters" onClick={() => navigate('/')}>
-            â† Dashboard
+            ← Dashboard
           </button>
           <button className="btn-clear-filters" onClick={() => navigate('/prenotazioni/calendario')}>
             Vista Calendario
@@ -511,7 +511,7 @@ function PrenotazioniProgramma() {
             <div className="cal-legend-popup-header">
               <h3>Tutte le Prestazioni</h3>
               <button className="cal-legend-popup-close" onClick={() => setShowLegendPopup(false)}>
-                Ã—
+                ×
               </button>
             </div>
             <div className="cal-legend-popup-content">
@@ -519,7 +519,7 @@ function PrenotazioniProgramma() {
                 <div key={p.id} className="cal-legend-popup-item">
                   <span className="cal-legend-popup-dot" style={{ backgroundColor: p.colore || '#6B7280' }}></span>
                   <span className="cal-legend-popup-label">{p.nomePrestazione}</span>
-                  <span className="cal-legend-popup-cost">â‚¬{p.costoBase?.toFixed(2) || '0.00'}</span>
+                  <span className="cal-legend-popup-cost">€{p.costoBase?.toFixed(2) || '0.00'}</span>
                 </div>
               ))}
             </div>

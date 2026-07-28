@@ -138,7 +138,7 @@ function ProprietarioCreate({ onClose, onSuccess, proprietario, isEditMode = fal
         
       } catch (error) {
         logger.error(isEditMode ? 'Errore nell\'aggiornamento del proprietario:' : 'Errore nella creazione del proprietario:', error);
-        setSubmitError(error.message || (isEditMode ? 'Si Ã¨ verificato un errore durante l\'aggiornamento del proprietario' : 'Si Ã¨ verificato un errore durante la creazione del proprietario'));
+        setSubmitError(error.message || (isEditMode ? 'Si è verificato un errore durante l\'aggiornamento del proprietario' : 'Si è verificato un errore durante la creazione del proprietario'));
         setIsSubmitting(false);
       }
     }

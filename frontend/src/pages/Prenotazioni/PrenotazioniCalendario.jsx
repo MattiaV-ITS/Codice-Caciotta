@@ -146,11 +146,11 @@ function PrenotazioniCalendario() {
 
   // Days of week mapping for studio hours
   const daysOfWeek = [
-    { value: 'LUNEDI', label: 'LunedÃ¬' },
-    { value: 'MARTEDI', label: 'MartedÃ¬' },
-    { value: 'MERCOLEDI', label: 'MercoledÃ¬' },
-    { value: 'GIOVEDI', label: 'GiovedÃ¬' },
-    { value: 'VENERDI', label: 'VenerdÃ¬' },
+    { value: 'LUNEDI', label: 'Lunedì' },
+    { value: 'MARTEDI', label: 'Martedì' },
+    { value: 'MERCOLEDI', label: 'Mercoledì' },
+    { value: 'GIOVEDI', label: 'Giovedì' },
+    { value: 'VENERDI', label: 'Venerdì' },
     { value: 'SABATO', label: 'Sabato' },
     { value: 'DOMENICA', label: 'Domenica' }
   ];
@@ -556,7 +556,7 @@ function PrenotazioniCalendario() {
         </div>
         <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
           <button className="btn-clear-filters" onClick={() => navigate('/')}>
-            â† Dashboard
+            ← Dashboard
           </button>
           <button className="btn-clear-filters" onClick={() => navigate('/prenotazioni/programma')}>
             Vista Lista
@@ -574,9 +574,9 @@ function PrenotazioniCalendario() {
 
       <div className="cal-toolbar">
         <div className="cal-nav">
-          <button className="cal-nav-btn" onClick={goToPrevWeek} aria-label="Settimana precedente">â€¹</button>
+          <button className="cal-nav-btn" onClick={goToPrevWeek} aria-label="Settimana precedente">‹</button>
           <button className="cal-today-btn" onClick={goToToday}>Oggi</button>
-          <button className="cal-nav-btn" onClick={goToNextWeek} aria-label="Settimana successiva">â€º</button>
+          <button className="cal-nav-btn" onClick={goToNextWeek} aria-label="Settimana successiva">›</button>
           <span className="cal-range-label">{formatRangeLabel(weekStart)}</span>
 
           <div className="cal-date-input">
@@ -736,7 +736,7 @@ function PrenotazioniCalendario() {
                     const leftPct = ev._col * widthPct;
                     const isCompact = height < 40;
                     const endDate = new Date(ev._startDate.getTime() + ev.durataMinuti * 60000);
-                    const timeLabel = `${ev._startDate.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}â€“${endDate.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}`;
+                    const timeLabel = `${ev._startDate.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}–${endDate.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}`;
 
                     const prestazioneColor = getPrestazioneColor(ev.motivo, prestazioni);
                     const prestazioneClass = getPrestazioneClass(ev.motivo, prestazioni);
@@ -805,7 +805,7 @@ function PrenotazioniCalendario() {
                   {blockedTimesByDay[dayIdx].map((blocked) => {
                     const top = (blocked._start / SLOT_MIN) * SLOT_HEIGHT;
                     const height = Math.max(((blocked._end - blocked._start) / SLOT_MIN) * SLOT_HEIGHT - 2, 20);
-                    const timeLabel = `${blocked._startDate.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}â€“${blocked._endDate.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}`;
+                    const timeLabel = `${blocked._startDate.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}–${blocked._endDate.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}`;
 
                     return (
                       <Suspense key={`blocked-${blocked.id}`} fallback={<div className="cal-blocked-time" style={{ top, height, left: '2px', width: 'calc(100% - 4px)' }} />}>
@@ -881,7 +881,7 @@ function PrenotazioniCalendario() {
             <div className="cal-legend-popup-header">
               <h3>Tutte le Prestazioni</h3>
               <button className="cal-legend-popup-close" onClick={() => setShowLegendPopup(false)}>
-                Ã—
+                ×
               </button>
             </div>
             <div className="cal-legend-popup-content">
@@ -889,7 +889,7 @@ function PrenotazioniCalendario() {
                 <div key={p.id} className="cal-legend-popup-item">
                   <span className="cal-legend-popup-dot" style={{ backgroundColor: p.colore || '#6B7280' }}></span>
                   <span className="cal-legend-popup-label">{p.nomePrestazione}</span>
-                  <span className="cal-legend-popup-cost">â‚¬{p.costoBase?.toFixed(2) || '0.00'}</span>
+                  <span className="cal-legend-popup-cost">€{p.costoBase?.toFixed(2) || '0.00'}</span>
                 </div>
               ))}
             </div>

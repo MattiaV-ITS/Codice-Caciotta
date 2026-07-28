@@ -43,7 +43,7 @@ const OrarioBloccatoContextMenu = ({ children, blockedTime, onBlockedTimeUpdated
   const handleDeleteBlockedTime = useCallback(async () => {
     if (!blockedTime?.id || !isStaffOrAdmin) return;
 
-    if (!window.confirm('Sei sicuro di voler eliminare questo orario bloccato? Questa azione non puÃ² essere annullata.')) {
+    if (!window.confirm('Sei sicuro di voler eliminare questo orario bloccato? Questa azione non può essere annullata.')) {
       return;
     }
 

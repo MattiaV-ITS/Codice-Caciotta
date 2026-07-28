@@ -113,7 +113,7 @@ function AnimaleDettaglio() {
   if (error) {
     return (
       <div className="error-wrapper">
-        <div className="error-icon">âš ï¸</div>
+        <div className="error-icon">⚠️</div>
         <h3>Errore di caricamento</h3>
         <p>{error}</p>
         <button className="btn btn-primary" onClick={() => window.location.reload()}>Riprova</button>
@@ -124,7 +124,7 @@ function AnimaleDettaglio() {
   if (!animale) {
     return (
       <div className="error-wrapper">
-        <div className="error-icon">âŒ</div>
+        <div className="error-icon">❌</div>
         <h3>Dati non disponibili</h3>
         <p>Impossibile caricare i dati dell'animale</p>
         <button className="btn btn-primary" onClick={() => window.location.reload()}>Riprova</button>

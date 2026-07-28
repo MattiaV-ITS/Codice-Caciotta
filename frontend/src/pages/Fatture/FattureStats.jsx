@@ -38,8 +38,8 @@ function FattureStats() {
   }, [fetchStats]);
 
   const formatEuro = (value) => {
-    if (value === null || value === undefined) return 'â‚¬ 0,00';
-    return 'â‚¬ ' + Number(value).toLocaleString('it-IT', {
+    if (value === null || value === undefined) return '€ 0,00';
+    return '€ ' + Number(value).toLocaleString('it-IT', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2
     });

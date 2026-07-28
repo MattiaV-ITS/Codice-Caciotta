@@ -29,7 +29,7 @@ function VisitePagina() {
   const { user } = useAuth();
   const isStaffOrAdmin = user?.roles?.some(r => r === 'ROLE_STAFF' || r === 'ROLE_ADMIN');
 
-  // ID della visita piÃ¹ recente per data (per il pulsante "Torna alla visita corrente")
+  // ID della visita più recente per data (per il pulsante "Torna alla visita corrente")
   const visitaCorrenteId = visite.length > 0 ? Math.max(...visite.map(v => {
     const date = parseDate(v.dataOraVisita);
     return date ? date.getTime() : 0;
@@ -232,7 +232,7 @@ function VisitePagina() {
   if (!visita || !animale) {
     return (
       <div className="error-wrapper">
-        <div className="error-icon" style={{ color: '#C62828', fontSize: '32px', fontWeight: 'bold' }}>âœ•</div>
+        <div className="error-icon" style={{ color: '#C62828', fontSize: '32px', fontWeight: 'bold' }}>✕</div>
         <h3>Dati non disponibili</h3>
         <p>Impossibile caricare i dati della visita o dell'animale</p>
         <button className="btn btn-primary" onClick={() => window.location.reload()}>Riprova</button>
@@ -339,7 +339,7 @@ function VisitePagina() {
                       className="btn btn-primary btn-sm"
                       onClick={goToVisitaCorrente}
                     >
-                      â† Torna alla visita corrente
+                      ← Torna alla visita corrente
                     </button>
                   </div>
                 )}

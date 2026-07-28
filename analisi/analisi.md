@@ -1,370 +1,414 @@
 # ANALISI – SISTEMA DI GESTIONE STUDIO VETERINARIO ZAMPETTI
 
-
 ## 1. Descrizione del Problema
 Lo studio veterinario del Dott. Camillo Zampetti, situato a Bergamo Alta, si trova ad affrontare una serie di inefficienze operative dovute alla gestione manuale, analogica e frammentata delle attività quotidiane. Con un volume di circa 280 pazienti attivi (suddivisi tra cani, gatti e altri piccoli animali), lo studio risente pesantemente dei seguenti ostacoli:
 
--  Perdita di tempo in attività ripetitive: La gestione delle prenotazioni avviene tramite canali asincroni e non strutturati (telefonate tradizionali e messaggi WhatsApp manuali), saturando il tempo della reception e aumentando il rischio di errori umani o dimenticanze.
--	Informazioni cliniche incomplete e frammentate: Lo storico medico dei pazienti è diviso tra supporti cartacei (libretti vaccinali) e file digitali isolati. Questa disorganizzazione rende complessa, lenta e fallace la ricerca dei dati critici durante le visite o le chiamate d'urgenza.
--	Smarrimento delle prescrizioni: Le ricette cartacee fornite ai proprietari vengono spesso smarrite, costringendo il medico a ripetere le operazioni di emissione e controllo, appesantendo la burocrazia interna.
--	Isolamento delle informazioni genealogiche: In caso di patologie ereditarie o indagini anamnestiche di lungo periodo, l'assenza di uno storico permanente impedisce di tracciare le linee di sangue dei discendenti (es. analizzare le patologie pregresse dei genitori per curare i figli), a causa della prassi di eliminazione dei vecchi archivi.
+- Perdita di tempo in attività ripetitive: La gestione delle prenotazioni avviene tramite canali asincroni e non strutturati (telefonate tradizionali e messaggi WhatsApp manuali), saturando il tempo della reception e aumentando il rischio di errori umani o dimenticanze.
+- Informazioni cliniche incomplete e frammentate: Lo storico medico dei pazienti e' diviso tra supporti cartacei (libretti vaccinali) e file digitali isolati. Questa disorganizzazione rende complessa, lenta e fallace la ricerca dei dati critici durante le visite o le chiamate d'urgenza.
+- Smarrimento delle prescrizioni: Le ricette cartacee fornite ai proprietari vengono spesso smarrite, costringendo il medico a ripetere le operazioni di emissione e controllo, appesantendo la burocrazia interna.
 
 ## 2. Obiettivo del Progetto
 La startup Codice Caciotta propone lo sviluppo di una Web App gestionale integrata, progettata su misura e strutturata su un'architettura moderna a tre livelli (Frontend in React, Backend centralizzato in Spring Boot e Database relazionale PostgreSQL).
-L'obiettivo della piattaforma è centralizzare l'intero ecosistema dello studio, automatizzare i flussi burocratici, digitalizzare le cartelle cliniche e i libretti vaccinali, e trasformare i canali di comunicazione tradizionali (WhatsApp e SMS) in strumenti automatizzati di notifica e gestione di scadenze ed appuntamenti, garantendo al contempo la totale tracciabilità storica dei pazienti.
+L'obiettivo della piattaforma e' centralizzare l'intero ecosistema dello studio, automatizzare i flussi burocratici, digitalizzare le cartelle cliniche e i libretti vaccinali, garantendo al contempo la totale tracciabilita' storica dei pazienti.
 
-## 3. Entità del sistema
-Utenti
--	Attributi: id_utente, codice_fiscale, nome, cognome, email, telefono, indirizzo, città, data_registrazione, stato_attività, .
+## 3. Entita' del Sistema
 
-Animali (Pazienti)
--	Attributi: id_animale, nome, specie, razza, data_nascita, sesso, peso, microchip, colore_mantello, stato_sopravvivenza, note_generali.
+### Proprietari
+Tabella: `proprietari`
+- id (PK, auto-increment)
+- codice_fiscale (unique, nullable, max 16 caratteri)
+- nome (NOT NULL)
+- cognome (NOT NULL)
+- email (NOT NULL, unique)
+- telefono (NOT NULL)
+- indirizzo (NOT NULL)
+- citta (NOT NULL)
+- data_registrazione (NOT NULL, date)
+- stato (NOT NULL, boolean: true=attivo, false=disattivo)
 
-Prenotazioni
--	Attributi: id_prenotazione, data_prenotazione, data_ora_appuntamento, motivo, stato_prenotazione, priorità, note.
+### Animali (Pazienti)
+Tabella: `animali`
+- id (PK, auto-increment)
+- nome (NOT NULL)
+- specie (NOT NULL)
+- razza (nullable)
+- data_di_nascita (NOT NULL, date)
+- sesso (nullable, enum: M, F)
+- peso (NOT NULL, decimal)
+- microchip (nullable, unique, 15 caratteri)
+- taglia (nullable, enum: PICCOLA, MEDIA, GRANDE)
+- colore_mantello (nullable)
+- sterilizzato (nullable, default false)
+- gruppo_sanguigno (nullable)
+- allergie (nullable)
+- patologie (nullable)
+- stato (NOT NULL, enum: SANO, MALATO, IN_CURA, DECEDUTO, default SANO)
+- note_generali (nullable)
+- note_private (nullable)
+- proprietario_id (FK -> proprietari.id, nullable)
 
-Visite
--	Attributi: id_visita, data_ora_visita, tipo_visita, motivo/diagnosi, trattamento, durata, importo, stato, note.
+### Prenotazioni
+Tabella: `prenotazioni`
+- id (PK, auto-increment)
+- data_prenotazione (NOT NULL, timestamp)
+- data_ora_appuntamento (NOT NULL, timestamp)
+- tipo_visita (NOT NULL, string)
+- note (nullable)
+- stato (NOT NULL, enum: NON_ARRIVATO, IN_ATTESA, COMPLETATO, default NON_ARRIVATO)
+- prestazione_id (FK -> prestazioni.id, nullable)
+- animale_id (FK -> animali.id, NOT NULL)
+- proprietario_id (FK -> proprietari.id, NOT NULL)
 
-Cartelle Cliniche
--	Attributi: id_cartella_clinica, sintomi, diagnosi, trattamento_terapia, note.
+### Visite
+Tabella: `visite`
+- id (PK, auto-increment)
+- data_ora_visita (NOT NULL, timestamp)
+- data_ora_fine_visita (nullable, timestamp)
+- tipo_visita (nullable)
+- animale_id (FK -> animali.id, NOT NULL)
+- prenotazione_id (FK -> prenotazioni.id, nullable, UNIQUE)
 
-Ricette
--	Attributi: id_ricetta, codice_ricetta, data_emissione, farmaco_prescritto, posologia_modalità_uso, durata_terapia, note.
+### Prestazioni
+Tabella: `prestazioni`
+- id (PK, auto-increment)
+- nome_prestazione (NOT NULL)
+- descrizione (nullable)
+- durata_stimata (NOT NULL, integer, minuti)
+- costo_base (NOT NULL, decimal(10,2))
+- aliquota_iva (NOT NULL, integer, default 22)
+- stato (NOT NULL, boolean: true=Disponibile, false=Non disponibile)
+- note (nullable)
+- colore (nullable, string)
 
-Vaccinazioni
--	Attributi: id_vaccino, tipo_vaccino, data_somministrazione, data_scadenza, lotto_farmaco, stato, note.
+### Visita_Prestazioni (tabella ponte N:M)
+Tabella: `visita_prestazioni`
+- visita_id (FK -> visite.id)
+- prestazione_id (FK -> prestazioni.id)
 
-Prestazioni
--	Attributi: id_prestazione, nome_prestazione, descrizione, categoria, costo_base, aliquota_IVA, stato_disponibilità, note.
+### Diario Clinico
+Tabella: `diario_clinico`
+- id (PK, auto-increment)
+- sintomi (nullable)
+- diagnosi (nullable)
+- trattamento_terapia (nullable)
+- note (nullable)
+- note_private (nullable, visibili solo al veterinario)
+- visita_id (FK -> visite.id, NOT NULL, UNIQUE)
 
-Fatture
--	Attributi: id_fattura, numero_fattura, data_emissione, descrizione_prestazione, importo_imponibile, aliquota_IVA, importo_IVA, importo_totale, denominazione_cliente, codice_fiscale_cliente, partita_IVA_cliente, indirizzo_cliente, codice_destinatario, PEC_cliente, metodo_pagamento, stato_pagamento, data_pagamento, stato_fattura, note.
+### Ricette
+Tabella: `ricette`
+- id (PK, auto-increment)
+- codice_ricetta (NOT NULL)
+- data_emissione (NOT NULL, timestamp, auto-generato)
+- farmaco_prescritto (NOT NULL)
+- posologia_modalita_uso (NOT NULL)
+- durata_terapia (NOT NULL, string)
+- note (nullable)
+- visita_id (FK -> visite.id, NOT NULL)
 
-## MODELLO E-R:
-### proprietario
--	id_utente (PK)
--	codice_fiscale
--	nome
--	cognome
--	email
--	telefono
--	indirizzo
--	città
--	data_registrazione
--	stato_attività
+### Vaccinazioni
+Tabella: `vaccinazioni`
+- id (PK, auto-increment)
+- tipo_vaccino (NOT NULL)
+- data_somministrazione (NOT NULL, date)
+- data_scadenza (NOT NULL, date)
+- lotto (NOT NULL)
+- note (nullable)
+- animale_id (FK -> animali.id, NOT NULL)
 
-### ANIMALI
--	id_animale (PK)
--	id_utente (FK)
--	nome
--	specie
--	razza
--	data_nascita
--	sesso
--	peso
--	microchip
--	colore_mantello
--	sterilizzato
--	gruppo_sanguigno
--	allergie
--	patologie
--	statoAnimale
--	note_generali
+### Fatture
+Tabella: `fatture`
+- id (PK, auto-increment)
+- numero_fattura (NOT NULL, unique)
+- data_emissione (NOT NULL, timestamp, auto-generato)
+- tipo_fattura (NOT NULL, default "Semplificata")
+- codice_fiscale_cliente (nullable, max 16)
+- indirizzo_cliente (nullable)
+- citta_cliente (nullable)
+- importo_totale (NOT NULL, decimal(10,2))
+- metodo_pagamento (nullable)
+- note (nullable)
+- dettaglio_servizi (nullable, TEXT)
+- pagata (NOT NULL, boolean, default false)
+- proprietario_id (FK -> proprietari.id, nullable)
+- visita_id (FK -> visite.id, NOT NULL, UNIQUE)
 
-## PRENOTAZIONI
+### Utenti (autenticazione)
+Tabella: `utenti`
+- id (PK, auto-increment)
+- username (NOT NULL, unique, max 20)
+- email (NOT NULL, unique, max 50)
+- password (NOT NULL, max 120, hashata)
+- proprietario_id (FK -> proprietari.id, nullable, UNIQUE)
 
--	id_prenotazione (PK)
--	id_utente (FK)
--	id_animale (FK) → NOT NULL
--	data_prenotazione
--	data_ora_appuntamento
--	motivo
--	stato_prenotazione
--	priorità
--	note
+### Ruoli
+Tabella: `ruoli`
+- id (PK, auto-increment)
+- nome (enum: ROLE_USER, ROLE_STAFF, ROLE_ADMIN)
 
-## TABELLA PONTE PRENOTAZIONI_PRESTAZIONI
--	id_prenotazione_prestazione (PK)
--	id_prenotazione (FK)
--	id_prestazione (FK)
--	prezzo_prenotato
--	note
+### Utente_Ruoli (tabella ponte N:M)
+Tabella: `utente_ruoli`
+- utente_id (FK -> utenti.id)
+- ruolo_id (FK -> ruoli.id)
 
-## VISITE
--	id_visita (PK)
--	id_prenotazione (FK) (nullable)
--	id_animale (FK) → NOT NULL
--	data_ora_visita
--	durata
--	importo_totale
--	stato
--	note
+### Documenti Allegati
+Tabella: `documenti_allegati`
+- id (PK, auto-increment)
+- animale_id (NOT NULL)
+- visita_id (nullable)
+- fattura_id (nullable)
+- nome_originale (NOT NULL)
+- percorso_file (NOT NULL)
+- tipo_documento (NOT NULL, enum: REFERTO, RICETTA, ANALISI, LIBRETTO_VACCINALE, CERTIFICATO, SCAN_FATTURA, DOCUMENTO_GENERICO, ALTRO)
+- dimensione_bytes (NOT NULL)
+- tipo_mime (NOT NULL)
+- note (nullable, max 500)
+- data_caricamento (NOT NULL, timestamp, auto-generato)
+- data_documento (nullable, timestamp)
 
-## TABELLA PONTE VISITE_PRESTAZIONI
--	id_visita_prestazione (PK)
--	id_visita (FK)
--	id_prestazione (FK)
--	prezzo_applicato
--	data_esecuzione
--	nome_farmaco → NULLABLE
--	lotto_farmaco → NULLABLE
--	data_prossima_scadenza  → NULLABLE
--	note
+### Orari Studio
+Tabella: `orari_studio`
+- id (PK, auto-increment)
+- giorno_settimana (enum: LUNEDI, MARTEDI, MERCOLEDI, GIOVEDI, VENERDI, SABATO, DOMENICA)
+- ora_apertura (time)
+- ora_chiusura (time)
+- ora_inizio_pausa_pranzo (nullable, time)
+- ora_fine_pausa_pranzo (nullable, time)
+- chiuso (boolean, default false)
+- data_specifica (nullable, date, per eccezioni)
+- is_default (boolean, default true)
 
-## PRESTAZIONI
--	id_prestazione (PK)
--	nome_prestazione
--	descrizione
--	categoria
--	durata_stimata
--	costo_base
--	aliquota_IVA
--	codice_prestazione
--	stato
--	note
+### Orari Bloccati
+Tabella: `orari_bloccati`
+- id (PK, auto-increment)
+- data (NOT NULL, date)
+- ora_inizio (NOT NULL, time)
+- ora_fine (NOT NULL, time)
+- motivo (nullable)
+- creato_il (date, auto-generato)
+- creato_da (nullable)
 
-## DIARIO CLINICO
--	id_diario_clinico (PK)
--	id_visita (FK) UNIQUE
--	sintomi
--	diagnosi
--	trattamento_terapia
--	note
+## 4. Modello E-R
 
-## RICETTE
--	id_ricetta (PK)
--	id_visita (FK)
--	codice_ricetta
--	data_emissione
--	farmaco_prescritto
--	posologia_modalità_uso
--	durata_terapia
--	note
+### Proprietari
+PROPRIETARI (1) --- (N) ANIMALI
+(un proprietario puo' avere piu' animali)
+PROPRIETARI (1) --- (N) PRENOTAZIONI
+(un proprietario puo' fare piu' prenotazioni)
+PROPRIETARI (1) --- (N) FATTURE
+(un proprietario puo' ricevere piu' fatture)
+PROPRIETARI (1) --- (0,1) UTENTI
+(un proprietario puo' avere un account di autenticazione)
 
-## FATTURE
--	id_fattura (PK)
--	id_utente (FK)
--	id_visita (FK) UNIQUE NOT NULL
--	numero_fattura
--	data_emissione
--	denominazione_cliente
--	codice_fiscale_cliente
--	partita_IVA_cliente
--	indirizzo_cliente
--	codice_destinatario
--	PEC_cliente
--	importo_imponibile
--	aliquota_IVA
--	importo_IVA
--	importo_totale
--	metodo_pagamento
--	stato_pagamento
--	data_ora_pagamento
--	stato_fattura
--	note
+### Animali
+ANIMALI (1) --- (N) PRENOTAZIONI
+(un animale puo' avere piu' prenotazioni)
+ANIMALI (1) --- (N) VISITE
+(un animale puo' avere piu' visite nel tempo)
+ANIMALI (1) --- (N) VACCINAZIONI
+(un animale puo' avere piu' vaccinazioni)
+ANIMALI (1) --- (N) DOCUMENTI_ALLEGATI
+(un animale puo' avere piu' documenti allegati)
 
+### Prenotazioni
+PRENOTAZIONI (0,1) --- (0,1) VISITE
+(una prenotazione puo' generare al massimo una visita; una visita puo' non derivare da prenotazione)
+PRENOTAZIONI (N) --- (1) PRESTAZIONI
+(una prenotazione e' associata a una prestazione)
 
-## UTENTI
-UTENTI (1) ─── (N) ANIMALI
-(un utente può avere più animali)
-UTENTI (1) ─── (N) PRENOTAZIONI
-(un utente può fare più prenotazioni)
-UTENTI (1) ─── (N) FATTURE
-(un utente può ricevere più fatture)
-
-## ANIMALI
-ANIMALI (1) ─── (N) PRENOTAZIONI
-(un animale può avere più prenotazioni)
-ANIMALI (1) ─── (N) VISITE
-(un animale può avere più visite nel tempo)
-
-## PRENOTAZIONI
-PRENOTAZIONI (0,1) ─── (0,1) VISITE
-(una prenotazione può generare al massimo una visita; una visita può non derivare da prenotazione)
-PRENOTAZIONI (1) ─── (N) PRENOTAZIONI_PRESTAZIONI
-PRESTAZIONI (1) ─── (N) PRENOTAZIONI_PRESTAZIONI
-👉 (N:M risolta tramite tabella ponte)
-
-## VISITE
-VISITE (1) ─── (1) DIARIO_CLINICO
+### Visite
+VISITE (1) --- (1) DIARIO_CLINICO
 (ogni visita ha un solo diario clinico)
-VISITE (1) ─── (N) VISITE_PRESTAZIONI
-PRESTAZIONI (1) ─── (N) VISITE_PRESTAZIONI
-👉 (N:M risolta tramite tabella ponte)
-VISITE (1) ─── (N) RICETTE
-(una visita può generare più ricette)
-VISITE (1) ─── (0,1) FATTURE
-(una visita può non essere ancora fatturata o avere al massimo una fattura)
+VISITE (1) --- (N) RICETTE
+(una visita puo' generare piu' ricette)
+VISITE (1) --- (0,1) FATTURE
+(una visita puo' non essere ancora fatturata o avere al massimo una fattura)
+VISITE (N) --- (M) PRESTAZIONI
+(risolta da VISITA_PRESTAZIONI: una visita puo' includere piu' prestazioni, una prestazione puo' essere eseguita in piu' visite)
+VISITE (1) --- (N) DOCUMENTI_ALLEGATI
+(una visita puo' avere piu' documenti allegati)
 
-## PRESTAZIONI
-PRESTAZIONI (1) ─── (N) PRENOTAZIONI_PRESTAZIONI
-PRESTAZIONI (1) ─── (N) VISITE_PRESTAZIONI
+### Prestazioni
+PRESTAZIONI (1) --- (N) PRENOTAZIONI
+(una prestazione puo' essere prenotata piu' volte)
+PRESTAZIONI (N) --- (M) VISITE
+(risolta da VISITA_PRESTAZIONI)
 
-## DIARIO CLINICO
-VISITE (1) ─── (1) DIARIO_CLINICO
-(relazione 1:1 con vincolo UNIQUE su id_visita)
+### Diario Clinico
+VISITE (1) --- (1) DIARIO_CLINICO
+(relazione 1:1 con vincolo UNIQUE su visita_id)
 
-##  FATTURE
-FATTURE (1) ─── (1) VISITE
-(ogni fattura è legata a una e una sola visita con vincolo UNIQUE su id_visita)
-UTENTI (1) ─── (N) FATTURE
-(un utente può ricevere più fatture)
+### Fatture
+FATTURE (1) --- (1) VISITE
+(ogni fattura e' legata a una e una sola visita con vincolo UNIQUE su visita_id)
+PROPRIETARI (1) --- (N) FATTURE
+(un proprietario puo' ricevere piu' fatture)
+FATTURE (1) --- (N) DOCUMENTI_ALLEGATI
+(una fattura puo' avere piu' documenti allegati)
 
-## RISOLUZIONE RELAZIONI N:M
-📌 Prenotazioni ↔ Prestazioni
-PRENOTAZIONI (N) ─── (M) PRESTAZIONI
-→ risolta da PRENOTAZIONI_PRESTAZIONI
-📌 Visite ↔ Prestazioni eseguite
-VISITE (N) ─── (M) PRESTAZIONI
-→ risolta da VISITE_PRESTAZIONI
+### Utenti
+UTENTI (1) --- (N) UTENTI_RUOLI
+UTENTI (1) --- (0,1) PROPRIETARI
+(un utente autenticato puo' essere associato a un proprietario)
+RUOLI (1) --- (N) UTENTI_RUOLI
 
+## 5. Dashboard e Report
 
-
-###  Dashboard
+### Dashboard
 All'accesso il veterinario visualizza i principali indicatori:
--	Numero di visite effettuate oggi
--	Numero di prenotazioni previste per oggi
--	Fatturato della giornata
--	Pazienti attivi nell'ultimo anno
--	Vaccinazioni effettuate nel mese
--	Fatture ancora da pagare
--	Richiami vaccinali in scadenza nei prossimi 30 giorni
+- Visite effettuate oggi (con elenco dettagliato)
+- Numero di prenotazioni totali
+- Fatture ancora da pagare e importo non pagato
+- Totale animali e proprietari registrati
+- Proprietari attivi
+- Animali con vaccinazioni in scadenza
 
+### Statistiche Animali
+- Totale animali registrati
+- Animali per specie
+- Animali per sesso
+- Animali deceduti
+- Animali con microchip
 
-### Report Visite
--	Visite effettuate oggi
--	Visite effettuate nell'ultima settimana
--	Visite effettuate nell'ultimo mese
--	Visite effettuate nell'ultimo anno
--	Numero di visite per tipologia di prestazione
--	Durata media delle visite
+### Statistiche Proprietari
+- Totale proprietari registrati
+- Proprietari attivi
+- Nuovi proprietari
 
+### Statistiche Fatture
+- Totale fatture emesse
+- Fatture pagate e non pagate
+- Importo totale, importo pagato e importo non pagato
 
-### Report Pazienti
--	Pazienti attivi (almeno una visita nell'ultimo anno)
--	Nuovi pazienti registrati nel mese
--	Specie più frequenti
--	Razze più frequenti
--	Peso medio per specie
--	Animali deceduti
+### Statistiche Vaccinazioni
+- Vaccinazioni in scadenza (prossimi 30 giorni)
+- Vaccinazioni scadute
 
+## 6. Vincoli del Sistema e Regole di Business
 
-### Report Economici
--	Fatturato giornaliero
--	Fatturato mensile
--	Fatturato annuale
--	Totale IVA incassata
--	Numero di fatture emesse
--	Numero di fatture pagate
--	Numero di fatture non pagate
--	Importo ancora da incassare
-
-### Report Sanitari
--	Vaccinazioni effettuate oggi
--	Vaccinazioni effettuate nel mese
--	Storico vaccinazioni per animale
--	Richiami vaccinali in scadenza nei prossimi 30 giorni
--	Farmaci prescritti più frequentemente
-
-## 5. Vincoli del Sistema e Regole di Business.
-Le seguenti Business Rules definiscono i principali vincoli funzionali e logici del sistema gestionale veterinario.
 ### BR_01 – Gestione dei Ruoli
-L'accesso alle funzionalità del sistema è regolato in base al ruolo dell'operatore.
--	Solo il veterinario può inserire, modificare o eliminare i dati clinici presenti nel Diario Clinico e nelle Ricette.
--	Il personale amministrativo può gestire utenti, animali, prenotazioni e fatture, ma non può modificare le informazioni cliniche.
-Nota: questa regola richiede una futura gestione degli utenti del sistema (es. tabella operatori con relativi ruoli), non ancora modellata nel database.
-________________________________________
-### BR_02 – Integrità Temporale delle Prenotazioni
-Non è consentito registrare una prenotazione con una data e ora di appuntamento antecedenti alla data e ora correnti.
-________________________________________
+L'accesso alle funzionalita' del sistema e' regolato in base al ruolo dell'operatore tramite autenticazione JWT.
+- ROLE_ADMIN: accesso completo a tutte le funzionalita', inclusa la gestione degli utenti e dei ruoli.
+- ROLE_STAFF: accesso a gestione animali, prenotazioni, visite, fatture e statistiche.
+- ROLE_USER: accesso limitato alle proprie prenotazioni e ai propri animali.
+I ruoli sono gestiti tramite le tabelle `utenti`, `ruoli` e `utente_ruoli`.
+
+### BR_02 – Integrita' Temporale delle Prenotazioni
+Non e' consentito registrare una prenotazione con una data e ora di appuntamento antecedenti alla data e ora correnti.
+
 ### BR_03 – Sovrapposizione degli Appuntamenti
-Non possono esistere due prenotazioni confermate con la stessa data e ora di appuntamento, poiché il sistema è progettato per uno studio veterinario con un unico veterinario operativo.
-________________________________________
+Non possono esistere due prenotazioni confermate con la stessa data e ora di appuntamento, poiche' il sistema e' progettato per uno studio veterinario con un unico veterinario operativo.
+
 ### BR_04 – Coerenza dei Richiami Vaccinali
-Quando una prestazione prevede un richiamo, la data del prossimo richiamo deve essere successiva alla data di esecuzione della prestazione.
-________________________________________
+Quando una vaccinazione prevede un richiamo, la data di scadenza deve essere successiva alla data di somministrazione.
+
 ### BR_05 – Gestione delle Specie
-Il sistema consente la registrazione di animali appartenenti a specie compatibili con l'attività dell'ambulatorio veterinario (ad esempio cane, gatto e altri animali domestici).
-________________________________________
+Il sistema consente la registrazione di animali appartenenti a specie compatibili con l'attivita' dell'ambulatorio veterinario (ad esempio cane, gatto, coniglio e altri animali domestici).
+
 ### BR_06 – Conservazione dello Storico Clinico
-Un animale non può essere eliminato fisicamente dal database.
-In caso di decesso o cessazione del rapporto con il proprietario, viene aggiornato il campo stato_sopravvivenza, mantenendo disponibili tutte le informazioni storiche (prenotazioni, visite, diario clinico, ricette e fatture).
-________________________________________
-### BR_07 – Gestione della Cancellazione dei Dati Personali
-Nel caso in cui un utente richieda la cancellazione dei propri dati personali, il sistema deve rispettare la normativa vigente sulla protezione dei dati personali.
-I dati necessari per obblighi fiscali e amministrativi (ad esempio le fatture già emesse) devono essere conservati secondo quanto previsto dalla normativa.
-Nota: questa regola rappresenta un requisito funzionale e non viene implementata tramite semplici vincoli del database.
-________________________________________
-### BR_08 – Registrazione degli Utenti
-Ogni utente deve essere identificato univocamente tramite il proprio codice fiscale.
-L'indirizzo e-mail, se presente, deve essere univoco.
-________________________________________
-### BR_09 – Stato di Attività dell'Utente
-Il campo stato_attivita può essere aggiornato automaticamente dal sistema qualora un utente non effettui prenotazioni o visite per un periodo di 24 mesi.
-________________________________________
-### BR_10 – Gestione dei Cuccioli
-L'età dell'animale viene calcolata automaticamente a partire dalla data di nascita.
-Se l'animale ha un'età inferiore a sei mesi, il sistema può generare un promemoria per:
--	avvio del piano vaccinale;
--	controlli periodici consigliati.
+Un animale non puo' essere eliminato fisicamente dal database.
+In caso di decesso o cessazione del rapporto con il proprietario, viene aggiornato il campo stato su DECEDUTO, mantenendo disponibili tutte le informazioni storiche (prenotazioni, visite, diario clinico, ricette e fatture).
 
+### BR_07 – Registrazione degli Utenti
+Ogni proprietario deve essere identificato univocamente tramite email (unique).
+Il codice fiscale, se presente, deve essere univoco.
 
-## 6. Funzionalità Richieste e Ottimizzazione del Flusso di Lavoro (CORRETTA)
+### BR_08 – Gestione Orari Studio
+Il sistema permette di configurare gli orari di apertura per ogni giorno della settimana, con possibilita' di specificare fasce di pausa pranzo e giorni di chiusura.
+E' possibile inserire eccezioni per date specifiche (festivita', chiusure straordinarie) e bloccare fasce orarie specifiche tramite la tabella `orari_bloccati`.
 
-### Flusso di Prenotazione per Utenti Non Registrati
-Il sistema mette a disposizione un portale pubblico che consente anche a utenti non registrati di richiedere un appuntamento.
-L’utente può inserire:
--	nome e cognome
--	email e telefono
--	dati dell’animale (nome, specie, razza, età)
-e selezionare uno slot disponibile nel calendario.
-La prenotazione viene salvata con stato:
--	PRENOTATA (in attesa di conferma)
-Successivamente, alla prima visita presso lo studio, la segreteria:
--	verifica i dati inseriti
--	associa o crea un account utente nel sistema
--	registra l’animale nel database (se non presente)
-- L’utente viene sempre registrato con un record completo nella tabella utenti.
-- Non viene utilizzato il campo password come discriminante tra utenti registrati e non registrati, poiché lo stato dell’utente è gestito tramite il sistema di autenticazione.
-- 
-### Modulo di Notifiche Automatiche (SMS / WhatsApp)
-Il sistema integra servizi di notifica tramite API esterne (SMS gateway e WhatsApp Business API) per automatizzare la comunicazione con i clienti.
+### BR_09 – Gestione Documenti Allegati
+Il sistema permette di allegare documenti (referti, ricette, analisi, libretti vaccinali, certificati, scansioni fatture) a animali, visite e fatture.
 
-### Notifiche Scadenze Vaccinali
-Il sistema esegue un controllo periodico sulle vaccinazioni registrate.
-Se una vaccinazione è in scadenza entro un intervallo configurato (es. 7 o 30 giorni), il sistema invia automaticamente:
--	SMS o messaggio WhatsApp al proprietario dell’animale
+## 7. Flussi Operativi
 
-### Promemoria Appuntamenti
-Il sistema invia automaticamente:
--	conferma immediata alla creazione della prenotazione
--	promemoria 24 ore prima dell’appuntamento
-Questo riduce significativamente il numero di appuntamenti mancati.
+### Flusso di Prenotazione
+1. L'utente (registrato o non registrato) contatta lo studio.
+2. La segreteria o l'utente registrato crea una prenotazione specificando: animale, proprietario, tipo di visita/prestazione, data e ora.
+3. La prenotazione viene salvata.
+4. All'arrivo del cliente, la segreteria aggiorna lo stato della prenotazione a COMPLETATO e viene generata una visita associata.
 
+### Flusso di Visita
+1. La visita viene creata a partire da una prenotazione o direttamente (per urgenze senza prenotazione).
+2. Durante la visita, il veterinario puo':
+   - Registrare il diario clinico (sintomi, diagnosi, trattamento)
+   - Registrare vaccinazioni
+3. Al termine, viene calcolata la durata effettiva della visita.
+4. Opzionalmente, viene generata una fattura per la visita.
 
-## 7. Persistenza dei Dati e Architettura Infrastrutturale
-Tutti i dati del sistema vengono memorizzati in un database relazionale PostgreSQL, progettato con vincoli di integrità per garantire coerenza e affidabilità:
--	FOREIGN KEY
--	UNIQUE
--	NOT NULL
--	CHECK constraints
+### Flusso di Fatturazione
+1. La fattura viene creata a partire da una visita completata.
+2. Il sistema genera un numero fattura univoco e calcola l'importo totale.
+3. La fattura puo' essere di tipo "Semplificata" (per ora unico tipo supportato).
+4. La fattura viene associata al proprietario e alla visita specifica.
+5. Il pagamento viene registrato aggiornando il campo `pagata`.
 
-### Deploy Cloud
-Il sistema è progettato per essere distribuito su infrastruttura cloud, utilizzando:
-- AWS (Amazon Web Services)
- - servizio gestito: Amazon RDS (PostgreSQL)
+### Flusso di Autenticazione e Autorizzazione
+1. L'utente si registra con username, email e password.
+2. La password viene hashata e salvata nella tabella `utenti`.
+3. All'utente viene assegnato il ruolo ROLE_USER di default.
+4. Un amministratore puo' promuovere l'utente a ROLE_STAFF o ROLE_ADMIN.
+5. L'utente puo' essere associato a un record nella tabella `proprietari`.
+6. L'accesso alle API e' regolato tramite token JWT e annotazioni @PreAuthorize.
 
-### Vantaggi dell’architettura cloud
-📡 Accesso remoto sicuro
-Il personale dello studio può accedere ai dati (visite, cartelle cliniche, prenotazioni) da qualsiasi dispositivo autorizzato.
+### Flusso di Gestione Documenti
+1. L'utente carica un documento associandolo a un animale, una visita o una fattura.
+2. Il file viene salvato su filesystem e il percorso registrato nel database.
+3. Il documento viene categorizzato per tipo (referto, ricetta, analisi, ecc.).
+4. I documenti possono essere visualizzati e scaricati dagli utenti autorizzati.
 
-### Backup e affidabilità
--	backup automatici giornalieri
--	ripristino in caso di errore
--	alta disponibilità del servizio
+### Flusso di Gestione Orari
+1. L'amministratore configura gli orari standard per ogni giorno della settimana.
+2. E' possibile specificare fasce orarie di pausa pranzo.
+3. Per date specifiche (festivita'), e' possibile sovrascrivere gli orari standard.
+4. E' possibile bloccare fasce orarie specifiche (es. per ferie del veterinario, manutenzione).
+5. Il sistema utilizza queste informazioni per validare la disponibilita' degli appuntamenti.
 
-### Continuità operativa
-Il sistema garantisce la continuità anche in caso di:
--	guasti hardware locali
--	problemi del server dello studio
+## 8. Persistenza dei Dati e Architettura Infrastrutturale
+Tutti i dati del sistema vengono memorizzati in un database relazionale PostgreSQL, progettato con vincoli di integrita' per garantire coerenza e affidabilita':
+- FOREIGN KEY
+- UNIQUE
+- NOT NULL
+- CHECK constraints
+
+### Architettura di Deploy
+Il sistema e' containerizzato tramite Docker Compose con i seguenti servizi:
+- **postgresdb**: database PostgreSQL (porta esterna 5433, interna 5432)
+- **backend**: applicazione Spring Boot (porta esterna 6868, interna 8080)
+- **frontend**: applicazione React con Nginx per produzione (porta 3000)
+- **frontend-dev**: server di sviluppo Vite (porta 5174)
+
+### Proxy e Routing
+- **Sviluppo**: Vite proxy configura per instradare `/api` verso `http://localhost:6868`
+- **Produzione**: Nginx gestisce il proxy di `/api/` verso `http://backend:8080/api/`
+
+### Vantaggi dell'architettura containerizzata
+- Accesso remoto sicuro: il personale dello studio puo' accedere ai dati da qualsiasi dispositivo autorizzato.
+- Backup e affidabilita': backup automatici giornalieri del database, ripristino in caso di errore.
+- Continuita' operativa: il sistema garantisce la continuita' anche in caso di guasti hardware locali.
+- Isolamento dei servizi: ogni componente opera in un container separato.
+- Scalabilita': possibilita' di replicare i servizi per gestire carichi maggiori.
+
+## 9. Tecnologie Utilizzate
+
+### Frontend
+- React con Vite per lo sviluppo
+- Nginx per il proxy di produzione
+- Dipendenze gestite con npm
+
+### Backend
+- Spring Boot con Maven
+- JPA/Hibernate per l'ORM
+- Spring Security con JWT per l'autenticazione
+- API RESTful
+
+### Database
+- PostgreSQL
+- Migrazione dati da Excel tramite script SQL
+
+### Infrastruttura
+- Docker Compose per l'orchestrazione dei container
+- Nginx come reverse proxy
+
+## 10. Autore
+Codice Caciotta - gruppo studenti ITS formato da: Simone Albanese, Alessandro Cistaro, Daniel Salamone, Gianluca Salzarulo, Mattia Viada

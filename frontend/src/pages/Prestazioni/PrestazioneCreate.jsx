@@ -81,7 +81,7 @@ function PrestazioneCreate() {
   const validateField = (name, value) => {
     switch (name) {
       case 'nomePrestazione':
-        return !value.trim() ? 'Il nome della prestazione Ã¨ obbligatorio' : '';
+        return !value.trim() ? 'Il nome della prestazione è obbligatorio' : '';
       case 'durataStimata':
         return isNaN(value) || value <= 0 ? 'La durata deve essere un numero positivo' : '';
       case 'costoBase':
@@ -203,7 +203,7 @@ function PrestazioneCreate() {
 
         {/* Costo Base */}
         <div className="form-group">
-          <label className="form-label">Costo Base (â‚¬) *</label>
+          <label className="form-label">Costo Base (€) *</label>
           <input
             type="number"
             name="costoBase"

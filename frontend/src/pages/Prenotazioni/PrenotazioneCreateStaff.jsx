@@ -263,9 +263,9 @@ function PrenotazioneCreateStaff({ onClose, onSuccess }) {
                 {a.nome}
               </div>
               <div style={{ fontSize: '12px', color: 'var(--gray-500)' }}>
-                {a.specie} {a.razza ? `â€¢ ${a.razza}` : ''}
-                {a.proprietarioNome && a.proprietarioNome !== 'Sconosciuto' ? ` â€¢ ${a.proprietarioNome}` : ''}
-                {a.microchip ? ` â€¢ Microchip: ${a.microchip}` : ''}
+                {a.specie} {a.razza ? ` \u2022 ${a.razza}` : ''}
+                {a.proprietarioNome && a.proprietarioNome !== 'Sconosciuto' ? ` \u2022 ${a.proprietarioNome}` : ''}
+                {a.microchip ? ` \u2022 Microchip: ${a.microchip}` : ''}
               </div>
             </div>
             <div style={{
@@ -324,7 +324,7 @@ function PrenotazioneCreateStaff({ onClose, onSuccess }) {
                 {p.nome} {p.cognome}
               </div>
               <div style={{ fontSize: '12px', color: 'var(--gray-500)' }}>
-                {p.telefono ? `Tel: ${p.telefono} â€¢ ` : ''}
+                {p.telefono ? `Tel: ${p.telefono} \u2022 ` : ''}
                 {p.email}
               </div>
             </div>
@@ -387,7 +387,7 @@ function PrenotazioneCreateStaff({ onClose, onSuccess }) {
                   transform: 'translateY(-50%)', background: 'none',
                   border: 'none', color: 'var(--gray-400)', cursor: 'pointer',
                   fontSize: '16px', padding: '0 4px',
-                }}>Ã—</button>
+                }}>\u00D7</button>
               )}
             </div>
             {hasError('proprietarioId') && <div className="form-error">{errors.proprietarioId}</div>}
@@ -400,10 +400,10 @@ function PrenotazioneCreateStaff({ onClose, onSuccess }) {
               borderRadius: 'var(--radius)', border: '1px solid rgba(42, 157, 143, 0.2)',
             }}>
               <span style={{ fontWeight: 600, color: 'var(--success)', fontSize: '13px' }}>
-                âœ“ {selectedProprietario ? `${selectedProprietario.nome || ''} ${selectedProprietario.cognome || ''}`.trim() : 'Proprietario'}
+                \u2713 {selectedProprietario ? `${selectedProprietario.nome || ''} ${selectedProprietario.cognome || ''}`.trim() : 'Proprietario'}
               </span>
               <span style={{ fontSize: '12px', color: 'var(--gray-500)' }}>
-                {selectedProprietario?.telefono ? `Tel: ${selectedProprietario.telefono} â€¢ ` : ''}
+                {selectedProprietario?.telefono ? `Tel: ${selectedProprietario.telefono} \u2022 ` : ''}
                 {selectedProprietario?.email || ''}
               </span>
             </div>
@@ -447,7 +447,7 @@ function PrenotazioneCreateStaff({ onClose, onSuccess }) {
                   transform: 'translateY(-50%)', background: 'none',
                   border: 'none', color: 'var(--gray-400)', cursor: 'pointer',
                   fontSize: '16px', padding: '0 4px',
-                }}>Ã—</button>
+                }}>\u00D7</button>
               )}
             </div>
             {hasError('animaleId') && <div className="form-error">{errors.animaleId}</div>}
@@ -460,10 +460,10 @@ function PrenotazioneCreateStaff({ onClose, onSuccess }) {
               borderRadius: 'var(--radius)', border: '1px solid rgba(42, 157, 143, 0.2)',
             }}>
               <span style={{ fontWeight: 600, color: 'var(--primary)', fontSize: '13px' }}>
-                âœ“ {selectedAnimale.nome}
+                \u2713 {selectedAnimale.nome}
               </span>
               <span style={{ fontSize: '12px', color: 'var(--gray-500)' }}>
-                {selectedAnimale.specie} {selectedAnimale.razza ? `â€¢ ${selectedAnimale.razza}` : ''}
+                {selectedAnimale.specie} {selectedAnimale.razza ? `\u2022 ${selectedAnimale.razza}` : ''}
               </span>
               <span style={{ fontSize: '11px', color: 'var(--gray-400)', marginLeft: 'auto' }}>
                 {selectedAnimale.proprietarioNome}
@@ -501,7 +501,7 @@ function PrenotazioneCreateStaff({ onClose, onSuccess }) {
                       value={prestazione.nomePrestazione}
                       disabled={!isAvailable}
                     >
-                      {prestazione.nomePrestazione} - â‚¬{prestazione.costoBase?.toFixed(2) || '0.00'}
+                      {prestazione.nomePrestazione} - \u20AC{prestazione.costoBase?.toFixed(2) || '0.00'}
                       {!isAvailable ? ' (Non disponibile)' : ''}
                     </option>
                   );

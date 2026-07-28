@@ -30,15 +30,15 @@ const VaccinazioneCreateModal = ({
     const newErrors = {};
 
     if (!formData.tipoVaccino) {
-      newErrors.tipoVaccino = 'Il tipo di vaccino Ã¨ obbligatorio';
+      newErrors.tipoVaccino = 'Il tipo di vaccino è obbligatorio';
     }
 
     if (!formData.dataSomministrazione) {
-      newErrors.dataSomministrazione = 'La data di somministrazione Ã¨ obbligatoria';
+      newErrors.dataSomministrazione = 'La data di somministrazione è obbligatoria';
     }
 
     if (!formData.dataScadenza) {
-      newErrors.dataScadenza = 'La data di scadenza Ã¨ obbligatoria';
+      newErrors.dataScadenza = 'La data di scadenza è obbligatoria';
     }
 
     if (
@@ -46,11 +46,11 @@ const VaccinazioneCreateModal = ({
       formData.dataSomministrazione &&
       formData.dataScadenza < formData.dataSomministrazione
     ) {
-      newErrors.dataScadenza = 'La data di scadenza non puÃ² precedere la somministrazione';
+      newErrors.dataScadenza = 'La data di scadenza non può precedere la somministrazione';
     }
 
     if (!formData.lotto) {
-      newErrors.lotto = 'Il numero di lotto Ã¨ obbligatorio';
+      newErrors.lotto = 'Il numero di lotto è obbligatorio';
     }
 
     setErrors(newErrors);

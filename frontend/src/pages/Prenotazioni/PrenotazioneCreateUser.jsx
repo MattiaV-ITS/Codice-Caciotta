@@ -140,7 +140,7 @@ function PrenotazioneCreateUser({ onClose, onSuccess }) {
                       value={prestazione.nomePrestazione}
                       disabled={!isAvailable}
                     >
-                      {prestazione.nomePrestazione} - â‚¬{prestazione.costoBase?.toFixed(2) || '0.00'}
+                      {prestazione.nomePrestazione} - €{prestazione.costoBase?.toFixed(2) || '0.00'}
                       {!isAvailable ? ' (Non disponibile)' : ''}
                     </option>
                   );

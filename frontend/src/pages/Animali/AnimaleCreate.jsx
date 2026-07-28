@@ -245,7 +245,7 @@ function AnimaleCreate({ onClose, onSuccess, animale, isEditMode = false, propri
       case 'nome':
         return validateRequired(value, 'Il nome');
       case 'specie':
-        if (!value) return 'La specie Ã¨ obbligatoria.';
+        if (!value) return 'La specie è obbligatoria.';
         if (isAltroSpecie(value) && !formData.specificaSpecie.trim()) {
           return 'Specifica il tipo di animale.';
         }
@@ -598,7 +598,7 @@ function AnimaleCreate({ onClose, onSuccess, animale, isEditMode = false, propri
                       checked={formData.sterilizzato === true}
                       onChange={() => setFormData(prev => ({ ...prev, sterilizzato: true }))}
                     />
-                    SÃ¬
+                    Sì
                   </label>
                   <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
                     <input
@@ -752,7 +752,7 @@ function AnimaleCreate({ onClose, onSuccess, animale, isEditMode = false, propri
                            >
                              <div style={{ fontWeight: 500 }}>{p.nome} {p.cognome}</div>
                              <div style={{ fontSize: '12px', color: 'var(--gray-500)' }}>
-                               {p.email} â€¢ {p.telefono}
+                               {p.email} • {p.telefono}
                              </div>
                            </div>
                          ))}

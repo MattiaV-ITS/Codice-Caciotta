@@ -77,7 +77,7 @@ function PrestazioniLista() {
 
   // Gestione click sulle card delle statistiche
   const handleStatoCardFilter = (stato) => {
-    // Se Ã¨ giÃ  attivo, deseleziona
+    // Se è giÃ  attivo, deseleziona
     if (statoFilter === stato) {
       setStatoFilter('');
     } else {
@@ -113,14 +113,14 @@ function PrestazioniLista() {
   };
 
   const handleDeletePrestazione = async (prestazione) => {
-    if (!window.confirm(`Sei sicuro di voler eliminare la prestazione "${prestazione.nomePrestazione}"? Questa azione non puÃ² essere annullata.`)) {
+    if (!window.confirm(`Sei sicuro di voler eliminare la prestazione "${prestazione.nomePrestazione}"? Questa azione non può essere annullata.`)) {
       return;
     }
     try {
       const response = await remove(`/api/prestazioni/${prestazione.id}`);
       if (response.status === 409) {
         const errorData = await response.json().catch(() => ({}));
-        window.alert(`Impossibile eliminare la prestazione: Ã¨ associata a ${errorData.message || 'altri record del sistema'}. Disabilitala invece.`);
+        window.alert(`Impossibile eliminare la prestazione: è associata a ${errorData.message || 'altri record del sistema'}. Disabilitala invece.`);
         return;
       }
       if (!response.ok) {
@@ -153,7 +153,7 @@ function PrestazioniLista() {
       sortable: true,
       render: (item) => {
         const val = typeof item.costoBase === 'string' ? parseFloat(item.costoBase) : item.costoBase || 0;
-        return `â‚¬${val.toFixed(2)}`;
+        return `€${val.toFixed(2)}`;
       }
     },
     {
@@ -260,7 +260,7 @@ function PrestazioniLista() {
 
           {/* Costo medio (informativo) */}
           <div className="stat-card">
-            <div className="stat-number stat-info">â‚¬{stats.averageCost}</div>
+            <div className="stat-number stat-info">€{stats.averageCost}</div>
             <div className="stat-label">Costo Medio</div>
           </div>
 

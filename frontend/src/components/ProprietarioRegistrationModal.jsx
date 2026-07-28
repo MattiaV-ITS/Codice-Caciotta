@@ -118,7 +118,7 @@ function ProprietarioRegistrationModal({ onClose, onSuccess, onSkip }) {
         
       } catch (error) {
         logger.error('Errore nella creazione del proprietario:', error);
-        setSubmitError(error.message || 'Si Ã¨ verificato un errore durante la creazione del proprietario');
+        setSubmitError(error.message || 'Si è verificato un errore durante la creazione del proprietario');
         setIsSubmitting(false);
       }
     }
