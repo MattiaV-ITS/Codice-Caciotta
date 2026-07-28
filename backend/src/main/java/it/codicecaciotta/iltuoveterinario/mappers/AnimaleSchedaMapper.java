@@ -14,7 +14,7 @@ public class AnimaleSchedaMapper {
 
         AnimaleSchedaDTO dto = new AnimaleSchedaDTO();
         dto.setId(animale.getId());
-        dto.setStato(animale.getStato().name()); // TODO: Stato vaccinazioni e salute
+        dto.setStato(animale.getStato().name());
         dto.setNome(animale.getNome());
         dto.setSpecie(animale.getSpecie());
         dto.setRazza(animale.getRazza());

@@ -157,7 +157,7 @@ public class AdminController {
 	// BLOCKED TIME SLOTS MANAGEMENT ENDPOINTS
 	// =======================================
 
-	@PreAuthorize("hasAuthority('ROLE_ADMIN')")
+	@PreAuthorize("hasAuthority('ROLE_USER') or hasAuthority('ROLE_STAFF') or hasAuthority('ROLE_ADMIN')")
 	@Transactional(readOnly = true)
 	@GetMapping("/orari/bloccati")
 	public ResponseEntity<List<OrarioBloccato>> getAllBlockedTimes() {
@@ -165,7 +165,7 @@ public class AdminController {
 		return ResponseEntity.ok(blockedTimes);
 	}
 
-	@PreAuthorize("hasAuthority('ROLE_ADMIN')")
+	@PreAuthorize("hasAuthority('ROLE_USER') or hasAuthority('ROLE_STAFF') or hasAuthority('ROLE_ADMIN')")
 	@Transactional(readOnly = true)
 	@GetMapping("/orari/bloccati/{data}")
 	public ResponseEntity<List<OrarioBloccato>> getBlockedTimesByDate(@PathVariable LocalDate data) {

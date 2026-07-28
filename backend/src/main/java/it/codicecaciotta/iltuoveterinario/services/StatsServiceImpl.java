@@ -29,7 +29,6 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -190,10 +189,10 @@ public class StatsServiceImpl implements StatsService {
                     // Deduplica per tipoVaccino mantenendo la più recente
                     Map<String, Vaccinazione> vaccinazioniPerTipo = vaccinazioniAnimale.stream()
                             .collect(Collectors.groupingBy(
-                                    Vaccinazione::getTipoVaccino,
+                                    v -> v.getTipoVaccino(),
                                     Collectors.collectingAndThen(
-                                            Collectors.maxBy(Comparator.comparing(Vaccinazione::getDataSomministrazione)),
-                                            Optional::orElseThrow
+                                            Collectors.maxBy(Comparator.comparing(v -> v.getDataSomministrazione())),
+                                            opt -> opt.orElseThrow()
                                     )
                             ));
                     
@@ -215,10 +214,10 @@ public class StatsServiceImpl implements StatsService {
                     // Deduplica per tipoVaccino mantenendo la più recente
                     Map<String, Vaccinazione> vaccinazioniPerTipo = vaccinazioniAnimale.stream()
                             .collect(Collectors.groupingBy(
-                                    Vaccinazione::getTipoVaccino,
+                                    v -> v.getTipoVaccino(),
                                     Collectors.collectingAndThen(
-                                            Collectors.maxBy(Comparator.comparing(Vaccinazione::getDataSomministrazione)),
-                                            Optional::orElseThrow
+                                            Collectors.maxBy(Comparator.comparing(v -> v.getDataSomministrazione())),
+                                            opt -> opt.orElseThrow()
                                     )
                             ));
                     
@@ -226,7 +225,7 @@ public class StatsServiceImpl implements StatsService {
                     return vaccinazioniPerTipo.values().stream()
                             .anyMatch(v -> vaccinazioneService.calculateStatoVaccinazione(v) == EStatoVaccinazione.SCADUTO);
                 })
-                .map(Animale::getId)
+                .map(a -> a.getId())
                 .collect(Collectors.toList());
     }
 
@@ -241,10 +240,10 @@ public class StatsServiceImpl implements StatsService {
                     // Deduplica per tipoVaccino mantenendo la più recente
                     Map<String, Vaccinazione> vaccinazioniPerTipo = vaccinazioniAnimale.stream()
                             .collect(Collectors.groupingBy(
-                                    Vaccinazione::getTipoVaccino,
+                                    v -> v.getTipoVaccino(),
                                     Collectors.collectingAndThen(
-                                            Collectors.maxBy(Comparator.comparing(Vaccinazione::getDataSomministrazione)),
-                                            Optional::orElseThrow
+                                            Collectors.maxBy(Comparator.comparing(v -> v.getDataSomministrazione())),
+                                            opt -> opt.orElseThrow()
                                     )
                             ));
                     
@@ -252,7 +251,7 @@ public class StatsServiceImpl implements StatsService {
                     return vaccinazioniPerTipo.values().stream()
                             .anyMatch(v -> vaccinazioneService.calculateStatoVaccinazione(v) == EStatoVaccinazione.SCADUTO);
                 })
-                .map(Animale::getId)
+                .map(a -> a.getId())
                 .collect(Collectors.toList());
     }
 }

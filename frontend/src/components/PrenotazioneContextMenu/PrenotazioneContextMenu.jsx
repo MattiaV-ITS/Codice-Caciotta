@@ -22,19 +22,19 @@ const EditIcon = () => (
   </svg>
 );
 
-const DeleteIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M3 6H5H21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    <path d="M8 6V4C8 3.46957 8.21071 2.96086 8.58579 2.58579C8.96086 2.21071 9.46957 2 10 2H14C14.5304 2 15.0391 2.21071 15.4142 2.58579C15.7893 2.96086 16 3.46957 16 4V6M19 6V20C19 20.5304 18.7893 21.0391 18.4142 21.4142C18.0391 21.7893 17.5304 22 17 22H7C6.46957 22 5.96086 21.7893 5.58579 21.4142C5.21071 21.0391 5 20.5304 5 20V6H19Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    <path d="M10 11V17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    <path d="M14 11V17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-  </svg>
-);
+// const DeleteIcon = () => (
+//   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+//     <path d="M3 6H5H21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+//     <path d="M8 6V4C8 3.46957 8.21071 2.96086 8.58579 2.58579C8.96086 2.21071 9.46957 2 10 2H14C14.5304 2 15.0391 2.21071 15.4142 2.58579C15.7893 2.96086 16 3.46957 16 4V6M19 6V20C19 20.5304 18.7893 21.0391 18.4142 21.4142C18.0391 21.7893 17.5304 22 17 22H7C6.46957 22 5.96086 21.7893 5.58579 21.4142C5.21071 21.0391 5 20.5304 5 20V6H19Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+//     <path d="M10 11V17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+//     <path d="M14 11V17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+//   </svg>
+// );
 
 const PrenotazioneContextMenu = ({ children, prenotazione, onPrenotazioneUpdated, onPrenotazioneDeleted }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { get, post, patch, delete: deleteRequest } = useApi();
+  const { get, post, patch } = useApi();
   const [isLoading, setIsLoading] = useState(false);
 
   const isStaffOrAdmin = user?.roles?.includes('ROLE_STAFF') || user?.roles?.includes('ROLE_ADMIN');
@@ -86,37 +86,37 @@ const PrenotazioneContextMenu = ({ children, prenotazione, onPrenotazioneUpdated
     setShowEditModal(false);
   }, [onPrenotazioneUpdated]);
 
-  const handleDeletePrenotazione = useCallback(async () => {
-    if (!prenotazione?.id || !isStaffOrAdmin) return;
-
-    if (!window.confirm('Sei sicuro di voler eliminare questa prenotazione? Questa azione non può essere annullata.')) {
-      return;
-    }
-
-    try {
-      setIsLoading(true);
-      const response = await deleteRequest(`/api/prenotazioni/${prenotazione.id}`);
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        const errorMessage = errorData.message || `Failed to delete prenotazione: ${response.status}`;
-        throw new Error(errorMessage);
-      }
-
-      onPrenotazioneDeleted?.(prenotazione.id);
-      console.log('Prenotazione deleted successfully');
-    } catch (error) {
-      console.error('Error deleting prenotazione:', error);
-      // Check if the error is about having an associated visita
-      if (error.message && error.message.includes('Cannot delete prenotazione that has an associated visita')) {
-        alert('Impossibile eliminare la prenotazione: esiste già una visita associata. Per eliminare la prenotazione, è necessario eliminare prima la visita.');
-      } else {
-        alert(`Errore durante l'eliminazione della prenotazione: ${error.message}`);
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  }, [prenotazione, isStaffOrAdmin, deleteRequest, onPrenotazioneDeleted]);
+  // const handleDeletePrenotazione = useCallback(async () => {
+  //   if (!prenotazione?.id || !isStaffOrAdmin) return;
+  // 
+  //   if (!window.confirm('Sei sicuro di voler eliminare questa prenotazione? Questa azione non può essere annullata.')) {
+  //     return;
+  //   }
+  // 
+  //   try {
+  //     setIsLoading(true);
+  //     const response = await deleteRequest(`/api/prenotazioni/${prenotazione.id}`);
+  //     
+  //     if (!response.ok) {
+  //       const errorData = await response.json().catch(() => ({}));
+  //       const errorMessage = errorData.message || `Failed to delete prenotazione: ${response.status}`;
+  //       throw new Error(errorMessage);
+  //     }
+  // 
+  //     onPrenotazioneDeleted?.(prenotazione.id);
+  //     console.log('Prenotazione deleted successfully');
+  //   } catch (error) {
+  //     console.error('Error deleting prenotazione:', error);
+  //     // Check if the error is about having an associated visita
+  //     if (error.message && error.message.includes('Cannot delete prenotazione that has an associated visita')) {
+  //       alert('Impossibile eliminare la prenotazione: esiste già una visita associata. Per eliminare la prenotazione, è necessario eliminare prima la visita.');
+  //     } else {
+  //       alert(`Errore durante l'eliminazione della prenotazione: ${error.message}`);
+  //     }
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // }, [prenotazione, isStaffOrAdmin, deleteRequest, onPrenotazioneDeleted]);
 
   const handleChangeStato = useCallback(async (nuovoStato) => {
     if (!prenotazione?.id) return;
@@ -192,16 +192,16 @@ const PrenotazioneContextMenu = ({ children, prenotazione, onPrenotazioneUpdated
   ];
 
   // Add delete option only for staff/admin
-  if (isStaffOrAdmin) {
-    menuItems.push({ divider: true });
-    menuItems.push({
-      label: 'Elimina Prenotazione',
-      icon: <DeleteIcon />,
-      onClick: handleDeletePrenotazione,
-      disabled: isLoading,
-      danger: true
-    });
-  }
+  // if (isStaffOrAdmin) {
+  //   menuItems.push({ divider: true });
+  //   menuItems.push({
+  //     label: 'Elimina Prenotazione',
+  //     icon: <DeleteIcon />,
+  //     onClick: handleDeletePrenotazione,
+  //     disabled: isLoading,
+  //     danger: true
+  //   });
+  // }
 
   return (
     <ContextMenu menuItems={menuItems} onClose={() => setIsLoading(false)}>

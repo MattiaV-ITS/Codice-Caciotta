@@ -31,7 +31,7 @@ public class StudioHoursController {
 		this.orarioStudioService = orarioStudioService;
 	}
 
-	@PreAuthorize("hasAuthority('ROLE_ADMIN')")
+	@PreAuthorize("hasAuthority('ROLE_USER') or hasAuthority('ROLE_STAFF') or hasAuthority('ROLE_ADMIN')")
 	@Transactional(readOnly = true)
 	@GetMapping("")
 	public ResponseEntity<StudioHoursResponse> getAllStudioHours() {

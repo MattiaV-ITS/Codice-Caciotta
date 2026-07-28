@@ -24,7 +24,6 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import jakarta.validation.Valid;
 import java.net.URI;
-import java.util.List;
 import java.util.Objects;
 
 @RestController
