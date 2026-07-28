@@ -13,9 +13,9 @@ import {
   CalendarIcon, 
   CalendarIcon2, 
   ChartIcon, 
-  PlusIcon 
+  PlusIcon,
+  SyringeIcon 
 } from '../../components/icons';
-
 
 function DashboardUser() {
   const { user, updateUser } = useAuth();
@@ -30,6 +30,8 @@ function DashboardUser() {
   const [showProprietarioModal, setShowProprietarioModal] = useState(false);
   const [showPrenotazioneModal, setShowPrenotazioneModal] = useState(false);
   const [hasProprietario, setHasProprietario] = useState(false);
+  const [vaccinazioniScaduteIds, setVaccinazioniScaduteIds] = useState([]);
+  const [animaleVaccinazioni, setAnimaleVaccinazioni] = useState({});
 
   const checkProprietario = useCallback(async () => {
     if (!user?.id) return false;
@@ -40,7 +42,6 @@ function DashboardUser() {
       
       if (response.ok && data.proprietarioId) {
         setHasProprietario(true);
-        // Update user context with proprietarioId
         updateUser({
           ...user,
           proprietarioId: data.proprietarioId
@@ -64,12 +65,45 @@ function DashboardUser() {
       const proprietarioId = user.proprietarioId;
       if (!proprietarioId) {
         setAnimali([]);
+        setVaccinazioniScaduteIds([]);
+        setAnimaleVaccinazioni({});
         setLoading(false);
         return;
       }
-      const animaliRes = await get(`/api/animali?proprietarioId=${proprietarioId}&page=0&size=4`);
+      
+      const animaliRes = await get(`/api/animali?proprietarioId=${proprietarioId}&page=0&size=10`);
       const animaliData = await animaliRes.json();
-      setAnimali(animaliData.content || []);
+      const animaliList = animaliData.content || [];
+      setAnimali(animaliList);
+      
+      // Fetch vaccinations for each animal and find expired ones
+      let scaduteIds = [];
+      let vaccMap = {};
+      
+      await Promise.all(animaliList.map(async (animale) => {
+        try {
+          const vaccRes = await get(`/api/vaccinazioni?animaleId=${animale.id}&size=50&page=0`);
+          if (vaccRes.ok) {
+            const vaccData = await vaccRes.json();
+            const vaccList = vaccData.content || [];
+            vaccMap[animale.id] = vaccList;
+            
+            const hasScadute = vaccList.some(v => {
+              const stato = String(v.statoVaccinazione || '').toUpperCase();
+              return stato === 'SCADUTO';
+            });
+            
+            if (hasScadute) {
+              scaduteIds.push(animale.id);
+            }
+          }
+        } catch (err) {
+          console.error(`Error fetching vaccinations for animal ${animale.id}:`, err);
+        }
+      }));
+      
+      setVaccinazioniScaduteIds(scaduteIds);
+      setAnimaleVaccinazioni(vaccMap);
 
       const prenotazioniRes = await get(`/api/prenotazioni?proprietarioId=${proprietarioId}`);
       const prenotazioniData = await prenotazioniRes.json();
@@ -112,7 +146,7 @@ function DashboardUser() {
 
   const handleCreateProprietarioSuccess = () => {
     setShowProprietarioModal(false);
-    checkProprietario(); // Re-check proprietario status
+    checkProprietario();
   };
 
   const handleCreateProprietarioSkip = () => {
@@ -129,6 +163,20 @@ function DashboardUser() {
     const appuntamento = new Date(p.dataOraAppuntamento);
     return appuntamento > now;
   }).length;
+
+  const getVaccStatusColor = (vaccinazione) => {
+    const stato = String(vaccinazione.statoVaccinazione || '').toUpperCase();
+    if (stato === 'SCADUTO') return '#e53e3e';
+    if (stato === 'PROSSIMO') return '#dd6b20';
+    return '#38a169';
+  };
+
+  const getVaccStatusBg = (vaccinazione) => {
+    const stato = String(vaccinazione.statoVaccinazione || '').toUpperCase();
+    if (stato === 'SCADUTO') return '#fff5f5';
+    if (stato === 'PROSSIMO') return '#fffaf0';
+    return '#f0fff4';
+  };
 
   if (loading) {
     return (
@@ -159,7 +207,7 @@ function DashboardUser() {
           <h1 className="dashboard-user-title">
             Bentornato, <span className="dashboard-user-name">{user?.username || 'Utente'}</span>
           </h1>
-          <p className="dashboard-user-subtitle">Prenota la tua prossima visita</p>
+          <p className="dashboard-user-subtitle">Gestisci i tuoi animali e le tue prenotazioni</p>
         </div>
 
         <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
@@ -228,7 +276,7 @@ function DashboardUser() {
       </div>
 
       {/* PROSSIME VISITE */}
-      <div className="card">
+      <div className="card" style={{ marginBottom: 'var(--space-4)' }}>
         <div className="card-header">
           <h3>Prossime visite</h3>
           <button className="btn btn-primary btn-sm" onClick={handlePrenotaVisita}>Prenota</button>
@@ -279,16 +327,24 @@ function DashboardUser() {
         </div>
       </div>
 
-      {/* I TUOI ANIMALI */}
-      <div className="card" style={{ marginTop: 'var(--space-4)' }}>
+      {/* I TUOI ANIMALI - Card unica con vaccinazioni integrate */}
+      <div className="card animali-master-card">
         <div className="card-header">
-          <h3>I tuoi animali</h3>
+          <h3>
+            <PawIcon width="20" height="20" fill="var(--primary)" style={{ marginRight: '8px', verticalAlign: 'middle' }} />
+            I tuoi animali
+            {animali.length > 0 && (
+              <span className="badge badge-primary" style={{ marginLeft: '8px', fontSize: '12px' }}>
+                {animali.length}
+              </span>
+            )}
+          </h3>
           <button className="btn btn-primary btn-sm" onClick={() => setShowCreateModal(true)}>
-            <PlusIcon width="16" height="16" stroke="currentColor" />
+            <PlusIcon width={16} height={16} stroke="currentColor" />
             Aggiungi
           </button>
         </div>
-        <div className="card-body">
+        <div className="card-body" style={{ padding: 0 }}>
           {animali.length === 0 ? (
             <div className="empty-state">
               <div className="empty-icon">
@@ -302,30 +358,108 @@ function DashboardUser() {
               </button>
             </div>
           ) : (
-            <div className="animali-user-grid-compact">
+            <div className="animali-modern-list">
               {animali.map((animale) => {
-                const statusClass = animale.stato 
-                  ? `status-${animale.stato.toLowerCase()}` 
-                  : '';
+                const vaccList = animaleVaccinazioni[animale.id] || [];
+                const hasScadute = vaccinazioniScaduteIds.includes(animale.id);
+                const scaduteCount = vaccList.filter(v => {
+                  const stato = String(v.statoVaccinazione || '').toUpperCase();
+                  return stato === 'SCADUTO';
+                }).length;
+                const prossimeCount = vaccList.filter(v => {
+                  const stato = String(v.statoVaccinazione || '').toUpperCase();
+                  return stato === 'PROSSIMO';
+                }).length;
+                const valideCount = vaccList.filter(v => {
+                  const stato = String(v.statoVaccinazione || '').toUpperCase();
+                  return stato === 'VALIDO';
+                }).length;
+
                 return (
                   <div
                     key={animale.id}
-                    className={`animali-user-card-compact ${statusClass}`}
-                    data-specie={animale.specie}
+                    className={`animale-modern-card ${hasScadute ? 'has-scadute' : ''}`}
                     onClick={() => handleSchedaAnimale(animale.id)}
                   >
-                    <div className="animali-user-avatar-small">
+                    <div className="animale-modern-avatar" data-specie={animale.specie}>
                       {animale.nome?.charAt(0).toUpperCase() || '?'}
                     </div>
-                    <div className="animali-user-card-info-compact">
-                      <div className="animali-user-card-nome">{animale.nome}</div>
-                      <div className="animali-user-card-specie">{animale.specie}</div>
-                      {animale.stato && (
-                        <div className={`animali-user-card-status status-${animale.stato.toLowerCase()}`}>
-                          {animale.stato}
-                        </div>
-                      )}
+                    
+                    <div className="animale-modern-info">
+                      <div className="animale-modern-nome">
+                        {animale.nome}
+                        {animale.stato && (
+                          <span className={`animale-modern-badge badge-${animale.stato.toLowerCase()}`}>
+                            {animale.stato.replace('_', ' ')}
+                          </span>
+                        )}
+                      </div>
+                      <div className="animale-modern-meta">
+                        <span>{animale.specie}</span>
+                        {animale.razza && <span>• {animale.razza}</span>}
+                        {animale.sesso && <span>• {animale.sesso === 'M' ? 'Maschio' : animale.sesso === 'F' ? 'Femmina' : ''}</span>}
+                      </div>
                     </div>
+
+                    <div className="animale-modern-vacc-status">
+                      {/* Vaccination summary dots */}
+                      <div className="vacc-status-dots">
+                        {valideCount > 0 && (
+                          <div className="vacc-dot vacc-dot-valido" title={`${valideCount} valide`}>
+                            <span>{valideCount}</span>
+                          </div>
+                        )}
+                        {prossimeCount > 0 && (
+                          <div className="vacc-dot vacc-dot-prossimo" title={`${prossimeCount} in scadenza`}>
+                            <span>{prossimeCount}</span>
+                          </div>
+                        )}
+                        {scaduteCount > 0 && (
+                          <div className="vacc-dot vacc-dot-scaduto" title={`${scaduteCount} scadute`}>
+                            <span>{scaduteCount}</span>
+                          </div>
+                        )}
+                        {vaccList.length === 0 && (
+                          <div className="vacc-dot vacc-dot-none" title="Nessuna vaccinazione">
+                            <span>0</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="animale-modern-arrow">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M9 18l6-6-6-6" />
+                      </svg>
+                    </div>
+
+                    {/* Vaccination details expand */}
+                    {vaccList.length > 0 && (
+                      <div className="animale-modern-vacc-details">
+                        {vaccList.slice(0, 3).map(v => {
+                          const color = getVaccStatusColor(v);
+                          const bg = getVaccStatusBg(v);
+                          const stato = String(v.statoVaccinazione || '').toUpperCase();
+                          const label = stato === 'SCADUTO' ? 'Scaduta' : stato === 'PROSSIMO' ? 'In scadenza' : 'Valida';
+                          return (
+                            <div key={v.id} className="animale-vacc-item" style={{ backgroundColor: bg, borderLeftColor: color }}>
+                              <div className="animale-vacc-item-info">
+                                <span className="animale-vacc-item-name">{v.tipoVaccino}</span>
+                                <span className="animale-vacc-item-date">Scad. {v.dataScadenza}</span>
+                              </div>
+                              <span className="animale-vacc-item-badge" style={{ color, fontWeight: 600, fontSize: '11px' }}>
+                                {label}
+                              </span>
+                            </div>
+                          );
+                        })}
+                        {vaccList.length > 3 && (
+                          <div className="animale-vacc-more">
+                            +{vaccList.length - 3} altre vaccinazioni
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 );
               })}

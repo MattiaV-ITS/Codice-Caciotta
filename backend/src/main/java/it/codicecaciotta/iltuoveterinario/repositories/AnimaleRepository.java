@@ -23,6 +23,10 @@ public interface AnimaleRepository
     @Query("SELECT a FROM Animale a LEFT JOIN FETCH a.proprietario WHERE a.proprietario.id = :proprietarioId")
     Page<Animale> findByProprietarioId(@Param("proprietarioId") Long proprietarioId, Pageable pageable);
 
+    // Ricerca per proprietario senza paginazione
+    @Query("SELECT a FROM Animale a LEFT JOIN FETCH a.proprietario WHERE a.proprietario.id = :proprietarioId")
+    List<Animale> findByProprietarioId(@Param("proprietarioId") Long proprietarioId);
+
     // Ricerca completa per nome animale, microchip, specie, razza o nome/cognome proprietario
     @Query("SELECT a FROM Animale a LEFT JOIN FETCH a.proprietario WHERE " +
            "LOWER(a.nome) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +

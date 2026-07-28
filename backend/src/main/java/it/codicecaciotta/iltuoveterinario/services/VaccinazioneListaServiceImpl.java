@@ -57,4 +57,10 @@ public class VaccinazioneListaServiceImpl implements VaccinazioneListaService {
         return vaccinazioneRepository.findByAnimaleId(animaleId, pageable)
                 .map(vaccinazioneListaMapper::toListaDTO);
     }
+
+    @Override
+    public Page<VaccinazioneListaDTO> getVaccinazioniByProprietario(Long proprietarioId, @NonNull Pageable pageable) {
+        return vaccinazioneRepository.findByAnimaleProprietarioId(proprietarioId, pageable)
+                .map(vaccinazioneListaMapper::toListaDTO);
+    }
 }

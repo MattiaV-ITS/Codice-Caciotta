@@ -13,7 +13,7 @@ const VaccinazioneCreateModal = ({
   const { post, get } = useApi();
 
   const [formData, setFormData] = useState({
-    tipoVaccino: initialTipoVaccino || '',
+    tipoVaccino: initialTipoVaccino || 'altro',
     dataSomministrazione: new Date().toISOString().split('T')[0],
     dataScadenza: '',
     lotto: '',
@@ -196,13 +196,12 @@ const VaccinazioneCreateModal = ({
             className={hasError('tipoVaccino') ? 'error' : ''}
             required
           >
-            <option value="">Seleziona tipo</option>
             {tipiEsistenti.map((tipo) => (
               <option key={tipo} value={tipo}>
                 {tipo}
               </option>
             ))}
-            <option value="__altro__">Altro (specifica)</option>
+            <option value="altro">Altro (specifica)</option>
           </select>
           {hasError('tipoVaccino') && (
             <span className="error-message">{errors.tipoVaccino}</span>
@@ -219,7 +218,7 @@ const VaccinazioneCreateModal = ({
               type="text"
               id="tipoVaccino_custom"
               name="tipoVaccino_custom"
-              value={isTipoPersonalizzato ? formData.tipoVaccino : ''}
+              value={isTipoPersonalizzato && formData.tipoVaccino !== 'altro' ? formData.tipoVaccino : ''}
               onChange={(e) => {
                 const value = e.target.value;
                 setFormData((prev) => ({ ...prev, tipoVaccino: value }));

@@ -11,8 +11,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 @RestController
 @CrossOrigin(origins = "*", maxAge = 3600)
@@ -53,6 +56,17 @@ public class StatsController {
     @PreAuthorize("hasAuthority('ROLE_STAFF') or hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<DashboardStatsDTO> getDashboardStats() {
         return ResponseEntity.ok(statsService.getDashboardStats());
+    }
+
+    @GetMapping("/animali-vaccinazioni-scadute")
+    @PreAuthorize("hasAuthority('ROLE_STAFF') or hasAuthority('ROLE_ADMIN')")
+    public ResponseEntity<List<Long>> getAnimaliVaccinazioniScadute() {
+        return ResponseEntity.ok(statsService.getAnimaliVaccinazioniScadute());
+    }
+
+    @GetMapping("/animali-vaccinazioni-scadute/proprietario/{proprietarioId}")
+    public ResponseEntity<List<Long>> getAnimaliVaccinazioniScaduteByProprietario(@PathVariable Long proprietarioId) {
+        return ResponseEntity.ok(statsService.getAnimaliVaccinazioniScaduteByProprietario(proprietarioId));
     }
 
     @GetMapping("/prestazioni")

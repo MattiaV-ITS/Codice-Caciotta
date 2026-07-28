@@ -8,7 +8,10 @@ import it.codicecaciotta.iltuoveterinario.dto.PrestazioneStatsDTO;
 import it.codicecaciotta.iltuoveterinario.dto.ProprietarioStatsDTO;
 import it.codicecaciotta.iltuoveterinario.dto.VaccinazioneStatsDTO;
 import it.codicecaciotta.iltuoveterinario.dto.VisitaOggiDTO;
+import it.codicecaciotta.iltuoveterinario.models.Animale;
+import it.codicecaciotta.iltuoveterinario.models.EStatoVaccinazione;
 import it.codicecaciotta.iltuoveterinario.models.Prenotazione;
+import it.codicecaciotta.iltuoveterinario.models.Vaccinazione;
 import it.codicecaciotta.iltuoveterinario.repositories.AnimaleRepository;
 import it.codicecaciotta.iltuoveterinario.repositories.FatturaRepository;
 import it.codicecaciotta.iltuoveterinario.repositories.PrenotazioneRepository;
@@ -23,7 +26,10 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -35,19 +41,22 @@ public class StatsServiceImpl implements StatsService {
     private final FatturaRepository fatturaRepository;
     private final PrenotazioneRepository prenotazioneRepository;
     private final PrestazioneRepository prestazioneRepository;
+    private final VaccinazioneService vaccinazioneService;
 
     public StatsServiceImpl(VaccinazioneRepository vaccinazioneRepository,
                           AnimaleRepository animaleRepository,
                           ProprietarioRepository proprietarioRepository,
                           FatturaRepository fatturaRepository,
                           PrenotazioneRepository prenotazioneRepository,
-                          PrestazioneRepository prestazioneRepository) {
+                          PrestazioneRepository prestazioneRepository,
+                          VaccinazioneService vaccinazioneService) {
         this.vaccinazioneRepository = vaccinazioneRepository;
         this.animaleRepository = animaleRepository;
         this.proprietarioRepository = proprietarioRepository;
         this.fatturaRepository = fatturaRepository;
         this.prenotazioneRepository = prenotazioneRepository;
         this.prestazioneRepository = prestazioneRepository;
+        this.vaccinazioneService = vaccinazioneService;
     }
 
     @Override
@@ -147,6 +156,7 @@ public class StatsServiceImpl implements StatsService {
         long animaliTotali = animaleRepository.count();
         long proprietariTotali = proprietarioRepository.count();
         long proprietariAttivi = proprietarioRepository.countAttivi();
+        long animaliVaccinazioniScadute = getAnimaliVaccinazioniScaduteCount();
 
         List<Prenotazione> visiteOggiList = prenotazioneRepository
                 .findByDataOraAppuntamentoBetweenOrderByDataOraAppuntamentoAsc(startOfDay, endOfDay);
@@ -166,7 +176,83 @@ public class StatsServiceImpl implements StatsService {
         return new DashboardStatsDTO(
                 visiteOggi, prenotazioniTotali, fattureNonPagate,
                 importoNonPagato, animaliTotali, proprietariTotali, proprietariAttivi,
-                visiteOggiDTOs
+                animaliVaccinazioniScadute, visiteOggiDTOs
         );
+    }
+
+    public long getAnimaliVaccinazioniScaduteCount() {
+        List<Animale> tuttiAnimali = animaleRepository.findAll();
+        
+        return tuttiAnimali.stream()
+                .filter(animale -> {
+                    List<Vaccinazione> vaccinazioniAnimale = vaccinazioneRepository.findByAnimaleOrderByDataScadenzaAsc(animale);
+                    
+                    // Deduplica per tipoVaccino mantenendo la più recente
+                    Map<String, Vaccinazione> vaccinazioniPerTipo = vaccinazioniAnimale.stream()
+                            .collect(Collectors.groupingBy(
+                                    Vaccinazione::getTipoVaccino,
+                                    Collectors.collectingAndThen(
+                                            Collectors.maxBy(Comparator.comparing(Vaccinazione::getDataSomministrazione)),
+                                            Optional::orElseThrow
+                                    )
+                            ));
+                    
+                    // Verifica se almeno una vaccinazione è SCADUTA
+                    return vaccinazioniPerTipo.values().stream()
+                            .anyMatch(v -> vaccinazioneService.calculateStatoVaccinazione(v) == EStatoVaccinazione.SCADUTO);
+                })
+                .count();
+    }
+
+    @Override
+    public List<Long> getAnimaliVaccinazioniScadute() {
+        List<Animale> tuttiAnimali = animaleRepository.findAll();
+        
+        return tuttiAnimali.stream()
+                .filter(animale -> {
+                    List<Vaccinazione> vaccinazioniAnimale = vaccinazioneRepository.findByAnimaleOrderByDataScadenzaAsc(animale);
+                    
+                    // Deduplica per tipoVaccino mantenendo la più recente
+                    Map<String, Vaccinazione> vaccinazioniPerTipo = vaccinazioniAnimale.stream()
+                            .collect(Collectors.groupingBy(
+                                    Vaccinazione::getTipoVaccino,
+                                    Collectors.collectingAndThen(
+                                            Collectors.maxBy(Comparator.comparing(Vaccinazione::getDataSomministrazione)),
+                                            Optional::orElseThrow
+                                    )
+                            ));
+                    
+                    // Verifica se almeno una vaccinazione è SCADUTA
+                    return vaccinazioniPerTipo.values().stream()
+                            .anyMatch(v -> vaccinazioneService.calculateStatoVaccinazione(v) == EStatoVaccinazione.SCADUTO);
+                })
+                .map(Animale::getId)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Long> getAnimaliVaccinazioniScaduteByProprietario(Long proprietarioId) {
+        List<Animale> animaliProprietario = animaleRepository.findByProprietarioId(proprietarioId);
+        
+        return animaliProprietario.stream()
+                .filter(animale -> {
+                    List<Vaccinazione> vaccinazioniAnimale = vaccinazioneRepository.findByAnimaleOrderByDataScadenzaAsc(animale);
+                    
+                    // Deduplica per tipoVaccino mantenendo la più recente
+                    Map<String, Vaccinazione> vaccinazioniPerTipo = vaccinazioniAnimale.stream()
+                            .collect(Collectors.groupingBy(
+                                    Vaccinazione::getTipoVaccino,
+                                    Collectors.collectingAndThen(
+                                            Collectors.maxBy(Comparator.comparing(Vaccinazione::getDataSomministrazione)),
+                                            Optional::orElseThrow
+                                    )
+                            ));
+                    
+                    // Verifica se almeno una vaccinazione è SCADUTA
+                    return vaccinazioniPerTipo.values().stream()
+                            .anyMatch(v -> vaccinazioneService.calculateStatoVaccinazione(v) == EStatoVaccinazione.SCADUTO);
+                })
+                .map(Animale::getId)
+                .collect(Collectors.toList());
     }
 }

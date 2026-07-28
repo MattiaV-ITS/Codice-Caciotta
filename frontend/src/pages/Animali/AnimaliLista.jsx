@@ -11,7 +11,7 @@ import { getIconLetter } from "../../utils";
 import { useApi } from '../../services/apiService';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import ErrorMessage from '../../components/common/ErrorMessage';
-import { PawIcon, PlusIcon } from '../../components/icons';
+import { PawIcon, PlusIcon, SyringeIcon } from '../../components/icons';
 
 function AnimaliLista() {
   const table = useTableControls({
@@ -30,6 +30,7 @@ function AnimaliLista() {
   const [statsLoading, setStatsLoading] = useState(true);
   const [statsError, setStatsError] = useState(null);
   const [statsRefreshIndex, setStatsRefreshIndex] = useState(0);
+  const [animaliVaccinazioniScadute, setAnimaliVaccinazioniScadute] = useState([]);
   const { get, patch } = useApi();
   const navigate = useNavigate();
 
@@ -118,6 +119,22 @@ function AnimaliLista() {
     { header: 'DATA DI NASCITA', field: 'dataNascita', type: 'date', sortable: true },
     { header: 'MICROCHIP', field: 'microchip', sortable: true },
     {
+      header: 'VACCINAZIONI',
+      field: 'vaccinazioni',
+      sortable: false,
+      render: (item) => {
+        const hasExpired = animaliVaccinazioniScadute.includes(item.id);
+        return hasExpired ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#e53e3e' }}>
+            <SyringeIcon width={16} height={16} fill="#e53e3e" />
+            <span style={{ fontSize: '12px', fontWeight: 600 }}>Scadute</span>
+          </div>
+        ) : (
+          <span style={{ color: '#38a169', fontSize: '12px' }}>Valide</span>
+        );
+      }
+    },
+    {
       header: 'STATO',
       field: 'stato',
       sortable: false,
@@ -171,14 +188,19 @@ function AnimaliLista() {
     <PawIcon width="48" height="48" style={{ color: 'var(--gray-400)', opacity: 0.5 }} />
   );
 
-  // Fetch stats
+  // Fetch stats and expired vaccinations
   useEffect(() => {
     const fetchStats = async () => {
       try {
         setStatsLoading(true);
-        const response = await get('/api/stats/animali');
-        const data = await response.json();
-        setStats(data || {});
+        const [animaliRes, vaccRes] = await Promise.all([
+          get('/api/stats/animali'),
+          get('/api/stats/animali-vaccinazioni-scadute')
+        ]);
+        const animaliData = await animaliRes.json();
+        const vaccData = await vaccRes.json();
+        setStats(animaliData || {});
+        setAnimaliVaccinazioniScadute(Array.isArray(vaccData) ? vaccData : []);
         setStatsError(null);
       } catch (err) {
         setStatsError(err);

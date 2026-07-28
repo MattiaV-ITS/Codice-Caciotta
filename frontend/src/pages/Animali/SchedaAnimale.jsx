@@ -4,8 +4,9 @@ import { useApi } from '../../services/apiService';
 import { formatDate } from '../../utils/dateUtils';
 import EditIcon from '../../components/icons/EditIcon';
 import DangerIcon from '../../components/icons/DangerIcon';
+import { SyringeIcon } from '../../components/icons';
 
-function SchedaAnimale({ animale, onEditClick }) {
+function SchedaAnimale({ animale, onEditClick, hasExpiredVaccinations }) {
   const navigate = useNavigate();
   const { get } = useApi();
 
@@ -29,6 +30,30 @@ function SchedaAnimale({ animale, onEditClick }) {
         </div>
 
         <div className="visite-card-body">
+          {/* AVVISO VACCINAZIONI SCADUTE */}
+          {hasExpiredVaccinations && (
+            <div style={{
+              backgroundColor: '#fff5f5',
+              border: '1px solid #e53e3e',
+              borderRadius: '6px',
+              padding: '12px',
+              marginBottom: '16px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}>
+              <SyringeIcon width={20} height={20} fill="#e53e3e" />
+              <div>
+                <div style={{ color: '#c53030', fontWeight: 600, fontSize: '14px' }}>
+                  Vaccinazioni Scadute
+                </div>
+                <div style={{ color: '#c53030', fontSize: '12px', marginTop: '2px' }}>
+                  Questo animale ha vaccinazioni che richiedono rinnovo
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* ANAGRAFICA */}
           <div className="visite-detail-section">
             <span className="visite-section-title">Anagrafica</span>

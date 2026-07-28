@@ -77,7 +77,8 @@ function AnimaleDettaglioUser() {
           return;
         }
         setVaccinazioniLoading(true);
-        const response = await api.get('/api/vaccinazioni', { params: { animaleId: animale.id, size: 200, page: 0 } });
+        const params = new URLSearchParams({ animaleId: animale.id, size: 200, page: 0 });
+        const response = await api.get(`/api/vaccinazioni?${params.toString()}`);
         if (!cancelled && response.ok) {
           const data = await response.json();
           const list = Array.isArray(data?.content) ? data.content : (Array.isArray(data) ? data : []);

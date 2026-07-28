@@ -23,6 +23,7 @@ function AnimaleDettaglio() {
   const [error, setError] = useState(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingAnimale, setEditingAnimale] = useState(null);
+  const [hasExpiredVaccinations, setHasExpiredVaccinations] = useState(false);
 
   const isStaffOrAdmin = user?.roles?.some(r => r === 'ROLE_STAFF' || r === 'ROLE_ADMIN');
 
@@ -56,6 +57,18 @@ function AnimaleDettaglio() {
         } catch (visiteError) {
           console.error('Error fetching visits:', visiteError);
           setVisite([]);
+        }
+
+        // Check if animal has expired vaccinations
+        try {
+          const vaccRes = await api.get(`/api/stats/animali-vaccinazioni-scadute`);
+          if (vaccRes.ok) {
+            const vaccData = await vaccRes.json();
+            const expiredIds = Array.isArray(vaccData) ? vaccData : [];
+            setHasExpiredVaccinations(expiredIds.includes(animaleId));
+          }
+        } catch (vaccError) {
+          console.error('Error fetching vaccination status:', vaccError);
         }
         
       } catch (error) {
@@ -124,6 +137,7 @@ function AnimaleDettaglio() {
 
       <SchedaAnimale 
         animale={animale} 
+        hasExpiredVaccinations={hasExpiredVaccinations}
         onEditClick={isStaffOrAdmin ? handleEditAnimale : undefined}
       />
 

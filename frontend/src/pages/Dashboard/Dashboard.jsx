@@ -77,7 +77,7 @@ export function Dashboard() {
 
   if (!stats) return null;
 
-  const { visiteOggi, prenotazioniTotali, fattureNonPagate, importoNonPagato, animaliTotali, visiteOggiList } = stats;
+  const { visiteOggi, prenotazioniTotali, fattureNonPagate, importoNonPagato, animaliTotali, animaliVaccinazioniScadute, visiteOggiList } = stats;
 
   return (
     <div className="dashboard">
@@ -93,9 +93,9 @@ export function Dashboard() {
           <div className="kpi-change">{visiteOggi > 0 ? 'Appuntamenti in programma' : 'Nessuna visita oggi'}</div>
         </div>
         <div className="kpi-card border-warning" onClick={() => navigate('/prenotazioni')} style={{ cursor: 'pointer' }}>
-          <div className="kpi-label">Prenotazioni Totali</div>
+          <div className="kpi-label">Prenotazioni Attive</div>
           <div className="kpi-value">{prenotazioniTotali}</div>
-          <div className="kpi-change">Registrate nel sistema</div>
+          <div className="kpi-change">Non completate</div>
         </div>
         <div className="kpi-card border-danger" onClick={() => navigate('/fatture/stats')} style={{ cursor: 'pointer' }}>
           <div className="kpi-label">Fatture da pagare</div>
@@ -108,6 +108,11 @@ export function Dashboard() {
           <div className="kpi-label">Animali Registrati</div>
           <div className="kpi-value">{animaliTotali}</div>
           <div className="kpi-change">Nello studio</div>
+        </div>
+        <div className="kpi-card border-danger" onClick={() => navigate('/animali')} style={{ cursor: 'pointer' }}>
+          <div className="kpi-label">Vaccinazioni Scadute</div>
+          <div className="kpi-value">{animaliVaccinazioniScadute ?? 0}</div>
+          <div className="kpi-change">Animali con vaccinazioni scadute</div>
         </div>
       </div>
 

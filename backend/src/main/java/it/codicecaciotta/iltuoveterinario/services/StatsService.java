@@ -7,6 +7,8 @@ import it.codicecaciotta.iltuoveterinario.dto.PrestazioneStatsDTO;
 import it.codicecaciotta.iltuoveterinario.dto.ProprietarioStatsDTO;
 import it.codicecaciotta.iltuoveterinario.dto.VaccinazioneStatsDTO;
 
+import java.util.List;
+
 public interface StatsService {
 
     /**
@@ -44,4 +46,23 @@ public interface StatsService {
      * @return PrestazioneStatsDTO with counts and averages
      */
     PrestazioneStatsDTO getPrestazioneStats();
+
+    /**
+     * Get count of animals with expired vaccinations (most recent vaccination per type is expired)
+     * @return count of animals with at least one expired vaccination type
+     */
+    long getAnimaliVaccinazioniScaduteCount();
+
+    /**
+     * Get list of animal IDs with expired vaccinations (most recent vaccination per type is expired)
+     * @return list of animal IDs with at least one expired vaccination type
+     */
+    List<Long> getAnimaliVaccinazioniScadute();
+
+    /**
+     * Get list of animal IDs with expired vaccinations for a specific owner
+     * @param proprietarioId owner ID
+     * @return list of animal IDs with at least one expired vaccination type
+     */
+    List<Long> getAnimaliVaccinazioniScaduteByProprietario(Long proprietarioId);
 }

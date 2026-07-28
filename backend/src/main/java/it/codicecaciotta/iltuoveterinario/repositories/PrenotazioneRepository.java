@@ -32,4 +32,6 @@ public interface PrenotazioneRepository extends JpaRepository<Prenotazione, Long
 
     @EntityGraph(attributePaths = {"animale", "proprietario", "visita"})
     List<Prenotazione> findByDataOraAppuntamentoBetweenOrderByDataOraAppuntamentoAsc(LocalDateTime start, LocalDateTime end);
+    
+    long countByStatoNot(it.codicecaciotta.iltuoveterinario.models.EStatoPrenotazione stato);
 }

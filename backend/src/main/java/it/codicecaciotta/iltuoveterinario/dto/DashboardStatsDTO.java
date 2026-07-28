@@ -16,5 +16,6 @@ public class DashboardStatsDTO {
     private long animaliTotali;
     private long proprietariTotali;
     private long proprietariAttivi;
+    private long animaliVaccinazioniScadute;
     private List<VisitaOggiDTO> visiteOggiList;
 }

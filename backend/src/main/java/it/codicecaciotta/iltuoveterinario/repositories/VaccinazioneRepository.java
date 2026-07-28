@@ -49,4 +49,6 @@ public interface VaccinazioneRepository extends JpaRepository<Vaccinazione, Long
 
     @Query("SELECT COUNT(v) FROM Vaccinazione v WHERE v.dataScadenza < CURRENT_DATE OR v.dataScadenza IS NULL")
     long countScadute();
+
+    Page<Vaccinazione> findByAnimaleProprietarioId(Long proprietarioId, Pageable pageable);
 }
